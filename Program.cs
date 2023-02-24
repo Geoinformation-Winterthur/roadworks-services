@@ -7,8 +7,8 @@ using Serilog;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using roadwork_portal_service.Controllers;
 using Prometheus;
-
 
 Log.Logger = new LoggerConfiguration()
             .ReadFrom.Configuration(AppConfig.Configuration)
@@ -27,6 +27,9 @@ try
 
     string serviceUrl = AppConfig.Configuration.GetValue<string>("URL:ServiceUrl");
     string securityKey = AppConfig.Configuration.GetValue<string>("SecurityKey");
+
+    // startUpDatabase();
+    RoadWorkProjectController.createDummyData();
 
 
     builder.Services.AddAuthentication(options =>
