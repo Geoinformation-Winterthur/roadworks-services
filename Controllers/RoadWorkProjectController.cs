@@ -24,12 +24,20 @@ namespace roadwork_portal_service.Controllers
             this.Configuration = configuration;
         }
 
-        // GET constructionproject/summaries
+        // GET roadworkproject/summaries
         [Route("/roadworkproject/summaries")]
         [Authorize]
         public IEnumerable<RoadWorkProjectFeature> GetSummaries()
         {
             return RoadWorkProjectController.roadworkProjects;
+        }
+
+        // POST roadworkproject/?projectid=...
+        [HttpPost]
+        [Authorize]
+        public ActionResult PostProject(int projectId, [FromBody] double[] coordinates)
+        {
+            return Ok();
         }
 
         public static void createDummyData()
