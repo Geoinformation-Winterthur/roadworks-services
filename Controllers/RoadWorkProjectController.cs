@@ -24,19 +24,51 @@ namespace roadwork_portal_service.Controllers
             this.Configuration = configuration;
         }
 
-        // GET roadworkproject/summaries
-        [Route("/roadworkproject/summaries")]
+        // GET roadworkproject/
+        [HttpGet]
         [Authorize]
-        public IEnumerable<RoadWorkProjectFeature> GetSummaries()
+        public IEnumerable<RoadWorkProjectFeature> GetProjects(int id = -1, bool summary = false)
         {
-            return RoadWorkProjectController.roadworkProjects;
+            List<RoadWorkProjectFeature> result = new List<RoadWorkProjectFeature>();
+            if(id >= 0)
+            {
+                foreach(RoadWorkProjectFeature roadWorkProjectFeature in RoadWorkProjectController.roadworkProjects)
+                {
+                    if(roadWorkProjectFeature.properties.id == id)
+                    {
+                        result.Add(roadWorkProjectFeature);
+                    }
+                }
+            } else {
+                result = RoadWorkProjectController.roadworkProjects;
+            }
+            return result;
         }
 
         // POST roadworkproject/?projectid=...
         [HttpPost]
         [Authorize]
-        public ActionResult PostProject(int projectId, [FromBody] double[] coordinates)
+        public ActionResult PostProject( [FromBody] RoadWorkProjectFeature roadWorkProjectFeature)
         {
+            RoadWorkProjectController.roadworkProjects.Add(roadWorkProjectFeature);
+            return Ok();
+        }
+
+        // PUT roadworkproject/?projectid=...
+        [HttpPut]
+        [Authorize]
+        public ActionResult PutProject( [FromBody] double[] coordinates, int projectId = -1)
+        {
+            for (int i = 0; i < RoadWorkProjectController.roadworkProjects.Count; i++)
+            {
+                if (RoadWorkProjectController.roadworkProjects[i].properties.id ==
+                             projectId)
+                {
+                    RoadWorkProjectController.roadworkProjects[i].geometry.coordinates
+                                 = coordinates;
+                    break;
+                }
+            }
             return Ok();
         }
 
