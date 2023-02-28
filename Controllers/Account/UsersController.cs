@@ -32,7 +32,7 @@ public class UsersController : ControllerBase
     // GET /account/users/?email=...
     [HttpGet]
     [Authorize(Roles = "administrator")]
-    public ActionResult<User[]> GetUsers(string email)
+    public ActionResult<User[]> GetUsers(string? email)
     {
         List<User> usersFromDb = new List<User>();
         // get data of current user from database:
