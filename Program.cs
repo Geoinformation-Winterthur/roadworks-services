@@ -28,10 +28,6 @@ try
     string serviceUrl = AppConfig.Configuration.GetValue<string>("URL:ServiceUrl");
     string securityKey = AppConfig.Configuration.GetValue<string>("SecurityKey");
 
-    // startUpDatabase();
-    RoadWorkProjectController.createDummyData();
-
-
     builder.Services.AddAuthentication(options =>
     {
         options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;

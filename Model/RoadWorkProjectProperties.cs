@@ -1,11 +1,14 @@
-
-using System;
+// <copyright company="Vermessungsamt Winterthur">
+//      Author: Edgar Butwilowski
+//      Copyright (c) Vermessungsamt Winterthur. All rights reserved.
+// </copyright>
+using System.Numerics;
 
 namespace roadwork_portal_service.Model
 {
     public class RoadWorkProjectProperties
     {
-        public int id { get; set; } = -1;
+        public string uuid { get; set; } = "";
         public string place { get; set; } = "";
         public string area { get; set; } = "";
         public string project { get; set; } = "";
