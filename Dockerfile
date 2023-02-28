@@ -3,5 +3,5 @@ WORKDIR /app
 COPY ./bin/Test/net6.0/publish/ .
 ENV DOTNET_CLI_TELEMETRY_OPTOUT=true
 ENV ASPNETCORE_ENVIRONMENT=Test
-ENTRYPOINT ["dotnet", "roadworks-servicess.dll"]
+ENTRYPOINT ["dotnet", "roadworks-services.dll"]
 EXPOSE 80
