@@ -27,7 +27,7 @@ namespace roadwork_portal_service.Controllers
         // GET roadworkproject/
         [HttpGet]
         [Authorize]
-        public IEnumerable<RoadWorkProjectFeature> GetProjects(int uuid = -1, bool summary = false)
+        public IEnumerable<RoadWorkProjectFeature> GetProjects(string? uuid = "", bool summary = false)
         {
             List<RoadWorkProjectFeature> projectsFromDb = new List<RoadWorkProjectFeature>();
             // get data of current user from database:
@@ -39,10 +39,15 @@ namespace roadwork_portal_service.Controllers
                         status, priority, realization_until, active, traffic_obstruction_type,
                         ST_AsText(geom) FROM ""roadworkprojects""";
 
-                if (uuid > 0)
+                
+                if (uuid != null)
                 {
+                    uuid = uuid.Trim();
+                    if(uuid != "")
+                    {
                         selectComm.CommandText += " WHERE uuid=@uuid";
                         selectComm.Parameters.AddWithValue("uuid", uuid);
+                    }
                 }
 
                 using (NpgsqlDataReader reader = selectComm.ExecuteReader())
@@ -51,7 +56,7 @@ namespace roadwork_portal_service.Controllers
                     while (reader.Read())
                     {
                         projectFeatureFromDb = new RoadWorkProjectFeature();
-                        projectFeatureFromDb.properties.uuid = reader.IsDBNull(0) ? "" : reader.GetInt64(0).ToString(); // TODO read 128 bit, not only 64 bit
+                        projectFeatureFromDb.properties.uuid = reader.IsDBNull(0) ? "" : reader.GetString(0);
                         projectFeatureFromDb.properties.place = reader.IsDBNull(1) ? "" : reader.GetString(1);
                         projectFeatureFromDb.properties.area = reader.IsDBNull(2) ? "" : reader.GetString(2);
                         projectFeatureFromDb.properties.project = reader.IsDBNull(3) ? "" : reader.GetString(3);
@@ -98,10 +103,10 @@ namespace roadwork_portal_service.Controllers
             return Ok();
         }
 
-        // PUT roadworkproject/?projectid=...
+        // PUT roadworkproject/?uuid=...
         [HttpPut]
         [Authorize]
-        public ActionResult PutProject([FromBody] double[] coordinates, int projectId = -1)
+        public ActionResult PutProject([FromBody] double[] coordinates, string uuid = "")
         {
             if (coordinates.Length > 2)
             {
@@ -128,9 +133,9 @@ namespace roadwork_portal_service.Controllers
                     NpgsqlCommand updateComm = pgConn.CreateCommand();
                     updateComm.CommandText = @"UPDATE ""roadworkprojects""
                         SET geom=ST_PolygonFromText(@geom, 2056)
-                        WHERE uuid=@projectId";
+                        WHERE uuid=@uuid";
                     updateComm.Parameters.AddWithValue("geom", polyWkt);
-                    updateComm.Parameters.AddWithValue("projectId", projectId);
+                    updateComm.Parameters.AddWithValue("uuid", uuid);
 
                     updateComm.ExecuteNonQuery();
                     pgConn.Close();

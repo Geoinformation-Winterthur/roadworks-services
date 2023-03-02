@@ -67,14 +67,16 @@ public class UsersController : ControllerBase
                 while (reader.Read())
                 {
                     userFromDb = new User();
+                    userFromDb.uuid =
+                            reader.IsDBNull(0) ? "" :
+                                    reader.GetString(0).Trim();
                     userFromDb.mailAddress =
                             reader.IsDBNull(3) ? "" :
                                     reader.GetString(3).ToLower().Trim();
                     if (userFromDb.mailAddress != null &&
-                            userFromDb.mailAddress != "")
+                            userFromDb.mailAddress != "" &&
+                            userFromDb.uuid != null && userFromDb.uuid != "")
                     {
-                        userFromDb.passPhrase = reader.GetString(4);
-
                         userFromDb.lastName = reader.GetString(1);
                         userFromDb.firstName = reader.GetString(2);
                         userFromDb.role = reader.GetString(4);
@@ -139,7 +141,7 @@ public class UsersController : ControllerBase
 
             user.uuid = Guid.NewGuid().ToString();
 
-            insertComm.Parameters.AddWithValue("uuid", transformUuidStringToInt(user.uuid));
+            insertComm.Parameters.AddWithValue("uuid", user.uuid);
             insertComm.Parameters.AddWithValue("last_name", user.lastName);
             insertComm.Parameters.AddWithValue("first_name", user.firstName);
             insertComm.Parameters.AddWithValue("e_mail", user.mailAddress);
@@ -282,18 +284,6 @@ public class UsersController : ControllerBase
         }
 
         return BadRequest("Something went wrong");
-    }
-
-    private BigInteger transformUuidStringToInt(string uuidString)
-    {
-        string[] uuidSplit = uuidString.Split("-");
-        uuidString = "";
-        foreach (string uuidSplitPart in uuidSplit)
-        {
-            uuidString += uuidSplitPart;
-        }
-        uuidString = "0" + uuidString;
-        return BigInteger.Parse(uuidString, NumberStyles.HexNumber);
     }
 
 }
