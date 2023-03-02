@@ -108,7 +108,8 @@ public class UsersController : ControllerBase
             userInDb = usersInDb[0];
         }
 
-        if (userInDb.mailAddress == "")
+        if (userInDb != null && userInDb.mailAddress != null &&
+                    userInDb.mailAddress.Trim() == user.mailAddress)
         {
             return BadRequest("Adding user not possible");
         }
@@ -122,7 +123,8 @@ public class UsersController : ControllerBase
                     VALUES(@uuid, @last_name, @first_name, @e_mail, @role, @pwd)";
 
             string newUserGuid = Guid.NewGuid().ToString();
-            newUserGuid = $"0{newUserGuid:N}"; // add leading zero, no dashes
+            newUserGuid.Replace("-", String.Empty);
+            newUserGuid = "0" + newUserGuid;
             user.uuid = BigInteger.Parse(newUserGuid, NumberStyles.HexNumber);
 
             insertComm.Parameters.AddWithValue("uuid", user.uuid);
