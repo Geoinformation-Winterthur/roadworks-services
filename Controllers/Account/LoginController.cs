@@ -176,7 +176,7 @@ public class LoginController : ControllerBase
                 if (hasUser)
                 {
                     userFromDb = new User();
-                    userFromDb.uuid = reader.GetInt32(0);
+                    userFromDb.uuid = reader.GetString(0);
                     userFromDb.mailAddress = reader.GetString(3);
                     userFromDb.passPhrase = reader.GetString(4);
 

@@ -2,10 +2,6 @@
 //      Author: Edgar Butwilowski
 //      Copyright (c) Vermessungsamt Winterthur. All rights reserved.
 // </copyright>
-// <copyright company="Vermessungsamt Winterthur">
-//      Author: Edgar Butwilowski
-//      Copyright (c) Vermessungsamt Winterthur. All rights reserved.
-// </copyright>
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Npgsql;
@@ -30,9 +26,10 @@ public class UsersController : ControllerBase
 
     // GET /account/users/
     // GET /account/users/?email=...
+    // GET /account/users/?uuid=...
     [HttpGet]
     [Authorize(Roles = "administrator")]
-    public ActionResult<User[]> GetUsers(string? email)
+    public ActionResult<User[]> GetUsers(string? email, string? uuid)
     {
         List<User> usersFromDb = new List<User>();
         // get data of current user from database:
@@ -51,6 +48,18 @@ public class UsersController : ControllerBase
                     selectComm.Parameters.AddWithValue("email", email);
                 }
             }
+            else
+            {
+                if (uuid != null)
+                {
+                    uuid = uuid.Trim();
+                    if (uuid != "")
+                    {
+                        selectComm.CommandText += " WHERE trim(uuid)=@uuid";
+                        selectComm.Parameters.AddWithValue("uuid", uuid);
+                    }
+                }
+            }
 
             using (NpgsqlDataReader reader = selectComm.ExecuteReader())
             {
@@ -58,24 +67,30 @@ public class UsersController : ControllerBase
                 while (reader.Read())
                 {
                     userFromDb = new User();
-                    userFromDb.mailAddress = reader.GetString(3);
-                    userFromDb.passPhrase = reader.GetString(4);
-
-                    userFromDb.lastName = reader.GetString(1);
-                    userFromDb.firstName = reader.GetString(2);
-                    userFromDb.role = reader.GetString(4);
-
-                    if (userFromDb.lastName == null || userFromDb.lastName.Trim().Equals(""))
+                    userFromDb.mailAddress =
+                            reader.IsDBNull(3) ? "" :
+                                    reader.GetString(3).ToLower().Trim();
+                    if (userFromDb.mailAddress != null &&
+                            userFromDb.mailAddress != "")
                     {
-                        userFromDb.lastName = "Nachname unbekannt";
-                    }
+                        userFromDb.passPhrase = reader.GetString(4);
 
-                    if (userFromDb.firstName == null || userFromDb.firstName.Trim().Equals(""))
-                    {
-                        userFromDb.firstName = "Vorname unbekannt";
-                    }
+                        userFromDb.lastName = reader.GetString(1);
+                        userFromDb.firstName = reader.GetString(2);
+                        userFromDb.role = reader.GetString(4);
 
-                    usersFromDb.Add(userFromDb);
+                        if (userFromDb.lastName == null || userFromDb.lastName.Trim().Equals(""))
+                        {
+                            userFromDb.lastName = "unbekannt";
+                        }
+
+                        if (userFromDb.firstName == null || userFromDb.firstName.Trim().Equals(""))
+                        {
+                            userFromDb.firstName = "unbekannt";
+                        }
+
+                        usersFromDb.Add(userFromDb);
+                    }
                 }
             }
             pgConn.Close();
@@ -101,9 +116,9 @@ public class UsersController : ControllerBase
         }
 
         User userInDb = new User();
-        ActionResult<User[]> usersInDbResult = this.GetUsers(user.mailAddress);
+        ActionResult<User[]> usersInDbResult = this.GetUsers(user.mailAddress, "");
         User[]? usersInDb = usersInDbResult.Value;
-        if(usersInDb != null && usersInDb.Length > 0)
+        if (usersInDb != null && usersInDb.Length > 0)
         {
             userInDb = usersInDb[0];
         }
@@ -119,15 +134,12 @@ public class UsersController : ControllerBase
             pgConn.Open();
             NpgsqlCommand insertComm = pgConn.CreateCommand();
             insertComm.CommandText = @"INSERT INTO ""users""(uuid,
-                    last_name, first_name, e_mail, role, pwd
+                    last_name, first_name, e_mail, role, pwd)
                     VALUES(@uuid, @last_name, @first_name, @e_mail, @role, @pwd)";
 
-            string newUserGuid = Guid.NewGuid().ToString();
-            newUserGuid.Replace("-", String.Empty);
-            newUserGuid = "0" + newUserGuid;
-            user.uuid = BigInteger.Parse(newUserGuid, NumberStyles.HexNumber);
+            user.uuid = Guid.NewGuid().ToString();
 
-            insertComm.Parameters.AddWithValue("uuid", user.uuid);
+            insertComm.Parameters.AddWithValue("uuid", transformUuidStringToInt(user.uuid));
             insertComm.Parameters.AddWithValue("last_name", user.lastName);
             insertComm.Parameters.AddWithValue("first_name", user.firstName);
             insertComm.Parameters.AddWithValue("e_mail", user.mailAddress);
@@ -138,7 +150,7 @@ public class UsersController : ControllerBase
 
             pgConn.Close();
 
-            if(noAffectedRows == 1)
+            if (noAffectedRows == 1)
             {
                 user.passPhrase = "";
                 return Ok(user);
@@ -149,13 +161,139 @@ public class UsersController : ControllerBase
         return BadRequest("Something went wrong");
     }
 
-
+    // PUT users/
     [HttpPut]
     [Authorize(Roles = "administrator")]
     public IActionResult UpdateUser([FromBody] User user)
     {
-        // TODO implement
-        return Ok();
+        if (user == null || user.uuid == null)
+        {
+            return BadRequest("No user data provided");
+        }
+
+        user.uuid = user.uuid.ToLower().Trim();
+
+        if (user.uuid == "")
+        {
+            return BadRequest("No user data provided");
+        }
+
+        User userInDb = new User();
+        ActionResult<User[]> usersInDbResult = this.GetUsers("", user.uuid);
+        User[]? usersInDb = usersInDbResult.Value;
+        if (usersInDb == null || usersInDb.Length != 1)
+        {
+            return BadRequest("Editing user not possible");
+        }
+        else
+        {
+            userInDb = usersInDb[0];
+            if (userInDb != null)
+            {
+                using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
+                {
+                    pgConn.Open();
+                    NpgsqlCommand updateComm = pgConn.CreateCommand();
+                    updateComm.CommandText = @"UPDATE ""users"" SET
+                        last_name=@last_name, first_name=@first_name, e_mail=@e_mail,
+                        role=@role, pwd=@pwd WHERE uuid=@uuid";
+
+                    updateComm.Parameters.AddWithValue("uuid", user.uuid);
+                    updateComm.Parameters.AddWithValue("last_name", user.lastName);
+                    updateComm.Parameters.AddWithValue("first_name", user.firstName);
+                    updateComm.Parameters.AddWithValue("e_mail", user.mailAddress);
+                    updateComm.Parameters.AddWithValue("role", user.role);
+                    updateComm.Parameters.AddWithValue("pwd", user.passPhrase);
+
+                    int noAffectedRows = updateComm.ExecuteNonQuery();
+
+                    pgConn.Close();
+
+                    if (noAffectedRows == 1)
+                    {
+                        user.passPhrase = "";
+                        return Ok(user);
+                    }
+
+                }
+
+            }
+            else
+            {
+                return BadRequest("Editing user not possible");
+            }
+        }
+
+        return BadRequest("Something went wrong");
+    }
+
+    // DELETE /users?email=...
+    [HttpDelete]
+    [Authorize(Roles = "administrator")]
+    public ActionResult DeleteUser(string email)
+    {
+        if (email == null)
+        {
+            return BadRequest("No user data provided");
+        }
+
+        email = email.ToLower().Trim();
+
+        if (email == "")
+        {
+            return BadRequest("No user data provided");
+        }
+
+        User userInDb = new User();
+        ActionResult<User[]> usersInDbResult = this.GetUsers(email, "");
+        User[]? usersInDb = usersInDbResult.Value;
+        if (usersInDb == null || usersInDb.Length != 1)
+        {
+            return BadRequest("Deleting user not possible");
+        }
+        else
+        {
+            userInDb = usersInDb[0];
+            if (userInDb != null)
+            {
+                using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
+                {
+                    pgConn.Open();
+                    NpgsqlCommand deleteComm = pgConn.CreateCommand();
+                    deleteComm.CommandText = @"UPDATE ""users"" SET
+                        last_name=NULL, first_name=NULL, e_mail=NULL,
+                        role=NULL, pwd=NULL WHERE e_mail=@e_mail";
+                    deleteComm.Parameters.AddWithValue("e_mail", email);
+
+                    int noAffectedRows = deleteComm.ExecuteNonQuery();
+
+                    pgConn.Close();
+
+                    if (noAffectedRows == 1)
+                    {
+                        return Ok();
+                    }
+                }
+            }
+            else
+            {
+                return BadRequest("Deleting user not possible");
+            }
+        }
+
+        return BadRequest("Something went wrong");
+    }
+
+    private BigInteger transformUuidStringToInt(string uuidString)
+    {
+        string[] uuidSplit = uuidString.Split("-");
+        uuidString = "";
+        foreach (string uuidSplitPart in uuidSplit)
+        {
+            uuidString += uuidSplitPart;
+        }
+        uuidString = "0" + uuidString;
+        return BigInteger.Parse(uuidString, NumberStyles.HexNumber);
     }
 
 }

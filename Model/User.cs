@@ -8,7 +8,7 @@ namespace roadwork_portal_service.Model
 {
     public class User
     {
-        public BigInteger uuid { get; set; } = -1;
+        public string uuid { get; set; } = "";
         public string mailAddress { get; set; } = "";
         public string passPhrase { get; set;} = "";
         public string lastName { get; set;} = "";
