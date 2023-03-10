@@ -7,7 +7,7 @@ using Serilog;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using roadwork_portal_service.Controllers;
+using Npgsql;
 using Prometheus;
 
 Log.Logger = new LoggerConfiguration()
@@ -18,6 +18,8 @@ try
 {
 
     Log.Information("Starting roadwork-portal service.");
+
+    NpgsqlConnection.GlobalTypeMapper.UseNetTopologySuite();
 
     WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 

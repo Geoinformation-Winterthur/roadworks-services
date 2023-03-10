@@ -13,8 +13,6 @@ namespace roadwork_portal_service.Controllers
     [Route("[controller]")]
     public class RoadWorkProjectController : ControllerBase
     {
-        // ONLY FOR TEST PURPOSES:
-        public static List<RoadWorkProjectFeature> roadworkProjects = new List<RoadWorkProjectFeature>();
         private readonly ILogger<RoadWorkProjectController> _logger;
         private IConfiguration Configuration { get; }
 
@@ -38,8 +36,7 @@ namespace roadwork_portal_service.Controllers
                 NpgsqlCommand selectComm = pgConn.CreateCommand();
                 selectComm.CommandText = @"SELECT uuid, place, area, project, project_no,
                         status, priority, realization_until, active, traffic_obstruction_type,
-                        ST_AsText(geom) FROM ""roadworkprojects""";
-
+                        geom FROM ""roadworkprojects""";
 
                 if (uuid != null)
                 {
@@ -67,9 +64,7 @@ namespace roadwork_portal_service.Controllers
                         projectFeatureFromDb.properties.realizationUntil = reader.IsDBNull(7) ? DateTime.Now : reader.GetDateTime(7);
                         projectFeatureFromDb.properties.active = reader.IsDBNull(8) ? false : reader.GetBoolean(8);
                         projectFeatureFromDb.properties.trafficObstructionType = reader.IsDBNull(9) ? "" : reader.GetString(9);
-                        string geomWkt = reader.IsDBNull(10) ? "" : reader.GetString(10);
-
-                        Polygon polyFromDb = new WKTReader().Read(geomWkt) as Polygon;
+                        Polygon polyFromDb = reader.IsDBNull(10) ? Polygon.Empty : reader.GetValue(10) as Polygon;
 
                         List<double> polyCoordsList = new List<double>();
                         foreach (Coordinate polyCoord in polyFromDb.ExteriorRing.Coordinates)
