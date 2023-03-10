@@ -1,9 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using NetTopologySuite;
 using NetTopologySuite.Geometries;
+using NetTopologySuite.Features;
 using Npgsql;
 using roadwork_portal_service.Configuration;
-using roadwork_portal_service.Model;
 
 namespace roadwork_portal_service.Controllers
 {
@@ -24,9 +25,9 @@ namespace roadwork_portal_service.Controllers
         // GET managementarea/
         [HttpGet]
         [Authorize(Roles = "administrator")]
-        public IEnumerable<ManagementAreaFeature> GetManagementAreas()
+        public ActionResult<FeatureCollection> GetManagementAreas()
         {
-            List<ManagementAreaFeature> managementAreasFromDb = new List<ManagementAreaFeature>();
+            FeatureCollection managementAreas = new FeatureCollection();
             // get data of current user from database:
             using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
             {
@@ -37,35 +38,23 @@ namespace roadwork_portal_service.Controllers
 
                 using (NpgsqlDataReader reader = selectComm.ExecuteReader())
                 {
-                    ManagementAreaFeature managementAreaFeatureFromDb;
+                    GeometryFactory geomFactory = NtsGeometryServices.Instance.CreateGeometryFactory(srid: 2056);
+                    Feature managementAreaFeatureFromDb;
                     while (reader.Read())
                     {
-                        managementAreaFeatureFromDb = new ManagementAreaFeature();
-                        managementAreaFeatureFromDb.uuid = reader.IsDBNull(0) ? "" : reader.GetString(0);
-                        managementAreaFeatureFromDb.managername = reader.IsDBNull(1) ? "" : reader.GetString(1);
-                        Polygon polyFromDb = reader.IsDBNull(2) ? Polygon.Empty : reader.GetValue(2) as Polygon;
+                        managementAreaFeatureFromDb = new Feature();
+                        managementAreaFeatureFromDb.Attributes = new AttributesTable();
+                        managementAreaFeatureFromDb.Attributes.Add("uuid", reader.IsDBNull(0) ? "" : reader.GetString(0));
+                        managementAreaFeatureFromDb.Attributes.Add("managername", reader.IsDBNull(1) ? "" : reader.GetString(1));
+                        managementAreaFeatureFromDb.Geometry = reader.IsDBNull(2) ? Polygon.Empty : reader.GetValue(2) as Polygon;
 
-                        List<double> polyCoordsList = new List<double>();
-                        foreach (Coordinate polyCoord in polyFromDb.ExteriorRing.Coordinates)
-                        {
-                            polyCoordsList.Add(polyCoord.X);
-                            polyCoordsList.Add(polyCoord.Y);
-                        }
-
-                        roadwork_portal_service.Model.Geometry geometry
-                                = new roadwork_portal_service.Model.Geometry(
-                                    roadwork_portal_service.Model.Geometry.GeometryType.Polygon,
-                                    polyCoordsList.ToArray<double>());
-
-                        managementAreaFeatureFromDb.geometry = geometry;
-
-                        managementAreasFromDb.Add(managementAreaFeatureFromDb);
+                        managementAreas.Add(managementAreaFeatureFromDb);
                     }
                 }
                 pgConn.Close();
             }
 
-            return managementAreasFromDb.ToArray();
+            return Ok(managementAreas);
         }
 
     }

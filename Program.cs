@@ -9,6 +9,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Npgsql;
 using Prometheus;
+using NetTopologySuite.IO.Converters;
 
 Log.Logger = new LoggerConfiguration()
             .ReadFrom.Configuration(AppConfig.Configuration)
@@ -50,7 +51,10 @@ try
             };
         });
 
-    builder.Services.AddControllers();
+    builder.Services.AddControllers()
+            .AddJsonOptions(options => {
+                options.JsonSerializerOptions.Converters.Add(new GeoJsonConverterFactory());
+            });
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
