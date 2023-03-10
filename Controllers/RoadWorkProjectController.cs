@@ -93,7 +93,7 @@ namespace roadwork_portal_service.Controllers
         // POST roadworkproject/?projectid=...
         [HttpPost]
         [Authorize]
-        public ActionResult<RoadWorkProjectFeature> PostProject([FromBody] RoadWorkProjectFeature roadWorkProjectFeature)
+        public ActionResult<RoadWorkProjectFeature> AddProject([FromBody] RoadWorkProjectFeature roadWorkProjectFeature)
         {
             string resultUuid = "";
             double[] coordinates = roadWorkProjectFeature.geometry.coordinates;
@@ -156,11 +156,13 @@ namespace roadwork_portal_service.Controllers
         // PUT roadworkproject/?uuid=...
         [HttpPut]
         [Authorize]
-        public ActionResult<WebAppException> PutProject([FromBody] double[] coordinates, string uuid = "")
+        public ActionResult<WebAppException> UpdateProject([FromBody] RoadWorkProjectFeature roadWorkProjectFeature)
         {
-            if (coordinates.Length > 2)
+            if (roadWorkProjectFeature != null && roadWorkProjectFeature.geometry != null &&
+                    roadWorkProjectFeature.geometry.coordinates != null && 
+                    roadWorkProjectFeature.geometry.coordinates.Length > 2)
             {
-                Polygon polygon = coordinatesToPolygon(coordinates);
+                Polygon polygon = coordinatesToPolygon(roadWorkProjectFeature.geometry.coordinates);
                 string polyWkt = new WKTWriter().Write(polygon);
 
                 using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
@@ -174,10 +176,19 @@ namespace roadwork_portal_service.Controllers
                         {
                             NpgsqlCommand updateComm = pgConn.CreateCommand();
                             updateComm.CommandText = @"UPDATE ""roadworkprojects""
-                                    SET geom=ST_PolygonFromText(@geom, 2056)
+                                    SET place=@place, area=@area, project=@project,
+                                    project_no=@project_no, status=@status, priority=@priority,
+                                    geom=ST_PolygonFromText(@geom, 2056)
                                     WHERE uuid=@uuid";
                             updateComm.Parameters.AddWithValue("geom", polyWkt);
-                            updateComm.Parameters.AddWithValue("uuid", uuid);
+                            updateComm.Parameters.AddWithValue("uuid", roadWorkProjectFeature.properties.uuid);
+                            updateComm.Parameters.AddWithValue("place", roadWorkProjectFeature.properties.place);
+                            updateComm.Parameters.AddWithValue("area", roadWorkProjectFeature.properties.area);
+                            updateComm.Parameters.AddWithValue("project", roadWorkProjectFeature.properties.project);
+                            updateComm.Parameters.AddWithValue("project_no", roadWorkProjectFeature.properties.projectNo);
+                            updateComm.Parameters.AddWithValue("status", roadWorkProjectFeature.properties.status);
+                            updateComm.Parameters.AddWithValue("priority", roadWorkProjectFeature.properties.priority);
+                            updateComm.Parameters.AddWithValue("geom", polyWkt);
 
                             updateComm.ExecuteNonQuery();
                         }
