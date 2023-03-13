@@ -25,7 +25,7 @@ namespace roadwork_portal_service.Controllers
 
         // GET managementarea/
         [HttpGet]
-        [Authorize(Roles = "administrator")]
+        [Authorize]
         public ActionResult<FeatureCollection> GetManagementAreas()
         {
             FeatureCollection managementAreas = new FeatureCollection();
@@ -45,10 +45,7 @@ namespace roadwork_portal_service.Controllers
                     {
                         managementAreaFeatureFromDb = new Feature();
                         managementAreaFeatureFromDb.Attributes = new AttributesTable();
-                        BigInteger areaUuidInt = (BigInteger) (reader.IsDBNull(0) ? 0 : reader.GetDecimal(0));
-                        Guid areaUuid =  new Guid(areaUuidInt.ToByteArray());
-
-                        managementAreaFeatureFromDb.Attributes.Add("uuid", areaUuid.ToString());
+                        managementAreaFeatureFromDb.Attributes.Add("uuid", reader.IsDBNull(0) ? "" : reader.GetString(0));
                         managementAreaFeatureFromDb.Attributes.Add("managername", reader.IsDBNull(1) ? "" : reader.GetString(1));
                         managementAreaFeatureFromDb.Geometry = reader.IsDBNull(2) ? Polygon.Empty : reader.GetValue(2) as Polygon;
 

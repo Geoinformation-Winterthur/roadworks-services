@@ -38,7 +38,7 @@ public class UsersController : ControllerBase
             pgConn.Open();
             NpgsqlCommand selectComm = pgConn.CreateCommand();
             selectComm.CommandText = @"SELECT uuid, last_name, first_name,
-                        trim(lower(e_mail)), role FROM ""users""";
+                        trim(lower(e_mail)), role, org_unit FROM ""users""";
             if (email != null)
             {
                 email = email.ToLower().Trim();
@@ -56,9 +56,7 @@ public class UsersController : ControllerBase
                     if (uuid != "")
                     {
                         selectComm.CommandText += " WHERE trim(uuid)=@uuid";
-                        Guid userUuid = Guid.Parse(uuid);
-                        BigInteger userUuidInt = new BigInteger(userUuid.ToByteArray());
-                        selectComm.Parameters.AddWithValue("uuid", userUuidInt);
+                        selectComm.Parameters.AddWithValue("uuid", uuid);
                     }
                 }
             }
@@ -69,12 +67,8 @@ public class UsersController : ControllerBase
                 while (reader.Read())
                 {
                     userFromDb = new User();
-                    BigInteger userUuidInt =
-                                (BigInteger) (reader.IsDBNull(0) ? 0 :
-                                    reader.GetDecimal(0));
-                    Guid userUuid = new Guid(userUuidInt.ToByteArray());
-                    userFromDb.uuid = userUuid.ToString();
-                            
+                    userFromDb.uuid = reader.IsDBNull(0) ? "" :
+                                reader.GetString(0);
                     userFromDb.mailAddress =
                             reader.IsDBNull(3) ? "" :
                                     reader.GetString(3).ToLower().Trim();
@@ -85,6 +79,7 @@ public class UsersController : ControllerBase
                         userFromDb.lastName = reader.GetString(1);
                         userFromDb.firstName = reader.GetString(2);
                         userFromDb.role = reader.GetString(4);
+                        userFromDb.organisationalUnitUuid = reader.GetString(5);
 
                         if (userFromDb.lastName == null || userFromDb.lastName.Trim().Equals(""))
                         {
@@ -141,19 +136,17 @@ public class UsersController : ControllerBase
             pgConn.Open();
             NpgsqlCommand insertComm = pgConn.CreateCommand();
             insertComm.CommandText = @"INSERT INTO ""users""(uuid,
-                    last_name, first_name, e_mail, role, pwd)
-                    VALUES(@uuid, @last_name, @first_name, @e_mail, @role, @pwd)";
-
+                    last_name, first_name, e_mail, role, pwd, org_unit)
+                    VALUES(@uuid, @last_name, @first_name, @e_mail, @role, @pwd, @org_unit)";
             Guid userUuid = Guid.NewGuid();
             user.uuid = userUuid.ToString();
-            BigInteger userUuidInt = new BigInteger(userUuid.ToByteArray());
-
-            insertComm.Parameters.AddWithValue("uuid", userUuidInt);
+            insertComm.Parameters.AddWithValue("uuid", user.uuid);
             insertComm.Parameters.AddWithValue("last_name", user.lastName);
             insertComm.Parameters.AddWithValue("first_name", user.firstName);
             insertComm.Parameters.AddWithValue("e_mail", user.mailAddress);
             insertComm.Parameters.AddWithValue("role", user.role);
             insertComm.Parameters.AddWithValue("pwd", user.passPhrase);
+            insertComm.Parameters.AddWithValue("org_unit", user.organisationalUnitUuid);
 
             int noAffectedRows = insertComm.ExecuteNonQuery();
 
@@ -205,22 +198,31 @@ public class UsersController : ControllerBase
                     NpgsqlCommand updateComm = pgConn.CreateCommand();
                     updateComm.CommandText = @"UPDATE ""users"" SET
                         last_name=@last_name, first_name=@first_name, e_mail=@e_mail,
-                        role=@role, pwd=@pwd WHERE uuid=@uuid";
-
-                    Guid userUuid = Guid.Parse(user.uuid);
-                    BigInteger userUuidInt = new BigInteger(userUuid.ToByteArray());
-                    updateComm.Parameters.AddWithValue("uuid", userUuid);
+                        role=@role, org_unit WHERE uuid=@uuid";
                     updateComm.Parameters.AddWithValue("last_name", user.lastName);
                     updateComm.Parameters.AddWithValue("first_name", user.firstName);
                     updateComm.Parameters.AddWithValue("e_mail", user.mailAddress);
                     updateComm.Parameters.AddWithValue("role", user.role);
-                    updateComm.Parameters.AddWithValue("pwd", user.passPhrase);
+                    updateComm.Parameters.AddWithValue("org_unit", user.organisationalUnitUuid);
+                    updateComm.Parameters.AddWithValue("uuid", user.uuid);
+                    int noAffectedRowsStep1 = updateComm.ExecuteNonQuery();
 
-                    int noAffectedRows = updateComm.ExecuteNonQuery();
+                    user.passPhrase = user.passPhrase.Trim();
+                    bool needToUpdatePassphrase = user.passPhrase.Length != 0;
+                    int noAffectedRowsStep2 = 0;
+                    if (needToUpdatePassphrase)
+                    {
+                        updateComm.CommandText = @"UPDATE ""users"" SET
+                        pwd=@pwd WHERE uuid=@uuid";
+                        updateComm.Parameters.AddWithValue("pwd", user.passPhrase);
+                        updateComm.Parameters.AddWithValue("uuid", user.uuid);
+                        noAffectedRowsStep2 = updateComm.ExecuteNonQuery();
+                    }
 
                     pgConn.Close();
 
-                    if (noAffectedRows == 1)
+                    if (noAffectedRowsStep1 == 1 && 
+                        (!needToUpdatePassphrase || noAffectedRowsStep2 == 1))
                     {
                         user.passPhrase = "";
                         return Ok(user);

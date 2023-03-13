@@ -13,6 +13,7 @@ namespace roadwork_portal_service.Model
         public string passPhrase { get; set;} = "";
         public string lastName { get; set;} = "";
         public string firstName { get; set;} = "";
+        public string organisationalUnitUuid { get; set; } = "";
         public DateTime? lastLoginAttempt { get; set; }
         public DateTime? databaseTime { get; set; }
         public string role { get; set;} = "";

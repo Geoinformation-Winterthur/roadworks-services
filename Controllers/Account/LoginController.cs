@@ -10,7 +10,6 @@ using System.IdentityModel.Tokens.Jwt;
 using Npgsql;
 using roadwork_portal_service.Model;
 using roadwork_portal_service.Configuration;
-using System.Numerics;
 
 namespace roadwork_portal_service.Controllers;
 
@@ -167,7 +166,8 @@ public class LoginController : ControllerBase
             pgConn.Open();
             NpgsqlCommand selectComm = pgConn.CreateCommand();
             selectComm.CommandText = @"SELECT uuid, last_name, first_name, e_mail, pwd,
-                        last_login_attempt, CURRENT_TIMESTAMP(0)::TIMESTAMP, role
+                        last_login_attempt, CURRENT_TIMESTAMP(0)::TIMESTAMP, role,
+                        org_unit
                         FROM ""users"" WHERE trim(lower(e_mail))=@e_mail";
             selectComm.Parameters.AddWithValue("e_mail", eMailAddress);
 
@@ -177,9 +177,7 @@ public class LoginController : ControllerBase
                 if (hasUser)
                 {
                     userFromDb = new User();
-                    BigInteger userUuidInt = (BigInteger) reader.GetDecimal(0);
-                    Guid userUuid = new Guid(userUuidInt.ToByteArray());
-                    userFromDb.uuid = userUuid.ToString();
+                    userFromDb.uuid = reader.GetString(0);
                     userFromDb.mailAddress = reader.GetString(3);
                     userFromDb.passPhrase = reader.GetString(4);
 
@@ -188,6 +186,7 @@ public class LoginController : ControllerBase
                     userFromDb.lastLoginAttempt = !reader.IsDBNull(5) ? reader.GetDateTime(5) : null;
                     userFromDb.databaseTime = !reader.IsDBNull(6) ? reader.GetDateTime(6) : null;
                     userFromDb.role = reader.GetString(7);
+                    userFromDb.organisationalUnitUuid = reader.GetString(8);
 
                     if (userFromDb.lastName == null || userFromDb.lastName.Trim().Equals(""))
                     {
