@@ -56,7 +56,9 @@ public class UsersController : ControllerBase
                     if (uuid != "")
                     {
                         selectComm.CommandText += " WHERE trim(uuid)=@uuid";
-                        selectComm.Parameters.AddWithValue("uuid", uuid);
+                        Guid userUuid = Guid.Parse(uuid);
+                        BigInteger userUuidInt = new BigInteger(userUuid.ToByteArray());
+                        selectComm.Parameters.AddWithValue("uuid", userUuidInt);
                     }
                 }
             }
@@ -67,9 +69,12 @@ public class UsersController : ControllerBase
                 while (reader.Read())
                 {
                     userFromDb = new User();
-                    userFromDb.uuid =
-                            reader.IsDBNull(0) ? "" :
-                                    reader.GetString(0).Trim();
+                    BigInteger userUuidInt =
+                                (BigInteger) (reader.IsDBNull(0) ? 0 :
+                                    reader.GetDecimal(0));
+                    Guid userUuid = new Guid(userUuidInt.ToByteArray());
+                    userFromDb.uuid = userUuid.ToString();
+                            
                     userFromDb.mailAddress =
                             reader.IsDBNull(3) ? "" :
                                     reader.GetString(3).ToLower().Trim();
@@ -139,9 +144,11 @@ public class UsersController : ControllerBase
                     last_name, first_name, e_mail, role, pwd)
                     VALUES(@uuid, @last_name, @first_name, @e_mail, @role, @pwd)";
 
-            user.uuid = Guid.NewGuid().ToString();
+            Guid userUuid = Guid.NewGuid();
+            user.uuid = userUuid.ToString();
+            BigInteger userUuidInt = new BigInteger(userUuid.ToByteArray());
 
-            insertComm.Parameters.AddWithValue("uuid", user.uuid);
+            insertComm.Parameters.AddWithValue("uuid", userUuidInt);
             insertComm.Parameters.AddWithValue("last_name", user.lastName);
             insertComm.Parameters.AddWithValue("first_name", user.firstName);
             insertComm.Parameters.AddWithValue("e_mail", user.mailAddress);
@@ -200,7 +207,9 @@ public class UsersController : ControllerBase
                         last_name=@last_name, first_name=@first_name, e_mail=@e_mail,
                         role=@role, pwd=@pwd WHERE uuid=@uuid";
 
-                    updateComm.Parameters.AddWithValue("uuid", user.uuid);
+                    Guid userUuid = Guid.Parse(user.uuid);
+                    BigInteger userUuidInt = new BigInteger(userUuid.ToByteArray());
+                    updateComm.Parameters.AddWithValue("uuid", userUuid);
                     updateComm.Parameters.AddWithValue("last_name", user.lastName);
                     updateComm.Parameters.AddWithValue("first_name", user.firstName);
                     updateComm.Parameters.AddWithValue("e_mail", user.mailAddress);

@@ -5,6 +5,7 @@ using NetTopologySuite.Geometries;
 using NetTopologySuite.Features;
 using Npgsql;
 using roadwork_portal_service.Configuration;
+using System.Numerics;
 
 namespace roadwork_portal_service.Controllers
 {
@@ -44,7 +45,10 @@ namespace roadwork_portal_service.Controllers
                     {
                         managementAreaFeatureFromDb = new Feature();
                         managementAreaFeatureFromDb.Attributes = new AttributesTable();
-                        managementAreaFeatureFromDb.Attributes.Add("uuid", reader.IsDBNull(0) ? "" : reader.GetString(0));
+                        BigInteger areaUuidInt = (BigInteger) (reader.IsDBNull(0) ? 0 : reader.GetDecimal(0));
+                        Guid areaUuid =  new Guid(areaUuidInt.ToByteArray());
+
+                        managementAreaFeatureFromDb.Attributes.Add("uuid", areaUuid.ToString());
                         managementAreaFeatureFromDb.Attributes.Add("managername", reader.IsDBNull(1) ? "" : reader.GetString(1));
                         managementAreaFeatureFromDb.Geometry = reader.IsDBNull(2) ? Polygon.Empty : reader.GetValue(2) as Polygon;
 

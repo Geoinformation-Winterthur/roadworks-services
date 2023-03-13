@@ -1,3 +1,4 @@
+using System.Numerics;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NetTopologySuite;
@@ -44,7 +45,9 @@ namespace roadwork_portal_service.Controllers
                     if (uuid != "")
                     {
                         selectComm.CommandText += " WHERE uuid=@uuid";
-                        selectComm.Parameters.AddWithValue("uuid", uuid);
+                        Guid roadworkUuid = Guid.Parse(uuid);
+                        BigInteger roadworkUuidInt = new BigInteger(roadworkUuid.ToByteArray());
+                        selectComm.Parameters.AddWithValue("uuid", roadworkUuidInt);
                     }
                 }
 
@@ -54,7 +57,9 @@ namespace roadwork_portal_service.Controllers
                     while (reader.Read())
                     {
                         projectFeatureFromDb = new RoadWorkProjectFeature();
-                        projectFeatureFromDb.properties.uuid = reader.IsDBNull(0) ? "" : reader.GetString(0);
+                        BigInteger roadworkUuidInt = (BigInteger) (reader.IsDBNull(0) ? 0 : reader.GetDecimal(0));
+                        Guid roadworkUuid =  new Guid(roadworkUuidInt.ToByteArray());
+                        projectFeatureFromDb.properties.uuid = roadworkUuid.ToString();
                         projectFeatureFromDb.properties.place = reader.IsDBNull(1) ? "" : reader.GetString(1);
                         projectFeatureFromDb.properties.area = reader.IsDBNull(2) ? "" : reader.GetString(2);
                         projectFeatureFromDb.properties.project = reader.IsDBNull(3) ? "" : reader.GetString(3);
@@ -95,7 +100,7 @@ namespace roadwork_portal_service.Controllers
         [Authorize]
         public ActionResult<RoadWorkProjectFeature> AddProject([FromBody] RoadWorkProjectFeature roadWorkProjectFeature)
         {
-            string resultUuid = "";
+            string resultUuidString = "";
             double[] coordinates = roadWorkProjectFeature.geometry.coordinates;
             if (coordinates.Length > 2)
             {
@@ -111,14 +116,17 @@ namespace roadwork_portal_service.Controllers
                         // only if project area is greater than 10qm:
                         if (polygon.Area > 10.0)
                         {
-                            resultUuid = Guid.NewGuid().ToString();
+                            Guid resultUuid = Guid.NewGuid();
+                            resultUuidString = resultUuid.ToString();
+                            BigInteger resultUuidInt = new BigInteger(resultUuid.ToByteArray());
+
                             NpgsqlCommand insertComm = pgConn.CreateCommand();
                             insertComm.CommandText = @"INSERT INTO ""roadworkprojects""
                                     (uuid, place, area, project, project_no, status, priority,
                                     realization_until, active, traffic_obstruction_type, geom)
                                     VALUES (@uuid, @place, @area, @project, @project_no, @status, @priority,
                                     @realization_until, @active, @traffic_obstruction_type, ST_PolygonFromText(@geom, 2056))";
-                            insertComm.Parameters.AddWithValue("uuid", resultUuid);
+                            insertComm.Parameters.AddWithValue("uuid", resultUuidInt);
                             insertComm.Parameters.AddWithValue("place", roadWorkProjectFeature.properties.place);
                             insertComm.Parameters.AddWithValue("area", roadWorkProjectFeature.properties.area);
                             insertComm.Parameters.AddWithValue("project", roadWorkProjectFeature.properties.project);
@@ -149,7 +157,7 @@ namespace roadwork_portal_service.Controllers
                 }
             }
             RoadWorkProjectFeature result = new RoadWorkProjectFeature();
-            result.properties.uuid = resultUuid;
+            result.properties.uuid = resultUuidString;
             return Ok(result);
         }
 
@@ -181,7 +189,9 @@ namespace roadwork_portal_service.Controllers
                                     geom=ST_PolygonFromText(@geom, 2056)
                                     WHERE uuid=@uuid";
                             updateComm.Parameters.AddWithValue("geom", polyWkt);
-                            updateComm.Parameters.AddWithValue("uuid", roadWorkProjectFeature.properties.uuid);
+                            Guid roadWorkUuid = Guid.Parse(roadWorkProjectFeature.properties.uuid);
+                            BigInteger roadWorkUuidInt = new BigInteger(roadWorkUuid.ToByteArray());
+                            updateComm.Parameters.AddWithValue("uuid", roadWorkUuidInt);
                             updateComm.Parameters.AddWithValue("place", roadWorkProjectFeature.properties.place);
                             updateComm.Parameters.AddWithValue("area", roadWorkProjectFeature.properties.area);
                             updateComm.Parameters.AddWithValue("project", roadWorkProjectFeature.properties.project);

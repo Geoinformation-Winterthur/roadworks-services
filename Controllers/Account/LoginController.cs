@@ -10,6 +10,7 @@ using System.IdentityModel.Tokens.Jwt;
 using Npgsql;
 using roadwork_portal_service.Model;
 using roadwork_portal_service.Configuration;
+using System.Numerics;
 
 namespace roadwork_portal_service.Controllers;
 
@@ -176,7 +177,9 @@ public class LoginController : ControllerBase
                 if (hasUser)
                 {
                     userFromDb = new User();
-                    userFromDb.uuid = reader.GetString(0);
+                    BigInteger userUuidInt = (BigInteger) reader.GetDecimal(0);
+                    Guid userUuid = new Guid(userUuidInt.ToByteArray());
+                    userFromDb.uuid = userUuid.ToString();
                     userFromDb.mailAddress = reader.GetString(3);
                     userFromDb.passPhrase = reader.GetString(4);
 
