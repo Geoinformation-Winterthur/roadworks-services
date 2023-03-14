@@ -44,7 +44,7 @@ namespace roadwork_portal_service.Controllers
                     if (uuid != "")
                     {
                         selectComm.CommandText += " WHERE uuid=@uuid";
-                        selectComm.Parameters.AddWithValue("uuid", uuid);
+                        selectComm.Parameters.AddWithValue("uuid", new Guid(uuid));
                     }
                 }
 
@@ -111,17 +111,17 @@ namespace roadwork_portal_service.Controllers
                             insertComm.Parameters.AddWithValue("uuid", resultUuidString);
                             insertComm.Parameters.AddWithValue("name", roadWorkNeedFeature.properties.name);
                             insertComm.Parameters.AddWithValue("kind", roadWorkNeedFeature.properties.kind);
-                            insertComm.Parameters.AddWithValue("orderer", roadWorkNeedFeature.properties.ordererUuid);
+                            insertComm.Parameters.AddWithValue("orderer", new Guid(roadWorkNeedFeature.properties.ordererUuid));
                             insertComm.Parameters.AddWithValue("finish_early_from", roadWorkNeedFeature.properties.finishEarlyFrom);
                             insertComm.Parameters.AddWithValue("finish_early_to", roadWorkNeedFeature.properties.finishEarlyTo);
                             insertComm.Parameters.AddWithValue("finish_optimum_from", roadWorkNeedFeature.properties.finishOptimumFrom);
                             insertComm.Parameters.AddWithValue("finish_optimum_to", roadWorkNeedFeature.properties.finishOptimumTo);
                             insertComm.Parameters.AddWithValue("finish_late_from", roadWorkNeedFeature.properties.finishLateFrom);
                             insertComm.Parameters.AddWithValue("finish_late_to", roadWorkNeedFeature.properties.finishLateTo);
-                            insertComm.Parameters.AddWithValue("priority", roadWorkNeedFeature.properties.priorityUuid);
-                            insertComm.Parameters.AddWithValue("status", roadWorkNeedFeature.properties.statusUuid);
+                            insertComm.Parameters.AddWithValue("priority", new Guid(roadWorkNeedFeature.properties.priorityUuid));
+                            insertComm.Parameters.AddWithValue("status", new Guid(roadWorkNeedFeature.properties.statusUuid));
                             insertComm.Parameters.AddWithValue("comment", roadWorkNeedFeature.properties.comment);
-                            insertComm.Parameters.AddWithValue("managementarea", roadWorkNeedFeature.properties.managementareaUuid);
+                            insertComm.Parameters.AddWithValue("managementarea", new Guid(roadWorkNeedFeature.properties.managementareaUuid));
                             insertComm.Parameters.AddWithValue("geom", roadWorkNeedFeature.geometry);
 
                             insertComm.ExecuteNonQuery();

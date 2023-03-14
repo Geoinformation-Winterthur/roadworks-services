@@ -186,7 +186,7 @@ public class LoginController : ControllerBase
                     userFromDb.lastLoginAttempt = !reader.IsDBNull(5) ? reader.GetDateTime(5) : null;
                     userFromDb.databaseTime = !reader.IsDBNull(6) ? reader.GetDateTime(6) : null;
                     userFromDb.role = reader.GetString(7);
-                    userFromDb.organisationalUnitUuid = reader.GetString(8);
+                    userFromDb.organisationalUnitUuid = reader.GetGuid(8).ToString();
 
                     if (userFromDb.lastName == null || userFromDb.lastName.Trim().Equals(""))
                     {

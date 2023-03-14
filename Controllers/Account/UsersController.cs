@@ -56,7 +56,7 @@ public class UsersController : ControllerBase
                     if (uuid != "")
                     {
                         selectComm.CommandText += " WHERE trim(uuid)=@uuid";
-                        selectComm.Parameters.AddWithValue("uuid", uuid);
+                        selectComm.Parameters.AddWithValue("uuid", new Guid(uuid));
                     }
                 }
             }
@@ -140,13 +140,13 @@ public class UsersController : ControllerBase
                     VALUES(@uuid, @last_name, @first_name, @e_mail, @role, @pwd, @org_unit)";
             Guid userUuid = Guid.NewGuid();
             user.uuid = userUuid.ToString();
-            insertComm.Parameters.AddWithValue("uuid", user.uuid);
+            insertComm.Parameters.AddWithValue("uuid", new Guid(user.uuid));
             insertComm.Parameters.AddWithValue("last_name", user.lastName);
             insertComm.Parameters.AddWithValue("first_name", user.firstName);
             insertComm.Parameters.AddWithValue("e_mail", user.mailAddress);
             insertComm.Parameters.AddWithValue("role", user.role);
             insertComm.Parameters.AddWithValue("pwd", user.passPhrase);
-            insertComm.Parameters.AddWithValue("org_unit", user.organisationalUnitUuid);
+            insertComm.Parameters.AddWithValue("org_unit", new Guid(user.organisationalUnitUuid));
 
             int noAffectedRows = insertComm.ExecuteNonQuery();
 
@@ -203,8 +203,8 @@ public class UsersController : ControllerBase
                     updateComm.Parameters.AddWithValue("first_name", user.firstName);
                     updateComm.Parameters.AddWithValue("e_mail", user.mailAddress);
                     updateComm.Parameters.AddWithValue("role", user.role);
-                    updateComm.Parameters.AddWithValue("org_unit", user.organisationalUnitUuid);
-                    updateComm.Parameters.AddWithValue("uuid", user.uuid);
+                    updateComm.Parameters.AddWithValue("org_unit", new Guid(user.organisationalUnitUuid));
+                    updateComm.Parameters.AddWithValue("uuid", new Guid(user.uuid));
                     int noAffectedRowsStep1 = updateComm.ExecuteNonQuery();
 
                     user.passPhrase = user.passPhrase.Trim();
@@ -215,7 +215,7 @@ public class UsersController : ControllerBase
                         updateComm.CommandText = @"UPDATE ""users"" SET
                         pwd=@pwd WHERE uuid=@uuid";
                         updateComm.Parameters.AddWithValue("pwd", user.passPhrase);
-                        updateComm.Parameters.AddWithValue("uuid", user.uuid);
+                        updateComm.Parameters.AddWithValue("uuid", new Guid(user.uuid));
                         noAffectedRowsStep2 = updateComm.ExecuteNonQuery();
                     }
 
