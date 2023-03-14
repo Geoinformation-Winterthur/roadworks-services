@@ -68,7 +68,7 @@ public class UsersController : ControllerBase
                 {
                     userFromDb = new User();
                     userFromDb.uuid = reader.IsDBNull(0) ? "" :
-                                reader.GetString(0);
+                                reader.GetGuid(0).ToString();
                     userFromDb.mailAddress =
                             reader.IsDBNull(3) ? "" :
                                     reader.GetString(3).ToLower().Trim();
@@ -79,7 +79,7 @@ public class UsersController : ControllerBase
                         userFromDb.lastName = reader.GetString(1);
                         userFromDb.firstName = reader.GetString(2);
                         userFromDb.role = reader.GetString(4);
-                        userFromDb.organisationalUnitUuid = reader.GetString(5);
+                        userFromDb.organisationalUnitUuid = reader.GetGuid(5).ToString();
 
                         if (userFromDb.lastName == null || userFromDb.lastName.Trim().Equals(""))
                         {

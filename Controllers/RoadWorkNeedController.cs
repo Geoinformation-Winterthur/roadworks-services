@@ -54,20 +54,20 @@ namespace roadwork_portal_service.Controllers
                     while (reader.Read())
                     {
                         needFeatureFromDb = new RoadWorkNeedFeature();
-                        needFeatureFromDb.properties.uuid = reader.IsDBNull(0) ? "" : reader.GetString(0);
+                        needFeatureFromDb.properties.uuid = reader.IsDBNull(0) ? "" : reader.GetGuid(0).ToString();
                         needFeatureFromDb.properties.name = reader.IsDBNull(1) ? "" : reader.GetString(1);
                         needFeatureFromDb.properties.kind = reader.IsDBNull(2) ? "" : reader.GetString(2);
-                        needFeatureFromDb.properties.ordererUuid = reader.IsDBNull(3) ? "" : reader.GetString(3);
+                        needFeatureFromDb.properties.ordererUuid = reader.IsDBNull(3) ? "" : reader.GetGuid(3).ToString();
                         needFeatureFromDb.properties.finishEarlyFrom = reader.IsDBNull(4) ? DateTime.MinValue : reader.GetDateTime(4);
                         needFeatureFromDb.properties.finishEarlyTo = reader.IsDBNull(5) ? DateTime.MinValue : reader.GetDateTime(5);
                         needFeatureFromDb.properties.finishOptimumFrom = reader.IsDBNull(6) ? DateTime.MinValue : reader.GetDateTime(6);
                         needFeatureFromDb.properties.finishOptimumTo = reader.IsDBNull(7) ? DateTime.MinValue : reader.GetDateTime(7);
                         needFeatureFromDb.properties.finishLateFrom = reader.IsDBNull(8) ? DateTime.MinValue : reader.GetDateTime(8);
                         needFeatureFromDb.properties.finishLateTo = reader.IsDBNull(9) ? DateTime.MinValue : reader.GetDateTime(9);
-                        needFeatureFromDb.properties.priorityUuid = reader.IsDBNull(10) ? "" : reader.GetString(10);
-                        needFeatureFromDb.properties.statusUuid = reader.IsDBNull(11) ? "" : reader.GetString(11);
+                        needFeatureFromDb.properties.priorityUuid = reader.IsDBNull(10) ? "" : reader.GetGuid(10).ToString();
+                        needFeatureFromDb.properties.statusUuid = reader.IsDBNull(11) ? "" : reader.GetGuid(11).ToString();
                         needFeatureFromDb.properties.comment = reader.IsDBNull(12) ? "" : reader.GetString(12);
-                        needFeatureFromDb.properties.managementareaUuid = reader.IsDBNull(13) ? "" : reader.GetString(13);
+                        needFeatureFromDb.properties.managementareaUuid = reader.IsDBNull(13) ? "" : reader.GetGuid(13).ToString();
                         needFeatureFromDb.geometry = reader.IsDBNull(14) ? Polygon.Empty : reader.GetValue(14) as Polygon;
 
                         projectsFromDb.Add(needFeatureFromDb);
