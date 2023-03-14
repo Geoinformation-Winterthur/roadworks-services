@@ -11,9 +11,10 @@ public class User
     public string passPhrase { get; set; } = "";
     public string lastName { get; set; } = "";
     public string firstName { get; set; } = "";
-    public string organisationalUnitUuid { get; set; } = "";
+    public OrganisationalUnit organisationalUnit
+            { get; set; } = new OrganisationalUnit();
     public DateTime? lastLoginAttempt { get; set; }
     public DateTime? databaseTime { get; set; }
-    public string role { get; set; } = "";
+    public Role role { get; set; } = new Role();
 }
 

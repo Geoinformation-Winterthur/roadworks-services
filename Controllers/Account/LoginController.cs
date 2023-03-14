@@ -101,7 +101,7 @@ public class LoginController : ControllerBase
                 userClaims.Add(new Claim(ClaimTypes.Email, userFromDb.mailAddress));
                 userClaims.Add(new Claim(ClaimTypes.GivenName, userFromDb.firstName));
                 userClaims.Add(new Claim(ClaimTypes.Name, userFromDb.lastName));
-                userClaims.Add(new Claim(ClaimTypes.Role, userFromDb.role));
+                userClaims.Add(new Claim(ClaimTypes.Role, userFromDb.role.code));
 
                 string serviceUrl = AppConfig.Configuration.GetValue<string>("URL:ServiceUrl");
 
@@ -165,10 +165,13 @@ public class LoginController : ControllerBase
         {
             pgConn.Open();
             NpgsqlCommand selectComm = pgConn.CreateCommand();
-            selectComm.CommandText = @"SELECT uuid, last_name, first_name, e_mail, pwd,
-                        last_login_attempt, CURRENT_TIMESTAMP(0)::TIMESTAMP, role,
-                        org_unit
-                        FROM ""users"" WHERE trim(lower(e_mail))=@e_mail";
+            selectComm.CommandText = @"SELECT u.uuid, u.last_name, u.first_name, u.e_mail, u.pwd,
+                        u.last_login_attempt, CURRENT_TIMESTAMP(0)::TIMESTAMP, u.role,
+                        roles.code, roles.name, u.org_unit, o.name
+                        FROM ""users"" u
+                        LEFT JOIN ""roles"" ON u.role = roles.uuid
+                        LEFT JOIN ""organisationalunits"" o ON u.org_unit = o.uuid
+                        WHERE trim(lower(u.e_mail))=@e_mail";
             selectComm.Parameters.AddWithValue("e_mail", eMailAddress);
 
             using (NpgsqlDataReader reader = selectComm.ExecuteReader())
@@ -185,8 +188,15 @@ public class LoginController : ControllerBase
                     userFromDb.firstName = reader.GetString(2);
                     userFromDb.lastLoginAttempt = !reader.IsDBNull(5) ? reader.GetDateTime(5) : null;
                     userFromDb.databaseTime = !reader.IsDBNull(6) ? reader.GetDateTime(6) : null;
-                    userFromDb.role = reader.GetString(7);
-                    userFromDb.organisationalUnitUuid = reader.GetGuid(8).ToString();
+                    Role role = new Role();
+                    role.uuid = reader.GetGuid(7).ToString();
+                    role.code = reader.GetString(8);
+                    role.name = reader.GetString(9);
+                    userFromDb.role = role;
+                    OrganisationalUnit orgUnit = new OrganisationalUnit();
+                    orgUnit.uuid = reader.GetGuid(10).ToString();
+                    orgUnit.name = reader.GetString(11);
+                    userFromDb.organisationalUnit = orgUnit;
 
                     if (userFromDb.lastName == null || userFromDb.lastName.Trim().Equals(""))
                     {

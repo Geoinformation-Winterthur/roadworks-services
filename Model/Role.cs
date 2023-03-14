@@ -4,9 +4,10 @@
 // </copyright>
 namespace roadwork_portal_service.Model;
 
-public class ManagementAreaProperties
+public class Role
 {
     public string uuid { get; set; } = "";
-    public User manager { get; set; } = new User();
+    public string code { get; set; } = "";
+    public string name { get; set; } = "";
 }
 

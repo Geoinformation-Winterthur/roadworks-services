@@ -14,7 +14,7 @@ public class RoadWorkNeedFeature
 
     public RoadWorkNeedFeature()
     {
-        this.type = "RoadWorkProjectFeature";
+        this.type = "RoadWorkNeedFeature";
         this.properties = new RoadWorkNeedProperties();
         this.geometry = Polygon.Empty;
     }
