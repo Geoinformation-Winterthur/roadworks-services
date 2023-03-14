@@ -68,14 +68,9 @@ public class LoginController : ControllerBase
         _logger.LogInformation("User " + receivedUser.mailAddress + " provided a non-empty password. Now trying to authenticate...");
 
         // get corresponding user from database:
-        // User userFromDb = LoginController._getUserFromDatabase(receivedUser.mailAddress);
-        User userFromDb = new User();
-        userFromDb.mailAddress = "edgar.butwilowski@win.ch";
-        userFromDb.passPhrase = "test";
-        userFromDb.role = "administrator";
-        userFromDb.organisationalUnitUuid = "123456";
+        User userFromDb = LoginController._getUserFromDatabase(receivedUser.mailAddress);
 
-        // LoginController._updateLoginTimestamp(receivedUser.mailAddress, dryRun);
+        LoginController._updateLoginTimestamp(receivedUser.mailAddress, dryRun);
 
         if (userFromDb != null)
         {
