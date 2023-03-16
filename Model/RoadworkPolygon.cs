@@ -9,9 +9,9 @@ namespace roadwork_portal_service.Model;
 
 public class RoadworkPolygon
 {
-    public RoadworkCoordinate[] Coordinates;
+    public RoadworkCoordinate[] coordinates { get; set; }
     public RoadworkPolygon() {
-        Coordinates = new RoadworkCoordinate[0];
+        coordinates = new RoadworkCoordinate[0];
     }
 
     public RoadworkPolygon(Polygon polygon) {
@@ -19,13 +19,13 @@ public class RoadworkPolygon
         foreach(Coordinate coord in polygon.ExteriorRing.Coordinates){
             resultCoords.Add(new RoadworkCoordinate(coord.X, coord.Y));
         }
-        this.Coordinates = resultCoords.ToArray();
+        this.coordinates = resultCoords.ToArray();
     }
 
     public Polygon getNtsPolygon() {
         GeometryFactory geomFactory = NtsGeometryServices.Instance.CreateGeometryFactory(srid: 2056);
         List<Coordinate> ntsCoords = new List<Coordinate>();
-        foreach(RoadworkCoordinate coord in this.Coordinates){
+        foreach(RoadworkCoordinate coord in this.coordinates){
             ntsCoords.Add(new Coordinate(coord.X, coord.Y));
         }
         Polygon ntsPoly = geomFactory.CreatePolygon(ntsCoords.ToArray());

@@ -98,7 +98,7 @@ namespace roadwork_portal_service.Controllers
                         managementAreaFeature.properties.manager = manager;
                         needFeatureFromDb.properties.managementarea = managementAreaFeature;
                         Polygon ntsPoly = reader.IsDBNull(23) ? Polygon.Empty : reader.GetValue(23) as Polygon;
-                        needFeatureFromDb.geometry =  new RoadworkPolygon(ntsPoly);
+                        needFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
 
                         projectsFromDb.Add(needFeatureFromDb);
                     }
@@ -134,7 +134,7 @@ namespace roadwork_portal_service.Controllers
                                     FROM ""managementareas""
                                     ORDER BY ST_Area(ST_Intersection(@geom, geom)) DESC
                                     LIMIT 1";
-                            selectMgmtAreaComm.Parameters.AddWithValue("geom", roadWorkNeedFeature.geometry);
+                            selectMgmtAreaComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
 
                             using (NpgsqlDataReader reader = selectMgmtAreaComm.ExecuteReader())
                             {
@@ -144,7 +144,7 @@ namespace roadwork_portal_service.Controllers
                                 }
                             }
 
-                            if(mgmtAreaUuid == "")
+                            if (mgmtAreaUuid == "")
                             {
                                 return BadRequest("New roadwork need does not lie in any management area");
                             }
@@ -163,18 +163,34 @@ namespace roadwork_portal_service.Controllers
                             insertComm.Parameters.AddWithValue("uuid", new Guid(resultUuidString));
                             insertComm.Parameters.AddWithValue("name", roadWorkNeedFeature.properties.name);
                             insertComm.Parameters.AddWithValue("kind", roadWorkNeedFeature.properties.kind);
-                            insertComm.Parameters.AddWithValue("orderer", new Guid(roadWorkNeedFeature.properties.orderer.uuid));
+                            if (roadWorkNeedFeature.properties.orderer.uuid != ""){
+                                insertComm.Parameters.AddWithValue("orderer", new Guid(roadWorkNeedFeature.properties.orderer.uuid));
+                            }else{
+                                insertComm.Parameters.AddWithValue("orderer", DBNull.Value);
+                            }
                             insertComm.Parameters.AddWithValue("finish_early_from", roadWorkNeedFeature.properties.finishEarlyFrom);
                             insertComm.Parameters.AddWithValue("finish_early_to", roadWorkNeedFeature.properties.finishEarlyTo);
                             insertComm.Parameters.AddWithValue("finish_optimum_from", roadWorkNeedFeature.properties.finishOptimumFrom);
                             insertComm.Parameters.AddWithValue("finish_optimum_to", roadWorkNeedFeature.properties.finishOptimumTo);
                             insertComm.Parameters.AddWithValue("finish_late_from", roadWorkNeedFeature.properties.finishLateFrom);
                             insertComm.Parameters.AddWithValue("finish_late_to", roadWorkNeedFeature.properties.finishLateTo);
-                            insertComm.Parameters.AddWithValue("priority", new Guid(roadWorkNeedFeature.properties.priority.uuid));
-                            insertComm.Parameters.AddWithValue("status", new Guid(roadWorkNeedFeature.properties.status.uuid));
+                            if (roadWorkNeedFeature.properties.priority.uuid != ""){
+                                insertComm.Parameters.AddWithValue("priority", new Guid(roadWorkNeedFeature.properties.priority.uuid));
+                            }else{
+                                insertComm.Parameters.AddWithValue("priority", DBNull.Value);
+                            }
+                            if (roadWorkNeedFeature.properties.status.uuid != ""){
+                                insertComm.Parameters.AddWithValue("status", new Guid(roadWorkNeedFeature.properties.status.uuid));
+                            }else{
+                                insertComm.Parameters.AddWithValue("status", DBNull.Value);                                
+                            }
                             insertComm.Parameters.AddWithValue("comment", roadWorkNeedFeature.properties.comment);
-                            insertComm.Parameters.AddWithValue("managementarea", new Guid(mgmtAreaUuid));
-                            insertComm.Parameters.AddWithValue("geom", roadWorkNeedFeature.geometry);
+                            if (mgmtAreaUuid != ""){
+                                insertComm.Parameters.AddWithValue("managementarea", new Guid(mgmtAreaUuid));
+                            }else{
+                                insertComm.Parameters.AddWithValue("managementarea", DBNull.Value);                                
+                            }
+                            insertComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
 
                             insertComm.ExecuteNonQuery();
                         }
@@ -205,8 +221,8 @@ namespace roadwork_portal_service.Controllers
         public ActionResult<WebAppException> UpdateNeed([FromBody] RoadWorkNeedFeature roadWorkNeedFeature)
         {
             if (roadWorkNeedFeature != null && roadWorkNeedFeature.geometry != null &&
-                    roadWorkNeedFeature.geometry.Coordinates != null &&
-                    roadWorkNeedFeature.geometry.Coordinates.Length > 2)
+                    roadWorkNeedFeature.geometry.coordinates != null &&
+                    roadWorkNeedFeature.geometry.coordinates.Length > 2)
             {
 
                 using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
@@ -226,7 +242,7 @@ namespace roadwork_portal_service.Controllers
                                     FROM ""managementareas""
                                     ORDER BY ST_Area(ST_Intersection(@geom, geom)) DESC
                                     LIMIT 1";
-                            selectMgmtAreaComm.Parameters.AddWithValue("geom", roadWorkNeedFeature.geometry);
+                            selectMgmtAreaComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
 
                             using (NpgsqlDataReader reader = selectMgmtAreaComm.ExecuteReader())
                             {
@@ -236,7 +252,7 @@ namespace roadwork_portal_service.Controllers
                                 }
                             }
 
-                            if(mgmtAreaUuid == "")
+                            if (mgmtAreaUuid == "")
                             {
                                 return BadRequest("New roadwork need does not lie in any management area");
                             }
@@ -264,7 +280,7 @@ namespace roadwork_portal_service.Controllers
                             updateComm.Parameters.AddWithValue("status", new Guid(roadWorkNeedFeature.properties.status.uuid));
                             updateComm.Parameters.AddWithValue("comment", roadWorkNeedFeature.properties.comment);
                             updateComm.Parameters.AddWithValue("managementarea", new Guid(mgmtAreaUuid));
-                            updateComm.Parameters.AddWithValue("geom", roadWorkNeedFeature.geometry);
+                            updateComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
                             updateComm.Parameters.AddWithValue("uuid", new Guid(roadWorkNeedFeature.properties.uuid));
 
                             updateComm.ExecuteNonQuery();
