@@ -97,7 +97,8 @@ namespace roadwork_portal_service.Controllers
                         manager.lastName = reader.IsDBNull(22) ? "" : reader.GetString(22);
                         managementAreaFeature.properties.manager = manager;
                         needFeatureFromDb.properties.managementarea = managementAreaFeature;
-                        needFeatureFromDb.geometry = reader.IsDBNull(23) ? Polygon.Empty : reader.GetValue(23) as Polygon;
+                        Polygon ntsPoly = reader.IsDBNull(23) ? Polygon.Empty : reader.GetValue(23) as Polygon;
+                        needFeatureFromDb.geometry =  new RoadworkPolygon(ntsPoly);
 
                         projectsFromDb.Add(needFeatureFromDb);
                     }
@@ -108,13 +109,14 @@ namespace roadwork_portal_service.Controllers
             return projectsFromDb.ToArray();
         }
 
-        // POST roadworkneed/?projectid=...
+        // POST roadworkneed/
         [HttpPost]
         [Authorize]
         public ActionResult<RoadWorkNeedFeature> AddNeed([FromBody] RoadWorkNeedFeature roadWorkNeedFeature)
         {
             string resultUuidString = "";
-            Coordinate[] coordinates = roadWorkNeedFeature.geometry.Coordinates;
+            Polygon roadWorkNeedPoly = roadWorkNeedFeature.geometry.getNtsPolygon();
+            Coordinate[] coordinates = roadWorkNeedPoly.Coordinates;
             if (coordinates.Length > 2)
             {
                 using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
@@ -124,7 +126,7 @@ namespace roadwork_portal_service.Controllers
                         pgConn.Open();
 
                         // only if project area is greater than 10qm:
-                        if (roadWorkNeedFeature.geometry.Area > 10.0)
+                        if (roadWorkNeedPoly.Area > 10.0)
                         {
                             string mgmtAreaUuid = "";
                             NpgsqlCommand selectMgmtAreaComm = pgConn.CreateCommand();
@@ -213,8 +215,10 @@ namespace roadwork_portal_service.Controllers
                     {
                         pgConn.Open();
 
+                        Polygon roadWorkNeedPoly = roadWorkNeedFeature.geometry.getNtsPolygon();
+
                         // only if project area is greater than 10qm:
-                        if (roadWorkNeedFeature.geometry.Area > 10.0)
+                        if (roadWorkNeedPoly.Area > 10.0)
                         {
                             string mgmtAreaUuid = "";
                             NpgsqlCommand selectMgmtAreaComm = pgConn.CreateCommand();

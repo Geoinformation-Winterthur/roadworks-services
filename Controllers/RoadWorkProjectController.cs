@@ -93,7 +93,8 @@ namespace roadwork_portal_service.Controllers
                         ct.name = reader.IsDBNull(17) ? "" : reader.GetString(17);
                         projectFeatureFromDb.properties.costsType = ct;
 
-                        projectFeatureFromDb.geometry = reader.IsDBNull(18) ? Polygon.Empty : reader.GetValue(18) as Polygon;
+                        Polygon ntsPoly = reader.IsDBNull(18) ? Polygon.Empty : reader.GetValue(18) as Polygon;
+                        projectFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
 
                         projectsFromDb.Add(projectFeatureFromDb);
                     }
