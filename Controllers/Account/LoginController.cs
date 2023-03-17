@@ -129,8 +129,8 @@ public class LoginController : ControllerBase
             _logger.LogWarning("User " + receivedUser.mailAddress + " could not be found in the database.");
         }
         _logger.LogWarning("User " + receivedUser.mailAddress + " is not authenticated.");
-        return Unauthorized("Sie sind entweder nicht als Kontrolleur in der " +
-            "Spielplatzkontrolle-Datenbank erfasst oder Sie haben keine Zugriffsberechtigung.");
+        return Unauthorized("Sie sind entweder nicht als Benutzer " +
+                    "erfasst oder Sie haben keine Zugriffsberechtigung.");
     }
 
 
