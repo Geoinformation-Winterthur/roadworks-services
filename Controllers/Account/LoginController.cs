@@ -134,7 +134,7 @@ public class LoginController : ControllerBase
     }
 
 
-    public static User getAuthorizedUser(ClaimsPrincipal userFromService)
+    public static User getAuthorizedUserFromDb(ClaimsPrincipal userFromService)
     {
         Claim userMailAddressClaim = null;
         foreach (Claim userClaim in userFromService.Claims)
