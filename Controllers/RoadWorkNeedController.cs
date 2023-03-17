@@ -128,10 +128,12 @@ namespace roadwork_portal_service.Controllers
                         // only if project area is greater than 10qm:
                         if (roadWorkNeedPoly.Area > 10.0)
                         {
-                            string mgmtAreaUuid = "";
+                            ManagementAreaFeature mgmtArea = new ManagementAreaFeature();
                             NpgsqlCommand selectMgmtAreaComm = pgConn.CreateCommand();
-                            selectMgmtAreaComm.CommandText = @"SELECT uuid
-                                    FROM ""managementareas""
+                            selectMgmtAreaComm.CommandText = @"SELECT m.uuid,
+                                        u.first_name, u.last_name
+                                    FROM ""managementareas"" m
+                                    LEFT JOIN ""users"" u ON m.manager = u.uuid
                                     ORDER BY ST_Area(ST_Intersection(@geom, geom)) DESC
                                     LIMIT 1";
                             selectMgmtAreaComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
@@ -140,11 +142,13 @@ namespace roadwork_portal_service.Controllers
                             {
                                 if (reader.Read())
                                 {
-                                    mgmtAreaUuid = reader.IsDBNull(0) ? "" : reader.GetGuid(0).ToString();
+                                    mgmtArea.properties.uuid = reader.IsDBNull(0) ? "" : reader.GetGuid(0).ToString();
+                                    mgmtArea.properties.manager.firstName = reader.IsDBNull(1) ? "" : reader.GetString(1);
+                                    mgmtArea.properties.manager.lastName = reader.IsDBNull(2) ? "" : reader.GetString(2);
                                 }
                             }
 
-                            if (mgmtAreaUuid == "")
+                            if (mgmtArea.properties.uuid == "")
                             {
                                 return BadRequest("New roadwork need does not lie in any management area");
                             }
@@ -185,8 +189,8 @@ namespace roadwork_portal_service.Controllers
                                 insertComm.Parameters.AddWithValue("status", DBNull.Value);                                
                             }
                             insertComm.Parameters.AddWithValue("comment", roadWorkNeedFeature.properties.comment);
-                            if (mgmtAreaUuid != ""){
-                                insertComm.Parameters.AddWithValue("managementarea", new Guid(mgmtAreaUuid));
+                            if (mgmtArea.properties.uuid != ""){
+                                insertComm.Parameters.AddWithValue("managementarea", new Guid(mgmtArea.properties.uuid));
                             }else{
                                 insertComm.Parameters.AddWithValue("managementarea", DBNull.Value);                                
                             }
