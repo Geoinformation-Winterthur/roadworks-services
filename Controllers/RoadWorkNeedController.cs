@@ -263,7 +263,8 @@ namespace roadwork_portal_service.Controllers
 
                             if (roadWorkNeedFeature.properties.managementarea.properties.uuid == "")
                             {
-                                return BadRequest("New roadwork need does not lie in any management area");
+                                roadWorkNeedFeature.errorMessageCode = "RWP-1";
+                                Ok(roadWorkNeedFeature);
                             }
 
                             NpgsqlCommand updateComm = pgConn.CreateCommand();
