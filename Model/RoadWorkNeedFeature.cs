@@ -9,14 +9,14 @@ public class RoadWorkNeedFeature
     public string type { get; set; }
     public RoadWorkNeedProperties properties { get; set; }
     public RoadworkPolygon geometry { get; set; }
-    public string errorMessageCode { get; set; }
+    public string errorMessage { get; set; }
 
     public RoadWorkNeedFeature()
     {
         this.type = "RoadWorkNeedFeature";
         this.properties = new RoadWorkNeedProperties();
         this.geometry = new RoadworkPolygon();
-        this.errorMessageCode = "";
+        this.errorMessage = "";
     }
 }
 
