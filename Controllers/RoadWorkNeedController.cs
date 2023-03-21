@@ -245,15 +245,28 @@ namespace roadwork_portal_service.Controllers
                 {
                     try
                     {
-                        pgConn.Open();
 
                         Polygon roadWorkNeedPoly = roadWorkNeedFeature.geometry.getNtsPolygon();
+
+                        if(!roadWorkNeedPoly.IsSimple)
+                        {
+                            roadWorkNeedFeature.errorMessage = "RWP-4";
+                            return Ok(roadWorkNeedFeature);
+                        }
+
+                        if(!roadWorkNeedPoly.IsValid)
+                        {
+                            roadWorkNeedFeature.errorMessage = "RWP-5";
+                            return Ok(roadWorkNeedFeature);
+                        }
 
                         roadWorkNeedFeature.properties.managementarea = new ManagementAreaFeature();
 
                         // only if project area is greater than 10qm:
                         if (roadWorkNeedPoly.Area > 10.0)
                         {
+                            pgConn.Open();
+
                             NpgsqlCommand selectMgmtAreaComm = pgConn.CreateCommand();
                             selectMgmtAreaComm.CommandText = @"SELECT m.uuid,
                                         u.first_name, u.last_name
