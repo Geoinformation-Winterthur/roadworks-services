@@ -344,8 +344,8 @@ namespace roadwork_portal_service.Controllers
                     }
                     catch (Exception ex)
                     {
-                        roadWorkNeedFeature.errorMessage = ex.Message;
                         _logger.LogError(ex.Message);
+                        roadWorkNeedFeature.errorMessage = "RWP-3";
                         return Ok(roadWorkNeedFeature);
                     }
                     finally
