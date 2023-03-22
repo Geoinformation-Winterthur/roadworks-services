@@ -4,16 +4,16 @@
 // </copyright>
 namespace roadwork_portal_service.Model;
 
-public class RoadWorkProjectFeature
+public class RoadWorkActivityFeature
 {
     public string type { get; set; }
-    public RoadWorkProjectProperties properties { get; set; }
+    public RoadWorkActivityProperties properties { get; set; }
     public RoadworkPolygon geometry { get; set; }
 
-    public RoadWorkProjectFeature()
+    public RoadWorkActivityFeature()
     {
-        this.type = "RoadWorkProjectFeature";
-        this.properties = new RoadWorkProjectProperties();
+        this.type = "RoadWorkActivityFeature";
+        this.properties = new RoadWorkActivityProperties();
         this.geometry = new RoadworkPolygon();
     }
 }

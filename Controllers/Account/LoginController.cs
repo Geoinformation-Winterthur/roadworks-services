@@ -166,10 +166,10 @@ public class LoginController : ControllerBase
             pgConn.Open();
             NpgsqlCommand selectComm = pgConn.CreateCommand();
             selectComm.CommandText = @"SELECT u.uuid, u.last_name, u.first_name, u.e_mail, u.pwd,
-                        u.last_login_attempt, CURRENT_TIMESTAMP(0)::TIMESTAMP, u.role,
+                        u.last_login_attempt, CURRENT_TIMESTAMP(0)::TIMESTAMP,
                         roles.code, roles.name, u.org_unit, o.name
                         FROM ""users"" u
-                        LEFT JOIN ""roles"" ON u.role = roles.uuid
+                        LEFT JOIN ""roles"" ON u.role = roles.code
                         LEFT JOIN ""organisationalunits"" o ON u.org_unit = o.uuid
                         WHERE trim(lower(u.e_mail))=@e_mail";
             selectComm.Parameters.AddWithValue("e_mail", eMailAddress);
@@ -189,13 +189,12 @@ public class LoginController : ControllerBase
                     userFromDb.lastLoginAttempt = !reader.IsDBNull(5) ? reader.GetDateTime(5) : null;
                     userFromDb.databaseTime = !reader.IsDBNull(6) ? reader.GetDateTime(6) : null;
                     Role role = new Role();
-                    role.uuid = reader.GetGuid(7).ToString();
-                    role.code = reader.GetString(8);
-                    role.name = reader.GetString(9);
+                    role.code = reader.GetString(7);
+                    role.name = reader.GetString(8);
                     userFromDb.role = role;
                     OrganisationalUnit orgUnit = new OrganisationalUnit();
-                    orgUnit.uuid = reader.GetGuid(10).ToString();
-                    orgUnit.name = reader.GetString(11);
+                    orgUnit.uuid = reader.GetGuid(9).ToString();
+                    orgUnit.name = reader.GetString(10);
                     userFromDb.organisationalUnit = orgUnit;
 
                     if (userFromDb.lastName == null || userFromDb.lastName.Trim().Equals(""))

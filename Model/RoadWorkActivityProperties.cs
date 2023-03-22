@@ -4,7 +4,7 @@
 // </copyright>
 namespace roadwork_portal_service.Model;
 
-public class RoadWorkProjectProperties
+public class RoadWorkActivityProperties
 {
     public string uuid { get; set; } = "";
     public ManagementAreaFeature managementarea

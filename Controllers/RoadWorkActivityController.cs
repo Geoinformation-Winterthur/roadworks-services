@@ -9,24 +9,24 @@ namespace roadwork_portal_service.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class RoadWorkProjectController : ControllerBase
+    public class RoadWorkActivityController : ControllerBase
     {
-        private readonly ILogger<RoadWorkProjectController> _logger;
+        private readonly ILogger<RoadWorkActivityController> _logger;
         private IConfiguration Configuration { get; }
 
-        public RoadWorkProjectController(ILogger<RoadWorkProjectController> logger,
+        public RoadWorkActivityController(ILogger<RoadWorkActivityController> logger,
                         IConfiguration configuration)
         {
             _logger = logger;
             this.Configuration = configuration;
         }
 
-        // GET roadworproject/
+        // GET roadworkactivity/
         [HttpGet]
         [Authorize]
-        public IEnumerable<RoadWorkProjectFeature> GetProjectss(string? uuid = "", bool summary = false)
+        public IEnumerable<RoadWorkActivityFeature> GetProjectss(string? uuid = "", bool summary = false)
         {
-            List<RoadWorkProjectFeature> projectsFromDb = new List<RoadWorkProjectFeature>();
+            List<RoadWorkActivityFeature> projectsFromDb = new List<RoadWorkActivityFeature>();
             // get data of current user from database:
             using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
             {
@@ -35,13 +35,13 @@ namespace roadwork_portal_service.Controllers
                 selectComm.CommandText = @"SELECT r.uuid, r.managementarea, m.manager, am.first_name, am.last_name,
                             r.projectmanager, pm.first_name, pm.last_name, r.traffic_agent,
                             ta.first_name, ta.last_name, comment, r.finish_from, r.finish_to,
-                            r.costs, r.costs_type, c.code, c.name, r.geom
-                        FROM ""roadworkprojects"" r
+                            r.costs, c.code, c.name, r.geom
+                        FROM ""roadworkactivities"" r
                         LEFT JOIN ""managementareas"" m ON r.managementarea = m.uuid
                         LEFT JOIN ""users"" am ON m.manager = am.uuid
                         LEFT JOIN ""users"" pm ON r.projectmanager = pm.uuid
                         LEFT JOIN ""users"" ta ON r.traffic_agent = ta.uuid
-                        LEFT JOIN ""costtypes"" c ON r.costs_type = c.uuid";
+                        LEFT JOIN ""costtypes"" c ON r.costs_type = c.code";
 
                 if (uuid != null)
                 {
@@ -55,10 +55,10 @@ namespace roadwork_portal_service.Controllers
 
                 using (NpgsqlDataReader reader = selectComm.ExecuteReader())
                 {
-                    RoadWorkProjectFeature projectFeatureFromDb;
+                    RoadWorkActivityFeature projectFeatureFromDb;
                     while (reader.Read())
                     {
-                        projectFeatureFromDb = new RoadWorkProjectFeature();
+                        projectFeatureFromDb = new RoadWorkActivityFeature();
                         projectFeatureFromDb.properties.uuid = reader.IsDBNull(0) ? "" : reader.GetGuid(0).ToString();
 
                         ManagementAreaFeature managementAreaFeature = new ManagementAreaFeature();
@@ -88,12 +88,11 @@ namespace roadwork_portal_service.Controllers
                         projectFeatureFromDb.properties.costs = reader.IsDBNull(14) ? 0m : reader.GetDecimal(14);
 
                         CostTypes ct = new CostTypes();
-                        ct.uuid = reader.IsDBNull(15) ? "" : reader.GetGuid(15).ToString();
-                        ct.code = reader.IsDBNull(16) ? "" : reader.GetString(16);
-                        ct.name = reader.IsDBNull(17) ? "" : reader.GetString(17);
+                        ct.code = reader.IsDBNull(15) ? "" : reader.GetString(15);
+                        ct.name = reader.IsDBNull(16) ? "" : reader.GetString(16);
                         projectFeatureFromDb.properties.costsType = ct;
 
-                        Polygon ntsPoly = reader.IsDBNull(18) ? Polygon.Empty : reader.GetValue(18) as Polygon;
+                        Polygon ntsPoly = reader.IsDBNull(17) ? Polygon.Empty : reader.GetValue(17) as Polygon;
                         projectFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
 
                         projectsFromDb.Add(projectFeatureFromDb);

@@ -36,10 +36,10 @@ public class UsersController : ControllerBase
             pgConn.Open();
             NpgsqlCommand selectComm = pgConn.CreateCommand();
             selectComm.CommandText = @"SELECT u.uuid, u.last_name, u.first_name,
-                                trim(lower(u.e_mail)), u.role, roles.code,
+                                trim(lower(u.e_mail)), roles.code,
                                 roles.name, u.org_unit, o.name
                             FROM ""users"" u
-                            LEFT JOIN ""roles"" ON u.role = roles.uuid
+                            LEFT JOIN ""roles"" ON u.role = roles.code
                             LEFT JOIN ""organisationalunits"" o ON u.org_unit = o.uuid";
 
             if (email != null)
@@ -83,13 +83,12 @@ public class UsersController : ControllerBase
                         userFromDb.lastName = reader.GetString(1);
                         userFromDb.firstName = reader.GetString(2);
                         Role role = new Role();
-                        role.uuid = reader.GetGuid(4).ToString();
-                        role.code = reader.GetString(5);
-                        role.name = reader.GetString(6);
+                        role.code = reader.GetString(4);
+                        role.name = reader.GetString(5);
                         userFromDb.role = role;
                         OrganisationalUnit orgUnit = new OrganisationalUnit();
-                        orgUnit.uuid = reader.GetGuid(7).ToString();
-                        orgUnit.name = reader.GetString(8);
+                        orgUnit.uuid = reader.GetGuid(6).ToString();
+                        orgUnit.name = reader.GetString(7);
                         userFromDb.organisationalUnit = orgUnit;
 
                         if (userFromDb.lastName == null || userFromDb.lastName.Trim().Equals(""))
@@ -156,7 +155,7 @@ public class UsersController : ControllerBase
             insertComm.Parameters.AddWithValue("last_name", user.lastName);
             insertComm.Parameters.AddWithValue("first_name", user.firstName);
             insertComm.Parameters.AddWithValue("e_mail", user.mailAddress);
-            insertComm.Parameters.AddWithValue("role", new Guid(user.role.uuid));
+            insertComm.Parameters.AddWithValue("role", user.role.code);
             insertComm.Parameters.AddWithValue("pwd", user.passPhrase);
             insertComm.Parameters.AddWithValue("org_unit", new Guid(user.organisationalUnit.uuid));
 
@@ -221,7 +220,7 @@ public class UsersController : ControllerBase
                     updateComm.Parameters.AddWithValue("last_name", user.lastName);
                     updateComm.Parameters.AddWithValue("first_name", user.firstName);
                     updateComm.Parameters.AddWithValue("e_mail", user.mailAddress);
-                    updateComm.Parameters.AddWithValue("role", new Guid(user.role.uuid));
+                    updateComm.Parameters.AddWithValue("role", user.role.code);
                     updateComm.Parameters.AddWithValue("org_unit", new Guid(user.organisationalUnit.uuid));
                     updateComm.Parameters.AddWithValue("uuid", new Guid(user.uuid));
                     int noAffectedRowsStep1 = updateComm.ExecuteNonQuery();

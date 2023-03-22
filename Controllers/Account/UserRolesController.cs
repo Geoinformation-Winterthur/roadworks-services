@@ -32,21 +32,19 @@ public class UserRolesController : ControllerBase
         {
             pgConn.Open();
             NpgsqlCommand selectComm = pgConn.CreateCommand();
-            selectComm.CommandText = @"SELECT uuid, code, name FROM ""roles""";
+            selectComm.CommandText = @"SELECT code, name FROM ""roles""";
             using (NpgsqlDataReader reader = selectComm.ExecuteReader())
             {
                 Role roleFromDb;
                 while (reader.Read())
                 {
                     roleFromDb = new Role();
-                    roleFromDb.uuid = reader.IsDBNull(0) ? "" :
-                                reader.GetGuid(0).ToString();
                     roleFromDb.code =
+                            reader.IsDBNull(0) ? "" :
+                                    reader.GetString(0);
+                    roleFromDb.name =
                             reader.IsDBNull(1) ? "" :
                                     reader.GetString(1);
-                    roleFromDb.name =
-                            reader.IsDBNull(2) ? "" :
-                                    reader.GetString(2);
                     rolesFromDb.Add(roleFromDb);
                 }
             }
