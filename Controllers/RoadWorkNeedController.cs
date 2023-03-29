@@ -153,42 +153,24 @@ namespace roadwork_portal_service.Controllers
 
                     if (roadWorkNeedFeature.properties.name == null || roadWorkNeedFeature.properties.name == "")
                     {
-                        NpgsqlCommand selectFromToNames = pgConn.CreateCommand();
-                        selectFromToNames.CommandText = @"SELECT address, geom
-                                    FROM ""addresses""
-                                    WHERE ST_Intersects(@geom, geom)";
-                        selectFromToNames.Parameters.AddWithValue("geom", roadWorkNeedPoly);
+                        roadWorkNeedFeature.properties.name = "";
+                        int bufferSize = 0;
+                        List<(string, Point)> fromToNamesList;
+                        (string, Point)[] greatestDistanceTuple;
 
-                        List<(string, Point)> fromToNamesList = new List<(string, Point)>();
-
-                        using (NpgsqlDataReader reader = selectFromToNames.ExecuteReader())
+                        do
                         {
-                            while (reader.Read())
+                            fromToNamesList = _getFromToListFromDb(roadWorkNeedPoly, bufferSize, pgConn);
+
+                            greatestDistanceTuple = _calcGreatestDistanceTuple(fromToNamesList);
+
+                            if (greatestDistanceTuple[0].Item1 != null && greatestDistanceTuple[1].Item1 != null)
                             {
-                                string address = reader.IsDBNull(0) ? "" : reader.GetString(0);
-                                Point p = reader.IsDBNull(1) ? Point.Empty : reader.GetValue(1) as Point;
-                                fromToNamesList.Add((address, p));
+                                roadWorkNeedFeature.properties.name =
+                                        greatestDistanceTuple[0].Item1 + " bis " + greatestDistanceTuple[1].Item1;
                             }
-                        }
-
-                        double distance = 0d;
-                        double greatestDistance = 0d;
-                        (string, Point)[] greatestDistanceTuple = new (string, Point)[2];
-                        foreach((string, Point) fromToNamesTuple1 in fromToNamesList){
-                           foreach((string, Point) fromToNamesTuple2 in fromToNamesList){
-                                distance = fromToNamesTuple1.Item2.Distance(fromToNamesTuple2.Item2);
-                                if(distance >= greatestDistance){
-                                    greatestDistance = distance;
-                                    greatestDistanceTuple[0] = fromToNamesTuple1;
-                                    greatestDistanceTuple[1] = fromToNamesTuple2;
-                                }
-                            }
-                        }
-
-                        if(greatestDistanceTuple[0].Item1 != null && greatestDistanceTuple[1].Item1 != null){
-                            roadWorkNeedFeature.properties.name =
-                                    greatestDistanceTuple[0].Item1 + " bis " + greatestDistanceTuple[1].Item1;
-                        }
+                            bufferSize += 10;
+                        } while (bufferSize < 100 && roadWorkNeedFeature.properties.name == "");
 
                     }
 
@@ -410,6 +392,56 @@ namespace roadwork_portal_service.Controllers
                 }
             }
             return Ok(roadWorkNeedFeature);
+        }
+
+        private static List<(string, Point)> _getFromToListFromDb(
+                        Polygon roadWorkNeedPoly, double bufferSize, NpgsqlConnection pgConn)
+        {
+            Polygon bufferedPoly = roadWorkNeedPoly;
+            if (bufferSize > 0)
+            {
+                bufferedPoly = roadWorkNeedPoly.Buffer(bufferSize) as Polygon;
+            }
+            List<(string, Point)> fromToNamesList = new List<(string, Point)>();
+            NpgsqlCommand selectFromToNames = pgConn.CreateCommand();
+            selectFromToNames.CommandText = @"SELECT address, geom
+                                    FROM ""addresses""
+                                    WHERE ST_Intersects(@geom, geom)";
+            selectFromToNames.Parameters.AddWithValue("geom", bufferedPoly);
+
+            using (NpgsqlDataReader reader = selectFromToNames.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    string address = reader.IsDBNull(0) ? "" : reader.GetString(0);
+                    Point p = reader.IsDBNull(1) ? Point.Empty : reader.GetValue(1) as Point;
+                    fromToNamesList.Add((address, p));
+                }
+            }
+            return fromToNamesList;
+        }
+
+        private static (string, Point)[] _calcGreatestDistanceTuple(List<(string, Point)> fromToNamesList)
+        {
+
+            double distance = 0d;
+            double greatestDistance = 0d;
+            (string, Point)[] greatestDistanceTuple = new (string, Point)[2];
+            foreach ((string, Point) fromToNamesTuple1 in fromToNamesList)
+            {
+                foreach ((string, Point) fromToNamesTuple2 in fromToNamesList)
+                {
+                    distance = fromToNamesTuple1.Item2.Distance(fromToNamesTuple2.Item2);
+                    if (distance >= greatestDistance)
+                    {
+                        greatestDistance = distance;
+                        greatestDistanceTuple[0] = fromToNamesTuple1;
+                        greatestDistanceTuple[1] = fromToNamesTuple2;
+                    }
+                }
+            }
+            return greatestDistanceTuple;
+
         }
 
     }
