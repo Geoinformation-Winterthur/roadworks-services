@@ -157,10 +157,16 @@ namespace roadwork_portal_service.Controllers
                         int bufferSize = 0;
                         List<(string, Point)> fromToNamesList;
                         (string, Point)[] greatestDistanceTuple;
+                        Polygon bufferedPoly = roadWorkNeedPoly;
 
                         do
                         {
-                            fromToNamesList = _getFromToListFromDb(roadWorkNeedPoly, bufferSize, pgConn);
+                            if (bufferSize > 0)
+                            {
+                                bufferedPoly = bufferedPoly.Buffer(bufferSize) as Polygon;
+                            }
+
+                            fromToNamesList = _getFromToListFromDb(bufferedPoly, pgConn);
 
                             greatestDistanceTuple = _calcGreatestDistanceTuple(fromToNamesList);
 
@@ -395,19 +401,14 @@ namespace roadwork_portal_service.Controllers
         }
 
         private static List<(string, Point)> _getFromToListFromDb(
-                        Polygon roadWorkNeedPoly, double bufferSize, NpgsqlConnection pgConn)
+                        Polygon roadWorkNeedPoly, NpgsqlConnection pgConn)
         {
-            Polygon bufferedPoly = roadWorkNeedPoly;
-            if (bufferSize > 0)
-            {
-                bufferedPoly = roadWorkNeedPoly.Buffer(bufferSize) as Polygon;
-            }
             List<(string, Point)> fromToNamesList = new List<(string, Point)>();
             NpgsqlCommand selectFromToNames = pgConn.CreateCommand();
             selectFromToNames.CommandText = @"SELECT address, geom
                                     FROM ""addresses""
                                     WHERE ST_Intersects(@geom, geom)";
-            selectFromToNames.Parameters.AddWithValue("geom", bufferedPoly);
+            selectFromToNames.Parameters.AddWithValue("geom", roadWorkNeedPoly);
 
             using (NpgsqlDataReader reader = selectFromToNames.ExecuteReader())
             {
