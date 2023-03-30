@@ -23,5 +23,6 @@ public class RoadWorkNeedProperties
     public string comment { get; set; } = "";
     public ManagementAreaFeature managementarea
                 { get; set; } = new ManagementAreaFeature();
+    public string roadWorkActivityUuid = "";
 }
 

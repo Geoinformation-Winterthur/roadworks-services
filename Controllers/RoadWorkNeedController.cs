@@ -37,7 +37,7 @@ namespace roadwork_portal_service.Controllers
                             r.finish_optimum_from, r.finish_optimum_to, r.finish_late_from,
                             r.finish_late_to, p.code, s.code, s.name,
                             r.comment, r.managementarea, m.manager, u2.first_name, u2.last_name,
-                            r.created, r.last_modified, r.geom
+                            r.created, r.last_modified, r.roadworkactivity, r.geom
                         FROM ""roadworkneeds"" r
                         LEFT JOIN ""users"" u ON r.orderer = u.uuid
                         LEFT JOIN ""organisationalunits"" o ON u.org_unit = o.uuid
@@ -101,8 +101,9 @@ namespace roadwork_portal_service.Controllers
 
                         needFeatureFromDb.properties.created = reader.IsDBNull(22) ? DateTime.MinValue : reader.GetDateTime(22);
                         needFeatureFromDb.properties.lastModified = reader.IsDBNull(23) ? DateTime.MinValue : reader.GetDateTime(23);
+                        needFeatureFromDb.properties.roadWorkActivityUuid = reader.IsDBNull(24) ? "" : reader.GetGuid(24).ToString();
 
-                        Polygon ntsPoly = reader.IsDBNull(24) ? Polygon.Empty : reader.GetValue(24) as Polygon;
+                        Polygon ntsPoly = reader.IsDBNull(25) ? Polygon.Empty : reader.GetValue(25) as Polygon;
                         needFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
 
                         projectsFromDb.Add(needFeatureFromDb);

@@ -12,6 +12,8 @@ public class RoadWorkActivityProperties
     public User projectManager { get; set; } = new User();
     public User trafficAgent { get; set; } = new User();
     public string comment { get; set; } = "";
+    public DateTime created { get; set; } = DateTime.MinValue;
+    public DateTime lastModified { get; set; } = DateTime.MinValue;
     public DateTime finishFrom { get; set; } = DateTime.MinValue;
     public DateTime finishTo { get; set; } = DateTime.MinValue;
     public decimal costs { get; set; } = 0m;

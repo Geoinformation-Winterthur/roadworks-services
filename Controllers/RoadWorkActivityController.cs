@@ -24,7 +24,7 @@ namespace roadwork_portal_service.Controllers
         // GET roadworkactivity/
         [HttpGet]
         [Authorize]
-        public IEnumerable<RoadWorkActivityFeature> GetProjectss(string? uuid = "", bool summary = false)
+        public IEnumerable<RoadWorkActivityFeature> GetProjects(string? uuid = "", bool summary = false)
         {
             List<RoadWorkActivityFeature> projectsFromDb = new List<RoadWorkActivityFeature>();
             // get data of current user from database:
@@ -34,7 +34,7 @@ namespace roadwork_portal_service.Controllers
                 NpgsqlCommand selectComm = pgConn.CreateCommand();
                 selectComm.CommandText = @"SELECT r.uuid, r.managementarea, m.manager, am.first_name, am.last_name,
                             r.projectmanager, pm.first_name, pm.last_name, r.traffic_agent,
-                            ta.first_name, ta.last_name, comment, r.finish_from, r.finish_to,
+                            ta.first_name, ta.last_name, comment, created, last_modified, r.finish_from, r.finish_to,
                             r.costs, c.code, c.name, r.geom
                         FROM ""roadworkactivities"" r
                         LEFT JOIN ""managementareas"" m ON r.managementarea = m.uuid
@@ -83,16 +83,18 @@ namespace roadwork_portal_service.Controllers
                         projectFeatureFromDb.properties.trafficAgent = trafficAgent;
 
                         projectFeatureFromDb.properties.comment = reader.IsDBNull(11) ? "" : reader.GetString(11);
-                        projectFeatureFromDb.properties.finishFrom = reader.IsDBNull(12) ? DateTime.MinValue : reader.GetDateTime(12);
-                        projectFeatureFromDb.properties.finishTo = reader.IsDBNull(13) ? DateTime.MinValue : reader.GetDateTime(13);
-                        projectFeatureFromDb.properties.costs = reader.IsDBNull(14) ? 0m : reader.GetDecimal(14);
+                        projectFeatureFromDb.properties.created = reader.IsDBNull(12) ? DateTime.MinValue : reader.GetDateTime(12);
+                        projectFeatureFromDb.properties.lastModified = reader.IsDBNull(13) ? DateTime.MinValue : reader.GetDateTime(13);
+                        projectFeatureFromDb.properties.finishFrom = reader.IsDBNull(14) ? DateTime.MinValue : reader.GetDateTime(14);
+                        projectFeatureFromDb.properties.finishTo = reader.IsDBNull(15) ? DateTime.MinValue : reader.GetDateTime(15);
+                        projectFeatureFromDb.properties.costs = reader.IsDBNull(16) ? 0m : reader.GetDecimal(16);
 
                         CostTypes ct = new CostTypes();
-                        ct.code = reader.IsDBNull(15) ? "" : reader.GetString(15);
-                        ct.name = reader.IsDBNull(16) ? "" : reader.GetString(16);
+                        ct.code = reader.IsDBNull(17) ? "" : reader.GetString(17);
+                        ct.name = reader.IsDBNull(18) ? "" : reader.GetString(18);
                         projectFeatureFromDb.properties.costsType = ct;
 
-                        Polygon ntsPoly = reader.IsDBNull(17) ? Polygon.Empty : reader.GetValue(17) as Polygon;
+                        Polygon ntsPoly = reader.IsDBNull(19) ? Polygon.Empty : reader.GetValue(19) as Polygon;
                         projectFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
 
                         projectsFromDb.Add(projectFeatureFromDb);
