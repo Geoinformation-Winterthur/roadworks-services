@@ -34,7 +34,7 @@ namespace roadwork_portal_service.Controllers
             {
                 pgConn.Open();
                 NpgsqlCommand selectComm = pgConn.CreateCommand();
-                selectComm.CommandText = @"SELECT m.uuid, u.first_name || ' ' || u.last_name,
+                selectComm.CommandText = @"SELECT m.uuid, m.name, u.first_name || ' ' || u.last_name,
                             m.geom
                             FROM ""managementareas"" m
                             LEFT JOIN ""users"" u ON m.manager = u.uuid";
@@ -48,8 +48,9 @@ namespace roadwork_portal_service.Controllers
                         managementAreaFeatureFromDb = new Feature();
                         managementAreaFeatureFromDb.Attributes = new AttributesTable();
                         managementAreaFeatureFromDb.Attributes.Add("uuid", reader.IsDBNull(0) ? "" : reader.GetGuid(0).ToString());
-                        managementAreaFeatureFromDb.Attributes.Add("managername", reader.IsDBNull(1) ? "" : reader.GetString(1));
-                        managementAreaFeatureFromDb.Geometry = reader.IsDBNull(2) ? Polygon.Empty : reader.GetValue(2) as Polygon;
+                        managementAreaFeatureFromDb.Attributes.Add("name", reader.IsDBNull(1) ? "" : reader.GetString(1));
+                        managementAreaFeatureFromDb.Attributes.Add("managername", reader.IsDBNull(2) ? "" : reader.GetString(2));
+                        managementAreaFeatureFromDb.Geometry = reader.IsDBNull(3) ? Polygon.Empty : reader.GetValue(3) as Polygon;
 
                         managementAreas.Add(managementAreaFeatureFromDb);
                     }
