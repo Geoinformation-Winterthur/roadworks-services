@@ -17,5 +17,6 @@ public class User
     public DateTime? lastLoginAttempt { get; set; }
     public DateTime? databaseTime { get; set; }
     public Role role { get; set; } = new Role();
+    public string errorMessage { get; set; } = "";
 }
 

@@ -109,6 +109,14 @@ public class UsersController : ControllerBase
             pgConn.Close();
         }
 
+        if (usersFromDb.Count() == 0)
+        {
+            _logger.LogInformation("No user found in database for e-mail " + email + " or uid " + uuid);
+            User errorUser = new User();
+            errorUser.errorMessage = "KOPAL-0";
+            usersFromDb.Add(errorUser);
+        }
+
         return usersFromDb.ToArray<User>();
     }
 
@@ -205,9 +213,9 @@ public class UsersController : ControllerBase
             userInDb = usersInDb[0];
             if (userInDb != null)
             {
-                if(userInDb.role.code == "administrator" && user.role.code != "administrator")
+                if (userInDb.role.code == "administrator" && user.role.code != "administrator")
                 {
-                    if(_countNumberOfActiveAdmins() == 1)
+                    if (_countNumberOfActiveAdmins() == 1)
                     {
                         return BadRequest("Last administrator cannot be removed");
                     }
@@ -242,7 +250,7 @@ public class UsersController : ControllerBase
 
                     pgConn.Close();
 
-                    if (noAffectedRowsStep1 == 1 && 
+                    if (noAffectedRowsStep1 == 1 &&
                         (!needToUpdatePassphrase || noAffectedRowsStep2 == 1))
                     {
                         user.passPhrase = "";
@@ -264,67 +272,75 @@ public class UsersController : ControllerBase
     // DELETE /users?email=...
     [HttpDelete]
     [Authorize(Roles = "administrator")]
-    public ActionResult DeleteUser(string email)
+    public ActionResult<ErrorMessage> DeleteUser(string email)
     {
+        ErrorMessage errorResult = new ErrorMessage();
+
         if (email == null)
         {
-            return BadRequest("No user data provided");
+            _logger.LogInformation("No user data provided by user in delete user process. " +
+                        "Thus process is canceled, no user is deleted.");
+            errorResult.errorMessage = "KOPAL-0";
+            return Ok(errorResult);
         }
 
         email = email.ToLower().Trim();
 
         if (email == "")
         {
-            return BadRequest("No user data provided");
+            _logger.LogInformation("No user data provided by user in delete user process. " +
+                        "Thus process is canceled, no user is deleted.");
+            errorResult.errorMessage = "KOPAL-0";
+            return Ok(errorResult);
         }
 
         User userInDb = new User();
         ActionResult<User[]> usersInDbResult = this.GetUsers(email, "");
         User[]? usersInDb = usersInDbResult.Value;
-        if (usersInDb == null || usersInDb.Length != 1)
+        if (usersInDb == null || usersInDb.Length != 1 || usersInDb[0] == null)
         {
-            return BadRequest("Deleting user not possible");
+            _logger.LogInformation("User " + email + " cannot be deleted since this user is not in the database.");
+            errorResult.errorMessage = "KOPAL-1";
+            return Ok(errorResult);
         }
         else
         {
             userInDb = usersInDb[0];
-            if (userInDb != null)
+            if (userInDb.role.code == "administrator")
             {
-                if(userInDb.role.code == "administrator")
+                if (_countNumberOfActiveAdmins() == 1)
                 {
-                    if(_countNumberOfActiveAdmins() == 1)
-                    {
-                        return BadRequest("Last administrator cannot be removed");
-                    }
-                }
-                using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
-                {
-                    pgConn.Open();
-                    NpgsqlCommand deleteComm = pgConn.CreateCommand();
-                    deleteComm.CommandText = @"DELETE FROM ""users""
-                                WHERE e_mail=@e_mail";
-                    deleteComm.Parameters.AddWithValue("e_mail", email);
-
-                    int noAffectedRows = deleteComm.ExecuteNonQuery();
-
-                    pgConn.Close();
-
-                    if (noAffectedRows == 1)
-                    {
-                        return Ok();
-                    }
+                    _logger.LogInformation("User tried to delete last administrator. Last administrator cannot be removed.");
+                    errorResult.errorMessage = "KOPAL-2";
+                    return Ok(errorResult);
                 }
             }
-            else
+            using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
             {
-                return BadRequest("Deleting user not possible");
+                pgConn.Open();
+                NpgsqlCommand deleteComm = pgConn.CreateCommand();
+                deleteComm.CommandText = @"DELETE FROM ""users""
+                                WHERE e_mail=@e_mail";
+                deleteComm.Parameters.AddWithValue("e_mail", email);
+
+                int noAffectedRows = deleteComm.ExecuteNonQuery();
+
+                pgConn.Close();
+
+                if (noAffectedRows == 1)
+                {
+                    return Ok();
+                }
             }
         }
 
-        return BadRequest("Something went wrong");
+         _logger.LogInformation("Fatal error.");
+        errorResult.errorMessage = "KOPAL-3";
+        return Ok(errorResult);
     }
 
-    private static int _countNumberOfActiveAdmins(){
+    private static int _countNumberOfActiveAdmins()
+    {
         int count = 0;
         using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
         {
@@ -332,7 +348,7 @@ public class UsersController : ControllerBase
             NpgsqlCommand selectComm = pgConn.CreateCommand();
             selectComm.CommandText = @"SELECT count(*) 
                             FROM ""users""
-                            LEFT JOIN ""roles"" ON users.role = roles.uuid
+                            LEFT JOIN ""roles"" ON users.role = roles.code
                             WHERE users.active=true AND roles.code='administrator'";
 
             using (NpgsqlDataReader reader = selectComm.ExecuteReader())
