@@ -174,7 +174,7 @@ public class LoginController : ControllerBase
             NpgsqlCommand selectComm = pgConn.CreateCommand();
             selectComm.CommandText = @"SELECT u.uuid, u.last_name, u.first_name, u.e_mail, u.pwd,
                         u.last_login_attempt, CURRENT_TIMESTAMP(0)::TIMESTAMP,
-                        roles.code, roles.name, u.org_unit, o.name
+                        roles.code, roles.name, u.org_unit, o.name, u.active
                         FROM ""users"" u
                         LEFT JOIN ""roles"" ON u.role = roles.code
                         LEFT JOIN ""organisationalunits"" o ON u.org_unit = o.uuid
@@ -203,6 +203,7 @@ public class LoginController : ControllerBase
                     orgUnit.uuid = reader.GetGuid(9).ToString();
                     orgUnit.name = reader.GetString(10);
                     userFromDb.organisationalUnit = orgUnit;
+                    userFromDb.active = reader.GetBoolean(11);
 
                     if (userFromDb.lastName == null || userFromDb.lastName.Trim().Equals(""))
                     {
