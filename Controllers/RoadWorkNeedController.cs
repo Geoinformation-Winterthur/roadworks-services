@@ -126,7 +126,7 @@ namespace roadwork_portal_service.Controllers
             if (coordinates.Length < 3)
             {
                 _logger.LogWarning("Roadworkneed Polygon has less than 3 coordinates.");
-                roadWorkNeedFeature.errorMessage = "RWP-4";
+                roadWorkNeedFeature.errorMessage = "KOPAL-7";
                 return Ok(roadWorkNeedFeature);
             }
 
@@ -134,7 +134,7 @@ namespace roadwork_portal_service.Controllers
             if (roadWorkNeedPoly.Area <= 10.0)
             {
                 _logger.LogWarning("Roadworkneed area is less than or equal 10qm.");
-                roadWorkNeedFeature.errorMessage = "RWP-1";
+                roadWorkNeedFeature.errorMessage = "KOPAL-8";
                 return Ok(roadWorkNeedFeature);
             }
 
@@ -186,8 +186,10 @@ namespace roadwork_portal_service.Controllers
                                         u.first_name, u.last_name
                                     FROM ""managementareas"" m
                                     LEFT JOIN ""users"" u ON m.manager = u.uuid
+                                    WHERE ST_Area(ST_Intersection(@geom, geom)) > 0
                                     ORDER BY ST_Area(ST_Intersection(@geom, geom)) DESC
                                     LIMIT 1";
+
                     selectMgmtAreaComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
 
                     roadWorkNeedFeature.properties.managementarea = new ManagementAreaFeature();
@@ -205,7 +207,7 @@ namespace roadwork_portal_service.Controllers
                     if (roadWorkNeedFeature.properties.managementarea.properties.uuid == "")
                     {
                         _logger.LogWarning("New roadworkneed does not lie in any management area.");
-                        roadWorkNeedFeature.errorMessage = "RWP-0";
+                        roadWorkNeedFeature.errorMessage = "KOPAL-9";
                         return Ok(roadWorkNeedFeature);
                     }
 
@@ -256,7 +258,7 @@ namespace roadwork_portal_service.Controllers
                 catch (Exception ex)
                 {
                     _logger.LogError(ex.Message);
-                    roadWorkNeedFeature.errorMessage = "RWP-3";
+                    roadWorkNeedFeature.errorMessage = "KOPAL-3";
                     return Ok(roadWorkNeedFeature);
                 }
                 finally
@@ -287,13 +289,17 @@ namespace roadwork_portal_service.Controllers
 
                         if (!roadWorkNeedPoly.IsSimple)
                         {
-                            roadWorkNeedFeature.errorMessage = "RWP-4";
+                            _logger.LogWarning("Geometry of roadworkneed " + roadWorkNeedFeature.properties.uuid +
+                                    " does not fulfill the criteria of geometrical simplicity.");
+                            roadWorkNeedFeature.errorMessage = "KOPAL-10";
                             return Ok(roadWorkNeedFeature);
                         }
 
                         if (!roadWorkNeedPoly.IsValid)
                         {
-                            roadWorkNeedFeature.errorMessage = "RWP-5";
+                            _logger.LogWarning("Geometry of roadworkneed " + roadWorkNeedFeature.properties.uuid +
+                                    " does not fulfill the criteria of geometrical validity.");
+                            roadWorkNeedFeature.errorMessage = "KOPAL-11";
                             return Ok(roadWorkNeedFeature);
                         }
 
@@ -326,7 +332,8 @@ namespace roadwork_portal_service.Controllers
 
                             if (roadWorkNeedFeature.properties.managementarea.properties.uuid == "")
                             {
-                                roadWorkNeedFeature.errorMessage = "RWP-0";
+                                _logger.LogWarning("New roadworkneed does not lie in any management area.");
+                                roadWorkNeedFeature.errorMessage = "KOPAL-9";
                                 return Ok(roadWorkNeedFeature);
                             }
 
@@ -374,14 +381,15 @@ namespace roadwork_portal_service.Controllers
                         }
                         else
                         {
-                            roadWorkNeedFeature.errorMessage = "RWP-1";
+                            _logger.LogWarning("Roadworkneed area is less than or equal 10qm.");
+                            roadWorkNeedFeature.errorMessage = "KOPAL-8";
                             return Ok(roadWorkNeedFeature);
                         }
                     }
                     catch (Exception ex)
                     {
                         _logger.LogError(ex.Message);
-                        roadWorkNeedFeature.errorMessage = "RWP-3";
+                        roadWorkNeedFeature.errorMessage = "KOPAL-3";
                         return Ok(roadWorkNeedFeature);
                     }
                     finally
@@ -394,7 +402,8 @@ namespace roadwork_portal_service.Controllers
             {
                 if (roadWorkNeedFeature != null)
                 {
-                    roadWorkNeedFeature.errorMessage = "RWP-2";
+                    _logger.LogWarning("Roadworkneed has a geometry error.");
+                    roadWorkNeedFeature.errorMessage = "KOPAL-3";
                     return Ok(roadWorkNeedFeature);
                 }
             }

@@ -187,86 +187,101 @@ public class UsersController : ControllerBase
     // PUT /account/users/
     [HttpPut]
     [Authorize(Roles = "administrator")]
-    public IActionResult UpdateUser([FromBody] User user)
+    public ActionResult<ErrorMessage> UpdateUser([FromBody] User user)
     {
+        ErrorMessage errorResult = new ErrorMessage();
         if (user == null || user.uuid == null)
         {
-            return BadRequest("No user data provided");
+            _logger.LogInformation("No user data provided by user in update user process.");
+            errorResult.errorMessage = "KOPAL-0";
+            return Ok(errorResult);
         }
 
         user.uuid = user.uuid.ToLower().Trim();
 
         if (user.uuid == "")
         {
-            return BadRequest("No user data provided");
+            _logger.LogWarning("No user data provided by user in update user process.");
+            errorResult.errorMessage = "KOPAL-0";
+            return Ok(errorResult);
         }
 
         User userInDb = new User();
         ActionResult<User[]> usersInDbResult = this.GetUsers("", user.uuid);
         User[]? usersInDb = usersInDbResult.Value;
-        if (usersInDb == null || usersInDb.Length != 1)
+        if (usersInDb == null || usersInDb.Length != 1 || usersInDb[0] == null)
         {
-            return BadRequest("Editing user not possible");
+            _logger.LogWarning("Updating user " + user.uuid + " is not possible since user is not in the database.");
+            errorResult.errorMessage = "KOPAL-4";
+            return Ok(errorResult);
         }
         else
         {
             userInDb = usersInDb[0];
-            if (userInDb != null)
+            int noOfActiveAdmins = _countNumberOfActiveAdmins();
+            if (userInDb.role.code == "administrator" && user.role.code != "administrator")
             {
-                if (userInDb.role.code == "administrator" && user.role.code != "administrator")
+                if (noOfActiveAdmins == 1)
                 {
-                    if (_countNumberOfActiveAdmins() == 1)
-                    {
-                        return BadRequest("Last administrator cannot be removed");
-                    }
+                    _logger.LogWarning("User tried to change role of last administrator. " +
+                            "Role cannot be changed since there would be no administrator anymore.");
+                    errorResult.errorMessage = "KOPAL-5";
+                    return Ok(errorResult);
                 }
-                using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
-                {
-                    pgConn.Open();
-                    NpgsqlCommand updateComm = pgConn.CreateCommand();
-                    updateComm.CommandText = @"UPDATE ""users"" SET
+            }
+
+            if (!user.active && noOfActiveAdmins == 1)
+            {
+                _logger.LogWarning("User tried to set last administrator inactive. " +
+                        "This is not allowed.");
+                errorResult.errorMessage = "KOPAL-6";
+                return Ok(errorResult);
+            }
+
+            using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
+            {
+                pgConn.Open();
+                NpgsqlCommand updateComm = pgConn.CreateCommand();
+                updateComm.CommandText = @"UPDATE ""users"" SET
                         last_name=@last_name, first_name=@first_name, e_mail=@e_mail,
                         role=@role, org_unit=@org_unit, active=@active WHERE uuid=@uuid";
-                    updateComm.Parameters.AddWithValue("last_name", user.lastName);
-                    updateComm.Parameters.AddWithValue("first_name", user.firstName);
-                    updateComm.Parameters.AddWithValue("e_mail", user.mailAddress);
-                    updateComm.Parameters.AddWithValue("role", user.role.code);
-                    updateComm.Parameters.AddWithValue("org_unit", new Guid(user.organisationalUnit.uuid));
-                    updateComm.Parameters.AddWithValue("active", user.active);
-                    updateComm.Parameters.AddWithValue("uuid", new Guid(user.uuid));
-                    int noAffectedRowsStep1 = updateComm.ExecuteNonQuery();
+                updateComm.Parameters.AddWithValue("last_name", user.lastName);
+                updateComm.Parameters.AddWithValue("first_name", user.firstName);
+                updateComm.Parameters.AddWithValue("e_mail", user.mailAddress);
+                updateComm.Parameters.AddWithValue("role", user.role.code);
+                updateComm.Parameters.AddWithValue("org_unit", new Guid(user.organisationalUnit.uuid));
+                updateComm.Parameters.AddWithValue("active", user.active);
+                updateComm.Parameters.AddWithValue("uuid", new Guid(user.uuid));
+                int noAffectedRowsStep1 = updateComm.ExecuteNonQuery();
 
-                    user.passPhrase = user.passPhrase.Trim();
-                    bool needToUpdatePassphrase = user.passPhrase.Length != 0;
-                    int noAffectedRowsStep2 = 0;
-                    if (needToUpdatePassphrase)
-                    {
-                        updateComm.CommandText = @"UPDATE ""users"" SET
+                user.passPhrase = user.passPhrase.Trim();
+                bool needToUpdatePassphrase = user.passPhrase.Length != 0;
+                int noAffectedRowsStep2 = 0;
+                if (needToUpdatePassphrase)
+                {
+                    updateComm.CommandText = @"UPDATE ""users"" SET
                                     pwd=@pwd WHERE uuid=@uuid";
-                        updateComm.Parameters.AddWithValue("pwd", user.passPhrase);
-                        updateComm.Parameters.AddWithValue("uuid", new Guid(user.uuid));
-                        noAffectedRowsStep2 = updateComm.ExecuteNonQuery();
-                    }
+                    updateComm.Parameters.AddWithValue("pwd", user.passPhrase);
+                    updateComm.Parameters.AddWithValue("uuid", new Guid(user.uuid));
+                    noAffectedRowsStep2 = updateComm.ExecuteNonQuery();
+                }
 
-                    pgConn.Close();
+                pgConn.Close();
 
-                    if (noAffectedRowsStep1 == 1 &&
-                        (!needToUpdatePassphrase || noAffectedRowsStep2 == 1))
-                    {
-                        user.passPhrase = "";
-                        return Ok(user);
-                    }
-
+                if (noAffectedRowsStep1 == 1 &&
+                    (!needToUpdatePassphrase || noAffectedRowsStep2 == 1))
+                {
+                    user.passPhrase = "";
+                    return Ok(user);
                 }
 
             }
-            else
-            {
-                return BadRequest("Editing user not possible");
-            }
+
         }
 
-        return BadRequest("Something went wrong");
+        _logger.LogError("Fatal error");
+        errorResult.errorMessage = "KOPAL-3";
+        return Ok(errorResult);
     }
 
     // DELETE /users?email=...
@@ -278,7 +293,7 @@ public class UsersController : ControllerBase
 
         if (email == null)
         {
-            _logger.LogInformation("No user data provided by user in delete user process. " +
+            _logger.LogWarning("No user data provided by user in delete user process. " +
                         "Thus process is canceled, no user is deleted.");
             errorResult.errorMessage = "KOPAL-0";
             return Ok(errorResult);
@@ -288,7 +303,7 @@ public class UsersController : ControllerBase
 
         if (email == "")
         {
-            _logger.LogInformation("No user data provided by user in delete user process. " +
+            _logger.LogWarning("No user data provided by user in delete user process. " +
                         "Thus process is canceled, no user is deleted.");
             errorResult.errorMessage = "KOPAL-0";
             return Ok(errorResult);
@@ -299,7 +314,7 @@ public class UsersController : ControllerBase
         User[]? usersInDb = usersInDbResult.Value;
         if (usersInDb == null || usersInDb.Length != 1 || usersInDb[0] == null)
         {
-            _logger.LogInformation("User " + email + " cannot be deleted since this user is not in the database.");
+            _logger.LogWarning("User " + email + " cannot be deleted since this user is not in the database.");
             errorResult.errorMessage = "KOPAL-1";
             return Ok(errorResult);
         }
@@ -310,7 +325,7 @@ public class UsersController : ControllerBase
             {
                 if (_countNumberOfActiveAdmins() == 1)
                 {
-                    _logger.LogInformation("User tried to delete last administrator. Last administrator cannot be removed.");
+                    _logger.LogWarning("User tried to delete last administrator. Last administrator cannot be removed.");
                     errorResult.errorMessage = "KOPAL-2";
                     return Ok(errorResult);
                 }
@@ -334,7 +349,7 @@ public class UsersController : ControllerBase
             }
         }
 
-         _logger.LogInformation("Fatal error.");
+        _logger.LogError("Fatal error.");
         errorResult.errorMessage = "KOPAL-3";
         return Ok(errorResult);
     }
