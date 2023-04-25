@@ -209,7 +209,7 @@ namespace roadwork_portal_service.Controllers
                     insertComm.Parameters.AddWithValue("finish_from", roadWorkActivityFeature.properties.finishFrom);
                     insertComm.Parameters.AddWithValue("finish_to", roadWorkActivityFeature.properties.finishTo);
                     insertComm.Parameters.AddWithValue("costs", roadWorkActivityFeature.properties.costs);
-                    insertComm.Parameters.AddWithValue("cost_type", roadWorkActivityFeature.properties.costsType.code);
+                    insertComm.Parameters.AddWithValue("costs_type", "fullcost"); // TODO make this dynamic 
                     insertComm.Parameters.AddWithValue("geom", roadWorkActivityPoly);
 
                     insertComm.ExecuteNonQuery();
