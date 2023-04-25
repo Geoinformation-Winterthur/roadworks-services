@@ -11,6 +11,7 @@ public class User
     public string passPhrase { get; set; } = "";
     public string lastName { get; set; } = "";
     public string firstName { get; set; } = "";
+    public bool active { get; set; } = false;
     public OrganisationalUnit organisationalUnit
             { get; set; } = new OrganisationalUnit();
     public DateTime? lastLoginAttempt { get; set; }

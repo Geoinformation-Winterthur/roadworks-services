@@ -37,7 +37,7 @@ public class UsersController : ControllerBase
             NpgsqlCommand selectComm = pgConn.CreateCommand();
             selectComm.CommandText = @"SELECT u.uuid, u.last_name, u.first_name,
                                 trim(lower(u.e_mail)), roles.code,
-                                roles.name, u.org_unit, o.name
+                                roles.name, u.org_unit, o.name, u.active
                             FROM ""users"" u
                             LEFT JOIN ""roles"" ON u.role = roles.code
                             LEFT JOIN ""organisationalunits"" o ON u.org_unit = o.uuid";
@@ -90,6 +90,7 @@ public class UsersController : ControllerBase
                         orgUnit.uuid = reader.GetGuid(6).ToString();
                         orgUnit.name = reader.GetString(7);
                         userFromDb.organisationalUnit = orgUnit;
+                        userFromDb.active = reader.GetBoolean(8);
 
                         if (userFromDb.lastName == null || userFromDb.lastName.Trim().Equals(""))
                         {
@@ -147,8 +148,8 @@ public class UsersController : ControllerBase
             pgConn.Open();
             NpgsqlCommand insertComm = pgConn.CreateCommand();
             insertComm.CommandText = @"INSERT INTO ""users""(uuid,
-                    last_name, first_name, e_mail, role, pwd, org_unit)
-                    VALUES(@uuid, @last_name, @first_name, @e_mail, @role, @pwd, @org_unit)";
+                    last_name, first_name, e_mail, role, pwd, org_unit, active)
+                    VALUES(@uuid, @last_name, @first_name, @e_mail, @role, @pwd, @org_unit, @active)";
             Guid userUuid = Guid.NewGuid();
             user.uuid = userUuid.ToString();
             insertComm.Parameters.AddWithValue("uuid", new Guid(user.uuid));
@@ -158,6 +159,7 @@ public class UsersController : ControllerBase
             insertComm.Parameters.AddWithValue("role", user.role.code);
             insertComm.Parameters.AddWithValue("pwd", user.passPhrase);
             insertComm.Parameters.AddWithValue("org_unit", new Guid(user.organisationalUnit.uuid));
+            insertComm.Parameters.AddWithValue("active", user.active);
 
             int noAffectedRows = insertComm.ExecuteNonQuery();
 
@@ -216,12 +218,13 @@ public class UsersController : ControllerBase
                     NpgsqlCommand updateComm = pgConn.CreateCommand();
                     updateComm.CommandText = @"UPDATE ""users"" SET
                         last_name=@last_name, first_name=@first_name, e_mail=@e_mail,
-                        role=@role, org_unit=@org_unit WHERE uuid=@uuid";
+                        role=@role, org_unit=@org_unit, active=@active WHERE uuid=@uuid";
                     updateComm.Parameters.AddWithValue("last_name", user.lastName);
                     updateComm.Parameters.AddWithValue("first_name", user.firstName);
                     updateComm.Parameters.AddWithValue("e_mail", user.mailAddress);
                     updateComm.Parameters.AddWithValue("role", user.role.code);
                     updateComm.Parameters.AddWithValue("org_unit", new Guid(user.organisationalUnit.uuid));
+                    updateComm.Parameters.AddWithValue("active", user.active);
                     updateComm.Parameters.AddWithValue("uuid", new Guid(user.uuid));
                     int noAffectedRowsStep1 = updateComm.ExecuteNonQuery();
 
