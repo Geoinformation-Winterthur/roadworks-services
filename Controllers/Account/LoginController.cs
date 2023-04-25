@@ -75,6 +75,13 @@ public class LoginController : ControllerBase
         if (userFromDb != null)
         {
             _logger.LogInformation("User " + receivedUser.mailAddress + " was found in the database.");
+            
+            if (!userFromDb.active)
+            {
+                _logger.LogWarning("User " + receivedUser.mailAddress + " was inactivated for login but still tried to login.");
+                return BadRequest("The user is inactivated for login.");
+            }
+
             if (userFromDb.lastLoginAttempt != null)
             {
                 // prohibit brute force attack:

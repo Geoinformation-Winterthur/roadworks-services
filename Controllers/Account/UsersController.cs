@@ -207,7 +207,7 @@ public class UsersController : ControllerBase
             {
                 if(userInDb.role.code == "administrator" && user.role.code != "administrator")
                 {
-                    if(_countNumberOfAdmins() == 1)
+                    if(_countNumberOfActiveAdmins() == 1)
                     {
                         return BadRequest("Last administrator cannot be removed");
                     }
@@ -292,7 +292,7 @@ public class UsersController : ControllerBase
             {
                 if(userInDb.role.code == "administrator")
                 {
-                    if(_countNumberOfAdmins() == 1)
+                    if(_countNumberOfActiveAdmins() == 1)
                     {
                         return BadRequest("Last administrator cannot be removed");
                     }
@@ -324,7 +324,7 @@ public class UsersController : ControllerBase
         return BadRequest("Something went wrong");
     }
 
-    private static int _countNumberOfAdmins(){
+    private static int _countNumberOfActiveAdmins(){
         int count = 0;
         using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
         {
@@ -333,7 +333,7 @@ public class UsersController : ControllerBase
             selectComm.CommandText = @"SELECT count(*) 
                             FROM ""users""
                             LEFT JOIN ""roles"" ON users.role = roles.uuid
-                            WHERE roles.code='administrator'";
+                            WHERE users.active=true AND roles.code='administrator'";
 
             using (NpgsqlDataReader reader = selectComm.ExecuteReader())
             {
