@@ -9,6 +9,7 @@ public class RoadWorkActivityFeature
     public string type { get; set; }
     public RoadWorkActivityProperties properties { get; set; }
     public RoadworkPolygon geometry { get; set; }
+    public string errorMessage { get; set; } = "";
 
     public RoadWorkActivityFeature()
     {
