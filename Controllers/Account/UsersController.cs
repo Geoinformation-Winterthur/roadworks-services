@@ -109,14 +109,6 @@ public class UsersController : ControllerBase
             pgConn.Close();
         }
 
-        if (usersFromDb.Count() == 0)
-        {
-            _logger.LogInformation("No user found in database for e-mail " + email + " or uid " + uuid);
-            User errorUser = new User();
-            errorUser.errorMessage = "KOPAL-0";
-            usersFromDb.Add(errorUser);
-        }
-
         return usersFromDb.ToArray<User>();
     }
 
@@ -127,14 +119,26 @@ public class UsersController : ControllerBase
     {
         if (user == null || user.mailAddress == null)
         {
-            return BadRequest("No user data provided");
+            _logger.LogWarning("No user data provided in add user process.");
+            User resultUser = new User();
+            resultUser.errorMessage = "KOPAL-0";
+            return Ok(resultUser);
         }
 
         user.mailAddress = user.mailAddress.ToLower().Trim();
 
         if (user.mailAddress == "")
         {
-            return BadRequest("No user data provided");
+            _logger.LogWarning("No user data provided in add user process.");
+            user.errorMessage = "KOPAL-0";
+            return Ok(user);
+        }
+        
+        if (user.mailAddress == "new")
+        {
+            _logger.LogWarning("User mail address 'new' not allowed.");
+            user.errorMessage = "KOPAL-12";
+            return Ok(user);
         }
 
         User userInDb = new User();
@@ -148,7 +152,9 @@ public class UsersController : ControllerBase
         if (userInDb != null && userInDb.mailAddress != null &&
                     userInDb.mailAddress.Trim() == user.mailAddress)
         {
-            return BadRequest("Adding user not possible");
+            _logger.LogWarning("Adding user not possible since user is already in database.");
+            user.errorMessage = "KOPAL-13";
+            return Ok(user);
         }
 
         using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
@@ -181,7 +187,9 @@ public class UsersController : ControllerBase
 
         }
 
-        return BadRequest("Something went wrong");
+        _logger.LogError("Something went wrong.");
+        user.errorMessage = "KOPAL-3";
+        return Ok(user);
     }
 
     // PUT /account/users/
@@ -204,6 +212,16 @@ public class UsersController : ControllerBase
             _logger.LogWarning("No user data provided by user in update user process.");
             errorResult.errorMessage = "KOPAL-0";
             return Ok(errorResult);
+        }
+
+        if (user.mailAddress == null || user.mailAddress == "")
+        {
+            return BadRequest("No user data provided.");
+        }
+
+        if (user.mailAddress == "new")
+        {
+            return BadRequest("User mail address 'new' not allowed.");
         }
 
         User userInDb = new User();

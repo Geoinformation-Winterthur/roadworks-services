@@ -109,7 +109,7 @@ namespace roadwork_portal_service.Controllers
         // POST roadworkactivity/
         [HttpPost]
         [Authorize]
-        public ActionResult<RoadWorkNeedFeature> AddActivity([FromBody] RoadWorkActivityFeature roadWorkActivityFeature)
+        public ActionResult<RoadWorkActivityFeature> AddActivity([FromBody] RoadWorkActivityFeature roadWorkActivityFeature)
         {
             Polygon roadWorkActivityPoly = roadWorkActivityFeature.geometry.getNtsPolygon();
             Coordinate[] coordinates = roadWorkActivityPoly.Coordinates;
