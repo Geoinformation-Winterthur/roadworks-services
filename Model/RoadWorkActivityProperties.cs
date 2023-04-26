@@ -7,6 +7,7 @@ namespace roadwork_portal_service.Model;
 public class RoadWorkActivityProperties
 {
     public string uuid { get; set; } = "";
+    public string name { get; set; } = "";
     public ManagementAreaFeature managementarea
                 { get; set; } = new ManagementAreaFeature();
     public User projectManager { get; set; } = new User();

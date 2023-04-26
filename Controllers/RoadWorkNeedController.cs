@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NetTopologySuite.Geometries;
@@ -24,9 +25,11 @@ namespace roadwork_portal_service.Controllers
         // GET roadworkneed/
         [HttpGet]
         [Authorize]
-        public IEnumerable<RoadWorkNeedFeature> GetNeeds(string? uuid = "", bool summary = false)
+        public IEnumerable<RoadWorkNeedFeature> GetNeeds(string? uuid = "", string? roadWorkActivityUuid = "",
+                bool summary = false)
         {
             List<RoadWorkNeedFeature> projectsFromDb = new List<RoadWorkNeedFeature>();
+
             // get data of current user from database:
             using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
             {
@@ -272,9 +275,10 @@ namespace roadwork_portal_service.Controllers
 
         // PUT roadworkneed/
         [HttpPut]
-        [Authorize]
+        [Authorize(Roles = "orderer,administrator")]
         public ActionResult<RoadWorkNeedFeature> UpdateNeed([FromBody] RoadWorkNeedFeature roadWorkNeedFeature)
         {
+
             if (roadWorkNeedFeature != null && roadWorkNeedFeature.geometry != null &&
                     roadWorkNeedFeature.geometry.coordinates != null &&
                     roadWorkNeedFeature.geometry.coordinates.Length > 2)
@@ -309,6 +313,39 @@ namespace roadwork_portal_service.Controllers
                         if (roadWorkNeedPoly.Area > 10.0)
                         {
                             pgConn.Open();
+
+
+                            if (User.IsInRole("orderer"))
+                            {
+
+                                NpgsqlCommand selectOrdererOfNeedComm = pgConn.CreateCommand();
+                                selectOrdererOfNeedComm.CommandText = @"SELECT u.e_mail
+                                    FROM ""roadworkneeds"" r
+                                    LEFT JOIN ""users"" u ON r.orderer = u.uuid
+                                    WHERE r.uuid=@uuid";
+                                selectOrdererOfNeedComm.Parameters.AddWithValue("uuid", roadWorkNeedFeature.properties.uuid);
+
+                                string eMailOfOrderer = "";
+
+                                using (NpgsqlDataReader reader = selectOrdererOfNeedComm.ExecuteReader())
+                                {
+                                    if (reader.Read())
+                                    {
+                                        eMailOfOrderer = reader.IsDBNull(0) ? "" : reader.GetString(0);
+                                    }
+                                }
+
+                                string mailOfLoggedInUser = User.FindFirstValue(ClaimTypes.Email);
+
+                                if(mailOfLoggedInUser != eMailOfOrderer)
+                                {
+                                    _logger.LogWarning("User " + mailOfLoggedInUser + " tried to edit a roadwork need to which he has access.");
+                                    roadWorkNeedFeature.errorMessage = "KOPAL-14";
+                                    return Ok(roadWorkNeedFeature);
+                                }
+
+                            }
+
 
                             NpgsqlCommand selectMgmtAreaComm = pgConn.CreateCommand();
                             selectMgmtAreaComm.CommandText = @"SELECT m.uuid,
