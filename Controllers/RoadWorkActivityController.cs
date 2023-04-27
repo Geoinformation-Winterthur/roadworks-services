@@ -34,7 +34,7 @@ namespace roadwork_portal_service.Controllers
                 NpgsqlCommand selectComm = pgConn.CreateCommand();
                 selectComm.CommandText = @"SELECT r.uuid, r.name, r.managementarea, m.manager, am.first_name, am.last_name,
                             r.projectmanager, pm.first_name, pm.last_name, r.traffic_agent,
-                            ta.first_name, ta.last_name, comment, created, last_modified, r.finish_from, r.finish_to,
+                            ta.first_name, ta.last_name, description, created, last_modified, r.finish_from, r.finish_to,
                             r.costs, c.code, c.name, r.geom
                         FROM ""roadworkactivities"" r
                         LEFT JOIN ""managementareas"" m ON r.managementarea = m.uuid
@@ -83,7 +83,7 @@ namespace roadwork_portal_service.Controllers
                         trafficAgent.lastName = reader.IsDBNull(11) ? "" : reader.GetString(11);
                         projectFeatureFromDb.properties.trafficAgent = trafficAgent;
 
-                        projectFeatureFromDb.properties.comment = reader.IsDBNull(12) ? "" : reader.GetString(12);
+                        projectFeatureFromDb.properties.description = reader.IsDBNull(12) ? "" : reader.GetString(12);
                         projectFeatureFromDb.properties.created = reader.IsDBNull(13) ? DateTime.MinValue : reader.GetDateTime(13);
                         projectFeatureFromDb.properties.lastModified = reader.IsDBNull(14) ? DateTime.MinValue : reader.GetDateTime(14);
                         projectFeatureFromDb.properties.finishFrom = reader.IsDBNull(15) ? DateTime.MinValue : reader.GetDateTime(15);
@@ -174,11 +174,11 @@ namespace roadwork_portal_service.Controllers
 
                     NpgsqlCommand insertComm = pgConn.CreateCommand();
                     insertComm.CommandText = @"INSERT INTO ""roadworkactivities""
-                                    (uuid, managementarea, projectmanager, traffic_agent, comment,
+                                    (uuid, managementarea, projectmanager, traffic_agent, description,
                                     created, last_modified, finish_from, finish_to,
                                     costs, costs_type, geom)
                                     VALUES (@uuid, @managementarea, @projectmanager, @traffic_agent,
-                                    @comment, current_timestamp, @last_modified, @finish_from,
+                                    @description, current_timestamp, @last_modified, @finish_from,
                                     @finish_to, @costs, @costs_type, @geom)";
                     insertComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
                     if (roadWorkActivityFeature.properties.managementarea.properties.uuid != "")
@@ -205,7 +205,7 @@ namespace roadwork_portal_service.Controllers
                     {
                         insertComm.Parameters.AddWithValue("traffic_agent", DBNull.Value);
                     }
-                    insertComm.Parameters.AddWithValue("comment", roadWorkActivityFeature.properties.comment);
+                    insertComm.Parameters.AddWithValue("description", roadWorkActivityFeature.properties.description);
                     insertComm.Parameters.AddWithValue("last_modified", roadWorkActivityFeature.properties.lastModified);
                     insertComm.Parameters.AddWithValue("finish_from", roadWorkActivityFeature.properties.finishFrom);
                     insertComm.Parameters.AddWithValue("finish_to", roadWorkActivityFeature.properties.finishTo);

@@ -12,7 +12,7 @@ public class RoadWorkActivityProperties
                 { get; set; } = new ManagementAreaFeature();
     public User projectManager { get; set; } = new User();
     public User trafficAgent { get; set; } = new User();
-    public string comment { get; set; } = "";
+    public string description { get; set; } = "";
     public DateTime created { get; set; } = DateTime.MinValue;
     public DateTime lastModified { get; set; } = DateTime.MinValue;
     public DateTime finishFrom { get; set; } = DateTime.MinValue;

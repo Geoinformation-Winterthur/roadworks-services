@@ -20,9 +20,10 @@ public class RoadWorkNeedProperties
     public DateTime finishLateTo { get; set; } = DateTime.MinValue;
     public Priority priority { get; set; } = new Priority();
     public Status status { get; set; } = new Status();
-    public string comment { get; set; } = "";
+    public string description { get; set; } = "";
     public ManagementAreaFeature managementarea
                 { get; set; } = new ManagementAreaFeature();
     public string roadWorkActivityUuid { get; set; } = "";
+    public bool isEditingAllowed { get; set; } = false;
 }
 
