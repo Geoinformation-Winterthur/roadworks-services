@@ -20,5 +20,7 @@ public class RoadWorkActivityProperties
     public decimal costs { get; set; } = 0m;
     public CostTypes costsType { get; set; } = new CostTypes();
 
+    public string[] roadWorkNeedsUuids { get; set; } = new string[0];
+
 }
 

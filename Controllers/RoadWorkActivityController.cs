@@ -169,15 +169,14 @@ namespace roadwork_portal_service.Controllers
                         return Ok(roadWorkActivityFeature);
                     }
 
-                    Guid resultUuid = Guid.NewGuid();
-                    roadWorkActivityFeature.properties.uuid = resultUuid.ToString();
+                    roadWorkActivityFeature.properties.uuid = Guid.NewGuid().ToString();
 
                     NpgsqlCommand insertComm = pgConn.CreateCommand();
                     insertComm.CommandText = @"INSERT INTO ""roadworkactivities""
-                                    (uuid, managementarea, projectmanager, traffic_agent, description,
+                                    (uuid, name, managementarea, projectmanager, traffic_agent, description,
                                     created, last_modified, finish_from, finish_to,
                                     costs, costs_type, geom)
-                                    VALUES (@uuid, @managementarea, @projectmanager, @traffic_agent,
+                                    VALUES (@uuid, @name, @managementarea, @projectmanager, @traffic_agent,
                                     @description, current_timestamp, @last_modified, @finish_from,
                                     @finish_to, @costs, @costs_type, @geom)";
                     insertComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
@@ -205,6 +204,7 @@ namespace roadwork_portal_service.Controllers
                     {
                         insertComm.Parameters.AddWithValue("traffic_agent", DBNull.Value);
                     }
+                    insertComm.Parameters.AddWithValue("name", roadWorkActivityFeature.properties.name);
                     insertComm.Parameters.AddWithValue("description", roadWorkActivityFeature.properties.description);
                     insertComm.Parameters.AddWithValue("last_modified", roadWorkActivityFeature.properties.lastModified);
                     insertComm.Parameters.AddWithValue("finish_from", roadWorkActivityFeature.properties.finishFrom);
@@ -214,6 +214,26 @@ namespace roadwork_portal_service.Controllers
                     insertComm.Parameters.AddWithValue("geom", roadWorkActivityPoly);
 
                     insertComm.ExecuteNonQuery();
+
+                    if (roadWorkActivityFeature.properties.roadWorkNeedsUuids != null &&
+                            roadWorkActivityFeature.properties.roadWorkNeedsUuids.Length != 0)
+                    {
+
+
+                        List<Guid> roadWorkNeedsUuidsList = new List<Guid>();
+                        foreach (string roadWorkNeedUuid in roadWorkActivityFeature.properties.roadWorkNeedsUuids)
+                        {
+                            roadWorkNeedsUuidsList.Add(new Guid(roadWorkNeedUuid));
+                        }
+                        NpgsqlCommand updateComm = pgConn.CreateCommand();
+                        updateComm.CommandText = @"UPDATE ""roadworkneeds"" SET
+                                    roadworkactivity = @roadworkactivity
+                                    WHERE uuid = ANY (@uuids)";
+                        updateComm.Parameters.AddWithValue("roadworkactivity", new Guid(roadWorkActivityFeature.properties.uuid));
+                        updateComm.Parameters.AddWithValue("uuids", roadWorkNeedsUuidsList);
+                        updateComm.ExecuteNonQuery();
+
+                    }
 
                 }
                 catch (Exception ex)
@@ -229,6 +249,78 @@ namespace roadwork_portal_service.Controllers
             }
 
             return Ok(roadWorkActivityFeature);
+        }
+
+        // DELETE /roadworkactivity?uuid=...
+        [HttpDelete]
+        [Authorize(Roles = "territorymanager,administrator")]
+        public ActionResult<ErrorMessage> DeleteActivity(string uuid)
+        {
+            ErrorMessage errorResult = new ErrorMessage();
+
+            try
+            {
+
+                if (uuid == null)
+                {
+                    _logger.LogWarning("No uuid provided by user in delete roadwork activity process. " +
+                                "Thus process is canceled, no roadwork activity is deleted.");
+                    errorResult.errorMessage = "KOPAL-15";
+                    return Ok(errorResult);
+                }
+
+                uuid = uuid.ToLower().Trim();
+
+                if (uuid == "")
+                {
+                    _logger.LogWarning("No uuid provided by user in delete roadwork activity process. " +
+                                "Thus process is canceled, no roadwork activity is deleted.");
+                    errorResult.errorMessage = "KOPAL-15";
+                    return Ok(errorResult);
+                }
+
+                int noAffectedRows = 0;
+                using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
+                {
+                    pgConn.Open();
+                    using (NpgsqlTransaction deleteTransAction = pgConn.BeginTransaction())
+                    {
+                        NpgsqlCommand updateComm = pgConn.CreateCommand();
+                        updateComm.CommandText = @"UPDATE ""roadworkneeds""
+                                SET uuid=NULL
+                                WHERE uuid=@uuid";
+                        updateComm.Parameters.AddWithValue("uuid", new Guid(uuid));
+                        updateComm.ExecuteNonQuery();
+
+                        NpgsqlCommand deleteComm = pgConn.CreateCommand();
+                        deleteComm = pgConn.CreateCommand();
+                        deleteComm.CommandText = @"DELETE FROM ""roadworkactivities""
+                                WHERE uuid=@uuid";
+                        deleteComm.Parameters.AddWithValue("uuid", new Guid(uuid));
+                        noAffectedRows = deleteComm.ExecuteNonQuery();
+                        deleteTransAction.Commit();
+                    }
+
+                    pgConn.Close();
+                }
+
+                if (noAffectedRows == 1)
+                {
+                    return Ok();
+                }
+
+                _logger.LogError("Unknown error.");
+                errorResult.errorMessage = "KOPAL-3";
+                return Ok(errorResult);
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                errorResult.errorMessage = "KOPAL-3";
+                return Ok(errorResult);
+            }
+
         }
 
     }
