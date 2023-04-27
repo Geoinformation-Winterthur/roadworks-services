@@ -24,7 +24,7 @@ namespace roadwork_portal_service.Controllers
 
         // GET roadworkneed/
         [HttpGet]
-        [Authorize]
+        [Authorize(Roles = "orderer,territorymanager,administrator")]
         public IEnumerable<RoadWorkNeedFeature> GetNeeds(string? uuid = "", string? roadWorkActivityUuid = "",
                 bool summary = false)
         {
@@ -129,7 +129,7 @@ namespace roadwork_portal_service.Controllers
 
         // POST roadworkneed/
         [HttpPost]
-        [Authorize]
+        [Authorize(Roles = "orderer,administrator")]
         public ActionResult<RoadWorkNeedFeature> AddNeed([FromBody] RoadWorkNeedFeature roadWorkNeedFeature)
         {
             Polygon roadWorkNeedPoly = roadWorkNeedFeature.geometry.getNtsPolygon();

@@ -23,7 +23,7 @@ namespace roadwork_portal_service.Controllers
 
         // GET roadworkactivity/
         [HttpGet]
-        [Authorize]
+        [Authorize(Roles = "orderer,territorymanager,administrator")]
         public IEnumerable<RoadWorkActivityFeature> GetActivities(string? uuid = "", bool summary = false)
         {
             List<RoadWorkActivityFeature> projectsFromDb = new List<RoadWorkActivityFeature>();
@@ -109,7 +109,7 @@ namespace roadwork_portal_service.Controllers
 
         // POST roadworkactivity/
         [HttpPost]
-        [Authorize]
+        [Authorize(Roles = "territorymanager,administrator")]
         public ActionResult<RoadWorkActivityFeature> AddActivity([FromBody] RoadWorkActivityFeature roadWorkActivityFeature)
         {
             Polygon roadWorkActivityPoly = roadWorkActivityFeature.geometry.getNtsPolygon();

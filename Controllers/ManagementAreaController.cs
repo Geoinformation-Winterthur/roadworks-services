@@ -25,7 +25,7 @@ namespace roadwork_portal_service.Controllers
 
         // GET managementarea/
         [HttpGet]
-        [Authorize]
+        [Authorize(Roles = "territorymanager,administrator")]
         public ActionResult<FeatureCollection> GetManagementAreas()
         {
             FeatureCollection managementAreas = new FeatureCollection();
