@@ -24,7 +24,7 @@ namespace roadwork_portal_service.Controllers
         // GET roadworkactivity/
         [HttpGet]
         [Authorize(Roles = "orderer,territorymanager,administrator")]
-        public IEnumerable<RoadWorkActivityFeature> GetActivities(string? uuid = "", bool summary = false)
+        public async Task<IEnumerable<RoadWorkActivityFeature>> GetActivities(string? uuid = "", bool summary = false)
         {
             List<RoadWorkActivityFeature> projectsFromDb = new List<RoadWorkActivityFeature>();
             // get data of current user from database:
@@ -53,7 +53,7 @@ namespace roadwork_portal_service.Controllers
                     }
                 }
 
-                using (NpgsqlDataReader reader = selectComm.ExecuteReader())
+                using (NpgsqlDataReader reader = await selectComm.ExecuteReaderAsync())
                 {
                     RoadWorkActivityFeature projectFeatureFromDb;
                     while (reader.Read())
@@ -101,6 +101,27 @@ namespace roadwork_portal_service.Controllers
                         projectsFromDb.Add(projectFeatureFromDb);
                     }
                 }
+
+                foreach (RoadWorkActivityFeature activityFromDb in projectsFromDb)
+                {
+                    NpgsqlCommand selectRoadWorkNeedComm = pgConn.CreateCommand();
+                    selectRoadWorkNeedComm.CommandText = @"SELECT uuid
+                            FROM ""roadworkneeds""
+                            WHERE roadworkactivity = @roadworkactivity_uuid";
+                    selectRoadWorkNeedComm.Parameters.AddWithValue("roadworkactivity_uuid", new Guid(activityFromDb.properties.uuid));
+
+                    using (NpgsqlDataReader roadWorkNeedReader = await selectRoadWorkNeedComm.ExecuteReaderAsync())
+                    {
+                        List<string> roadWorkNeedsUuids = new List<string>();
+                        while (roadWorkNeedReader.Read())
+                        {
+                            if (!roadWorkNeedReader.IsDBNull(0))
+                                roadWorkNeedsUuids.Add(roadWorkNeedReader.GetGuid(0).ToString());
+                        }
+                        activityFromDb.properties.roadWorkNeedsUuids = roadWorkNeedsUuids.ToArray();
+                    }
+                }
+
                 pgConn.Close();
             }
 
@@ -110,7 +131,7 @@ namespace roadwork_portal_service.Controllers
         // POST roadworkactivity/
         [HttpPost]
         [Authorize(Roles = "territorymanager,administrator")]
-        public ActionResult<RoadWorkActivityFeature> AddActivity([FromBody] RoadWorkActivityFeature roadWorkActivityFeature)
+        public async Task<ActionResult<RoadWorkActivityFeature>> AddActivity([FromBody] RoadWorkActivityFeature roadWorkActivityFeature)
         {
             Polygon roadWorkActivityPoly = roadWorkActivityFeature.geometry.getNtsPolygon();
             Coordinate[] coordinates = roadWorkActivityPoly.Coordinates;
@@ -152,7 +173,7 @@ namespace roadwork_portal_service.Controllers
 
                     roadWorkActivityFeature.properties.managementarea = new ManagementAreaFeature();
 
-                    using (NpgsqlDataReader reader = selectMgmtAreaComm.ExecuteReader())
+                    using (NpgsqlDataReader reader = await selectMgmtAreaComm.ExecuteReaderAsync())
                     {
                         if (reader.Read())
                         {
@@ -170,6 +191,8 @@ namespace roadwork_portal_service.Controllers
                     }
 
                     roadWorkActivityFeature.properties.uuid = Guid.NewGuid().ToString();
+
+                    await using NpgsqlTransaction trans = await pgConn.BeginTransactionAsync();
 
                     NpgsqlCommand insertComm = pgConn.CreateCommand();
                     insertComm.CommandText = @"INSERT INTO ""roadworkactivities""
@@ -213,7 +236,7 @@ namespace roadwork_portal_service.Controllers
                     insertComm.Parameters.AddWithValue("costs_type", "fullcost"); // TODO make this dynamic 
                     insertComm.Parameters.AddWithValue("geom", roadWorkActivityPoly);
 
-                    insertComm.ExecuteNonQuery();
+                    await insertComm.ExecuteNonQueryAsync();
 
                     if (roadWorkActivityFeature.properties.roadWorkNeedsUuids != null &&
                             roadWorkActivityFeature.properties.roadWorkNeedsUuids.Length != 0)
@@ -231,10 +254,10 @@ namespace roadwork_portal_service.Controllers
                                     WHERE uuid = ANY (@uuids)";
                         updateComm.Parameters.AddWithValue("roadworkactivity", new Guid(roadWorkActivityFeature.properties.uuid));
                         updateComm.Parameters.AddWithValue("uuids", roadWorkNeedsUuidsList);
-                        updateComm.ExecuteNonQuery();
+                        await updateComm.ExecuteNonQueryAsync();
 
                     }
-
+                    await trans.CommitAsync();
                 }
                 catch (Exception ex)
                 {
