@@ -25,7 +25,7 @@ namespace roadwork_portal_service.Controllers
         // GET roadworkneed/
         [HttpGet]
         [Authorize(Roles = "orderer,territorymanager,administrator")]
-        public IEnumerable<RoadWorkNeedFeature> GetNeeds(string? uuid = "", string? roadWorkActivityUuid = "",
+        public IEnumerable<RoadWorkNeedFeature> GetNeeds(string? uuids = "", string? roadWorkActivityUuid = "",
                 bool summary = false)
         {
             List<RoadWorkNeedFeature> projectsFromDb = new List<RoadWorkNeedFeature>();
@@ -40,7 +40,8 @@ namespace roadwork_portal_service.Controllers
                             r.finish_optimum_from, r.finish_optimum_to, r.finish_late_from,
                             r.finish_late_to, p.code, s.code, s.name,
                             r.description, r.managementarea, m.manager, u2.first_name, u2.last_name,
-                            r.created, r.last_modified, r.roadworkactivity, u.e_mail, r.geom
+                            r.created, r.last_modified, r.roadworkactivity, u.e_mail,
+                            r.longer_six_months, r.geom
                         FROM ""roadworkneeds"" r
                         LEFT JOIN ""users"" u ON r.orderer = u.uuid
                         LEFT JOIN ""organisationalunits"" o ON u.org_unit = o.uuid
@@ -50,13 +51,16 @@ namespace roadwork_portal_service.Controllers
                         LEFT JOIN ""users"" u2 ON m.manager = u2.uuid
                         LEFT JOIN ""roadworkneedtypes"" rwt ON r.kind = rwt.code";
 
-                if (uuid != null)
+                if (uuids != null)
                 {
-                    uuid = uuid.Trim().ToLower();
-                    if (uuid != "")
+                    uuids = uuids.Trim().ToLower();
+                    if (uuids != "")
                     {
-                        selectComm.CommandText += " WHERE r.uuid=@uuid";
-                        selectComm.Parameters.AddWithValue("uuid", new Guid(uuid));
+                        if(uuids.EndsWith(",")){
+                            uuids = uuids.Substring(0, uuids.Length - 1);
+                        }
+                        selectComm.CommandText += " WHERE r.uuid IN (@uuids)";
+                        selectComm.Parameters.AddWithValue("uuids", new Guid(uuids));
                     }
                 }
 
@@ -115,7 +119,9 @@ namespace roadwork_portal_service.Controllers
                             needFeatureFromDb.properties.isEditingAllowed = true;
                         }
 
-                        Polygon ntsPoly = reader.IsDBNull(26) ? Polygon.Empty : reader.GetValue(26) as Polygon;
+                        needFeatureFromDb.properties.longer6Month = reader.IsDBNull(26) ? false : reader.GetBoolean(26);
+
+                        Polygon ntsPoly = reader.IsDBNull(27) ? Polygon.Empty : reader.GetValue(27) as Polygon;
                         needFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
 
                         projectsFromDb.Add(needFeatureFromDb);
@@ -230,10 +236,10 @@ namespace roadwork_portal_service.Controllers
                     insertComm.CommandText = @"INSERT INTO ""roadworkneeds""
                                     (uuid, name, kind, orderer, created, last_modified, finish_early_from, finish_early_to,
                                     finish_optimum_from, finish_optimum_to, finish_late_from,
-                                    finish_late_to, priority, status, description, managementarea, geom)
+                                    finish_late_to, priority, status, description, managementarea, longer_six_months, geom)
                                     VALUES (@uuid, @name, @kind, @orderer, current_timestamp, current_timestamp,
                                     @finish_early_from, @finish_early_to, @finish_optimum_from, @finish_optimum_to, @finish_late_from,
-                                    @finish_late_to, @priority, @status, @description, @managementarea, @geom)";
+                                    @finish_late_to, @priority, @status, @description, @managementarea, @longer_six_months, @geom)";
                     insertComm.Parameters.AddWithValue("uuid", new Guid(roadWorkNeedFeature.properties.uuid));
                     insertComm.Parameters.AddWithValue("name", roadWorkNeedFeature.properties.name);
                     insertComm.Parameters.AddWithValue("kind", roadWorkNeedFeature.properties.kind.code);
@@ -262,6 +268,7 @@ namespace roadwork_portal_service.Controllers
                     {
                         insertComm.Parameters.AddWithValue("managementarea", DBNull.Value);
                     }
+                    insertComm.Parameters.AddWithValue("longer_six_months", roadWorkNeedFeature.properties.longer6Month);
                     insertComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
 
                     insertComm.ExecuteNonQuery();
@@ -391,7 +398,7 @@ namespace roadwork_portal_service.Controllers
                                     finish_optimum_from=@finish_optimum_from, finish_optimum_to=@finish_optimum_to,
                                     finish_late_from=@finish_late_from, finish_late_to=@finish_late_to,
                                     priority=@priority, status=@status, description=@description,
-                                    managementarea=@managementarea, geom=@geom
+                                    managementarea=@managementarea, longer_six_months=@longer_six_months, geom=@geom
                                     WHERE uuid=@uuid";
 
                             updateComm.Parameters.AddWithValue("name", roadWorkNeedFeature.properties.name);
@@ -421,6 +428,7 @@ namespace roadwork_portal_service.Controllers
                             {
                                 updateComm.Parameters.AddWithValue("managementarea", DBNull.Value);
                             }
+                            updateComm.Parameters.AddWithValue("longer_six_months", roadWorkNeedFeature.properties.longer6Month);
                             updateComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
                             updateComm.Parameters.AddWithValue("uuid", new Guid(roadWorkNeedFeature.properties.uuid));
 

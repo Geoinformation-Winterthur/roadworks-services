@@ -20,6 +20,7 @@ public class RoadWorkNeedProperties
     public DateTime finishLateTo { get; set; } = DateTime.MinValue;
     public Priority priority { get; set; } = new Priority();
     public Status status { get; set; } = new Status();
+    public bool longer6Month { get; set; } = false;
     public string description { get; set; } = "";
     public ManagementAreaFeature managementarea
                 { get; set; } = new ManagementAreaFeature();
