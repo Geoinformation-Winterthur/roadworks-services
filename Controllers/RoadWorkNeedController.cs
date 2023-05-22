@@ -56,11 +56,17 @@ namespace roadwork_portal_service.Controllers
                     uuids = uuids.Trim().ToLower();
                     if (uuids != "")
                     {
-                        if(uuids.EndsWith(",")){
-                            uuids = uuids.Substring(0, uuids.Length - 1);
+                        List<Guid> uuidsList = new List<Guid>();
+
+                        foreach(string uuid in uuids.Split(","))
+                        {
+                            if(uuid != null && uuid != "")
+                            {
+                                uuidsList.Add(new Guid(uuid));
+                            }
                         }
-                        selectComm.CommandText += " WHERE r.uuid IN (@uuids)";
-                        selectComm.Parameters.AddWithValue("uuids", new Guid(uuids));
+                        selectComm.CommandText += " WHERE r.uuid = ANY (:uuids)";
+                        selectComm.Parameters.AddWithValue("uuids", uuidsList);
                     }
                 }
 
@@ -114,7 +120,7 @@ namespace roadwork_portal_service.Controllers
                         string mailOfLoggedInUser = User.FindFirstValue(ClaimTypes.Email);
                         string roleOfLoggedInUser = User.FindFirstValue(ClaimTypes.Role);
 
-                        if(User.IsInRole("administrator") || ordererMailAddress == mailOfLoggedInUser)
+                        if (User.IsInRole("administrator") || ordererMailAddress == mailOfLoggedInUser)
                         {
                             needFeatureFromDb.properties.isEditingAllowed = true;
                         }
@@ -352,10 +358,10 @@ namespace roadwork_portal_service.Controllers
 
                                 string mailOfLoggedInUser = User.FindFirstValue(ClaimTypes.Email);
 
-                                if(mailOfLoggedInUser != eMailOfOrderer)
+                                if (mailOfLoggedInUser != eMailOfOrderer)
                                 {
-                                    _logger.LogWarning("User " + mailOfLoggedInUser + " has no right to edit "+
-                                        "roadwork need " + roadWorkNeedFeature.properties.uuid + " but tried "+
+                                    _logger.LogWarning("User " + mailOfLoggedInUser + " has no right to edit " +
+                                        "roadwork need " + roadWorkNeedFeature.properties.uuid + " but tried " +
                                         "to edit it.");
                                     roadWorkNeedFeature.errorMessage = "KOPAL-14";
                                     return Ok(roadWorkNeedFeature);
@@ -369,7 +375,7 @@ namespace roadwork_portal_service.Controllers
                                         u.first_name, u.last_name
                                     FROM ""managementareas"" m
                                     LEFT JOIN ""users"" u ON m.manager = u.uuid
-                                    WHERE ST_Area(ST_Intersection(@geom, geom)) > 0
+                                    WHERE ST_Intersects(@geom, geom)
                                     ORDER BY ST_Area(ST_Intersection(@geom, geom)) DESC
                                     LIMIT 1";
                             selectMgmtAreaComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
@@ -463,6 +469,65 @@ namespace roadwork_portal_service.Controllers
                 }
             }
             return Ok(roadWorkNeedFeature);
+        }
+
+        // DELETE /roadworkneed?uuid=...&releaseonly=true
+        [HttpDelete]
+        [Authorize(Roles = "administrator")]
+        public ActionResult<ErrorMessage> DeleteNeed(string uuid, bool releaseOnly = false)
+        {
+            ErrorMessage errorResult = new ErrorMessage();
+
+            if (uuid == null)
+            {
+                _logger.LogWarning("No uuid provided by user in delete roadwork need process. " +
+                            "Thus process is canceled, no roadwork need is deleted.");
+                errorResult.errorMessage = "KOPAL-15";
+                return Ok(errorResult);
+            }
+
+            uuid = uuid.ToLower().Trim();
+
+            if (uuid == "")
+            {
+                _logger.LogWarning("No uuid provided by user in delete roadwork need process. " +
+                            "Thus process is canceled, no roadwork need is deleted.");
+                errorResult.errorMessage = "KOPAL-15";
+                return Ok(errorResult);
+            }
+
+            using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
+            {
+                pgConn.Open();
+                NpgsqlCommand deleteComm = pgConn.CreateCommand();
+                if (releaseOnly)
+                {
+                    // if activityUuid is given, then only remove the given need from the
+                    // given activity, but do not delete activity as a whole:
+                    deleteComm.CommandText = @"UPDATE ""roadworkneeds""
+                                SET roadworkactivity=NULL
+                                WHERE uuid=@uuid";
+                }
+                else
+                {
+                    deleteComm.CommandText = @"DELETE FROM ""roadworkneeds""
+                                WHERE uuid=@uuid";
+                }
+                deleteComm.Parameters.AddWithValue("uuid", new Guid(uuid));
+
+                int noAffectedRows = deleteComm.ExecuteNonQuery();
+
+                pgConn.Close();
+
+                if (noAffectedRows == 1)
+                {
+                    return Ok();
+                }
+            }
+
+            _logger.LogError("Fatal error.");
+            errorResult.errorMessage = "KOPAL-3";
+            return Ok(errorResult);
         }
 
         private static List<(string, Point)> _getFromToListFromDb(

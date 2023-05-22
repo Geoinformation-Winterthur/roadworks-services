@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NetTopologySuite.Geometries;
@@ -263,6 +264,194 @@ namespace roadwork_portal_service.Controllers
                 catch (Exception ex)
                 {
                     _logger.LogError(ex.Message);
+                    roadWorkActivityFeature.errorMessage = "KOPAL-3";
+                    return Ok(roadWorkActivityFeature);
+                }
+                finally
+                {
+                    pgConn.Close();
+                }
+            }
+
+            return Ok(roadWorkActivityFeature);
+        }
+
+        // PUT roadworkactivity/
+        [HttpPut]
+        [Authorize(Roles = "territorymanager,administrator")]
+        public ActionResult<RoadWorkActivityFeature> UpdateActivity([FromBody] RoadWorkActivityFeature roadWorkActivityFeature)
+        {
+
+            if (roadWorkActivityFeature == null)
+            {
+                _logger.LogWarning("No roadworkactivity received in update activity method.");
+                roadWorkActivityFeature = new RoadWorkActivityFeature();
+                roadWorkActivityFeature.errorMessage = "KOPAL-3";
+                return Ok(roadWorkActivityFeature);
+            }
+
+            if (roadWorkActivityFeature.geometry == null ||
+                    roadWorkActivityFeature.geometry.coordinates == null ||
+                    roadWorkActivityFeature.geometry.coordinates.Length < 3)
+            {
+                _logger.LogWarning("Roadworkactivity has a geometry error.");
+                roadWorkActivityFeature = new RoadWorkActivityFeature();
+                roadWorkActivityFeature.errorMessage = "KOPAL-3";
+                return Ok(roadWorkActivityFeature);
+            }
+
+            Polygon roadWorkActivityPoly = roadWorkActivityFeature.geometry.getNtsPolygon();
+
+            if (!roadWorkActivityPoly.IsSimple)
+            {
+                _logger.LogWarning("Geometry of roadworkactivity " + roadWorkActivityFeature.properties.uuid +
+                        " does not fulfill the criteria of geometrical simplicity.");
+                roadWorkActivityFeature = new RoadWorkActivityFeature();
+                roadWorkActivityFeature.errorMessage = "KOPAL-10";
+                return Ok(roadWorkActivityFeature);
+            }
+
+            if (!roadWorkActivityPoly.IsValid)
+            {
+                _logger.LogWarning("Geometry of roadworkactivity " + roadWorkActivityFeature.properties.uuid +
+                        " does not fulfill the criteria of geometrical validity.");
+                roadWorkActivityFeature = new RoadWorkActivityFeature();
+                roadWorkActivityFeature.errorMessage = "KOPAL-11";
+                return Ok(roadWorkActivityFeature);
+            }
+
+            // error if activity area is less equal 10qm:
+            if (roadWorkActivityPoly.Area <= 10.0)
+            {
+                _logger.LogWarning("Roadworkactivity area is less than or equal 10qm.");
+                roadWorkActivityFeature = new RoadWorkActivityFeature();
+                roadWorkActivityFeature.errorMessage = "KOPAL-8";
+                return Ok(roadWorkActivityFeature);
+            }
+
+            using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
+            {
+                try
+                {
+
+                    pgConn.Open();
+
+                    using NpgsqlTransaction trans = pgConn.BeginTransaction();
+
+                    if (!User.IsInRole("administrator"))
+                    {
+                        NpgsqlCommand selectManagerOfActivityComm = pgConn.CreateCommand();
+                        selectManagerOfActivityComm.CommandText = @"SELECT u.e_mail
+                                    FROM ""roadworkactivities"" r
+                                    LEFT JOIN ""users"" u ON r.projectmanager = u.uuid
+                                    WHERE r.uuid=@uuid";
+                        selectManagerOfActivityComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
+
+                        string eMailOfManager = "";
+
+                        using (NpgsqlDataReader reader = selectManagerOfActivityComm.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                eMailOfManager = reader.IsDBNull(0) ? "" : reader.GetString(0);
+                            }
+                        }
+
+                        string mailOfLoggedInUser = User.FindFirstValue(ClaimTypes.Email);
+
+                        if (mailOfLoggedInUser != eMailOfManager)
+                        {
+                            _logger.LogWarning("User " + mailOfLoggedInUser + " has no right to edit " +
+                                "roadwork activity " + roadWorkActivityFeature.properties.uuid + " but tried " +
+                                "to edit it.");
+                            roadWorkActivityFeature.errorMessage = "KOPAL-14";
+                            return Ok(roadWorkActivityFeature);
+                        }
+
+                    }
+
+                    NpgsqlCommand updateComm = pgConn.CreateCommand();
+                    updateComm.CommandText = @"UPDATE ""roadworkactivities""
+                                    SET name=@name, managementarea=@managementarea, projectmanager=@projectmanager,
+                                    traffic_agent=@traffic_agent, description=@description,
+                                    created=current_timestamp, last_modified=current_timestamp,
+                                    finish_from=current_timestamp, finish_to=current_timestamp,
+                                    costs=@costs, costs_type=@costs_type, geom=@geom
+                                    WHERE uuid=@uuid";
+
+                    updateComm.Parameters.AddWithValue("name", roadWorkActivityFeature.properties.name);
+                    if (roadWorkActivityFeature.properties.managementarea.properties.uuid != "")
+                    {
+                        updateComm.Parameters.AddWithValue("managementarea",
+                                new Guid(roadWorkActivityFeature.properties.managementarea.properties.uuid));
+                    }
+                    else
+                    {
+                        updateComm.Parameters.AddWithValue("managementarea", DBNull.Value);
+                    }
+                    if (roadWorkActivityFeature.properties.projectManager.uuid != "")
+                    {
+                        updateComm.Parameters.AddWithValue("projectmanager",
+                                new Guid(roadWorkActivityFeature.properties.projectManager.uuid));
+                    }
+                    else
+                    {
+                        updateComm.Parameters.AddWithValue("projectmanager", DBNull.Value);
+                    }
+                    if (roadWorkActivityFeature.properties.trafficAgent.uuid != "")
+                    {
+                        updateComm.Parameters.AddWithValue("traffic_agent",
+                                new Guid(roadWorkActivityFeature.properties.trafficAgent.uuid));
+                    }
+                    else
+                    {
+                        updateComm.Parameters.AddWithValue("traffic_agent", DBNull.Value);
+                    }
+                    updateComm.Parameters.AddWithValue("description", roadWorkActivityFeature.properties.description);
+                    updateComm.Parameters.AddWithValue("created", roadWorkActivityFeature.properties.created);
+                    updateComm.Parameters.AddWithValue("last_modified", roadWorkActivityFeature.properties.lastModified);
+                    updateComm.Parameters.AddWithValue("finish_from", roadWorkActivityFeature.properties.finishFrom);
+                    updateComm.Parameters.AddWithValue("finish_to", roadWorkActivityFeature.properties.finishTo);
+                    updateComm.Parameters.AddWithValue("costs", roadWorkActivityFeature.properties.costs);
+                    updateComm.Parameters.AddWithValue("costs_type", roadWorkActivityFeature.properties.costsType.code);
+                    updateComm.Parameters.AddWithValue("geom", roadWorkActivityPoly);
+                    updateComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
+
+                    updateComm.ExecuteNonQuery();
+
+                    NpgsqlCommand selectIntersectingNeeds = pgConn.CreateCommand();
+                    selectIntersectingNeeds.CommandText = @"SELECT uuid FROM ""roadworkneeds"" WHERE ST_Intersects(@geom, geom)";
+                    selectIntersectingNeeds.Parameters.AddWithValue("geom", roadWorkActivityPoly);
+
+                    List<Guid> intersectingNeedsUuids = new List<Guid>();
+                    using (NpgsqlDataReader reader = selectIntersectingNeeds.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            if (!reader.IsDBNull(0))
+                            {
+                                intersectingNeedsUuids.Add(reader.GetGuid(0));
+                            }
+                        }
+                    }
+
+                    if (intersectingNeedsUuids.Count != 0)
+                    {
+                        NpgsqlCommand updateActivityOfNeedsComm = pgConn.CreateCommand();
+                        updateActivityOfNeedsComm.CommandText = @"UPDATE roadworkneeds
+                                        SET roadworkactivity=@activity_uuid
+                                        WHERE uuid = ANY (:needs_uuids)";
+                        updateActivityOfNeedsComm.Parameters.AddWithValue("activity_uuid", new Guid(roadWorkActivityFeature.properties.uuid));
+                        updateActivityOfNeedsComm.Parameters.AddWithValue("needs_uuids", intersectingNeedsUuids);
+                        updateActivityOfNeedsComm.ExecuteNonQuery();
+                    }
+
+                    trans.Commit();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex.Message);
+                    roadWorkActivityFeature = new RoadWorkActivityFeature();
                     roadWorkActivityFeature.errorMessage = "KOPAL-3";
                     return Ok(roadWorkActivityFeature);
                 }
