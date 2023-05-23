@@ -437,6 +437,14 @@ namespace roadwork_portal_service.Controllers
 
                     if (intersectingNeedsUuids.Count != 0)
                     {
+                        NpgsqlCommand cleanActivityOfNeedsComm = pgConn.CreateCommand();
+                        cleanActivityOfNeedsComm.CommandText = @"UPDATE roadworkneeds
+                                        SET roadworkactivity=NULL
+                                        WHERE roadworkactivity = @activity_uuid";
+                        cleanActivityOfNeedsComm.Parameters.AddWithValue("activity_uuid", new Guid(roadWorkActivityFeature.properties.uuid));
+                        cleanActivityOfNeedsComm.ExecuteNonQuery();
+
+
                         NpgsqlCommand updateActivityOfNeedsComm = pgConn.CreateCommand();
                         updateActivityOfNeedsComm.CommandText = @"UPDATE roadworkneeds
                                         SET roadworkactivity=@activity_uuid
@@ -444,6 +452,15 @@ namespace roadwork_portal_service.Controllers
                         updateActivityOfNeedsComm.Parameters.AddWithValue("activity_uuid", new Guid(roadWorkActivityFeature.properties.uuid));
                         updateActivityOfNeedsComm.Parameters.AddWithValue("needs_uuids", intersectingNeedsUuids);
                         updateActivityOfNeedsComm.ExecuteNonQuery();
+
+                        roadWorkActivityFeature.properties.roadWorkNeedsUuids = new string[intersectingNeedsUuids.Count];
+                        int i = 0;
+                        foreach(Guid intersectingNeedUuid in intersectingNeedsUuids)                        
+                        {
+                            roadWorkActivityFeature.properties.roadWorkNeedsUuids[i] = intersectingNeedUuid.ToString();
+                            i++;
+                        }
+
                     }
 
                     trans.Commit();
@@ -454,10 +471,6 @@ namespace roadwork_portal_service.Controllers
                     roadWorkActivityFeature = new RoadWorkActivityFeature();
                     roadWorkActivityFeature.errorMessage = "KOPAL-3";
                     return Ok(roadWorkActivityFeature);
-                }
-                finally
-                {
-                    pgConn.Close();
                 }
             }
 
