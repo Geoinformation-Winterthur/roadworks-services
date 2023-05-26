@@ -58,9 +58,9 @@ namespace roadwork_portal_service.Controllers
                     {
                         List<Guid> uuidsList = new List<Guid>();
 
-                        foreach(string uuid in uuids.Split(","))
+                        foreach (string uuid in uuids.Split(","))
                         {
-                            if(uuid != null && uuid != "")
+                            if (uuid != null && uuid != "")
                             {
                                 uuidsList.Add(new Guid(uuid));
                             }
@@ -144,36 +144,48 @@ namespace roadwork_portal_service.Controllers
         [Authorize(Roles = "orderer,administrator")]
         public ActionResult<RoadWorkNeedFeature> AddNeed([FromBody] RoadWorkNeedFeature roadWorkNeedFeature)
         {
-            Polygon roadWorkNeedPoly = roadWorkNeedFeature.geometry.getNtsPolygon();
-            Coordinate[] coordinates = roadWorkNeedPoly.Coordinates;
-
-            if (coordinates.Length < 3)
+            try
             {
-                _logger.LogWarning("Roadworkneed Polygon has less than 3 coordinates.");
-                roadWorkNeedFeature.errorMessage = "KOPAL-7";
-                return Ok(roadWorkNeedFeature);
-            }
+                Polygon roadWorkNeedPoly = roadWorkNeedFeature.geometry.getNtsPolygon();
+                Coordinate[] coordinates = roadWorkNeedPoly.Coordinates;
 
-            // only if project area is greater than 10qm:
-            if (roadWorkNeedPoly.Area <= 10.0)
-            {
-                _logger.LogWarning("Roadworkneed area is less than or equal 10qm.");
-                roadWorkNeedFeature.errorMessage = "KOPAL-8";
-                return Ok(roadWorkNeedFeature);
-            }
-
-            User userFromDb = LoginController.getAuthorizedUserFromDb(this.User);
-            roadWorkNeedFeature.properties.orderer = userFromDb;
-
-            if (roadWorkNeedFeature.properties.name != null)
-            {
-                roadWorkNeedFeature.properties.name = roadWorkNeedFeature.properties.name.Trim();
-            }
-
-            using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
-            {
-                try
+                if (coordinates.Length < 3)
                 {
+                    _logger.LogWarning("Roadworkneed Polygon has less than 3 coordinates.");
+                    roadWorkNeedFeature.errorMessage = "KOPAL-7";
+                    return Ok(roadWorkNeedFeature);
+                }
+
+                ConfigurationData configData = AppConfigController.getConfigurationFromDb();
+                // only if project area is greater than min area size:
+                if (roadWorkNeedPoly.Area <= configData.minAreaSize)
+                {
+                    _logger.LogWarning("Roadworkneed area is less than or equal " + configData.minAreaSize + "qm.");
+                    roadWorkNeedFeature = new RoadWorkNeedFeature();
+                    roadWorkNeedFeature.errorMessage = "KOPAL-8";
+                    return Ok(roadWorkNeedFeature);
+                }
+
+                // only if project area is smaller than max area size:
+                if (roadWorkNeedPoly.Area > configData.maxAreaSize)
+                {
+                    _logger.LogWarning("Roadworkneed area is greater than " + configData.maxAreaSize + "qm.");
+                    roadWorkNeedFeature = new RoadWorkNeedFeature();
+                    roadWorkNeedFeature.errorMessage = "KOPAL-16";
+                    return Ok(roadWorkNeedFeature);
+                }
+
+                User userFromDb = LoginController.getAuthorizedUserFromDb(this.User);
+                roadWorkNeedFeature.properties.orderer = userFromDb;
+
+                if (roadWorkNeedFeature.properties.name != null)
+                {
+                    roadWorkNeedFeature.properties.name = roadWorkNeedFeature.properties.name.Trim();
+                }
+
+                using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
+                {
+
                     pgConn.Open();
 
                     if (roadWorkNeedFeature.properties.name == null || roadWorkNeedFeature.properties.name == "")
@@ -279,17 +291,15 @@ namespace roadwork_portal_service.Controllers
 
                     insertComm.ExecuteNonQuery();
 
+
                 }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex.Message);
-                    roadWorkNeedFeature.errorMessage = "KOPAL-3";
-                    return Ok(roadWorkNeedFeature);
-                }
-                finally
-                {
-                    pgConn.Close();
-                }
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                roadWorkNeedFeature.errorMessage = "KOPAL-3";
+                return Ok(roadWorkNeedFeature);
             }
 
             return Ok(roadWorkNeedFeature);
@@ -301,104 +311,126 @@ namespace roadwork_portal_service.Controllers
         public ActionResult<RoadWorkNeedFeature> UpdateNeed([FromBody] RoadWorkNeedFeature roadWorkNeedFeature)
         {
 
-            if (roadWorkNeedFeature != null && roadWorkNeedFeature.geometry != null &&
-                    roadWorkNeedFeature.geometry.coordinates != null &&
-                    roadWorkNeedFeature.geometry.coordinates.Length > 2)
+            try
             {
+                if (roadWorkNeedFeature == null || roadWorkNeedFeature.geometry == null ||
+                        roadWorkNeedFeature.geometry.coordinates == null ||
+                            roadWorkNeedFeature.geometry.coordinates.Length < 3)
+                {
+                    _logger.LogWarning("Roadworkneed has a geometry error.");
+                    roadWorkNeedFeature = new RoadWorkNeedFeature();
+                    roadWorkNeedFeature.errorMessage = "KOPAL-3";
+                    return Ok(roadWorkNeedFeature);
+                }
+
+                Polygon roadWorkNeedPoly = roadWorkNeedFeature.geometry.getNtsPolygon();
+
+                ConfigurationData configData = AppConfigController.getConfigurationFromDb();
+                // only if project area is greater than min area size:
+                if (roadWorkNeedPoly.Area <= configData.minAreaSize)
+                {
+                    _logger.LogWarning("Roadworkneed area is less than or equal " + configData.minAreaSize + "qm.");
+                    roadWorkNeedFeature = new RoadWorkNeedFeature();
+                    roadWorkNeedFeature.errorMessage = "KOPAL-8";
+                    return Ok(roadWorkNeedFeature);
+                }
+
+                // only if project area is smaller than max area size:
+                if (roadWorkNeedPoly.Area > configData.maxAreaSize)
+                {
+                    _logger.LogWarning("Roadworkneed area is greater than " + configData.maxAreaSize + "qm.");
+                    roadWorkNeedFeature = new RoadWorkNeedFeature();
+                    roadWorkNeedFeature.errorMessage = "KOPAL-16";
+                    return Ok(roadWorkNeedFeature);
+                }
+
+                if (!roadWorkNeedPoly.IsSimple)
+                {
+                    _logger.LogWarning("Geometry of roadworkneed " + roadWorkNeedFeature.properties.uuid +
+                            " does not fulfill the criteria of geometrical simplicity.");
+                    roadWorkNeedFeature.errorMessage = "KOPAL-10";
+                    return Ok(roadWorkNeedFeature);
+                }
+
+                if (!roadWorkNeedPoly.IsValid)
+                {
+                    _logger.LogWarning("Geometry of roadworkneed " + roadWorkNeedFeature.properties.uuid +
+                            " does not fulfill the criteria of geometrical validity.");
+                    roadWorkNeedFeature.errorMessage = "KOPAL-11";
+                    return Ok(roadWorkNeedFeature);
+                }
+
 
                 using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
                 {
-                    try
+
+                    roadWorkNeedFeature.properties.managementarea = new ManagementAreaFeature();
+
+                    pgConn.Open();
+
+                    if (!User.IsInRole("administrator"))
                     {
 
-                        Polygon roadWorkNeedPoly = roadWorkNeedFeature.geometry.getNtsPolygon();
-
-                        if (!roadWorkNeedPoly.IsSimple)
-                        {
-                            _logger.LogWarning("Geometry of roadworkneed " + roadWorkNeedFeature.properties.uuid +
-                                    " does not fulfill the criteria of geometrical simplicity.");
-                            roadWorkNeedFeature.errorMessage = "KOPAL-10";
-                            return Ok(roadWorkNeedFeature);
-                        }
-
-                        if (!roadWorkNeedPoly.IsValid)
-                        {
-                            _logger.LogWarning("Geometry of roadworkneed " + roadWorkNeedFeature.properties.uuid +
-                                    " does not fulfill the criteria of geometrical validity.");
-                            roadWorkNeedFeature.errorMessage = "KOPAL-11";
-                            return Ok(roadWorkNeedFeature);
-                        }
-
-                        roadWorkNeedFeature.properties.managementarea = new ManagementAreaFeature();
-
-                        // only if project area is greater than 10qm:
-                        if (roadWorkNeedPoly.Area > 10.0)
-                        {
-                            pgConn.Open();
-
-                            if (!User.IsInRole("administrator"))
-                            {
-
-                                NpgsqlCommand selectOrdererOfNeedComm = pgConn.CreateCommand();
-                                selectOrdererOfNeedComm.CommandText = @"SELECT u.e_mail
+                        NpgsqlCommand selectOrdererOfNeedComm = pgConn.CreateCommand();
+                        selectOrdererOfNeedComm.CommandText = @"SELECT u.e_mail
                                     FROM ""roadworkneeds"" r
                                     LEFT JOIN ""users"" u ON r.orderer = u.uuid
                                     WHERE r.uuid=@uuid";
-                                selectOrdererOfNeedComm.Parameters.AddWithValue("uuid", new Guid(roadWorkNeedFeature.properties.uuid));
+                        selectOrdererOfNeedComm.Parameters.AddWithValue("uuid", new Guid(roadWorkNeedFeature.properties.uuid));
 
-                                string eMailOfOrderer = "";
+                        string eMailOfOrderer = "";
 
-                                using (NpgsqlDataReader reader = selectOrdererOfNeedComm.ExecuteReader())
-                                {
-                                    if (reader.Read())
-                                    {
-                                        eMailOfOrderer = reader.IsDBNull(0) ? "" : reader.GetString(0);
-                                    }
-                                }
-
-                                string mailOfLoggedInUser = User.FindFirstValue(ClaimTypes.Email);
-
-                                if (mailOfLoggedInUser != eMailOfOrderer)
-                                {
-                                    _logger.LogWarning("User " + mailOfLoggedInUser + " has no right to edit " +
-                                        "roadwork need " + roadWorkNeedFeature.properties.uuid + " but tried " +
-                                        "to edit it.");
-                                    roadWorkNeedFeature.errorMessage = "KOPAL-14";
-                                    return Ok(roadWorkNeedFeature);
-                                }
-
+                        using (NpgsqlDataReader reader = selectOrdererOfNeedComm.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                eMailOfOrderer = reader.IsDBNull(0) ? "" : reader.GetString(0);
                             }
+                        }
+
+                        string mailOfLoggedInUser = User.FindFirstValue(ClaimTypes.Email);
+
+                        if (mailOfLoggedInUser != eMailOfOrderer)
+                        {
+                            _logger.LogWarning("User " + mailOfLoggedInUser + " has no right to edit " +
+                                "roadwork need " + roadWorkNeedFeature.properties.uuid + " but tried " +
+                                "to edit it.");
+                            roadWorkNeedFeature.errorMessage = "KOPAL-14";
+                            return Ok(roadWorkNeedFeature);
+                        }
+
+                    }
 
 
-                            NpgsqlCommand selectMgmtAreaComm = pgConn.CreateCommand();
-                            selectMgmtAreaComm.CommandText = @"SELECT m.uuid,
+                    NpgsqlCommand selectMgmtAreaComm = pgConn.CreateCommand();
+                    selectMgmtAreaComm.CommandText = @"SELECT m.uuid,
                                         u.first_name, u.last_name
                                     FROM ""managementareas"" m
                                     LEFT JOIN ""users"" u ON m.manager = u.uuid
                                     WHERE ST_Intersects(@geom, geom)
                                     ORDER BY ST_Area(ST_Intersection(@geom, geom)) DESC
                                     LIMIT 1";
-                            selectMgmtAreaComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
+                    selectMgmtAreaComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
 
-                            using (NpgsqlDataReader reader = selectMgmtAreaComm.ExecuteReader())
-                            {
-                                if (reader.Read())
-                                {
-                                    roadWorkNeedFeature.properties.managementarea.properties.uuid = reader.IsDBNull(0) ? "" : reader.GetGuid(0).ToString();
-                                    roadWorkNeedFeature.properties.managementarea.properties.manager.firstName = reader.IsDBNull(1) ? "" : reader.GetString(1);
-                                    roadWorkNeedFeature.properties.managementarea.properties.manager.lastName = reader.IsDBNull(2) ? "" : reader.GetString(2);
-                                }
-                            }
+                    using (NpgsqlDataReader reader = selectMgmtAreaComm.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            roadWorkNeedFeature.properties.managementarea.properties.uuid = reader.IsDBNull(0) ? "" : reader.GetGuid(0).ToString();
+                            roadWorkNeedFeature.properties.managementarea.properties.manager.firstName = reader.IsDBNull(1) ? "" : reader.GetString(1);
+                            roadWorkNeedFeature.properties.managementarea.properties.manager.lastName = reader.IsDBNull(2) ? "" : reader.GetString(2);
+                        }
+                    }
 
-                            if (roadWorkNeedFeature.properties.managementarea.properties.uuid == "")
-                            {
-                                _logger.LogWarning("New roadworkneed does not lie in any management area.");
-                                roadWorkNeedFeature.errorMessage = "KOPAL-9";
-                                return Ok(roadWorkNeedFeature);
-                            }
+                    if (roadWorkNeedFeature.properties.managementarea.properties.uuid == "")
+                    {
+                        _logger.LogWarning("New roadworkneed does not lie in any management area.");
+                        roadWorkNeedFeature.errorMessage = "KOPAL-9";
+                        return Ok(roadWorkNeedFeature);
+                    }
 
-                            NpgsqlCommand updateComm = pgConn.CreateCommand();
-                            updateComm.CommandText = @"UPDATE ""roadworkneeds""
+                    NpgsqlCommand updateComm = pgConn.CreateCommand();
+                    updateComm.CommandText = @"UPDATE ""roadworkneeds""
                                     SET name=@name, kind=@kind, orderer=@orderer, last_modified=current_timestamp,
                                     finish_early_from=@finish_early_from, finish_early_to=@finish_early_to,
                                     finish_optimum_from=@finish_optimum_from, finish_optimum_to=@finish_optimum_to,
@@ -407,67 +439,49 @@ namespace roadwork_portal_service.Controllers
                                     managementarea=@managementarea, longer_six_months=@longer_six_months, geom=@geom
                                     WHERE uuid=@uuid";
 
-                            updateComm.Parameters.AddWithValue("name", roadWorkNeedFeature.properties.name);
-                            updateComm.Parameters.AddWithValue("kind", roadWorkNeedFeature.properties.kind.code);
-                            if (roadWorkNeedFeature.properties.orderer.uuid != "")
-                            {
-                                updateComm.Parameters.AddWithValue("orderer", new Guid(roadWorkNeedFeature.properties.orderer.uuid));
-                            }
-                            else
-                            {
-                                updateComm.Parameters.AddWithValue("orderer", DBNull.Value);
-                            }
-                            updateComm.Parameters.AddWithValue("finish_early_from", roadWorkNeedFeature.properties.finishEarlyFrom);
-                            updateComm.Parameters.AddWithValue("finish_early_to", roadWorkNeedFeature.properties.finishEarlyTo);
-                            updateComm.Parameters.AddWithValue("finish_optimum_from", roadWorkNeedFeature.properties.finishOptimumFrom);
-                            updateComm.Parameters.AddWithValue("finish_optimum_to", roadWorkNeedFeature.properties.finishOptimumTo);
-                            updateComm.Parameters.AddWithValue("finish_late_from", roadWorkNeedFeature.properties.finishLateFrom);
-                            updateComm.Parameters.AddWithValue("finish_late_to", roadWorkNeedFeature.properties.finishLateTo);
-                            updateComm.Parameters.AddWithValue("priority", roadWorkNeedFeature.properties.priority.code);
-                            updateComm.Parameters.AddWithValue("status", roadWorkNeedFeature.properties.status.code);
-                            updateComm.Parameters.AddWithValue("description", roadWorkNeedFeature.properties.description);
-                            if (roadWorkNeedFeature.properties.managementarea.properties.uuid != "")
-                            {
-                                updateComm.Parameters.AddWithValue("managementarea", new Guid(roadWorkNeedFeature.properties.managementarea.properties.uuid));
-                            }
-                            else
-                            {
-                                updateComm.Parameters.AddWithValue("managementarea", DBNull.Value);
-                            }
-                            updateComm.Parameters.AddWithValue("longer_six_months", roadWorkNeedFeature.properties.longer6Month);
-                            updateComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
-                            updateComm.Parameters.AddWithValue("uuid", new Guid(roadWorkNeedFeature.properties.uuid));
+                    updateComm.Parameters.AddWithValue("name", roadWorkNeedFeature.properties.name);
+                    updateComm.Parameters.AddWithValue("kind", roadWorkNeedFeature.properties.kind.code);
+                    if (roadWorkNeedFeature.properties.orderer.uuid != "")
+                    {
+                        updateComm.Parameters.AddWithValue("orderer", new Guid(roadWorkNeedFeature.properties.orderer.uuid));
+                    }
+                    else
+                    {
+                        updateComm.Parameters.AddWithValue("orderer", DBNull.Value);
+                    }
+                    updateComm.Parameters.AddWithValue("finish_early_from", roadWorkNeedFeature.properties.finishEarlyFrom);
+                    updateComm.Parameters.AddWithValue("finish_early_to", roadWorkNeedFeature.properties.finishEarlyTo);
+                    updateComm.Parameters.AddWithValue("finish_optimum_from", roadWorkNeedFeature.properties.finishOptimumFrom);
+                    updateComm.Parameters.AddWithValue("finish_optimum_to", roadWorkNeedFeature.properties.finishOptimumTo);
+                    updateComm.Parameters.AddWithValue("finish_late_from", roadWorkNeedFeature.properties.finishLateFrom);
+                    updateComm.Parameters.AddWithValue("finish_late_to", roadWorkNeedFeature.properties.finishLateTo);
+                    updateComm.Parameters.AddWithValue("priority", roadWorkNeedFeature.properties.priority.code);
+                    updateComm.Parameters.AddWithValue("status", roadWorkNeedFeature.properties.status.code);
+                    updateComm.Parameters.AddWithValue("description", roadWorkNeedFeature.properties.description);
+                    if (roadWorkNeedFeature.properties.managementarea.properties.uuid != "")
+                    {
+                        updateComm.Parameters.AddWithValue("managementarea", new Guid(roadWorkNeedFeature.properties.managementarea.properties.uuid));
+                    }
+                    else
+                    {
+                        updateComm.Parameters.AddWithValue("managementarea", DBNull.Value);
+                    }
+                    updateComm.Parameters.AddWithValue("longer_six_months", roadWorkNeedFeature.properties.longer6Month);
+                    updateComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
+                    updateComm.Parameters.AddWithValue("uuid", new Guid(roadWorkNeedFeature.properties.uuid));
 
-                            updateComm.ExecuteNonQuery();
-                        }
-                        else
-                        {
-                            _logger.LogWarning("Roadworkneed area is less than or equal 10qm.");
-                            roadWorkNeedFeature.errorMessage = "KOPAL-8";
-                            return Ok(roadWorkNeedFeature);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex.Message);
-                        roadWorkNeedFeature.errorMessage = "KOPAL-3";
-                        return Ok(roadWorkNeedFeature);
-                    }
-                    finally
-                    {
-                        pgConn.Close();
-                    }
+                    updateComm.ExecuteNonQuery();
+
                 }
             }
-            else
+            catch (Exception ex)
             {
-                if (roadWorkNeedFeature != null)
-                {
-                    _logger.LogWarning("Roadworkneed has a geometry error.");
-                    roadWorkNeedFeature.errorMessage = "KOPAL-3";
-                    return Ok(roadWorkNeedFeature);
-                }
+                _logger.LogError(ex.Message);
+                roadWorkNeedFeature = new RoadWorkNeedFeature();
+                roadWorkNeedFeature.errorMessage = "KOPAL-3";
+                return Ok(roadWorkNeedFeature);
             }
+
             return Ok(roadWorkNeedFeature);
         }
 

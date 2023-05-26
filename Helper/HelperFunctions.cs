@@ -4,6 +4,7 @@
 // </copyright>
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using roadwork_portal_service.Configuration;
+using roadwork_portal_service.Model;
 
 namespace roadwork_portal_service.Helper
 {
@@ -19,6 +20,11 @@ namespace roadwork_portal_service.Helper
                 numBytesRequested: 256 / 8
             ));
             return hashedPassphrase;
+        }
+
+        public static ConfigurationData getConfigDataFromDb(){
+
+            return null;            
         }
 
     }

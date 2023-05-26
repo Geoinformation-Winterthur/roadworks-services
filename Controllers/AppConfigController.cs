@@ -31,26 +31,7 @@ public class AppConfigController : ControllerBase
 
         try
         {
-            // get configuration data from database:
-            using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
-            {
-                pgConn.Open();
-                NpgsqlCommand selectComm = pgConn.CreateCommand();
-                selectComm.CommandText = @"SELECT min_area_size, max_area_size
-                            FROM ""configuration""";
-
-                using (NpgsqlDataReader reader = selectComm.ExecuteReader())
-                {
-                    if (reader.Read())
-                    {
-                        result.minAreaSize = reader.IsDBNull(0) ? 0 :
-                                    reader.GetInt32(0);
-                        result.maxAreaSize = reader.IsDBNull(1) ? 0 :
-                                    reader.GetInt32(1);
-                    }
-                }
-                pgConn.Close();
-            }
+            result = AppConfigController.getConfigurationFromDb();
         }
         catch (Exception ex)
         {
@@ -99,6 +80,32 @@ public class AppConfigController : ControllerBase
             return Ok(errorResult);
         }
 
+    }
+
+    public static ConfigurationData getConfigurationFromDb()
+    {
+        ConfigurationData result = new ConfigurationData();
+        // get configuration data from database:
+        using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
+        {
+            pgConn.Open();
+            NpgsqlCommand selectComm = pgConn.CreateCommand();
+            selectComm.CommandText = @"SELECT min_area_size, max_area_size
+                            FROM ""configuration""";
+
+            using (NpgsqlDataReader reader = selectComm.ExecuteReader())
+            {
+                if (reader.Read())
+                {
+                    result.minAreaSize = reader.IsDBNull(0) ? 0 :
+                                reader.GetInt32(0);
+                    result.maxAreaSize = reader.IsDBNull(1) ? 0 :
+                                reader.GetInt32(1);
+                }
+            }
+            pgConn.Close();
+        }
+        return result;
     }
 
 }

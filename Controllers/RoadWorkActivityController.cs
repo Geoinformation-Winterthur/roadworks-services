@@ -134,31 +134,45 @@ namespace roadwork_portal_service.Controllers
         [Authorize(Roles = "territorymanager,administrator")]
         public async Task<ActionResult<RoadWorkActivityFeature>> AddActivity([FromBody] RoadWorkActivityFeature roadWorkActivityFeature)
         {
-            Polygon roadWorkActivityPoly = roadWorkActivityFeature.geometry.getNtsPolygon();
-            Coordinate[] coordinates = roadWorkActivityPoly.Coordinates;
-
-            if (coordinates.Length < 3)
+            try
             {
-                _logger.LogWarning("Roadwork activity polygon has less than 3 coordinates.");
-                roadWorkActivityFeature.errorMessage = "KOPAL-7";
-                return Ok(roadWorkActivityFeature);
-            }
+                Polygon roadWorkActivityPoly = roadWorkActivityFeature.geometry.getNtsPolygon();
+                Coordinate[] coordinates = roadWorkActivityPoly.Coordinates;
 
-            // only if project area is greater than 10qm:
-            if (roadWorkActivityPoly.Area <= 10.0)
-            {
-                _logger.LogWarning("Roadworkneed area is less than or equal 10qm.");
-                roadWorkActivityFeature.errorMessage = "KOPAL-8";
-                return Ok(roadWorkActivityFeature);
-            }
-
-            User userFromDb = LoginController.getAuthorizedUserFromDb(this.User);
-            roadWorkActivityFeature.properties.projectManager = userFromDb;
-
-            using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
-            {
-                try
+                if (coordinates.Length < 3)
                 {
+                    _logger.LogWarning("Roadwork activity polygon has less than 3 coordinates.");
+                    roadWorkActivityFeature = new RoadWorkActivityFeature();
+                    roadWorkActivityFeature.errorMessage = "KOPAL-7";
+                    return Ok(roadWorkActivityFeature);
+                }
+
+                ConfigurationData configData = AppConfigController.getConfigurationFromDb();
+
+                // only if project area is greater than min area size:
+                if (roadWorkActivityPoly.Area <= configData.minAreaSize)
+                {
+                    _logger.LogWarning("Roadworkneed area is less than or equal " + configData.minAreaSize + "qm.");
+                    roadWorkActivityFeature = new RoadWorkActivityFeature();
+                    roadWorkActivityFeature.errorMessage = "KOPAL-8";
+                    return Ok(roadWorkActivityFeature);
+                }
+
+                // only if project area is smaller than max area size:
+                if (roadWorkActivityPoly.Area > configData.maxAreaSize)
+                {
+                    _logger.LogWarning("Roadworkneed area is greater than " + configData.maxAreaSize + "qm.");
+                    roadWorkActivityFeature = new RoadWorkActivityFeature();
+                    roadWorkActivityFeature.errorMessage = "KOPAL-16";
+                    return Ok(roadWorkActivityFeature);
+                }
+
+                User userFromDb = LoginController.getAuthorizedUserFromDb(this.User);
+                roadWorkActivityFeature.properties.projectManager = userFromDb;
+
+                using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
+                {
+
                     pgConn.Open();
 
                     NpgsqlCommand selectMgmtAreaComm = pgConn.CreateCommand();
@@ -260,17 +274,16 @@ namespace roadwork_portal_service.Controllers
 
                     }
                     await trans.CommitAsync();
+
                 }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex.Message);
-                    roadWorkActivityFeature.errorMessage = "KOPAL-3";
-                    return Ok(roadWorkActivityFeature);
-                }
-                finally
-                {
-                    pgConn.Close();
-                }
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                roadWorkActivityFeature = new RoadWorkActivityFeature();
+                roadWorkActivityFeature.errorMessage = "KOPAL-3";
+                return Ok(roadWorkActivityFeature);
             }
 
             return Ok(roadWorkActivityFeature);
@@ -281,58 +294,68 @@ namespace roadwork_portal_service.Controllers
         [Authorize(Roles = "territorymanager,administrator")]
         public ActionResult<RoadWorkActivityFeature> UpdateActivity([FromBody] RoadWorkActivityFeature roadWorkActivityFeature)
         {
-
-            if (roadWorkActivityFeature == null)
+            try
             {
-                _logger.LogWarning("No roadworkactivity received in update activity method.");
-                roadWorkActivityFeature = new RoadWorkActivityFeature();
-                roadWorkActivityFeature.errorMessage = "KOPAL-3";
-                return Ok(roadWorkActivityFeature);
-            }
-
-            if (roadWorkActivityFeature.geometry == null ||
-                    roadWorkActivityFeature.geometry.coordinates == null ||
-                    roadWorkActivityFeature.geometry.coordinates.Length < 3)
-            {
-                _logger.LogWarning("Roadworkactivity has a geometry error.");
-                roadWorkActivityFeature = new RoadWorkActivityFeature();
-                roadWorkActivityFeature.errorMessage = "KOPAL-3";
-                return Ok(roadWorkActivityFeature);
-            }
-
-            Polygon roadWorkActivityPoly = roadWorkActivityFeature.geometry.getNtsPolygon();
-
-            if (!roadWorkActivityPoly.IsSimple)
-            {
-                _logger.LogWarning("Geometry of roadworkactivity " + roadWorkActivityFeature.properties.uuid +
-                        " does not fulfill the criteria of geometrical simplicity.");
-                roadWorkActivityFeature = new RoadWorkActivityFeature();
-                roadWorkActivityFeature.errorMessage = "KOPAL-10";
-                return Ok(roadWorkActivityFeature);
-            }
-
-            if (!roadWorkActivityPoly.IsValid)
-            {
-                _logger.LogWarning("Geometry of roadworkactivity " + roadWorkActivityFeature.properties.uuid +
-                        " does not fulfill the criteria of geometrical validity.");
-                roadWorkActivityFeature = new RoadWorkActivityFeature();
-                roadWorkActivityFeature.errorMessage = "KOPAL-11";
-                return Ok(roadWorkActivityFeature);
-            }
-
-            // error if activity area is less equal 10qm:
-            if (roadWorkActivityPoly.Area <= 10.0)
-            {
-                _logger.LogWarning("Roadworkactivity area is less than or equal 10qm.");
-                roadWorkActivityFeature = new RoadWorkActivityFeature();
-                roadWorkActivityFeature.errorMessage = "KOPAL-8";
-                return Ok(roadWorkActivityFeature);
-            }
-
-            using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
-            {
-                try
+                if (roadWorkActivityFeature == null)
                 {
+                    _logger.LogWarning("No roadworkactivity received in update activity method.");
+                    roadWorkActivityFeature = new RoadWorkActivityFeature();
+                    roadWorkActivityFeature.errorMessage = "KOPAL-3";
+                    return Ok(roadWorkActivityFeature);
+                }
+
+                if (roadWorkActivityFeature.geometry == null ||
+                        roadWorkActivityFeature.geometry.coordinates == null ||
+                        roadWorkActivityFeature.geometry.coordinates.Length < 3)
+                {
+                    _logger.LogWarning("Roadworkactivity has a geometry error.");
+                    roadWorkActivityFeature = new RoadWorkActivityFeature();
+                    roadWorkActivityFeature.errorMessage = "KOPAL-3";
+                    return Ok(roadWorkActivityFeature);
+                }
+
+                Polygon roadWorkActivityPoly = roadWorkActivityFeature.geometry.getNtsPolygon();
+
+                if (!roadWorkActivityPoly.IsSimple)
+                {
+                    _logger.LogWarning("Geometry of roadworkactivity " + roadWorkActivityFeature.properties.uuid +
+                            " does not fulfill the criteria of geometrical simplicity.");
+                    roadWorkActivityFeature = new RoadWorkActivityFeature();
+                    roadWorkActivityFeature.errorMessage = "KOPAL-10";
+                    return Ok(roadWorkActivityFeature);
+                }
+
+                if (!roadWorkActivityPoly.IsValid)
+                {
+                    _logger.LogWarning("Geometry of roadworkactivity " + roadWorkActivityFeature.properties.uuid +
+                            " does not fulfill the criteria of geometrical validity.");
+                    roadWorkActivityFeature = new RoadWorkActivityFeature();
+                    roadWorkActivityFeature.errorMessage = "KOPAL-11";
+                    return Ok(roadWorkActivityFeature);
+                }
+
+                ConfigurationData configData = AppConfigController.getConfigurationFromDb();
+                // only if project area is greater than min area size:
+                if (roadWorkActivityPoly.Area <= configData.minAreaSize)
+                {
+                    _logger.LogWarning("Roadworkneed area is less than or equal " + configData.minAreaSize + "qm.");
+                    roadWorkActivityFeature = new RoadWorkActivityFeature();
+                    roadWorkActivityFeature.errorMessage = "KOPAL-8";
+                    return Ok(roadWorkActivityFeature);
+                }
+
+                // only if project area is smaller than max area size:
+                if (roadWorkActivityPoly.Area > configData.maxAreaSize)
+                {
+                    _logger.LogWarning("Roadworkneed area is greater than " + configData.maxAreaSize + "qm.");
+                    roadWorkActivityFeature = new RoadWorkActivityFeature();
+                    roadWorkActivityFeature.errorMessage = "KOPAL-16";
+                    return Ok(roadWorkActivityFeature);
+                }
+
+                using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
+                {
+
 
                     pgConn.Open();
 
@@ -455,7 +478,7 @@ namespace roadwork_portal_service.Controllers
 
                         roadWorkActivityFeature.properties.roadWorkNeedsUuids = new string[intersectingNeedsUuids.Count];
                         int i = 0;
-                        foreach(Guid intersectingNeedUuid in intersectingNeedsUuids)                        
+                        foreach (Guid intersectingNeedUuid in intersectingNeedsUuids)
                         {
                             roadWorkActivityFeature.properties.roadWorkNeedsUuids[i] = intersectingNeedUuid.ToString();
                             i++;
@@ -464,14 +487,16 @@ namespace roadwork_portal_service.Controllers
                     }
 
                     trans.Commit();
+
                 }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex.Message);
-                    roadWorkActivityFeature = new RoadWorkActivityFeature();
-                    roadWorkActivityFeature.errorMessage = "KOPAL-3";
-                    return Ok(roadWorkActivityFeature);
-                }
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                roadWorkActivityFeature = new RoadWorkActivityFeature();
+                roadWorkActivityFeature.errorMessage = "KOPAL-3";
+                return Ok(roadWorkActivityFeature);
             }
 
             return Ok(roadWorkActivityFeature);
