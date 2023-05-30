@@ -39,7 +39,8 @@ namespace roadwork_portal_service.Controllers
                             u.first_name, u.last_name, o.name, r.finish_early_from, r.finish_early_to,
                             r.finish_optimum_from, r.finish_optimum_to, r.finish_late_from,
                             r.finish_late_to, p.code, s.code, s.name,
-                            r.description, r.managementarea, m.manager, u2.first_name, u2.last_name,
+                            r.description, r.managementarea, m.manager, am.first_name, am.last_name,
+                            m.substitute_manager, sam.first_name, sam.last_name,
                             r.created, r.last_modified, r.roadworkactivity, u.e_mail,
                             r.longer_six_months, r.geom
                         FROM ""roadworkneeds"" r
@@ -48,7 +49,8 @@ namespace roadwork_portal_service.Controllers
                         LEFT JOIN ""priorities"" p ON r.priority = p.code
                         LEFT JOIN ""status"" s ON r.status = s.code
                         LEFT JOIN ""managementareas"" m ON r.managementarea = m.uuid                        
-                        LEFT JOIN ""users"" u2 ON m.manager = u2.uuid
+                        LEFT JOIN ""users"" am ON m.manager = am.uuid
+                        LEFT JOIN ""users"" sam ON m.substitute_manager = sam.uuid
                         LEFT JOIN ""roadworkneedtypes"" rwt ON r.kind = rwt.code";
 
                 if (uuids != null)
@@ -105,18 +107,26 @@ namespace roadwork_portal_service.Controllers
                         needFeatureFromDb.properties.description = reader.IsDBNull(17) ? "" : reader.GetString(17);
                         ManagementAreaFeature managementAreaFeature = new ManagementAreaFeature();
                         managementAreaFeature.properties.uuid = reader.IsDBNull(18) ? "" : reader.GetGuid(18).ToString();
+
                         User manager = new User();
                         manager.uuid = reader.IsDBNull(19) ? "" : reader.GetGuid(19).ToString();
                         manager.firstName = reader.IsDBNull(20) ? "" : reader.GetString(20);
                         manager.lastName = reader.IsDBNull(21) ? "" : reader.GetString(21);
                         managementAreaFeature.properties.manager = manager;
+
+                        User substituteManager = new User();
+                        substituteManager.uuid = reader.IsDBNull(22) ? "" : reader.GetGuid(22).ToString();
+                        substituteManager.firstName = reader.IsDBNull(23) ? "" : reader.GetString(23);
+                        substituteManager.lastName = reader.IsDBNull(24) ? "" : reader.GetString(24);
+                        managementAreaFeature.properties.substituteManager = substituteManager;
+
                         needFeatureFromDb.properties.managementarea = managementAreaFeature;
 
-                        needFeatureFromDb.properties.created = reader.IsDBNull(22) ? DateTime.MinValue : reader.GetDateTime(22);
-                        needFeatureFromDb.properties.lastModified = reader.IsDBNull(23) ? DateTime.MinValue : reader.GetDateTime(23);
-                        needFeatureFromDb.properties.roadWorkActivityUuid = reader.IsDBNull(24) ? "" : reader.GetGuid(24).ToString();
+                        needFeatureFromDb.properties.created = reader.IsDBNull(25) ? DateTime.MinValue : reader.GetDateTime(25);
+                        needFeatureFromDb.properties.lastModified = reader.IsDBNull(26) ? DateTime.MinValue : reader.GetDateTime(26);
+                        needFeatureFromDb.properties.roadWorkActivityUuid = reader.IsDBNull(27) ? "" : reader.GetGuid(27).ToString();
 
-                        string ordererMailAddress = reader.IsDBNull(25) ? "" : reader.GetString(25);
+                        string ordererMailAddress = reader.IsDBNull(28) ? "" : reader.GetString(28);
                         string mailOfLoggedInUser = User.FindFirstValue(ClaimTypes.Email);
                         string roleOfLoggedInUser = User.FindFirstValue(ClaimTypes.Role);
 
@@ -125,9 +135,9 @@ namespace roadwork_portal_service.Controllers
                             needFeatureFromDb.properties.isEditingAllowed = true;
                         }
 
-                        needFeatureFromDb.properties.longer6Month = reader.IsDBNull(26) ? false : reader.GetBoolean(26);
+                        needFeatureFromDb.properties.longer6Month = reader.IsDBNull(29) ? false : reader.GetBoolean(29);
 
-                        Polygon ntsPoly = reader.IsDBNull(27) ? Polygon.Empty : reader.GetValue(27) as Polygon;
+                        Polygon ntsPoly = reader.IsDBNull(30) ? Polygon.Empty : reader.GetValue(30) as Polygon;
                         needFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
 
                         projectsFromDb.Add(needFeatureFromDb);
@@ -219,9 +229,11 @@ namespace roadwork_portal_service.Controllers
 
                     NpgsqlCommand selectMgmtAreaComm = pgConn.CreateCommand();
                     selectMgmtAreaComm.CommandText = @"SELECT m.uuid,
-                                        u.first_name, u.last_name
+                                        am.first_name, am.last_name
+                                        sam.first_name, sam.last_name
                                     FROM ""managementareas"" m
-                                    LEFT JOIN ""users"" u ON m.manager = u.uuid
+                                    LEFT JOIN ""users"" am ON m.manager = am.uuid
+                                    LEFT JOIN ""users"" sam ON m.substitute_manager = sam.uuid
                                     WHERE ST_Area(ST_Intersection(@geom, geom)) > 0
                                     ORDER BY ST_Area(ST_Intersection(@geom, geom)) DESC
                                     LIMIT 1";
@@ -237,6 +249,8 @@ namespace roadwork_portal_service.Controllers
                             roadWorkNeedFeature.properties.managementarea.properties.uuid = reader.IsDBNull(0) ? "" : reader.GetGuid(0).ToString();
                             roadWorkNeedFeature.properties.managementarea.properties.manager.firstName = reader.IsDBNull(1) ? "" : reader.GetString(1);
                             roadWorkNeedFeature.properties.managementarea.properties.manager.lastName = reader.IsDBNull(2) ? "" : reader.GetString(2);
+                            roadWorkNeedFeature.properties.managementarea.properties.substituteManager.firstName = reader.IsDBNull(3) ? "" : reader.GetString(3);
+                            roadWorkNeedFeature.properties.managementarea.properties.substituteManager.lastName = reader.IsDBNull(4) ? "" : reader.GetString(4);
                         }
                     }
 
@@ -404,9 +418,11 @@ namespace roadwork_portal_service.Controllers
 
                     NpgsqlCommand selectMgmtAreaComm = pgConn.CreateCommand();
                     selectMgmtAreaComm.CommandText = @"SELECT m.uuid,
-                                        u.first_name, u.last_name
+                                        am.first_name, am.last_name
+                                        sam.first_name, sam.last_name
                                     FROM ""managementareas"" m
-                                    LEFT JOIN ""users"" u ON m.manager = u.uuid
+                                    LEFT JOIN ""users"" u ON m.manager = am.uuid
+                                    LEFT JOIN ""users"" u ON m.substitute_manager = sam.uuid
                                     WHERE ST_Intersects(@geom, geom)
                                     ORDER BY ST_Area(ST_Intersection(@geom, geom)) DESC
                                     LIMIT 1";
@@ -419,6 +435,8 @@ namespace roadwork_portal_service.Controllers
                             roadWorkNeedFeature.properties.managementarea.properties.uuid = reader.IsDBNull(0) ? "" : reader.GetGuid(0).ToString();
                             roadWorkNeedFeature.properties.managementarea.properties.manager.firstName = reader.IsDBNull(1) ? "" : reader.GetString(1);
                             roadWorkNeedFeature.properties.managementarea.properties.manager.lastName = reader.IsDBNull(2) ? "" : reader.GetString(2);
+                            roadWorkNeedFeature.properties.managementarea.properties.substituteManager.firstName = reader.IsDBNull(3) ? "" : reader.GetString(3);
+                            roadWorkNeedFeature.properties.managementarea.properties.substituteManager.lastName = reader.IsDBNull(4) ? "" : reader.GetString(4);
                         }
                     }
 

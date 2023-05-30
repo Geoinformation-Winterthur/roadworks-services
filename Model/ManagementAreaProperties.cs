@@ -8,5 +8,6 @@ public class ManagementAreaProperties
 {
     public string uuid { get; set; } = "";
     public User manager { get; set; } = new User();
+    public User substituteManager { get; set; } = new User();
 }
 
