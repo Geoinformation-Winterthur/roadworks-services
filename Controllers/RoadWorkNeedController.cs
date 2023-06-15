@@ -128,8 +128,6 @@ namespace roadwork_portal_service.Controllers
 
                         string ordererMailAddress = reader.IsDBNull(28) ? "" : reader.GetString(28);
                         string mailOfLoggedInUser = User.FindFirstValue(ClaimTypes.Email);
-                        string roleOfLoggedInUser = User.FindFirstValue(ClaimTypes.Role);
-
                         if (User.IsInRole("administrator") || ordererMailAddress == mailOfLoggedInUser)
                         {
                             needFeatureFromDb.properties.isEditingAllowed = true;

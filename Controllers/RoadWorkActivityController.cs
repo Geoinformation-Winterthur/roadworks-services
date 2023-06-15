@@ -36,7 +36,7 @@ namespace roadwork_portal_service.Controllers
                 selectComm.CommandText = @"SELECT r.uuid, r.name, r.managementarea, m.manager, am.first_name, am.last_name,
                             m.substitute_manager, sam.first_name, sam.last_name, r.projectmanager, pm.first_name, pm.last_name, r.traffic_agent,
                             ta.first_name, ta.last_name, description, created, last_modified, r.finish_from, r.finish_to,
-                            r.costs, c.code, c.name, r.geom
+                            r.costs, c.code, c.name, am.e_mail, r.geom
                         FROM ""roadworkactivities"" r
                         LEFT JOIN ""managementareas"" m ON r.managementarea = m.uuid
                         LEFT JOIN ""users"" am ON m.manager = am.uuid
@@ -105,7 +105,14 @@ namespace roadwork_portal_service.Controllers
                         ct.name = reader.IsDBNull(22) ? "" : reader.GetString(22);
                         projectFeatureFromDb.properties.costsType = ct;
 
-                        Polygon ntsPoly = reader.IsDBNull(23) ? Polygon.Empty : reader.GetValue(23) as Polygon;
+                        string managerMailAddress = reader.IsDBNull(23) ? "" : reader.GetString(23);
+                        string mailOfLoggedInUser = User.FindFirstValue(ClaimTypes.Email);
+                        if (User.IsInRole("administrator") || managerMailAddress == mailOfLoggedInUser)
+                        {
+                            projectFeatureFromDb.properties.isEditingAllowed = true;
+                        }
+
+                        Polygon ntsPoly = reader.IsDBNull(24) ? Polygon.Empty : reader.GetValue(24) as Polygon;
                         projectFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
 
                         projectsFromDb.Add(projectFeatureFromDb);
