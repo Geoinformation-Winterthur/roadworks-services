@@ -34,8 +34,8 @@ namespace roadwork_portal_service.Controllers
             {
                 pgConn.Open();
                 NpgsqlCommand selectComm = pgConn.CreateCommand();
-                selectComm.CommandText = @"SELECT m.uuid, m.name, am.first_name || ' ' || am.last_name,
-                            sam.first_name || ' ' || sam.last_name, m.color_fill, m.color_stroke, m.geom
+                selectComm.CommandText = @"SELECT m.uuid, m.name, am.uuid, am.first_name || ' ' || am.last_name,
+                            sam.uuid, sam.first_name || ' ' || sam.last_name, m.color_fill, m.color_stroke, m.geom
                             FROM ""managementareas"" m
                             LEFT JOIN ""users"" am ON m.manager = am.uuid
                             LEFT JOIN ""users"" sam ON m.substitute_manager = sam.uuid";
@@ -50,11 +50,13 @@ namespace roadwork_portal_service.Controllers
                         managementAreaFeatureFromDb.Attributes = new AttributesTable();
                         managementAreaFeatureFromDb.Attributes.Add("uuid", reader.IsDBNull(0) ? "" : reader.GetGuid(0).ToString());
                         managementAreaFeatureFromDb.Attributes.Add("name", reader.IsDBNull(1) ? "" : reader.GetString(1));
-                        managementAreaFeatureFromDb.Attributes.Add("managername", reader.IsDBNull(2) ? "" : reader.GetString(2));
-                        managementAreaFeatureFromDb.Attributes.Add("substitutemanager_name", reader.IsDBNull(3) ? "" : reader.GetString(3));
-                        managementAreaFeatureFromDb.Attributes.Add("color_fill", reader.IsDBNull(4) ? "" : reader.GetString(4));
-                        managementAreaFeatureFromDb.Attributes.Add("color_stroke", reader.IsDBNull(5) ? "" : reader.GetString(5));
-                        managementAreaFeatureFromDb.Geometry = reader.IsDBNull(6) ? Polygon.Empty : reader.GetValue(6) as Polygon;
+                        managementAreaFeatureFromDb.Attributes.Add("manager_uuid", reader.IsDBNull(2) ? "" : reader.GetGuid(2).ToString());
+                        managementAreaFeatureFromDb.Attributes.Add("managername", reader.IsDBNull(3) ? "" : reader.GetString(3));
+                        managementAreaFeatureFromDb.Attributes.Add("substitutemanager_uuid", reader.IsDBNull(4) ? "" : reader.GetGuid(4).ToString());
+                        managementAreaFeatureFromDb.Attributes.Add("substitutemanager_name", reader.IsDBNull(5) ? "" : reader.GetString(5));
+                        managementAreaFeatureFromDb.Attributes.Add("color_fill", reader.IsDBNull(6) ? "" : reader.GetString(6));
+                        managementAreaFeatureFromDb.Attributes.Add("color_stroke", reader.IsDBNull(7) ? "" : reader.GetString(7));
+                        managementAreaFeatureFromDb.Geometry = reader.IsDBNull(8) ? Polygon.Empty : reader.GetValue(8) as Polygon;
 
                         managementAreas.Add(managementAreaFeatureFromDb);
                     }

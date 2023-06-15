@@ -27,7 +27,7 @@ public class UsersController : ControllerBase
     // GET /account/users/?uuid=...
     [HttpGet]
     [Authorize(Roles = "administrator")]
-    public ActionResult<User[]> GetUsers(string? email, string? uuid)
+    public ActionResult<User[]> GetUsers(string? email, string? uuid, string? role)
     {
         List<User> usersFromDb = new List<User>();
         // get data of current user from database:
@@ -52,18 +52,25 @@ public class UsersController : ControllerBase
                 selectComm.CommandText += " WHERE trim(lower(u.e_mail))=@email";
                 selectComm.Parameters.AddWithValue("email", email);
             }
-            else
+            else if (uuid != null)
             {
-                if (uuid != null)
+                uuid = uuid.Trim().ToLower();
+                if (uuid != "")
                 {
-                    uuid = uuid.Trim().ToLower();
-                    if (uuid != "")
-                    {
-                        selectComm.CommandText += " WHERE u.uuid=@uuid";
-                        selectComm.Parameters.AddWithValue("uuid", new Guid(uuid));
-                    }
+                    selectComm.CommandText += " WHERE u.uuid=@uuid";
+                    selectComm.Parameters.AddWithValue("uuid", new Guid(uuid));
                 }
             }
+            else if (role != null)
+            {
+                role = role.Trim().ToLower();
+                if (role != "")
+                {
+                    selectComm.CommandText += " WHERE roles.code=@role";
+                    selectComm.Parameters.AddWithValue("role", role);
+                }
+            }
+
 
             using (NpgsqlDataReader reader = selectComm.ExecuteReader())
             {
@@ -82,10 +89,10 @@ public class UsersController : ControllerBase
                     {
                         userFromDb.lastName = reader.GetString(1);
                         userFromDb.firstName = reader.GetString(2);
-                        Role role = new Role();
-                        role.code = reader.GetString(4);
-                        role.name = reader.GetString(5);
-                        userFromDb.role = role;
+                        Role roleObj = new Role();
+                        roleObj.code = reader.GetString(4);
+                        roleObj.name = reader.GetString(5);
+                        userFromDb.role = roleObj;
                         OrganisationalUnit orgUnit = new OrganisationalUnit();
                         orgUnit.uuid = reader.GetGuid(6).ToString();
                         orgUnit.name = reader.GetString(7);
@@ -133,7 +140,7 @@ public class UsersController : ControllerBase
             user.errorMessage = "KOPAL-0";
             return Ok(user);
         }
-        
+
         if (user.mailAddress == "new")
         {
             _logger.LogWarning("User mail address 'new' not allowed.");
@@ -142,7 +149,7 @@ public class UsersController : ControllerBase
         }
 
         User userInDb = new User();
-        ActionResult<User[]> usersInDbResult = this.GetUsers(user.mailAddress, "");
+        ActionResult<User[]> usersInDbResult = this.GetUsers(user.mailAddress, "", "");
         User[]? usersInDb = usersInDbResult.Value;
         if (usersInDb != null && usersInDb.Length > 0)
         {
@@ -225,7 +232,7 @@ public class UsersController : ControllerBase
         }
 
         User userInDb = new User();
-        ActionResult<User[]> usersInDbResult = this.GetUsers("", user.uuid);
+        ActionResult<User[]> usersInDbResult = this.GetUsers("", user.uuid, "");
         User[]? usersInDb = usersInDbResult.Value;
         if (usersInDb == null || usersInDb.Length != 1 || usersInDb[0] == null)
         {
@@ -328,7 +335,7 @@ public class UsersController : ControllerBase
         }
 
         User userInDb = new User();
-        ActionResult<User[]> usersInDbResult = this.GetUsers(email, "");
+        ActionResult<User[]> usersInDbResult = this.GetUsers(email, "", "");
         User[]? usersInDb = usersInDbResult.Value;
         if (usersInDb == null || usersInDb.Length != 1 || usersInDb[0] == null)
         {
