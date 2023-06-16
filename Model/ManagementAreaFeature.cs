@@ -9,6 +9,7 @@ public class ManagementAreaFeature
     public string type { get; set; } = "";
     public ManagementAreaProperties properties { get; set; }
     public RoadworkPolygon geometry { get; set; }
+    public string errorMessage { get; set; } = "";
 
     public ManagementAreaFeature()
     {

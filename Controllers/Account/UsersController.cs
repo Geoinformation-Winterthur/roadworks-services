@@ -240,69 +240,80 @@ public class UsersController : ControllerBase
             errorResult.errorMessage = "KOPAL-4";
             return Ok(errorResult);
         }
-        else
+
+        userInDb = usersInDb[0];
+        int noOfActiveAdmins = _countNumberOfActiveAdmins();
+        if (noOfActiveAdmins == 1 && userInDb.role.code == "administrator")
         {
-            userInDb = usersInDb[0];
-            int noOfActiveAdmins = _countNumberOfActiveAdmins();
-            if (userInDb.role.code == "administrator" && user.role.code != "administrator")
+            if (user.role.code != "administrator")
             {
-                if (noOfActiveAdmins == 1)
-                {
-                    _logger.LogWarning("User tried to change role of last administrator. " +
-                            "Role cannot be changed since there would be no administrator anymore.");
-                    errorResult.errorMessage = "KOPAL-5";
-                    return Ok(errorResult);
-                }
+                _logger.LogWarning("Administrator tried to change role of last administrator. " +
+                        "Role cannot be changed since there would be no administrator anymore.");
+                errorResult.errorMessage = "KOPAL-5";
+                return Ok(errorResult);
             }
 
-            if (!user.active && noOfActiveAdmins == 1)
+            if (!user.active)
             {
-                _logger.LogWarning("User tried to set last administrator inactive. " +
+                _logger.LogWarning("Administrator tried to set last administrator inactive. " +
                         "This is not allowed.");
                 errorResult.errorMessage = "KOPAL-6";
                 return Ok(errorResult);
             }
+        }
 
-            using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
+
+        if (userInDb.role.code == "territorymanager" && user.role.code != "territorymanager")
+        {
+            if (_isAreaManagerAssigned(user.uuid))
             {
-                pgConn.Open();
-                NpgsqlCommand updateComm = pgConn.CreateCommand();
-                updateComm.CommandText = @"UPDATE ""users"" SET
+                _logger.LogWarning("Administrator tried to change role of a territory manager " +
+                        "who is in active charge of a territory. This is not allowed thus ignored.");
+                errorResult.errorMessage = "KOPAL-18";
+                return Ok(errorResult);
+            }
+        }
+
+        using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
+        {
+            pgConn.Open();
+            NpgsqlCommand updateComm = pgConn.CreateCommand();
+            updateComm.CommandText = @"UPDATE ""users"" SET
                         last_name=@last_name, first_name=@first_name, e_mail=@e_mail,
                         role=@role, org_unit=@org_unit, active=@active WHERE uuid=@uuid";
-                updateComm.Parameters.AddWithValue("last_name", user.lastName);
-                updateComm.Parameters.AddWithValue("first_name", user.firstName);
-                updateComm.Parameters.AddWithValue("e_mail", user.mailAddress);
-                updateComm.Parameters.AddWithValue("role", user.role.code);
-                updateComm.Parameters.AddWithValue("org_unit", new Guid(user.organisationalUnit.uuid));
-                updateComm.Parameters.AddWithValue("active", user.active);
-                updateComm.Parameters.AddWithValue("uuid", new Guid(user.uuid));
-                int noAffectedRowsStep1 = updateComm.ExecuteNonQuery();
+            updateComm.Parameters.AddWithValue("last_name", user.lastName);
+            updateComm.Parameters.AddWithValue("first_name", user.firstName);
+            updateComm.Parameters.AddWithValue("e_mail", user.mailAddress);
+            updateComm.Parameters.AddWithValue("role", user.role.code);
+            updateComm.Parameters.AddWithValue("org_unit", new Guid(user.organisationalUnit.uuid));
+            updateComm.Parameters.AddWithValue("active", user.active);
+            updateComm.Parameters.AddWithValue("uuid", new Guid(user.uuid));
+            int noAffectedRowsStep1 = updateComm.ExecuteNonQuery();
 
-                user.passPhrase = user.passPhrase.Trim();
-                bool needToUpdatePassphrase = user.passPhrase.Length != 0;
-                int noAffectedRowsStep2 = 0;
-                if (needToUpdatePassphrase)
-                {
-                    updateComm.CommandText = @"UPDATE ""users"" SET
+            user.passPhrase = user.passPhrase.Trim();
+            bool needToUpdatePassphrase = user.passPhrase.Length != 0;
+            int noAffectedRowsStep2 = 0;
+            if (needToUpdatePassphrase)
+            {
+                updateComm.CommandText = @"UPDATE ""users"" SET
                                     pwd=@pwd WHERE uuid=@uuid";
-                    updateComm.Parameters.AddWithValue("pwd", user.passPhrase);
-                    updateComm.Parameters.AddWithValue("uuid", new Guid(user.uuid));
-                    noAffectedRowsStep2 = updateComm.ExecuteNonQuery();
-                }
+                updateComm.Parameters.AddWithValue("pwd", user.passPhrase);
+                updateComm.Parameters.AddWithValue("uuid", new Guid(user.uuid));
+                noAffectedRowsStep2 = updateComm.ExecuteNonQuery();
+            }
 
-                pgConn.Close();
+            pgConn.Close();
 
-                if (noAffectedRowsStep1 == 1 &&
-                    (!needToUpdatePassphrase || noAffectedRowsStep2 == 1))
-                {
-                    user.passPhrase = "";
-                    return Ok(user);
-                }
-
+            if (noAffectedRowsStep1 == 1 &&
+                (!needToUpdatePassphrase || noAffectedRowsStep2 == 1))
+            {
+                user.passPhrase = "";
+                return Ok(user);
             }
 
         }
+
+
 
         _logger.LogError("Fatal error");
         errorResult.errorMessage = "KOPAL-3";
@@ -402,6 +413,36 @@ public class UsersController : ControllerBase
             pgConn.Close();
         }
         return count;
+    }
+
+    private static bool _isAreaManagerAssigned(string areaManagerUuid)
+    {
+        bool result = false;
+        using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
+        {
+            pgConn.Open();
+            NpgsqlCommand selectComm = pgConn.CreateCommand();
+            selectComm.CommandText = @"SELECT count(*) 
+                            FROM ""managementareas""
+                            WHERE manager=@uuid OR substitute_manager=@uuid";
+            selectComm.Parameters.AddWithValue("uuid", new Guid(areaManagerUuid));
+
+            using (NpgsqlDataReader reader = selectComm.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    int count = reader.IsDBNull(0) ? 0 :
+                                    reader.GetInt32(0);
+
+                    if (count != 0)
+                    {
+                        result = true;
+                    }
+                }
+            }
+            pgConn.Close();
+        }
+        return result;
     }
 
 }

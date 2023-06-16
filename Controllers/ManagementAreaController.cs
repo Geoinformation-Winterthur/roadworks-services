@@ -6,6 +6,7 @@ using NetTopologySuite.Features;
 using Npgsql;
 using roadwork_portal_service.Configuration;
 using System.Numerics;
+using roadwork_portal_service.Model;
 
 namespace roadwork_portal_service.Controllers
 {
@@ -65,6 +66,157 @@ namespace roadwork_portal_service.Controllers
             }
 
             return Ok(managementAreas);
+        }
+
+        // PUT managementarea/
+        [HttpPut]
+        [Authorize(Roles = "administrator")]
+        public ActionResult<ManagementAreaFeature>
+                    UpdateManagementArea([FromBody] ManagementAreaFeature managementAreaFeature)
+        {
+
+            try
+            {
+                if (managementAreaFeature == null || managementAreaFeature.properties == null ||
+                        managementAreaFeature.properties.uuid == null)
+                {
+                    _logger.LogWarning("No management area feature provided in area feature update process.");
+                    managementAreaFeature = new ManagementAreaFeature();
+                    managementAreaFeature.errorMessage = "KOPAL-15";
+                    return Ok(managementAreaFeature);
+                }
+
+                string managementAreaUuid = managementAreaFeature.properties.uuid.Trim().ToLower();
+                if (managementAreaUuid == "")
+                {
+                    _logger.LogWarning("No management area feature provided in area feature update process.");
+                    managementAreaFeature = new ManagementAreaFeature();
+                    managementAreaFeature.errorMessage = "KOPAL-15";
+                    return Ok(managementAreaFeature);
+                }
+
+                using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
+                {
+
+                    pgConn.Open();
+
+                    string managerUuid = "";
+
+                    if (managementAreaFeature.properties.manager != null
+                        && managementAreaFeature.properties.manager.uuid != null)
+                    {
+                        managerUuid = managementAreaFeature.properties.manager.uuid.Trim().ToLower();
+                    }
+
+                    if (managerUuid != "")
+                    {
+
+                        NpgsqlCommand selectAreaManagerRole = pgConn.CreateCommand();
+                        selectAreaManagerRole.CommandText = @"SELECT role,
+                                        first_name, last_name
+                                    FROM ""users""
+                                    WHERE uuid=@uuid";
+                        selectAreaManagerRole.Parameters.AddWithValue("uuid", new Guid(managerUuid));
+
+                        using (NpgsqlDataReader reader = selectAreaManagerRole.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                managementAreaFeature.properties.manager.role.code
+                                            = reader.IsDBNull(0) ? "" : reader.GetString(0);
+                                managementAreaFeature.properties.manager.firstName
+                                            = reader.IsDBNull(1) ? "" : reader.GetString(1);
+                                managementAreaFeature.properties.manager.lastName
+                                            = reader.IsDBNull(2) ? "" : reader.GetString(2);
+                            }
+                        }
+
+                        if (managementAreaFeature.properties.manager.role.code != "territorymanager")
+                        {
+                            _logger.LogWarning("Administrator tried to set the user with UUID "
+                                + managerUuid + " as a manager of an area, though the user " +
+                                "has not the role of a territory manager. Operation forbidden " +
+                                "and canceled.");
+                            managementAreaFeature = new ManagementAreaFeature();
+                            managementAreaFeature.errorMessage = "KOPAL-17";
+                            return Ok(managementAreaFeature);
+                        }
+
+                        NpgsqlCommand updateComm = pgConn.CreateCommand();
+                        updateComm.CommandText = @"UPDATE ""managementareas""
+                                    SET manager=@manager_uuid
+                                    WHERE uuid=@uuid";
+
+                        updateComm.Parameters.AddWithValue("manager_uuid", new Guid(managerUuid));
+                        updateComm.Parameters.AddWithValue("uuid", new Guid(managementAreaFeature.properties.uuid));
+
+                        updateComm.ExecuteNonQuery();
+                    }
+
+                    string substituteManagerUuid = "";
+
+                    if (managementAreaFeature.properties.substituteManager != null
+                        && managementAreaFeature.properties.substituteManager.uuid != null)
+                    {
+                        substituteManagerUuid = managementAreaFeature.properties.substituteManager.uuid.Trim().ToLower();
+                    }
+
+                    if (substituteManagerUuid != "")
+                    {
+
+                        NpgsqlCommand selectAreaManagerRole = pgConn.CreateCommand();
+                        selectAreaManagerRole.CommandText = @"SELECT role,
+                                        first_name, last_name
+                                    FROM ""users""
+                                    WHERE uuid=@uuid";
+                        selectAreaManagerRole.Parameters.AddWithValue("uuid", new Guid(substituteManagerUuid));
+
+                        using (NpgsqlDataReader reader = selectAreaManagerRole.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                managementAreaFeature.properties.substituteManager.role.code
+                                            = reader.IsDBNull(0) ? "" : reader.GetString(0);
+                                managementAreaFeature.properties.substituteManager.firstName
+                                            = reader.IsDBNull(1) ? "" : reader.GetString(1);
+                                managementAreaFeature.properties.substituteManager.lastName
+                                            = reader.IsDBNull(2) ? "" : reader.GetString(2);
+                            }
+                        }
+
+                        if (managementAreaFeature.properties.substituteManager.role.code != "territorymanager")
+                        {
+                            _logger.LogWarning("Administrator tried to set the user with UUID "
+                                + managerUuid + " as a manager of an area, though the user " +
+                                "has not the role of a territory manager. Operation forbidden " +
+                                "and canceled.");
+                            managementAreaFeature = new ManagementAreaFeature();
+                            managementAreaFeature.errorMessage = "KOPAL-17";
+                            return Ok(managementAreaFeature);
+                        }
+
+                        NpgsqlCommand updateComm = pgConn.CreateCommand();
+                        updateComm.CommandText = @"UPDATE ""managementareas""
+                                    SET substitute_manager=@substitute_manager_uuid
+                                    WHERE uuid=@uuid";
+
+                        updateComm.Parameters.AddWithValue("substitute_manager_uuid", new Guid(substituteManagerUuid));
+                        updateComm.Parameters.AddWithValue("uuid", new Guid(managementAreaFeature.properties.uuid));
+
+                        updateComm.ExecuteNonQuery();
+                    }
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                managementAreaFeature = new ManagementAreaFeature();
+                managementAreaFeature.errorMessage = "KOPAL-3";
+                return Ok(managementAreaFeature);
+            }
+            return managementAreaFeature;
         }
 
     }
