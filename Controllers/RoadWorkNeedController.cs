@@ -227,7 +227,7 @@ namespace roadwork_portal_service.Controllers
 
                     NpgsqlCommand selectMgmtAreaComm = pgConn.CreateCommand();
                     selectMgmtAreaComm.CommandText = @"SELECT m.uuid,
-                                        am.first_name, am.last_name
+                                        am.first_name, am.last_name,
                                         sam.first_name, sam.last_name
                                     FROM ""managementareas"" m
                                     LEFT JOIN ""users"" am ON m.manager = am.uuid
@@ -416,11 +416,11 @@ namespace roadwork_portal_service.Controllers
 
                     NpgsqlCommand selectMgmtAreaComm = pgConn.CreateCommand();
                     selectMgmtAreaComm.CommandText = @"SELECT m.uuid,
-                                        am.first_name, am.last_name
+                                        am.first_name, am.last_name,
                                         sam.first_name, sam.last_name
                                     FROM ""managementareas"" m
-                                    LEFT JOIN ""users"" u ON m.manager = am.uuid
-                                    LEFT JOIN ""users"" u ON m.substitute_manager = sam.uuid
+                                    LEFT JOIN ""users"" am ON m.manager = am.uuid
+                                    LEFT JOIN ""users"" sam ON m.substitute_manager = sam.uuid
                                     WHERE ST_Intersects(@geom, geom)
                                     ORDER BY ST_Area(ST_Intersection(@geom, geom)) DESC
                                     LIMIT 1";
