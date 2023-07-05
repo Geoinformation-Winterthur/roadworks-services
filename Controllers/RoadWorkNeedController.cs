@@ -42,7 +42,7 @@ namespace roadwork_portal_service.Controllers
                             r.description, r.managementarea, m.manager, am.first_name, am.last_name,
                             m.substitute_manager, sam.first_name, sam.last_name,
                             r.created, r.last_modified, r.roadworkactivity, u.e_mail,
-                            r.longer_six_months, r.geom
+                            r.longer_six_months, r.relevance, r.geom
                         FROM ""roadworkneeds"" r
                         LEFT JOIN ""users"" u ON r.orderer = u.uuid
                         LEFT JOIN ""organisationalunits"" o ON u.org_unit = o.uuid
@@ -135,7 +135,8 @@ namespace roadwork_portal_service.Controllers
 
                         needFeatureFromDb.properties.longer6Month = reader.IsDBNull(29) ? false : reader.GetBoolean(29);
 
-                        Polygon ntsPoly = reader.IsDBNull(30) ? Polygon.Empty : reader.GetValue(30) as Polygon;
+                        needFeatureFromDb.properties.relevance = reader.IsDBNull(30) ? 0 : reader.GetInt32(30);
+                        Polygon ntsPoly = reader.IsDBNull(31) ? Polygon.Empty : reader.GetValue(31) as Polygon;
                         needFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
 
                         projectsFromDb.Add(needFeatureFromDb);
@@ -266,10 +267,12 @@ namespace roadwork_portal_service.Controllers
                     insertComm.CommandText = @"INSERT INTO ""roadworkneeds""
                                     (uuid, name, kind, orderer, created, last_modified, finish_early_from, finish_early_to,
                                     finish_optimum_from, finish_optimum_to, finish_late_from,
-                                    finish_late_to, priority, status, description, managementarea, longer_six_months, geom)
+                                    finish_late_to, priority, status, description, managementarea, longer_six_months, relevance,
+                                    geom)
                                     VALUES (@uuid, @name, @kind, @orderer, current_timestamp, current_timestamp,
                                     @finish_early_from, @finish_early_to, @finish_optimum_from, @finish_optimum_to, @finish_late_from,
-                                    @finish_late_to, @priority, @status, @description, @managementarea, @longer_six_months, @geom)";
+                                    @finish_late_to, @priority, @status, @description, @managementarea, @longer_six_months, @relevance,
+                                    @geom)";
                     insertComm.Parameters.AddWithValue("uuid", new Guid(roadWorkNeedFeature.properties.uuid));
                     insertComm.Parameters.AddWithValue("name", roadWorkNeedFeature.properties.name);
                     insertComm.Parameters.AddWithValue("kind", roadWorkNeedFeature.properties.kind.code);
@@ -299,6 +302,7 @@ namespace roadwork_portal_service.Controllers
                         insertComm.Parameters.AddWithValue("managementarea", DBNull.Value);
                     }
                     insertComm.Parameters.AddWithValue("longer_six_months", roadWorkNeedFeature.properties.longer6Month);
+                    insertComm.Parameters.AddWithValue("relevance", roadWorkNeedFeature.properties.relevance);
                     insertComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
 
                     insertComm.ExecuteNonQuery();
@@ -452,7 +456,8 @@ namespace roadwork_portal_service.Controllers
                                     finish_optimum_from=@finish_optimum_from, finish_optimum_to=@finish_optimum_to,
                                     finish_late_from=@finish_late_from, finish_late_to=@finish_late_to,
                                     priority=@priority, status=@status, description=@description,
-                                    managementarea=@managementarea, longer_six_months=@longer_six_months, geom=@geom
+                                    managementarea=@managementarea, longer_six_months=@longer_six_months,
+                                    relevance=@relevance, geom=@geom
                                     WHERE uuid=@uuid";
 
                     updateComm.Parameters.AddWithValue("name", roadWorkNeedFeature.properties.name);
@@ -483,6 +488,7 @@ namespace roadwork_portal_service.Controllers
                         updateComm.Parameters.AddWithValue("managementarea", DBNull.Value);
                     }
                     updateComm.Parameters.AddWithValue("longer_six_months", roadWorkNeedFeature.properties.longer6Month);
+                    updateComm.Parameters.AddWithValue("relevance", roadWorkNeedFeature.properties.relevance);
                     updateComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
                     updateComm.Parameters.AddWithValue("uuid", new Guid(roadWorkNeedFeature.properties.uuid));
 
