@@ -21,6 +21,7 @@ public class RoadWorkActivityProperties
     public CostTypes costsType { get; set; } = new CostTypes();
 
     public string[] roadWorkNeedsUuids { get; set; } = new string[0];
+    public Status status { get; set; } = new Status();
     public bool isEditingAllowed { get; set; } = false;
 
 }

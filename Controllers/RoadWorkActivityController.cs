@@ -36,13 +36,14 @@ namespace roadwork_portal_service.Controllers
                 selectComm.CommandText = @"SELECT r.uuid, r.name, r.managementarea, m.manager, am.first_name, am.last_name,
                             m.substitute_manager, sam.first_name, sam.last_name, r.projectmanager, pm.first_name, pm.last_name, r.traffic_agent,
                             ta.first_name, ta.last_name, description, created, last_modified, r.finish_from, r.finish_to,
-                            r.costs, c.code, c.name, am.e_mail, r.geom
+                            r.costs, c.code, c.name, am.e_mail, s.code, s.name, r.geom
                         FROM ""roadworkactivities"" r
                         LEFT JOIN ""managementareas"" m ON r.managementarea = m.uuid
                         LEFT JOIN ""users"" am ON m.manager = am.uuid
                         LEFT JOIN ""users"" sam ON m.substitute_manager = sam.uuid
                         LEFT JOIN ""users"" pm ON r.projectmanager = pm.uuid
                         LEFT JOIN ""users"" ta ON r.traffic_agent = ta.uuid
+                        LEFT JOIN ""status"" s ON r.status = s.code
                         LEFT JOIN ""costtypes"" c ON r.costs_type = c.code";
 
                 if (uuid != null)
@@ -112,7 +113,12 @@ namespace roadwork_portal_service.Controllers
                             projectFeatureFromDb.properties.isEditingAllowed = true;
                         }
 
-                        Polygon ntsPoly = reader.IsDBNull(24) ? Polygon.Empty : reader.GetValue(24) as Polygon;
+                        Status status = new Status();
+                        status.code = reader.IsDBNull(24) ? "" : reader.GetString(24);
+                        status.name = reader.IsDBNull(25) ? "" : reader.GetString(25);
+                        projectFeatureFromDb.properties.status = status;
+
+                        Polygon ntsPoly = reader.IsDBNull(26) ? Polygon.Empty : reader.GetValue(26) as Polygon;
                         projectFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
 
                         projectsFromDb.Add(projectFeatureFromDb);
@@ -233,10 +239,10 @@ namespace roadwork_portal_service.Controllers
                     insertComm.CommandText = @"INSERT INTO ""roadworkactivities""
                                     (uuid, name, managementarea, projectmanager, traffic_agent, description,
                                     created, last_modified, finish_from, finish_to,
-                                    costs, costs_type, geom)
+                                    costs, costs_type, status, geom)
                                     VALUES (@uuid, @name, @managementarea, @projectmanager, @traffic_agent,
                                     @description, current_timestamp, @last_modified, @finish_from,
-                                    @finish_to, @costs, @costs_type, @geom)";
+                                    @finish_to, @costs, @costs_type, @status, @geom)";
                     insertComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
                     if (roadWorkActivityFeature.properties.managementarea.properties.uuid != "")
                     {
@@ -269,6 +275,7 @@ namespace roadwork_portal_service.Controllers
                     insertComm.Parameters.AddWithValue("finish_to", roadWorkActivityFeature.properties.finishTo);
                     insertComm.Parameters.AddWithValue("costs", roadWorkActivityFeature.properties.costs);
                     insertComm.Parameters.AddWithValue("costs_type", "fullcost"); // TODO make this dynamic 
+                    insertComm.Parameters.AddWithValue("status", roadWorkActivityFeature.properties.status.code);
                     insertComm.Parameters.AddWithValue("geom", roadWorkActivityPoly);
 
                     await insertComm.ExecuteNonQueryAsync();
@@ -419,7 +426,7 @@ namespace roadwork_portal_service.Controllers
                                     traffic_agent=@traffic_agent, description=@description,
                                     created=current_timestamp, last_modified=current_timestamp,
                                     finish_from=current_timestamp, finish_to=current_timestamp,
-                                    costs=@costs, costs_type=@costs_type, geom=@geom
+                                    costs=@costs, costs_type=@costs_type, status=@status, geom=@geom
                                     WHERE uuid=@uuid";
 
                     updateComm.Parameters.AddWithValue("name", roadWorkActivityFeature.properties.name);
@@ -457,6 +464,7 @@ namespace roadwork_portal_service.Controllers
                     updateComm.Parameters.AddWithValue("finish_to", roadWorkActivityFeature.properties.finishTo);
                     updateComm.Parameters.AddWithValue("costs", roadWorkActivityFeature.properties.costs);
                     updateComm.Parameters.AddWithValue("costs_type", roadWorkActivityFeature.properties.costsType.code);
+                    updateComm.Parameters.AddWithValue("status", roadWorkActivityFeature.properties.status.code);
                     updateComm.Parameters.AddWithValue("geom", roadWorkActivityPoly);
                     updateComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
 
