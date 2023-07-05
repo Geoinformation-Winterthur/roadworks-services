@@ -25,7 +25,8 @@ namespace roadwork_portal_service.Controllers
         // GET roadworkactivity/
         [HttpGet]
         [Authorize(Roles = "orderer,territorymanager,administrator")]
-        public async Task<IEnumerable<RoadWorkActivityFeature>> GetActivities(string? uuid = "", bool summary = false)
+        public async Task<IEnumerable<RoadWorkActivityFeature>> GetActivities
+                                (string? uuid = "", string? status = "", bool summary = false)
         {
             List<RoadWorkActivityFeature> projectsFromDb = new List<RoadWorkActivityFeature>();
             // get data of current user from database:
@@ -53,6 +54,16 @@ namespace roadwork_portal_service.Controllers
                     {
                         selectComm.CommandText += " WHERE r.uuid=@uuid";
                         selectComm.Parameters.AddWithValue("uuid", new Guid(uuid));
+                    }
+                }
+
+                if ((uuid == null || uuid == "") && status != null)
+                {
+                    status = status.Trim().ToLower();
+                    if (status != "")
+                    {
+                        selectComm.CommandText += " WHERE r.status=@status";
+                        selectComm.Parameters.AddWithValue("status", status);
                     }
                 }
 
@@ -113,10 +124,10 @@ namespace roadwork_portal_service.Controllers
                             projectFeatureFromDb.properties.isEditingAllowed = true;
                         }
 
-                        Status status = new Status();
-                        status.code = reader.IsDBNull(24) ? "" : reader.GetString(24);
-                        status.name = reader.IsDBNull(25) ? "" : reader.GetString(25);
-                        projectFeatureFromDb.properties.status = status;
+                        Status statusFromDb = new Status();
+                        statusFromDb.code = reader.IsDBNull(24) ? "" : reader.GetString(24);
+                        statusFromDb.name = reader.IsDBNull(25) ? "" : reader.GetString(25);
+                        projectFeatureFromDb.properties.status = statusFromDb;
 
                         Polygon ntsPoly = reader.IsDBNull(26) ? Polygon.Empty : reader.GetValue(26) as Polygon;
                         projectFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
@@ -275,7 +286,7 @@ namespace roadwork_portal_service.Controllers
                     insertComm.Parameters.AddWithValue("finish_to", roadWorkActivityFeature.properties.finishTo);
                     insertComm.Parameters.AddWithValue("costs", roadWorkActivityFeature.properties.costs);
                     insertComm.Parameters.AddWithValue("costs_type", "fullcost"); // TODO make this dynamic 
-                    insertComm.Parameters.AddWithValue("status", roadWorkActivityFeature.properties.status.code);
+                    insertComm.Parameters.AddWithValue("status", "inwork");
                     insertComm.Parameters.AddWithValue("geom", roadWorkActivityPoly);
 
                     await insertComm.ExecuteNonQueryAsync();
