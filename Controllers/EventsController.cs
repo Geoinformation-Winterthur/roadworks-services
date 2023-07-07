@@ -25,7 +25,8 @@ namespace roadwork_portal_service.Controllers
         // GET events/
         [HttpGet]
         [Authorize]
-        public IEnumerable<EventFeature> GetEvents(string? uuid = "", bool summary = false)
+        public IEnumerable<EventFeature> GetEvents(string? uuid = "", string? roadWorkActivityUuid = "",
+                         bool summary = false)
         {
             List<EventFeature> eventsFromDb = new List<EventFeature>();
 
@@ -34,17 +35,28 @@ namespace roadwork_portal_service.Controllers
             {
                 pgConn.Open();
                 NpgsqlCommand selectComm = pgConn.CreateCommand();
-                selectComm.CommandText = @"SELECT uuid, name, created, last_modified,
-                            date_from, date_to, geom
-                        FROM ""events""";
+                selectComm.CommandText = @"SELECT e.uuid, e.name, e.created, e.last_modified,
+                            e.date_from, e.date_to, e.geom
+                        FROM ""events"" e";
 
                 if (uuid != null)
                 {
                     uuid = uuid.Trim().ToLower();
                     if (uuid != "")
                     {
-                        selectComm.CommandText += " WHERE uuid=@uuid";
+                        selectComm.CommandText += " WHERE e.uuid=@uuid";
                         selectComm.Parameters.AddWithValue("uuid", new Guid(uuid));
+                    }
+                }
+
+                if ((uuid == null || uuid == "") && roadWorkActivityUuid != null)
+                {
+                    roadWorkActivityUuid = roadWorkActivityUuid.Trim().ToLower();
+                    if (roadWorkActivityUuid != "")
+                    {
+                        NpgsqlCommand selectIntersectingNeeds = pgConn.CreateCommand();
+                        selectComm.CommandText += @", ""roadworkactivities"" r WHERE ST_Intersects(e.geom, r.geom) AND r.uuid=@roadworkactivity_uuid";
+                        selectComm.Parameters.AddWithValue("roadworkactivity_uuid", new Guid(roadWorkActivityUuid));
                     }
                 }
 
