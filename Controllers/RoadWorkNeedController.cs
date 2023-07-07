@@ -459,7 +459,8 @@ namespace roadwork_portal_service.Controllers
                                     finish_late_from=@finish_late_from, finish_late_to=@finish_late_to,
                                     priority=@priority, status=@status, description=@description,
                                     managementarea=@managementarea, longer_six_months=@longer_six_months,
-                                    relevance=@relevance, activityrelationtype=@activityrelationtype, geom=@geom
+                                    relevance=@relevance, activityrelationtype=@activityrelationtype,
+                                    roadworkactivity=@roadworkactivity, geom=@geom
                                     WHERE uuid=@uuid";
 
                     updateComm.Parameters.AddWithValue("name", roadWorkNeedFeature.properties.name);
@@ -492,6 +493,14 @@ namespace roadwork_portal_service.Controllers
                     updateComm.Parameters.AddWithValue("longer_six_months", roadWorkNeedFeature.properties.longer6Month);
                     updateComm.Parameters.AddWithValue("relevance", roadWorkNeedFeature.properties.relevance);
                     updateComm.Parameters.AddWithValue("activityrelationtype", roadWorkNeedFeature.properties.activityRelationType);
+                    if (roadWorkNeedFeature.properties.roadWorkActivityUuid != "")
+                    {
+                        updateComm.Parameters.AddWithValue("roadworkactivity", new Guid(roadWorkNeedFeature.properties.roadWorkActivityUuid));
+                    }
+                    else
+                    {
+                        updateComm.Parameters.AddWithValue("roadworkactivity", DBNull.Value);
+                    }
                     updateComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
                     updateComm.Parameters.AddWithValue("uuid", new Guid(roadWorkNeedFeature.properties.uuid));
 
