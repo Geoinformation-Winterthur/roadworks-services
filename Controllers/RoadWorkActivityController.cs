@@ -304,7 +304,8 @@ namespace roadwork_portal_service.Controllers
                         NpgsqlCommand updateComm = pgConn.CreateCommand();
                         updateComm.CommandText = @"UPDATE ""roadworkneeds"" SET
                                     roadworkactivity = @roadworkactivity,
-                                    status = 'coordinated'
+                                    status = 'coordinated',
+                                    activityrelationtype = 'nonassignedneed'
                                     WHERE uuid = ANY (@uuids)";
                         updateComm.Parameters.AddWithValue("roadworkactivity", new Guid(roadWorkActivityFeature.properties.uuid));
                         updateComm.Parameters.AddWithValue("uuids", roadWorkNeedsUuidsList);

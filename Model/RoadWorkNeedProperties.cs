@@ -22,6 +22,7 @@ public class RoadWorkNeedProperties
     public Status status { get; set; } = new Status();
     public bool longer6Month { get; set; } = false;
     public int relevance { get; set; } = 0;
+    public string activityRelationType { get; set; } = "";    
     public string description { get; set; } = "";
     public ManagementAreaFeature managementarea
                 { get; set; } = new ManagementAreaFeature();
