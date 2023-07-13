@@ -26,7 +26,7 @@ namespace roadwork_portal_service.Controllers
         [HttpGet]
         [Authorize]
         public IEnumerable<EventFeature> GetEvents(string? uuid = "", string? roadWorkActivityUuid = "",
-                         bool summary = false)
+                         bool? temporal = false, bool? spatial = false, bool summary = false)
         {
             List<EventFeature> eventsFromDb = new List<EventFeature>();
 
@@ -54,9 +54,39 @@ namespace roadwork_portal_service.Controllers
                     roadWorkActivityUuid = roadWorkActivityUuid.Trim().ToLower();
                     if (roadWorkActivityUuid != "")
                     {
-                        NpgsqlCommand selectIntersectingNeeds = pgConn.CreateCommand();
-                        selectComm.CommandText += @", ""roadworkactivities"" r WHERE ST_Intersects(e.geom, r.geom) AND r.uuid=@roadworkactivity_uuid";
-                        selectComm.Parameters.AddWithValue("roadworkactivity_uuid", new Guid(roadWorkActivityUuid));
+                        bool spatialParam = false;
+                        if (spatial != null)
+                        {
+                            spatialParam = (bool)spatial;
+                        }
+                        bool temporalParam = false;
+                        if (temporal != null)
+                        {
+                            temporalParam = (bool)temporal;
+                        }
+
+                        if (spatialParam && temporalParam)
+                        {
+                            selectComm.CommandText += @", ""roadworkactivities"" r 
+                                                WHERE ST_Intersects(e.geom, r.geom)
+                                                        AND (r.finish_from <= e.date_to AND r.finish_to >= e.date_from)
+                                                        AND r.uuid=@roadworkactivity_uuid";
+                            selectComm.Parameters.AddWithValue("roadworkactivity_uuid", new Guid(roadWorkActivityUuid));
+                        } else if (spatialParam)
+                        {
+                            selectComm.CommandText += @", ""roadworkactivities"" r 
+                                                WHERE ST_Intersects(e.geom, r.geom)
+                                                        AND (r.finish_from > e.date_to OR r.finish_to < e.date_from)
+                                                        AND r.uuid=@roadworkactivity_uuid";
+                            selectComm.Parameters.AddWithValue("roadworkactivity_uuid", new Guid(roadWorkActivityUuid));
+                        } else if (temporalParam)
+                        {
+                            selectComm.CommandText += @", ""roadworkactivities"" r
+                                                WHERE NOT ST_Intersects(e.geom, r.geom) 
+                                                    AND (r.finish_from <= e.date_to AND r.finish_to >= e.date_from)
+                                                    AND r.uuid=@roadworkactivity_uuid";
+                            selectComm.Parameters.AddWithValue("roadworkactivity_uuid", new Guid(roadWorkActivityUuid));
+                        }
                     }
                 }
 
