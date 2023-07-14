@@ -503,8 +503,8 @@ namespace roadwork_portal_service.Controllers
                     updateComm.CommandText = @"UPDATE ""roadworkactivities""
                                     SET name=@name, managementarea=@managementarea, projectmanager=@projectmanager,
                                     traffic_agent=@traffic_agent, description=@description,
-                                    created=current_timestamp, last_modified=current_timestamp,
-                                    finish_from=current_timestamp, finish_to=current_timestamp,
+                                    last_modified=current_timestamp,
+                                    finish_from=@finish_from, finish_to=@finish_to,
                                     costs=@costs, costs_type=@costs_type, status=@status, geom=@geom
                                     WHERE uuid=@uuid";
 
@@ -537,8 +537,6 @@ namespace roadwork_portal_service.Controllers
                         updateComm.Parameters.AddWithValue("traffic_agent", DBNull.Value);
                     }
                     updateComm.Parameters.AddWithValue("description", roadWorkActivityFeature.properties.description);
-                    updateComm.Parameters.AddWithValue("created", roadWorkActivityFeature.properties.created);
-                    updateComm.Parameters.AddWithValue("last_modified", roadWorkActivityFeature.properties.lastModified);
                     updateComm.Parameters.AddWithValue("finish_from", roadWorkActivityFeature.properties.finishFrom);
                     updateComm.Parameters.AddWithValue("finish_to", roadWorkActivityFeature.properties.finishTo);
                     updateComm.Parameters.AddWithValue("costs", roadWorkActivityFeature.properties.costs);

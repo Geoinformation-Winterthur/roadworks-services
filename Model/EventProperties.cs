@@ -12,5 +12,6 @@ public class EventProperties
     public DateTime lastModified { get; set; } = DateTime.MinValue;
     public DateTime dateFrom { get; set; } = DateTime.MinValue;
     public DateTime dateTo { get; set; } = DateTime.MinValue;
+    public bool isEditingAllowed { get; set; } = false;
 }
 
