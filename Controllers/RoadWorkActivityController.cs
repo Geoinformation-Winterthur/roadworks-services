@@ -227,7 +227,7 @@ namespace roadwork_portal_service.Controllers
                     {
                         while (reader.Read())
                         {
-                            if(!reader.IsDBNull(0))
+                            if (!reader.IsDBNull(0))
                             {
                                 roadWorkNeedsUuidsList.Add(reader.GetGuid(0));
                             }
@@ -449,7 +449,6 @@ namespace roadwork_portal_service.Controllers
                 using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
                 {
 
-
                     pgConn.Open();
 
                     using NpgsqlTransaction trans = pgConn.BeginTransaction();
@@ -484,6 +483,20 @@ namespace roadwork_portal_service.Controllers
                             return Ok(roadWorkActivityFeature);
                         }
 
+                    }
+
+                    NpgsqlCommand selectStatusComm = pgConn.CreateCommand();
+                    selectStatusComm.CommandText = @"SELECT status FROM ""roadworkactivities""
+                                                        WHERE uuid=@uuid";
+                    selectStatusComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
+
+                    string statusOfActivityInDb = "";
+                    using (NpgsqlDataReader reader = selectStatusComm.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            statusOfActivityInDb = reader.IsDBNull(0) ? "" : reader.GetString(0);
+                        }
                     }
 
                     NpgsqlCommand updateComm = pgConn.CreateCommand();
@@ -556,16 +569,19 @@ namespace roadwork_portal_service.Controllers
                     {
                         NpgsqlCommand cleanActivityOfNeedsComm = pgConn.CreateCommand();
                         cleanActivityOfNeedsComm.CommandText = @"UPDATE roadworkneeds
-                                        SET roadworkactivity=NULL
-                                        WHERE roadworkactivity = @activity_uuid";
+                                        SET roadworkactivity = NULL, activityrelationtype = NULL
+                                        WHERE activityrelationtype = 'nonassignedneed'
+                                            AND roadworkactivity = @activity_uuid";
                         cleanActivityOfNeedsComm.Parameters.AddWithValue("activity_uuid", new Guid(roadWorkActivityFeature.properties.uuid));
                         cleanActivityOfNeedsComm.ExecuteNonQuery();
 
 
                         NpgsqlCommand updateActivityOfNeedsComm = pgConn.CreateCommand();
                         updateActivityOfNeedsComm.CommandText = @"UPDATE roadworkneeds
-                                        SET roadworkactivity=@activity_uuid
-                                        WHERE uuid = ANY (:needs_uuids)";
+                                        SET roadworkactivity = @activity_uuid,
+                                            activityrelationtype = 'nonassignedneed'
+                                        WHERE activityrelationtype <> 'assignedneed'
+                                            AND uuid = ANY (:needs_uuids)";
                         updateActivityOfNeedsComm.Parameters.AddWithValue("activity_uuid", new Guid(roadWorkActivityFeature.properties.uuid));
                         updateActivityOfNeedsComm.Parameters.AddWithValue("needs_uuids", intersectingNeedsUuids);
                         updateActivityOfNeedsComm.ExecuteNonQuery();
@@ -578,6 +594,41 @@ namespace roadwork_portal_service.Controllers
                             i++;
                         }
 
+                    }
+
+                    if (statusOfActivityInDb != null && statusOfActivityInDb.Length != 0)
+                    {
+                        if (statusOfActivityInDb != roadWorkActivityFeature.properties.status.code)
+                        {
+                            NpgsqlCommand updateActivityStatusComm = pgConn.CreateCommand();
+                            updateActivityStatusComm.CommandText = @"UPDATE roadworkactivities
+                                                    SET status=@status WHERE uuid=@uuid";
+                            updateActivityStatusComm.Parameters.AddWithValue("status", roadWorkActivityFeature.properties.status.code);
+                            updateActivityStatusComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
+                            updateActivityStatusComm.ExecuteNonQuery();
+
+                            if (roadWorkActivityFeature.properties.status.code == "inwork")
+                            {
+                                NpgsqlCommand updateNeedsStatusComm = pgConn.CreateCommand();
+                                updateNeedsStatusComm.CommandText = @"UPDATE roadworkneeds
+                                                    SET status='coordinated'
+                                                    WHERE activityrelationtype='assignedneed'
+                                                        AND roadworkactivity=@activity_uuid";
+                                updateNeedsStatusComm.Parameters.AddWithValue("activity_uuid", new Guid(roadWorkActivityFeature.properties.uuid));
+                                updateNeedsStatusComm.ExecuteNonQuery();
+                            }
+                            else
+                            {
+                                NpgsqlCommand updateNeedsStatusComm = pgConn.CreateCommand();
+                                updateNeedsStatusComm.CommandText = @"UPDATE roadworkneeds
+                                                    SET status=@status
+                                                    WHERE activityrelationtype='assignedneed'
+                                                        AND roadworkactivity=@activity_uuid";
+                                updateNeedsStatusComm.Parameters.AddWithValue("status", roadWorkActivityFeature.properties.status.code);
+                                updateNeedsStatusComm.Parameters.AddWithValue("activity_uuid", new Guid(roadWorkActivityFeature.properties.uuid));
+                                updateNeedsStatusComm.ExecuteNonQuery();
+                            }
+                        }
                     }
 
                     trans.Commit();
