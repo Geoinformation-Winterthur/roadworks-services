@@ -36,7 +36,7 @@ namespace roadwork_portal_service.Controllers
                 NpgsqlCommand selectComm = pgConn.CreateCommand();
                 selectComm.CommandText = @"SELECT r.uuid, r.name, r.managementarea, m.manager, am.first_name, am.last_name,
                             m.substitute_manager, sam.first_name, sam.last_name, r.projectmanager, pm.first_name, pm.last_name, r.traffic_agent,
-                            ta.first_name, ta.last_name, description, created, last_modified, r.finish_from, r.finish_to,
+                            ta.first_name, ta.last_name, description, created, last_modified, r.date_from, r.date_to,
                             r.costs, c.code, c.name, am.e_mail, s.code, s.name, r.geom
                         FROM ""roadworkactivities"" r
                         LEFT JOIN ""managementareas"" m ON r.managementarea = m.uuid
@@ -304,11 +304,11 @@ namespace roadwork_portal_service.Controllers
                     NpgsqlCommand insertComm = pgConn.CreateCommand();
                     insertComm.CommandText = @"INSERT INTO ""roadworkactivities""
                                     (uuid, name, managementarea, projectmanager, traffic_agent, description,
-                                    created, last_modified, finish_from, finish_to,
+                                    created, last_modified, date_from, date_to,
                                     costs, costs_type, status, geom)
                                     VALUES (@uuid, @name, @managementarea, @projectmanager, @traffic_agent,
-                                    @description, current_timestamp, @last_modified, @finish_from,
-                                    @finish_to, @costs, @costs_type, @status, @geom)";
+                                    @description, current_timestamp, @last_modified, @date_from,
+                                    @date_to, @costs, @costs_type, @status, @geom)";
                     insertComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
                     if (roadWorkActivityFeature.properties.managementarea.properties.uuid != "")
                     {
@@ -337,8 +337,8 @@ namespace roadwork_portal_service.Controllers
                     insertComm.Parameters.AddWithValue("name", roadWorkActivityFeature.properties.name);
                     insertComm.Parameters.AddWithValue("description", roadWorkActivityFeature.properties.description);
                     insertComm.Parameters.AddWithValue("last_modified", roadWorkActivityFeature.properties.lastModified);
-                    insertComm.Parameters.AddWithValue("finish_from", roadWorkActivityFinishFrom);
-                    insertComm.Parameters.AddWithValue("finish_to", roadWorkActivityFinishTo);
+                    insertComm.Parameters.AddWithValue("date_from", roadWorkActivityFinishFrom);
+                    insertComm.Parameters.AddWithValue("date_to", roadWorkActivityFinishTo);
                     insertComm.Parameters.AddWithValue("costs", roadWorkActivityFeature.properties.costs);
                     insertComm.Parameters.AddWithValue("costs_type", "fullcost"); // TODO make this dynamic 
                     insertComm.Parameters.AddWithValue("status", "inwork");
@@ -504,7 +504,7 @@ namespace roadwork_portal_service.Controllers
                                     SET name=@name, managementarea=@managementarea, projectmanager=@projectmanager,
                                     traffic_agent=@traffic_agent, description=@description,
                                     last_modified=current_timestamp,
-                                    finish_from=@finish_from, finish_to=@finish_to,
+                                    date_from=@date_from, date_to=@date_to,
                                     costs=@costs, costs_type=@costs_type, status=@status, geom=@geom
                                     WHERE uuid=@uuid";
 
@@ -537,8 +537,8 @@ namespace roadwork_portal_service.Controllers
                         updateComm.Parameters.AddWithValue("traffic_agent", DBNull.Value);
                     }
                     updateComm.Parameters.AddWithValue("description", roadWorkActivityFeature.properties.description);
-                    updateComm.Parameters.AddWithValue("finish_from", roadWorkActivityFeature.properties.finishFrom);
-                    updateComm.Parameters.AddWithValue("finish_to", roadWorkActivityFeature.properties.finishTo);
+                    updateComm.Parameters.AddWithValue("date_from", roadWorkActivityFeature.properties.finishFrom);
+                    updateComm.Parameters.AddWithValue("date_to", roadWorkActivityFeature.properties.finishTo);
                     updateComm.Parameters.AddWithValue("costs", roadWorkActivityFeature.properties.costs);
                     updateComm.Parameters.AddWithValue("costs_type", roadWorkActivityFeature.properties.costsType.code);
                     updateComm.Parameters.AddWithValue("status", roadWorkActivityFeature.properties.status.code);

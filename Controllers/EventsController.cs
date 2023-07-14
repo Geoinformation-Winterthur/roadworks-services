@@ -69,7 +69,7 @@ namespace roadwork_portal_service.Controllers
                         {
                             selectComm.CommandText += @", ""roadworkactivities"" r 
                                                 WHERE ST_Intersects(e.geom, r.geom)
-                                                        AND (r.finish_from <= e.date_to AND r.finish_to >= e.date_from)
+                                                        AND (r.date_from <= e.date_to AND r.date_to >= e.date_from)
                                                         AND r.uuid=@roadworkactivity_uuid";
                             selectComm.Parameters.AddWithValue("roadworkactivity_uuid", new Guid(roadWorkActivityUuid));
                         }
@@ -77,7 +77,7 @@ namespace roadwork_portal_service.Controllers
                         {
                             selectComm.CommandText += @", ""roadworkactivities"" r 
                                                 WHERE ST_Intersects(e.geom, r.geom)
-                                                        AND (r.finish_from > e.date_to OR r.finish_to < e.date_from)
+                                                        AND (r.date_from > e.date_to OR r.date_to < e.date_from)
                                                         AND r.uuid=@roadworkactivity_uuid";
                             selectComm.Parameters.AddWithValue("roadworkactivity_uuid", new Guid(roadWorkActivityUuid));
                         }
@@ -85,7 +85,7 @@ namespace roadwork_portal_service.Controllers
                         {
                             selectComm.CommandText += @", ""roadworkactivities"" r
                                                 WHERE NOT ST_Intersects(e.geom, r.geom) 
-                                                    AND (r.finish_from <= e.date_to AND r.finish_to >= e.date_from)
+                                                    AND (r.date_from <= e.date_to AND r.date_to >= e.date_from)
                                                     AND r.uuid=@roadworkactivity_uuid";
                             selectComm.Parameters.AddWithValue("roadworkactivity_uuid", new Guid(roadWorkActivityUuid));
                         }
