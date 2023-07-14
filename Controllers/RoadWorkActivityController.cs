@@ -200,14 +200,12 @@ namespace roadwork_portal_service.Controllers
                     return Ok(roadWorkActivityFeature);
                 }
 
-                List<Guid> roadWorkNeedsUuidsList = new List<Guid>();
-                if (roadWorkActivityFeature.properties.roadWorkNeedsUuids != null &&
-                            roadWorkActivityFeature.properties.roadWorkNeedsUuids.Length != 0)
+                if (roadWorkActivityFeature.properties.finishFrom > roadWorkActivityFeature.properties.finishTo)
                 {
-                    foreach (string roadWorkNeedUuid in roadWorkActivityFeature.properties.roadWorkNeedsUuids)
-                    {
-                        roadWorkNeedsUuidsList.Add(new Guid(roadWorkNeedUuid));
-                    }
+                    _logger.LogWarning("The finish from date of a roadworkactivity cannot be higher than its finish to date.");
+                    roadWorkActivityFeature = new RoadWorkActivityFeature();
+                    roadWorkActivityFeature.errorMessage = "KOPAL-19";
+                    return Ok(roadWorkActivityFeature);
                 }
 
                 User userFromDb = LoginController.getAuthorizedUserFromDb(this.User);
@@ -217,6 +215,24 @@ namespace roadwork_portal_service.Controllers
                 {
 
                     pgConn.Open();
+
+                    List<Guid> roadWorkNeedsUuidsList = new List<Guid>();
+                    NpgsqlCommand selectIntersectingNeedsComm = pgConn.CreateCommand();
+                    selectIntersectingNeedsComm.CommandText = @"SELECT uuid
+                                            FROM ""roadworkneeds""
+                                            WHERE ST_Intersects(@geom, geom)";
+                    selectIntersectingNeedsComm.Parameters.AddWithValue("geom", roadWorkActivityPoly);
+
+                    using (NpgsqlDataReader reader = await selectIntersectingNeedsComm.ExecuteReaderAsync())
+                    {
+                        while (reader.Read())
+                        {
+                            if(!reader.IsDBNull(0))
+                            {
+                                roadWorkNeedsUuidsList.Add(reader.GetGuid(0));
+                            }
+                        }
+                    }
 
                     DateTime roadWorkActivityFinishFrom = DateTime.MaxValue;
                     DateTime roadWorkActivityFinishTo = DateTime.MinValue;
@@ -234,11 +250,13 @@ namespace roadwork_portal_service.Controllers
                             while (reader.Read())
                             {
                                 roadWorkActivityFinishFromTemp = reader.IsDBNull(0) ? DateTime.MaxValue : reader.GetDateTime(0);
-                                if(roadWorkActivityFinishFromTemp < roadWorkActivityFinishFrom){
+                                if (roadWorkActivityFinishFromTemp < roadWorkActivityFinishFrom)
+                                {
                                     roadWorkActivityFinishFrom = roadWorkActivityFinishFromTemp;
                                 }
                                 roadWorkActivityFinishToTemp = reader.IsDBNull(1) ? DateTime.MinValue : reader.GetDateTime(1);
-                                if(roadWorkActivityFinishToTemp > roadWorkActivityFinishTo){
+                                if (roadWorkActivityFinishToTemp > roadWorkActivityFinishTo)
+                                {
                                     roadWorkActivityFinishTo = roadWorkActivityFinishToTemp;
                                 }
                             }
@@ -417,6 +435,14 @@ namespace roadwork_portal_service.Controllers
                     _logger.LogWarning("Roadworkneed area is greater than " + configData.maxAreaSize + "qm.");
                     roadWorkActivityFeature = new RoadWorkActivityFeature();
                     roadWorkActivityFeature.errorMessage = "KOPAL-16";
+                    return Ok(roadWorkActivityFeature);
+                }
+
+                if (roadWorkActivityFeature.properties.finishFrom > roadWorkActivityFeature.properties.finishTo)
+                {
+                    _logger.LogWarning("The finish from date of a roadworkactivity cannot be higher than its finish to date.");
+                    roadWorkActivityFeature = new RoadWorkActivityFeature();
+                    roadWorkActivityFeature.errorMessage = "KOPAL-19";
                     return Ok(roadWorkActivityFeature);
                 }
 
