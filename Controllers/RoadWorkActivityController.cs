@@ -200,6 +200,16 @@ namespace roadwork_portal_service.Controllers
                     return Ok(roadWorkActivityFeature);
                 }
 
+                List<Guid> roadWorkNeedsUuidsList = new List<Guid>();
+                if (roadWorkActivityFeature.properties.roadWorkNeedsUuids != null &&
+                            roadWorkActivityFeature.properties.roadWorkNeedsUuids.Length != 0)
+                {
+                    foreach (string roadWorkNeedUuid in roadWorkActivityFeature.properties.roadWorkNeedsUuids)
+                    {
+                        roadWorkNeedsUuidsList.Add(new Guid(roadWorkNeedUuid));
+                    }
+                }
+
                 User userFromDb = LoginController.getAuthorizedUserFromDb(this.User);
                 roadWorkActivityFeature.properties.projectManager = userFromDb;
 
@@ -207,6 +217,33 @@ namespace roadwork_portal_service.Controllers
                 {
 
                     pgConn.Open();
+
+                    DateTime roadWorkActivityFinishFrom = DateTime.MaxValue;
+                    DateTime roadWorkActivityFinishTo = DateTime.MinValue;
+                    if (roadWorkNeedsUuidsList.Count() != 0)
+                    {
+                        NpgsqlCommand selectPeriodComm = pgConn.CreateCommand();
+                        selectPeriodComm.CommandText = @"SELECT finish_optimum_from, finish_optimum_to
+                                                    FROM ""roadworkneeds""
+                                                    WHERE uuid = ANY (@uuids)";
+                        selectPeriodComm.Parameters.AddWithValue("uuids", roadWorkNeedsUuidsList);
+                        using (NpgsqlDataReader reader = await selectPeriodComm.ExecuteReaderAsync())
+                        {
+                            DateTime roadWorkActivityFinishFromTemp;
+                            DateTime roadWorkActivityFinishToTemp;
+                            while (reader.Read())
+                            {
+                                roadWorkActivityFinishFromTemp = reader.IsDBNull(0) ? DateTime.MaxValue : reader.GetDateTime(0);
+                                if(roadWorkActivityFinishFromTemp < roadWorkActivityFinishFrom){
+                                    roadWorkActivityFinishFrom = roadWorkActivityFinishFromTemp;
+                                }
+                                roadWorkActivityFinishToTemp = reader.IsDBNull(1) ? DateTime.MinValue : reader.GetDateTime(1);
+                                if(roadWorkActivityFinishToTemp > roadWorkActivityFinishTo){
+                                    roadWorkActivityFinishTo = roadWorkActivityFinishToTemp;
+                                }
+                            }
+                        }
+                    }
 
                     NpgsqlCommand selectMgmtAreaComm = pgConn.CreateCommand();
                     selectMgmtAreaComm.CommandText = @"SELECT a.uuid,
@@ -282,8 +319,8 @@ namespace roadwork_portal_service.Controllers
                     insertComm.Parameters.AddWithValue("name", roadWorkActivityFeature.properties.name);
                     insertComm.Parameters.AddWithValue("description", roadWorkActivityFeature.properties.description);
                     insertComm.Parameters.AddWithValue("last_modified", roadWorkActivityFeature.properties.lastModified);
-                    insertComm.Parameters.AddWithValue("finish_from", roadWorkActivityFeature.properties.finishFrom);
-                    insertComm.Parameters.AddWithValue("finish_to", roadWorkActivityFeature.properties.finishTo);
+                    insertComm.Parameters.AddWithValue("finish_from", roadWorkActivityFinishFrom);
+                    insertComm.Parameters.AddWithValue("finish_to", roadWorkActivityFinishTo);
                     insertComm.Parameters.AddWithValue("costs", roadWorkActivityFeature.properties.costs);
                     insertComm.Parameters.AddWithValue("costs_type", "fullcost"); // TODO make this dynamic 
                     insertComm.Parameters.AddWithValue("status", "inwork");
@@ -291,20 +328,11 @@ namespace roadwork_portal_service.Controllers
 
                     await insertComm.ExecuteNonQueryAsync();
 
-                    if (roadWorkActivityFeature.properties.roadWorkNeedsUuids != null &&
-                            roadWorkActivityFeature.properties.roadWorkNeedsUuids.Length != 0)
+                    if (roadWorkNeedsUuidsList.Count() != 0)
                     {
-
-
-                        List<Guid> roadWorkNeedsUuidsList = new List<Guid>();
-                        foreach (string roadWorkNeedUuid in roadWorkActivityFeature.properties.roadWorkNeedsUuids)
-                        {
-                            roadWorkNeedsUuidsList.Add(new Guid(roadWorkNeedUuid));
-                        }
                         NpgsqlCommand updateComm = pgConn.CreateCommand();
                         updateComm.CommandText = @"UPDATE ""roadworkneeds"" SET
                                     roadworkactivity = @roadworkactivity,
-                                    status = 'coordinated',
                                     activityrelationtype = 'nonassignedneed'
                                     WHERE uuid = ANY (@uuids)";
                         updateComm.Parameters.AddWithValue("roadworkactivity", new Guid(roadWorkActivityFeature.properties.uuid));
