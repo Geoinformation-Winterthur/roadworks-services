@@ -681,9 +681,10 @@ namespace roadwork_portal_service.Controllers
                     {
                         NpgsqlCommand updateComm = pgConn.CreateCommand();
                         updateComm.CommandText = @"UPDATE ""roadworkneeds""
-                                SET uuid=NULL
-                                WHERE uuid=@uuid";
-                        updateComm.Parameters.AddWithValue("uuid", new Guid(uuid));
+                                SET roadworkactivity=NULL, activityrelationtype=NULL,
+                                    status='notcoord'
+                                WHERE roadworkactivity=@roadworkactivity";
+                        updateComm.Parameters.AddWithValue("roadworkactivity", new Guid(uuid));
                         updateComm.ExecuteNonQuery();
 
                         NpgsqlCommand deleteComm = pgConn.CreateCommand();
