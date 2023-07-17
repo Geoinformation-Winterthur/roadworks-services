@@ -36,11 +36,11 @@ public class UsersController : ControllerBase
             pgConn.Open();
             NpgsqlCommand selectComm = pgConn.CreateCommand();
             selectComm.CommandText = @"SELECT u.uuid, u.last_name, u.first_name,
-                                trim(lower(u.e_mail)), roles.code,
-                                roles.name, u.org_unit, o.name, u.active
-                            FROM ""users"" u
-                            LEFT JOIN ""roles"" ON u.role = roles.code
-                            LEFT JOIN ""organisationalunits"" o ON u.org_unit = o.uuid";
+                                trim(lower(u.e_mail)), wtb_ssp_roles.code,
+                                wtb_ssp_roles.name, u.org_unit, o.name, u.active
+                            FROM ""wtb_ssp_users"" u
+                            LEFT JOIN ""wtb_ssp_roles"" ON u.role = wtb_ssp_roles.code
+                            LEFT JOIN ""wtb_ssp_organisationalunits"" o ON u.org_unit = o.uuid";
 
             if (email != null)
             {
@@ -66,7 +66,7 @@ public class UsersController : ControllerBase
                 role = role.Trim().ToLower();
                 if (role != "")
                 {
-                    selectComm.CommandText += " WHERE roles.code=@role";
+                    selectComm.CommandText += " WHERE wtb_ssp_roles.code=@role";
                     selectComm.Parameters.AddWithValue("role", role);
                 }
             }
@@ -168,7 +168,7 @@ public class UsersController : ControllerBase
         {
             pgConn.Open();
             NpgsqlCommand insertComm = pgConn.CreateCommand();
-            insertComm.CommandText = @"INSERT INTO ""users""(uuid,
+            insertComm.CommandText = @"INSERT INTO ""wtb_ssp_users""(uuid,
                     last_name, first_name, e_mail, role, pwd, org_unit, active)
                     VALUES(@uuid, @last_name, @first_name, @e_mail, @role, @pwd, @org_unit, @active)";
             Guid userUuid = Guid.NewGuid();
@@ -278,7 +278,7 @@ public class UsersController : ControllerBase
         {
             pgConn.Open();
             NpgsqlCommand updateComm = pgConn.CreateCommand();
-            updateComm.CommandText = @"UPDATE ""users"" SET
+            updateComm.CommandText = @"UPDATE ""wtb_ssp_users"" SET
                         last_name=@last_name, first_name=@first_name, e_mail=@e_mail,
                         role=@role, org_unit=@org_unit, active=@active WHERE uuid=@uuid";
             updateComm.Parameters.AddWithValue("last_name", user.lastName);
@@ -295,7 +295,7 @@ public class UsersController : ControllerBase
             int noAffectedRowsStep2 = 0;
             if (needToUpdatePassphrase)
             {
-                updateComm.CommandText = @"UPDATE ""users"" SET
+                updateComm.CommandText = @"UPDATE ""wtb_ssp_users"" SET
                                     pwd=@pwd WHERE uuid=@uuid";
                 updateComm.Parameters.AddWithValue("pwd", user.passPhrase);
                 updateComm.Parameters.AddWithValue("uuid", new Guid(user.uuid));
@@ -370,7 +370,7 @@ public class UsersController : ControllerBase
             {
                 pgConn.Open();
                 NpgsqlCommand deleteComm = pgConn.CreateCommand();
-                deleteComm.CommandText = @"DELETE FROM ""users""
+                deleteComm.CommandText = @"DELETE FROM ""wtb_ssp_users""
                                 WHERE e_mail=@e_mail";
                 deleteComm.Parameters.AddWithValue("e_mail", email);
 
@@ -398,9 +398,9 @@ public class UsersController : ControllerBase
             pgConn.Open();
             NpgsqlCommand selectComm = pgConn.CreateCommand();
             selectComm.CommandText = @"SELECT count(*) 
-                            FROM ""users""
-                            LEFT JOIN ""roles"" ON users.role = roles.code
-                            WHERE users.active=true AND roles.code='administrator'";
+                            FROM ""wtb_ssp_users""
+                            LEFT JOIN ""wtb_ssp_roles"" ON users.role = wtb_ssp_roles.code
+                            WHERE users.active=true AND wtb_ssp_roles.code='administrator'";
 
             using (NpgsqlDataReader reader = selectComm.ExecuteReader())
             {
@@ -423,7 +423,7 @@ public class UsersController : ControllerBase
             pgConn.Open();
             NpgsqlCommand selectComm = pgConn.CreateCommand();
             selectComm.CommandText = @"SELECT count(*) 
-                            FROM ""managementareas""
+                            FROM ""wtb_ssp_managementareas""
                             WHERE manager=@uuid OR substitute_manager=@uuid";
             selectComm.Parameters.AddWithValue("uuid", new Guid(areaManagerUuid));
 

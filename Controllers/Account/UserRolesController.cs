@@ -32,7 +32,7 @@ public class UserRolesController : ControllerBase
         {
             pgConn.Open();
             NpgsqlCommand selectComm = pgConn.CreateCommand();
-            selectComm.CommandText = @"SELECT code, name FROM ""roles""";
+            selectComm.CommandText = @"SELECT code, name FROM ""wtb_ssp_roles""";
             using (NpgsqlDataReader reader = selectComm.ExecuteReader())
             {
                 Role roleFromDb;

@@ -38,14 +38,14 @@ namespace roadwork_portal_service.Controllers
                             m.substitute_manager, sam.first_name, sam.last_name, r.projectmanager, pm.first_name, pm.last_name, r.traffic_agent,
                             ta.first_name, ta.last_name, description, created, last_modified, r.date_from, r.date_to,
                             r.costs, c.code, c.name, am.e_mail, s.code, s.name, r.geom
-                        FROM ""roadworkactivities"" r
-                        LEFT JOIN ""managementareas"" m ON r.managementarea = m.uuid
-                        LEFT JOIN ""users"" am ON m.manager = am.uuid
-                        LEFT JOIN ""users"" sam ON m.substitute_manager = sam.uuid
-                        LEFT JOIN ""users"" pm ON r.projectmanager = pm.uuid
-                        LEFT JOIN ""users"" ta ON r.traffic_agent = ta.uuid
-                        LEFT JOIN ""status"" s ON r.status = s.code
-                        LEFT JOIN ""costtypes"" c ON r.costs_type = c.code";
+                        FROM ""wtb_ssp_roadworkactivities"" r
+                        LEFT JOIN ""wtb_ssp_managementareas"" m ON r.managementarea = m.uuid
+                        LEFT JOIN ""wtb_ssp_users"" am ON m.manager = am.uuid
+                        LEFT JOIN ""wtb_ssp_users"" sam ON m.substitute_manager = sam.uuid
+                        LEFT JOIN ""wtb_ssp_users"" pm ON r.projectmanager = pm.uuid
+                        LEFT JOIN ""wtb_ssp_users"" ta ON r.traffic_agent = ta.uuid
+                        LEFT JOIN ""wtb_ssp_status"" s ON r.status = s.code
+                        LEFT JOIN ""wtb_ssp_costtypes"" c ON r.costs_type = c.code";
 
                 if (uuid != null)
                 {
@@ -140,7 +140,7 @@ namespace roadwork_portal_service.Controllers
                 {
                     NpgsqlCommand selectRoadWorkNeedComm = pgConn.CreateCommand();
                     selectRoadWorkNeedComm.CommandText = @"SELECT uuid
-                            FROM ""roadworkneeds""
+                            FROM ""wtb_ssp_roadworkneeds""
                             WHERE roadworkactivity = @roadworkactivity_uuid";
                     selectRoadWorkNeedComm.Parameters.AddWithValue("roadworkactivity_uuid", new Guid(activityFromDb.properties.uuid));
 
@@ -219,7 +219,7 @@ namespace roadwork_portal_service.Controllers
                     List<Guid> roadWorkNeedsUuidsList = new List<Guid>();
                     NpgsqlCommand selectIntersectingNeedsComm = pgConn.CreateCommand();
                     selectIntersectingNeedsComm.CommandText = @"SELECT uuid
-                                            FROM ""roadworkneeds""
+                                            FROM ""wtb_ssp_roadworkneeds""
                                             WHERE ST_Intersects(@geom, geom)";
                     selectIntersectingNeedsComm.Parameters.AddWithValue("geom", roadWorkActivityPoly);
 
@@ -240,7 +240,7 @@ namespace roadwork_portal_service.Controllers
                     {
                         NpgsqlCommand selectPeriodComm = pgConn.CreateCommand();
                         selectPeriodComm.CommandText = @"SELECT finish_optimum_from, finish_optimum_to
-                                                    FROM ""roadworkneeds""
+                                                    FROM ""wtb_ssp_roadworkneeds""
                                                     WHERE uuid = ANY (@uuids)";
                         selectPeriodComm.Parameters.AddWithValue("uuids", roadWorkNeedsUuidsList);
                         using (NpgsqlDataReader reader = await selectPeriodComm.ExecuteReaderAsync())
@@ -267,9 +267,9 @@ namespace roadwork_portal_service.Controllers
                     selectMgmtAreaComm.CommandText = @"SELECT a.uuid,
                                         m.first_name, m.last_name,
                                         s.first_name, s.last_name
-                                    FROM ""managementareas"" a
-                                    LEFT JOIN ""users"" m ON a.manager = m.uuid
-                                    LEFT JOIN ""users"" s ON a.substitute_manager = s.uuid
+                                    FROM ""wtb_ssp_managementareas"" a
+                                    LEFT JOIN ""wtb_ssp_users"" m ON a.manager = m.uuid
+                                    LEFT JOIN ""wtb_ssp_users"" s ON a.substitute_manager = s.uuid
                                     WHERE ST_Area(ST_Intersection(@geom, geom)) > 0
                                     ORDER BY ST_Area(ST_Intersection(@geom, geom)) DESC
                                     LIMIT 1";
@@ -302,7 +302,7 @@ namespace roadwork_portal_service.Controllers
                     await using NpgsqlTransaction trans = await pgConn.BeginTransactionAsync();
 
                     NpgsqlCommand insertComm = pgConn.CreateCommand();
-                    insertComm.CommandText = @"INSERT INTO ""roadworkactivities""
+                    insertComm.CommandText = @"INSERT INTO ""wtb_ssp_roadworkactivities""
                                     (uuid, name, managementarea, projectmanager, traffic_agent, description,
                                     created, last_modified, date_from, date_to,
                                     costs, costs_type, status, geom)
@@ -349,7 +349,7 @@ namespace roadwork_portal_service.Controllers
                     if (roadWorkNeedsUuidsList.Count() != 0)
                     {
                         NpgsqlCommand updateComm = pgConn.CreateCommand();
-                        updateComm.CommandText = @"UPDATE ""roadworkneeds"" SET
+                        updateComm.CommandText = @"UPDATE ""wtb_ssp_roadworkneeds"" SET
                                     roadworkactivity = @roadworkactivity,
                                     activityrelationtype = 'nonassignedneed'
                                     WHERE uuid = ANY (@uuids)";
@@ -457,8 +457,8 @@ namespace roadwork_portal_service.Controllers
                     {
                         NpgsqlCommand selectManagerOfActivityComm = pgConn.CreateCommand();
                         selectManagerOfActivityComm.CommandText = @"SELECT u.e_mail
-                                    FROM ""roadworkactivities"" r
-                                    LEFT JOIN ""users"" u ON r.projectmanager = u.uuid
+                                    FROM ""wtb_ssp_roadworkactivities"" r
+                                    LEFT JOIN ""wtb_ssp_users"" u ON r.projectmanager = u.uuid
                                     WHERE r.uuid=@uuid";
                         selectManagerOfActivityComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
 
@@ -486,7 +486,7 @@ namespace roadwork_portal_service.Controllers
                     }
 
                     NpgsqlCommand selectStatusComm = pgConn.CreateCommand();
-                    selectStatusComm.CommandText = @"SELECT status FROM ""roadworkactivities""
+                    selectStatusComm.CommandText = @"SELECT status FROM ""wtb_ssp_roadworkactivities""
                                                         WHERE uuid=@uuid";
                     selectStatusComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
 
@@ -500,7 +500,7 @@ namespace roadwork_portal_service.Controllers
                     }
 
                     NpgsqlCommand updateComm = pgConn.CreateCommand();
-                    updateComm.CommandText = @"UPDATE ""roadworkactivities""
+                    updateComm.CommandText = @"UPDATE ""wtb_ssp_roadworkactivities""
                                     SET name=@name, managementarea=@managementarea, projectmanager=@projectmanager,
                                     traffic_agent=@traffic_agent, description=@description,
                                     last_modified=current_timestamp,
@@ -548,7 +548,7 @@ namespace roadwork_portal_service.Controllers
                     updateComm.ExecuteNonQuery();
 
                     NpgsqlCommand selectIntersectingNeeds = pgConn.CreateCommand();
-                    selectIntersectingNeeds.CommandText = @"SELECT uuid FROM ""roadworkneeds"" WHERE ST_Intersects(@geom, geom)";
+                    selectIntersectingNeeds.CommandText = @"SELECT uuid FROM ""wtb_ssp_roadworkneeds"" WHERE ST_Intersects(@geom, geom)";
                     selectIntersectingNeeds.Parameters.AddWithValue("geom", roadWorkActivityPoly);
 
                     List<Guid> intersectingNeedsUuids = new List<Guid>();
@@ -566,7 +566,7 @@ namespace roadwork_portal_service.Controllers
                     if (intersectingNeedsUuids.Count != 0)
                     {
                         NpgsqlCommand cleanActivityOfNeedsComm = pgConn.CreateCommand();
-                        cleanActivityOfNeedsComm.CommandText = @"UPDATE roadworkneeds
+                        cleanActivityOfNeedsComm.CommandText = @"UPDATE wtb_ssp_roadworkneeds
                                         SET roadworkactivity = NULL, activityrelationtype = NULL
                                         WHERE activityrelationtype = 'nonassignedneed'
                                             AND roadworkactivity = @activity_uuid";
@@ -575,7 +575,7 @@ namespace roadwork_portal_service.Controllers
 
 
                         NpgsqlCommand updateActivityOfNeedsComm = pgConn.CreateCommand();
-                        updateActivityOfNeedsComm.CommandText = @"UPDATE roadworkneeds
+                        updateActivityOfNeedsComm.CommandText = @"UPDATE wtb_ssp_roadworkneeds
                                         SET roadworkactivity = @activity_uuid,
                                             activityrelationtype = 'nonassignedneed'
                                         WHERE activityrelationtype <> 'assignedneed'
@@ -599,7 +599,7 @@ namespace roadwork_portal_service.Controllers
                         if (statusOfActivityInDb != roadWorkActivityFeature.properties.status.code)
                         {
                             NpgsqlCommand updateActivityStatusComm = pgConn.CreateCommand();
-                            updateActivityStatusComm.CommandText = @"UPDATE roadworkactivities
+                            updateActivityStatusComm.CommandText = @"UPDATE wtb_ssp_roadworkactivities
                                                     SET status=@status WHERE uuid=@uuid";
                             updateActivityStatusComm.Parameters.AddWithValue("status", roadWorkActivityFeature.properties.status.code);
                             updateActivityStatusComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
@@ -608,7 +608,7 @@ namespace roadwork_portal_service.Controllers
                             if (roadWorkActivityFeature.properties.status.code == "inwork")
                             {
                                 NpgsqlCommand updateNeedsStatusComm = pgConn.CreateCommand();
-                                updateNeedsStatusComm.CommandText = @"UPDATE roadworkneeds
+                                updateNeedsStatusComm.CommandText = @"UPDATE wtb_ssp_roadworkneeds
                                                     SET status='coordinated'
                                                     WHERE activityrelationtype='assignedneed'
                                                         AND roadworkactivity=@activity_uuid";
@@ -618,7 +618,7 @@ namespace roadwork_portal_service.Controllers
                             else
                             {
                                 NpgsqlCommand updateNeedsStatusComm = pgConn.CreateCommand();
-                                updateNeedsStatusComm.CommandText = @"UPDATE roadworkneeds
+                                updateNeedsStatusComm.CommandText = @"UPDATE wtb_ssp_roadworkneeds
                                                     SET status=@status
                                                     WHERE activityrelationtype='assignedneed'
                                                         AND roadworkactivity=@activity_uuid";
@@ -680,7 +680,7 @@ namespace roadwork_portal_service.Controllers
                     using (NpgsqlTransaction deleteTransAction = pgConn.BeginTransaction())
                     {
                         NpgsqlCommand updateComm = pgConn.CreateCommand();
-                        updateComm.CommandText = @"UPDATE ""roadworkneeds""
+                        updateComm.CommandText = @"UPDATE ""wtb_ssp_roadworkneeds""
                                 SET roadworkactivity=NULL, activityrelationtype=NULL,
                                     status='notcoord'
                                 WHERE roadworkactivity=@roadworkactivity";
@@ -689,7 +689,7 @@ namespace roadwork_portal_service.Controllers
 
                         NpgsqlCommand deleteComm = pgConn.CreateCommand();
                         deleteComm = pgConn.CreateCommand();
-                        deleteComm.CommandText = @"DELETE FROM ""roadworkactivities""
+                        deleteComm.CommandText = @"DELETE FROM ""wtb_ssp_roadworkactivities""
                                 WHERE uuid=@uuid";
                         deleteComm.Parameters.AddWithValue("uuid", new Guid(uuid));
                         noAffectedRows = deleteComm.ExecuteNonQuery();

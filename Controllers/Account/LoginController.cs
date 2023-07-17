@@ -174,10 +174,10 @@ public class LoginController : ControllerBase
             NpgsqlCommand selectComm = pgConn.CreateCommand();
             selectComm.CommandText = @"SELECT u.uuid, u.last_name, u.first_name, u.e_mail, u.pwd,
                         u.last_login_attempt, CURRENT_TIMESTAMP(0)::TIMESTAMP,
-                        roles.code, roles.name, u.org_unit, o.name, u.active
-                        FROM ""users"" u
-                        LEFT JOIN ""roles"" ON u.role = roles.code
-                        LEFT JOIN ""organisationalunits"" o ON u.org_unit = o.uuid
+                        wtb_ssp_roles.code, wtb_ssp_roles.name, u.org_unit, o.name, u.active
+                        FROM ""wtb_ssp_users"" u
+                        LEFT JOIN ""wtb_ssp_roles"" ON u.role = wtb_ssp_roles.code
+                        LEFT JOIN ""wtb_ssp_organisationalunits"" o ON u.org_unit = o.uuid
                         WHERE trim(lower(u.e_mail))=@e_mail";
             selectComm.Parameters.AddWithValue("e_mail", eMailAddress);
 
@@ -231,7 +231,7 @@ public class LoginController : ControllerBase
         {
             pgConn.Open();
             NpgsqlCommand updateTimestampComm = pgConn.CreateCommand();
-            updateTimestampComm.CommandText = "UPDATE \"users\"" +
+            updateTimestampComm.CommandText = "UPDATE \"wtb_ssp_users\"" +
                         " SET last_login_attempt=CURRENT_TIMESTAMP " +
                         " WHERE trim(lower(e_mail))=@e_mail";
             updateTimestampComm.Parameters.AddWithValue("e_mail", eMailAddress);

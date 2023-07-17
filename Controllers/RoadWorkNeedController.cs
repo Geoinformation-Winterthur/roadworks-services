@@ -43,15 +43,15 @@ namespace roadwork_portal_service.Controllers
                             m.substitute_manager, sam.first_name, sam.last_name,
                             r.created, r.last_modified, r.roadworkactivity, u.e_mail,
                             r.longer_six_months, r.relevance, r.activityrelationtype, r.geom
-                        FROM ""roadworkneeds"" r
-                        LEFT JOIN ""users"" u ON r.orderer = u.uuid
-                        LEFT JOIN ""organisationalunits"" o ON u.org_unit = o.uuid
-                        LEFT JOIN ""priorities"" p ON r.priority = p.code
-                        LEFT JOIN ""status"" s ON r.status = s.code
-                        LEFT JOIN ""managementareas"" m ON r.managementarea = m.uuid                        
-                        LEFT JOIN ""users"" am ON m.manager = am.uuid
-                        LEFT JOIN ""users"" sam ON m.substitute_manager = sam.uuid
-                        LEFT JOIN ""roadworkneedtypes"" rwt ON r.kind = rwt.code";
+                        FROM ""wtb_ssp_roadworkneeds"" r
+                        LEFT JOIN ""wtb_ssp_users"" u ON r.orderer = u.uuid
+                        LEFT JOIN ""wtb_ssp_organisationalunits"" o ON u.org_unit = o.uuid
+                        LEFT JOIN ""wtb_ssp_priorities"" p ON r.priority = p.code
+                        LEFT JOIN ""wtb_ssp_status"" s ON r.status = s.code
+                        LEFT JOIN ""wtb_ssp_managementareas"" m ON r.managementarea = m.uuid                        
+                        LEFT JOIN ""wtb_ssp_users"" am ON m.manager = am.uuid
+                        LEFT JOIN ""wtb_ssp_users"" sam ON m.substitute_manager = sam.uuid
+                        LEFT JOIN ""wtb_ssp_roadworkneedtypes"" rwt ON r.kind = rwt.code";
 
                 if (uuids != null)
                 {
@@ -231,9 +231,9 @@ namespace roadwork_portal_service.Controllers
                     selectMgmtAreaComm.CommandText = @"SELECT m.uuid,
                                         am.first_name, am.last_name,
                                         sam.first_name, sam.last_name
-                                    FROM ""managementareas"" m
-                                    LEFT JOIN ""users"" am ON m.manager = am.uuid
-                                    LEFT JOIN ""users"" sam ON m.substitute_manager = sam.uuid
+                                    FROM ""wtb_ssp_managementareas"" m
+                                    LEFT JOIN ""wtb_ssp_users"" am ON m.manager = am.uuid
+                                    LEFT JOIN ""wtb_ssp_users"" sam ON m.substitute_manager = sam.uuid
                                     WHERE ST_Area(ST_Intersection(@geom, geom)) > 0
                                     ORDER BY ST_Area(ST_Intersection(@geom, geom)) DESC
                                     LIMIT 1";
@@ -265,7 +265,7 @@ namespace roadwork_portal_service.Controllers
                     roadWorkNeedFeature.properties.uuid = resultUuid.ToString();
 
                     NpgsqlCommand insertComm = pgConn.CreateCommand();
-                    insertComm.CommandText = @"INSERT INTO ""roadworkneeds""
+                    insertComm.CommandText = @"INSERT INTO ""wtb_ssp_roadworkneeds""
                                     (uuid, name, kind, orderer, created, last_modified, finish_early_from, finish_early_to,
                                     finish_optimum_from, finish_optimum_to, finish_late_from,
                                     finish_late_to, priority, status, description, managementarea, longer_six_months, relevance,
@@ -391,8 +391,8 @@ namespace roadwork_portal_service.Controllers
 
                         NpgsqlCommand selectOrdererOfNeedComm = pgConn.CreateCommand();
                         selectOrdererOfNeedComm.CommandText = @"SELECT u.e_mail
-                                    FROM ""roadworkneeds"" r
-                                    LEFT JOIN ""users"" u ON r.orderer = u.uuid
+                                    FROM ""wtb_ssp_roadworkneeds"" r
+                                    LEFT JOIN ""wtb_ssp_users"" u ON r.orderer = u.uuid
                                     WHERE r.uuid=@uuid";
                         selectOrdererOfNeedComm.Parameters.AddWithValue("uuid", new Guid(roadWorkNeedFeature.properties.uuid));
 
@@ -424,9 +424,9 @@ namespace roadwork_portal_service.Controllers
                     selectMgmtAreaComm.CommandText = @"SELECT m.uuid,
                                         am.first_name, am.last_name,
                                         sam.first_name, sam.last_name
-                                    FROM ""managementareas"" m
-                                    LEFT JOIN ""users"" am ON m.manager = am.uuid
-                                    LEFT JOIN ""users"" sam ON m.substitute_manager = sam.uuid
+                                    FROM ""wtb_ssp_managementareas"" m
+                                    LEFT JOIN ""wtb_ssp_users"" am ON m.manager = am.uuid
+                                    LEFT JOIN ""wtb_ssp_users"" sam ON m.substitute_manager = sam.uuid
                                     WHERE ST_Intersects(@geom, geom)
                                     ORDER BY ST_Area(ST_Intersection(@geom, geom)) DESC
                                     LIMIT 1";
@@ -452,7 +452,7 @@ namespace roadwork_portal_service.Controllers
                     }
 
                     NpgsqlCommand updateComm = pgConn.CreateCommand();
-                    updateComm.CommandText = @"UPDATE ""roadworkneeds""
+                    updateComm.CommandText = @"UPDATE ""wtb_ssp_roadworkneeds""
                                     SET name=@name, kind=@kind, orderer=@orderer, last_modified=current_timestamp,
                                     finish_early_from=@finish_early_from, finish_early_to=@finish_early_to,
                                     finish_optimum_from=@finish_optimum_from, finish_optimum_to=@finish_optimum_to,
@@ -552,13 +552,13 @@ namespace roadwork_portal_service.Controllers
                 {
                     // if activityUuid is given, then only remove the given need from the
                     // given activity, but do not delete activity as a whole:
-                    deleteComm.CommandText = @"UPDATE ""roadworkneeds""
+                    deleteComm.CommandText = @"UPDATE ""wtb_ssp_roadworkneeds""
                                 SET roadworkactivity=NULL
                                 WHERE uuid=@uuid";
                 }
                 else
                 {
-                    deleteComm.CommandText = @"DELETE FROM ""roadworkneeds""
+                    deleteComm.CommandText = @"DELETE FROM ""wtb_ssp_roadworkneeds""
                                 WHERE uuid=@uuid";
                 }
                 deleteComm.Parameters.AddWithValue("uuid", new Guid(uuid));

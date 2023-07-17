@@ -62,7 +62,7 @@ public class AppConfigController : ControllerBase
             {
                 pgConn.Open();
                 NpgsqlCommand updateComm = pgConn.CreateCommand();
-                updateComm.CommandText = @"UPDATE ""configuration"" SET
+                updateComm.CommandText = @"UPDATE ""wtb_ssp_configuration"" SET
                         min_area_size=@min_area_size, max_area_size=@max_area_size";
                 updateComm.Parameters.AddWithValue("min_area_size", configData.minAreaSize);
                 updateComm.Parameters.AddWithValue("max_area_size", configData.maxAreaSize);
@@ -91,7 +91,7 @@ public class AppConfigController : ControllerBase
             pgConn.Open();
             NpgsqlCommand selectComm = pgConn.CreateCommand();
             selectComm.CommandText = @"SELECT min_area_size, max_area_size
-                            FROM ""configuration""";
+                            FROM ""wtb_ssp_configuration""";
 
             using (NpgsqlDataReader reader = selectComm.ExecuteReader())
             {

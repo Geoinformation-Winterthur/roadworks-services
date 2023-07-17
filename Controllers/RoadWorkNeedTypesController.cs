@@ -34,10 +34,10 @@ public class RoadWorkNeedTypesController : ControllerBase
             pgConn.Open();
             NpgsqlCommand selectComm = pgConn.CreateCommand();
             selectComm.CommandText = @"SELECT rwt.code, rwt.name
-                            FROM ""roadworkneedtypes"" rwt";
+                            FROM ""wtb_ssp_roadworkneedtypes"" rwt";
 
             if(userFromDb != null){
-                selectComm.CommandText += @" JOIN ""organisationalunits"" o ON rwt.organisation = o.uuid
+                selectComm.CommandText += @" JOIN ""wtb_ssp_organisationalunits"" o ON rwt.organisation = o.uuid
                             WHERE o.uuid=@uuid";
                 selectComm.Parameters.AddWithValue("uuid", new Guid(userFromDb.organisationalUnit.uuid));
             }

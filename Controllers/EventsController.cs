@@ -37,7 +37,7 @@ namespace roadwork_portal_service.Controllers
                 NpgsqlCommand selectComm = pgConn.CreateCommand();
                 selectComm.CommandText = @"SELECT e.uuid, e.name, e.created, e.last_modified,
                             e.date_from, e.date_to, editable, e.geom
-                        FROM ""events"" e";
+                        FROM ""wtb_ssp_events"" e";
 
                 if (uuid != null)
                 {
@@ -67,7 +67,7 @@ namespace roadwork_portal_service.Controllers
 
                         if (spatialParam && temporalParam)
                         {
-                            selectComm.CommandText += @", ""roadworkactivities"" r 
+                            selectComm.CommandText += @", ""wtb_ssp_roadworkactivities"" r 
                                                 WHERE ST_Intersects(e.geom, r.geom)
                                                         AND (r.date_from <= e.date_to AND r.date_to >= e.date_from)
                                                         AND r.uuid=@roadworkactivity_uuid";
@@ -75,7 +75,7 @@ namespace roadwork_portal_service.Controllers
                         }
                         else if (spatialParam)
                         {
-                            selectComm.CommandText += @", ""roadworkactivities"" r 
+                            selectComm.CommandText += @", ""wtb_ssp_roadworkactivities"" r 
                                                 WHERE ST_Intersects(e.geom, r.geom)
                                                         AND (r.date_from > e.date_to OR r.date_to < e.date_from)
                                                         AND r.uuid=@roadworkactivity_uuid";
@@ -83,7 +83,7 @@ namespace roadwork_portal_service.Controllers
                         }
                         else if (temporalParam)
                         {
-                            selectComm.CommandText += @", ""roadworkactivities"" r
+                            selectComm.CommandText += @", ""wtb_ssp_roadworkactivities"" r
                                                 WHERE NOT ST_Intersects(e.geom, r.geom) 
                                                     AND (r.date_from <= e.date_to AND r.date_to >= e.date_from)
                                                     AND r.uuid=@roadworkactivity_uuid";
@@ -173,7 +173,7 @@ namespace roadwork_portal_service.Controllers
                     pgConn.Open();
 
                     NpgsqlCommand updateComm = pgConn.CreateCommand();
-                    updateComm.CommandText = @"INSERT INTO ""events"" (uuid, name,
+                    updateComm.CommandText = @"INSERT INTO ""wtb_ssp_events"" (uuid, name,
                                     created, last_modified, date_from, date_to,
                                     editable, geom)
                                     VALUES (@uuid, @name, current_timestamp,
@@ -257,7 +257,7 @@ namespace roadwork_portal_service.Controllers
                     pgConn.Open();
 
                     NpgsqlCommand updateComm = pgConn.CreateCommand();
-                    updateComm.CommandText = @"UPDATE ""events""
+                    updateComm.CommandText = @"UPDATE ""wtb_ssp_events""
                                     SET name=@name, last_modified=current_timestamp,
                                     date_from=@date_from, date_to=@date_to, geom=@geom
                                     WHERE uuid=@uuid AND editable=true";
@@ -318,7 +318,7 @@ namespace roadwork_portal_service.Controllers
 
                     NpgsqlCommand deleteComm = pgConn.CreateCommand();
                     deleteComm = pgConn.CreateCommand();
-                    deleteComm.CommandText = @"DELETE FROM ""events""
+                    deleteComm.CommandText = @"DELETE FROM ""wtb_ssp_events""
                                 WHERE uuid=@uuid AND editable=true";
                     deleteComm.Parameters.AddWithValue("uuid", new Guid(uuid));
                     noAffectedRows = deleteComm.ExecuteNonQuery();

@@ -32,7 +32,7 @@ public class OrganisationsController : ControllerBase
         {
             pgConn.Open();
             NpgsqlCommand selectComm = pgConn.CreateCommand();
-            selectComm.CommandText = @"SELECT uuid, name FROM ""organisationalunits""";
+            selectComm.CommandText = @"SELECT uuid, name FROM ""wtb_ssp_organisationalunits""";
             using (NpgsqlDataReader reader = selectComm.ExecuteReader())
             {
                 OrganisationalUnit orgFromDb;

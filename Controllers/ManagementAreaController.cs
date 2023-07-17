@@ -37,9 +37,9 @@ namespace roadwork_portal_service.Controllers
                 NpgsqlCommand selectComm = pgConn.CreateCommand();
                 selectComm.CommandText = @"SELECT m.uuid, m.name, am.uuid, am.first_name || ' ' || am.last_name,
                             sam.uuid, sam.first_name || ' ' || sam.last_name, m.color_fill, m.color_stroke, m.geom
-                            FROM ""managementareas"" m
-                            LEFT JOIN ""users"" am ON m.manager = am.uuid
-                            LEFT JOIN ""users"" sam ON m.substitute_manager = sam.uuid";
+                            FROM ""wtb_ssp_managementareas"" m
+                            LEFT JOIN ""wtb_ssp_users"" am ON m.manager = am.uuid
+                            LEFT JOIN ""wtb_ssp_users"" sam ON m.substitute_manager = sam.uuid";
 
                 using (NpgsqlDataReader reader = selectComm.ExecuteReader())
                 {
@@ -114,7 +114,7 @@ namespace roadwork_portal_service.Controllers
                         NpgsqlCommand selectAreaManagerRole = pgConn.CreateCommand();
                         selectAreaManagerRole.CommandText = @"SELECT role,
                                         first_name, last_name
-                                    FROM ""users""
+                                    FROM ""wtb_ssp_users""
                                     WHERE uuid=@uuid";
                         selectAreaManagerRole.Parameters.AddWithValue("uuid", new Guid(managerUuid));
 
@@ -143,7 +143,7 @@ namespace roadwork_portal_service.Controllers
                         }
 
                         NpgsqlCommand updateComm = pgConn.CreateCommand();
-                        updateComm.CommandText = @"UPDATE ""managementareas""
+                        updateComm.CommandText = @"UPDATE ""wtb_ssp_managementareas""
                                     SET manager=@manager_uuid
                                     WHERE uuid=@uuid";
 
@@ -167,7 +167,7 @@ namespace roadwork_portal_service.Controllers
                         NpgsqlCommand selectAreaManagerRole = pgConn.CreateCommand();
                         selectAreaManagerRole.CommandText = @"SELECT role,
                                         first_name, last_name
-                                    FROM ""users""
+                                    FROM ""wtb_ssp_users""
                                     WHERE uuid=@uuid";
                         selectAreaManagerRole.Parameters.AddWithValue("uuid", new Guid(substituteManagerUuid));
 
@@ -196,7 +196,7 @@ namespace roadwork_portal_service.Controllers
                         }
 
                         NpgsqlCommand updateComm = pgConn.CreateCommand();
-                        updateComm.CommandText = @"UPDATE ""managementareas""
+                        updateComm.CommandText = @"UPDATE ""wtb_ssp_managementareas""
                                     SET substitute_manager=@substitute_manager_uuid
                                     WHERE uuid=@uuid";
 
