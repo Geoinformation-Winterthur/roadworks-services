@@ -41,9 +41,10 @@ namespace roadwork_portal_service.Controllers
                             r.finish_late_to, p.code, s.code, s.name,
                             r.description, r.managementarea, m.manager, am.first_name, am.last_name,
                             m.substitute_manager, sam.first_name, sam.last_name,
-                            r.created, r.last_modified, r.roadworkactivity, u.e_mail,
-                            r.longer_six_months, r.relevance, r.activityrelationtype, r.geom
+                            r.created, r.last_modified, an.uuid_roadwork_activity, u.e_mail,
+                            r.longer_six_months, r.relevance, an.activityrelationtype, r.geom
                         FROM ""wtb_ssp_roadworkneeds"" r
+                        LEFT JOIN ""wtb_ssp_activities_to_needs"" an ON an.uuid_roadwork_need = r.uuid
                         LEFT JOIN ""wtb_ssp_users"" u ON r.orderer = u.uuid
                         LEFT JOIN ""wtb_ssp_organisationalunits"" o ON u.org_unit = o.uuid
                         LEFT JOIN ""wtb_ssp_priorities"" p ON r.priority = p.code
@@ -269,11 +270,11 @@ namespace roadwork_portal_service.Controllers
                                     (uuid, name, kind, orderer, created, last_modified, finish_early_from, finish_early_to,
                                     finish_optimum_from, finish_optimum_to, finish_late_from,
                                     finish_late_to, priority, status, description, managementarea, longer_six_months, relevance,
-                                    activityrelationtype, geom)
+                                    geom)
                                     VALUES (@uuid, @name, @kind, @orderer, current_timestamp, current_timestamp,
                                     @finish_early_from, @finish_early_to, @finish_optimum_from, @finish_optimum_to, @finish_late_from,
                                     @finish_late_to, @priority, @status, @description, @managementarea, @longer_six_months, @relevance,
-                                    @activityrelationtype, @geom)";
+                                    @geom)";
                     insertComm.Parameters.AddWithValue("uuid", new Guid(roadWorkNeedFeature.properties.uuid));
                     insertComm.Parameters.AddWithValue("name", roadWorkNeedFeature.properties.name);
                     insertComm.Parameters.AddWithValue("kind", roadWorkNeedFeature.properties.kind.code);
@@ -304,7 +305,6 @@ namespace roadwork_portal_service.Controllers
                     }
                     insertComm.Parameters.AddWithValue("longer_six_months", roadWorkNeedFeature.properties.longer6Month);
                     insertComm.Parameters.AddWithValue("relevance", roadWorkNeedFeature.properties.relevance);
-                    insertComm.Parameters.AddWithValue("activityrelationtype", roadWorkNeedFeature.properties.activityRelationType);                    
                     insertComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
 
                     insertComm.ExecuteNonQuery();
@@ -451,60 +451,75 @@ namespace roadwork_portal_service.Controllers
                         return Ok(roadWorkNeedFeature);
                     }
 
-                    NpgsqlCommand updateComm = pgConn.CreateCommand();
-                    updateComm.CommandText = @"UPDATE ""wtb_ssp_roadworkneeds""
+                    using (NpgsqlTransaction updateTransAction = pgConn.BeginTransaction())
+                    {
+
+                        NpgsqlCommand updateComm = pgConn.CreateCommand();
+                        updateComm.CommandText = @"UPDATE ""wtb_ssp_roadworkneeds""
                                     SET name=@name, kind=@kind, orderer=@orderer, last_modified=current_timestamp,
                                     finish_early_from=@finish_early_from, finish_early_to=@finish_early_to,
                                     finish_optimum_from=@finish_optimum_from, finish_optimum_to=@finish_optimum_to,
                                     finish_late_from=@finish_late_from, finish_late_to=@finish_late_to,
                                     priority=@priority, status=@status, description=@description,
                                     managementarea=@managementarea, longer_six_months=@longer_six_months,
-                                    relevance=@relevance, activityrelationtype=@activityrelationtype,
-                                    roadworkactivity=@roadworkactivity, geom=@geom
+                                    relevance=@relevance, geom=@geom
                                     WHERE uuid=@uuid";
 
-                    updateComm.Parameters.AddWithValue("name", roadWorkNeedFeature.properties.name);
-                    updateComm.Parameters.AddWithValue("kind", roadWorkNeedFeature.properties.kind.code);
-                    if (roadWorkNeedFeature.properties.orderer.uuid != "")
-                    {
-                        updateComm.Parameters.AddWithValue("orderer", new Guid(roadWorkNeedFeature.properties.orderer.uuid));
-                    }
-                    else
-                    {
-                        updateComm.Parameters.AddWithValue("orderer", DBNull.Value);
-                    }
-                    updateComm.Parameters.AddWithValue("finish_early_from", roadWorkNeedFeature.properties.finishEarlyFrom);
-                    updateComm.Parameters.AddWithValue("finish_early_to", roadWorkNeedFeature.properties.finishEarlyTo);
-                    updateComm.Parameters.AddWithValue("finish_optimum_from", roadWorkNeedFeature.properties.finishOptimumFrom);
-                    updateComm.Parameters.AddWithValue("finish_optimum_to", roadWorkNeedFeature.properties.finishOptimumTo);
-                    updateComm.Parameters.AddWithValue("finish_late_from", roadWorkNeedFeature.properties.finishLateFrom);
-                    updateComm.Parameters.AddWithValue("finish_late_to", roadWorkNeedFeature.properties.finishLateTo);
-                    updateComm.Parameters.AddWithValue("priority", roadWorkNeedFeature.properties.priority.code);
-                    updateComm.Parameters.AddWithValue("status", roadWorkNeedFeature.properties.status.code);
-                    updateComm.Parameters.AddWithValue("description", roadWorkNeedFeature.properties.description);
-                    if (roadWorkNeedFeature.properties.managementarea.properties.uuid != "")
-                    {
-                        updateComm.Parameters.AddWithValue("managementarea", new Guid(roadWorkNeedFeature.properties.managementarea.properties.uuid));
-                    }
-                    else
-                    {
-                        updateComm.Parameters.AddWithValue("managementarea", DBNull.Value);
-                    }
-                    updateComm.Parameters.AddWithValue("longer_six_months", roadWorkNeedFeature.properties.longer6Month);
-                    updateComm.Parameters.AddWithValue("relevance", roadWorkNeedFeature.properties.relevance);
-                    updateComm.Parameters.AddWithValue("activityrelationtype", roadWorkNeedFeature.properties.activityRelationType);
-                    if (roadWorkNeedFeature.properties.roadWorkActivityUuid != "")
-                    {
-                        updateComm.Parameters.AddWithValue("roadworkactivity", new Guid(roadWorkNeedFeature.properties.roadWorkActivityUuid));
-                    }
-                    else
-                    {
-                        updateComm.Parameters.AddWithValue("roadworkactivity", DBNull.Value);
-                    }
-                    updateComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
-                    updateComm.Parameters.AddWithValue("uuid", new Guid(roadWorkNeedFeature.properties.uuid));
+                        updateComm.Parameters.AddWithValue("name", roadWorkNeedFeature.properties.name);
+                        updateComm.Parameters.AddWithValue("kind", roadWorkNeedFeature.properties.kind.code);
+                        if (roadWorkNeedFeature.properties.orderer.uuid != "")
+                        {
+                            updateComm.Parameters.AddWithValue("orderer", new Guid(roadWorkNeedFeature.properties.orderer.uuid));
+                        }
+                        else
+                        {
+                            updateComm.Parameters.AddWithValue("orderer", DBNull.Value);
+                        }
+                        updateComm.Parameters.AddWithValue("finish_early_from", roadWorkNeedFeature.properties.finishEarlyFrom);
+                        updateComm.Parameters.AddWithValue("finish_early_to", roadWorkNeedFeature.properties.finishEarlyTo);
+                        updateComm.Parameters.AddWithValue("finish_optimum_from", roadWorkNeedFeature.properties.finishOptimumFrom);
+                        updateComm.Parameters.AddWithValue("finish_optimum_to", roadWorkNeedFeature.properties.finishOptimumTo);
+                        updateComm.Parameters.AddWithValue("finish_late_from", roadWorkNeedFeature.properties.finishLateFrom);
+                        updateComm.Parameters.AddWithValue("finish_late_to", roadWorkNeedFeature.properties.finishLateTo);
+                        updateComm.Parameters.AddWithValue("priority", roadWorkNeedFeature.properties.priority.code);
+                        updateComm.Parameters.AddWithValue("status", roadWorkNeedFeature.properties.status.code);
+                        updateComm.Parameters.AddWithValue("description", roadWorkNeedFeature.properties.description);
+                        if (roadWorkNeedFeature.properties.managementarea.properties.uuid != "")
+                        {
+                            updateComm.Parameters.AddWithValue("managementarea", new Guid(roadWorkNeedFeature.properties.managementarea.properties.uuid));
+                        }
+                        else
+                        {
+                            updateComm.Parameters.AddWithValue("managementarea", DBNull.Value);
+                        }
+                        updateComm.Parameters.AddWithValue("longer_six_months", roadWorkNeedFeature.properties.longer6Month);
+                        updateComm.Parameters.AddWithValue("relevance", roadWorkNeedFeature.properties.relevance);
+                        updateComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
+                        updateComm.Parameters.AddWithValue("uuid", new Guid(roadWorkNeedFeature.properties.uuid));
 
-                    updateComm.ExecuteNonQuery();
+                        updateComm.ExecuteNonQuery();
+
+
+                        updateComm.CommandText = @"UPDATE ""wtb_ssp_activities_to_needs""
+                                    SET activityrelationtype=@activityrelationtype,
+                                        uuid_roadwork_activity=@roadworkactivity
+                                    WHERE uuid_roadwork_need=@uuid_roadwork_need";
+                        updateComm.Parameters.AddWithValue("activityrelationtype", roadWorkNeedFeature.properties.activityRelationType);
+                        if (roadWorkNeedFeature.properties.roadWorkActivityUuid != "")
+                        {
+                            updateComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkNeedFeature.properties.roadWorkActivityUuid));
+                        }
+                        else
+                        {
+                            updateComm.Parameters.AddWithValue("uuid_roadwork_activity", DBNull.Value);
+                        }
+                        updateComm.Parameters.AddWithValue("uuid_roadwork_need", new Guid(roadWorkNeedFeature.properties.uuid));
+
+                        updateComm.ExecuteNonQuery();
+
+                        updateTransAction.Commit();
+
+                    }
 
                 }
             }
@@ -548,15 +563,9 @@ namespace roadwork_portal_service.Controllers
             {
                 pgConn.Open();
                 NpgsqlCommand deleteComm = pgConn.CreateCommand();
-                if (releaseOnly)
-                {
-                    // if activityUuid is given, then only remove the given need from the
-                    // given activity, but do not delete activity as a whole:
-                    deleteComm.CommandText = @"UPDATE ""wtb_ssp_roadworkneeds""
-                                SET roadworkactivity=NULL
+                deleteComm.CommandText = @"DELETE FROM ""wtb_ssp_activities_to_needs""
                                 WHERE uuid=@uuid";
-                }
-                else
+                if(!releaseOnly)
                 {
                     deleteComm.CommandText = @"DELETE FROM ""wtb_ssp_roadworkneeds""
                                 WHERE uuid=@uuid";
