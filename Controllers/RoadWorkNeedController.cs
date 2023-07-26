@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using NetTopologySuite.Geometries;
 using Npgsql;
 using roadwork_portal_service.Configuration;
+using roadwork_portal_service.Helper;
 using roadwork_portal_service.Model;
 
 namespace roadwork_portal_service.Controllers
@@ -24,11 +25,21 @@ namespace roadwork_portal_service.Controllers
 
         // GET roadworkneed/
         [HttpGet]
-        [Authorize(Roles = "orderer,territorymanager,administrator")]
+        [Authorize(Roles = "orderer,trefficmanager,territorymanager,administrator")]
         public IEnumerable<RoadWorkNeedFeature> GetNeeds(string? uuids = "", string? roadWorkActivityUuid = "",
                 bool summary = false)
         {
             List<RoadWorkNeedFeature> projectsFromDb = new List<RoadWorkNeedFeature>();
+
+            if(uuids == null)
+                uuids = "";
+            else
+                uuids = uuids.Trim().ToLower();
+
+            if(roadWorkActivityUuid == null)
+                roadWorkActivityUuid = "";
+            else
+                roadWorkActivityUuid = roadWorkActivityUuid.Trim().ToLower();
 
             // get data of current user from database:
             using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
@@ -54,22 +65,28 @@ namespace roadwork_portal_service.Controllers
                         LEFT JOIN ""wtb_ssp_users"" sam ON m.substitute_manager = sam.uuid
                         LEFT JOIN ""wtb_ssp_roadworkneedtypes"" rwt ON r.kind = rwt.code";
 
-                if (uuids != null)
+                if (uuids != "")
                 {
-                    uuids = uuids.Trim().ToLower();
-                    if (uuids != "")
-                    {
-                        List<Guid> uuidsList = new List<Guid>();
+                    List<Guid> uuidsList = new List<Guid>();
 
-                        foreach (string uuid in uuids.Split(","))
+                    foreach (string uuid in uuids.Split(","))
+                    {
+                        if (uuid != null && uuid != "")
                         {
-                            if (uuid != null && uuid != "")
-                            {
-                                uuidsList.Add(new Guid(uuid));
-                            }
+                            uuidsList.Add(new Guid(uuid));
                         }
-                        selectComm.CommandText += " WHERE r.uuid = ANY (:uuids)";
-                        selectComm.Parameters.AddWithValue("uuids", uuidsList);
+                    }
+                    selectComm.CommandText += " WHERE r.uuid = ANY (:uuids)";
+                    selectComm.Parameters.AddWithValue("uuids", uuidsList);
+
+                } else if (roadWorkActivityUuid != "")
+                {
+                    roadWorkActivityUuid = roadWorkActivityUuid.Trim().ToLower();
+                    if (roadWorkActivityUuid != "")
+                    {
+                        selectComm.CommandText += @" LEFT JOIN ""wtb_ssp_roadworkactivities"" act ON act.uuid = @act_uuid
+                                                        WHERE ST_Intersects(act.geom, r.geom)";
+                        selectComm.Parameters.AddWithValue("act_uuid", new Guid(roadWorkActivityUuid));
                     }
                 }
 
@@ -134,7 +151,7 @@ namespace roadwork_portal_service.Controllers
                             needFeatureFromDb.properties.isEditingAllowed = true;
                         }
 
-                        if(needFeatureFromDb.properties.status.code == "inconsult" ||
+                        if (needFeatureFromDb.properties.status.code == "inconsult" ||
                             needFeatureFromDb.properties.status.code == "provfixed" ||
                             needFeatureFromDb.properties.status.code == "deffixed" ||
                             needFeatureFromDb.properties.status.code == "executed")
@@ -209,31 +226,7 @@ namespace roadwork_portal_service.Controllers
 
                     if (roadWorkNeedFeature.properties.name == null || roadWorkNeedFeature.properties.name == "")
                     {
-                        roadWorkNeedFeature.properties.name = "";
-                        int bufferSize = 0;
-                        List<(string, Point)> fromToNamesList;
-                        (string, Point)[] greatestDistanceTuple;
-                        Polygon bufferedPoly = roadWorkNeedPoly;
-
-                        do
-                        {
-                            if (bufferSize > 0)
-                            {
-                                bufferedPoly = bufferedPoly.Buffer(bufferSize) as Polygon;
-                            }
-
-                            fromToNamesList = _getFromToListFromDb(bufferedPoly, pgConn);
-
-                            greatestDistanceTuple = _calcGreatestDistanceTuple(fromToNamesList);
-
-                            if (greatestDistanceTuple[0].Item1 != null && greatestDistanceTuple[1].Item1 != null)
-                            {
-                                roadWorkNeedFeature.properties.name =
-                                        greatestDistanceTuple[0].Item1 + " bis " + greatestDistanceTuple[1].Item1;
-                            }
-                            bufferSize += 10;
-                        } while (bufferSize < 100 && roadWorkNeedFeature.properties.name == "");
-
+                        roadWorkNeedFeature.properties.name = HelperFunctions.getAddressNames(roadWorkNeedPoly, pgConn);
                     }
 
                     NpgsqlCommand selectMgmtAreaComm = pgConn.CreateCommand();
@@ -504,26 +497,32 @@ namespace roadwork_portal_service.Controllers
                         updateComm.Parameters.AddWithValue("relevance", roadWorkNeedFeature.properties.relevance);
                         updateComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
                         updateComm.Parameters.AddWithValue("uuid", new Guid(roadWorkNeedFeature.properties.uuid));
-
                         updateComm.ExecuteNonQuery();
 
+                        NpgsqlCommand deleteComm = pgConn.CreateCommand();
+                        deleteComm.CommandText = @"DELETE FROM ""wtb_ssp_activities_to_needs""
+                                    WHERE uuid_roadwork_need=@uuid_roadwork_need
+                                        AND activityrelationtype=@activityrelationtype";
+                        deleteComm.Parameters.AddWithValue("uuid_roadwork_need", new Guid(roadWorkNeedFeature.properties.uuid));
+                        deleteComm.Parameters.AddWithValue("activityrelationtype", roadWorkNeedFeature.properties.activityRelationType);
+                        deleteComm.ExecuteNonQuery();
 
-                        updateComm.CommandText = @"UPDATE ""wtb_ssp_activities_to_needs""
-                                    SET activityrelationtype=@activityrelationtype,
-                                        uuid_roadwork_activity=@uuid_roadwork_activity
-                                    WHERE uuid_roadwork_need=@uuid_roadwork_need";
-                        updateComm.Parameters.AddWithValue("activityrelationtype", roadWorkNeedFeature.properties.activityRelationType);
+                        NpgsqlCommand insertComm = pgConn.CreateCommand();
+                        insertComm.CommandText = @"INSERT INTO ""wtb_ssp_activities_to_needs""
+                                        (uuid, uuid_roadwork_need, uuid_roadwork_activity, activityrelationtype)
+                                        VALUES(@uuid, @uuid_roadwork_need, @uuid_roadwork_activity, @activityrelationtype)";
+                        insertComm.Parameters.AddWithValue("uuid", Guid.NewGuid());
+                        insertComm.Parameters.AddWithValue("uuid_roadwork_need", new Guid(roadWorkNeedFeature.properties.uuid));
                         if (roadWorkNeedFeature.properties.roadWorkActivityUuid != "")
                         {
-                            updateComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkNeedFeature.properties.roadWorkActivityUuid));
+                            insertComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkNeedFeature.properties.roadWorkActivityUuid));
                         }
                         else
                         {
-                            updateComm.Parameters.AddWithValue("uuid_roadwork_activity", DBNull.Value);
+                            insertComm.Parameters.AddWithValue("uuid_roadwork_activity", DBNull.Value);
                         }
-                        updateComm.Parameters.AddWithValue("uuid_roadwork_need", new Guid(roadWorkNeedFeature.properties.uuid));
-
-                        updateComm.ExecuteNonQuery();
+                        insertComm.Parameters.AddWithValue("activityrelationtype", roadWorkNeedFeature.properties.activityRelationType);
+                        insertComm.ExecuteNonQuery();
 
                         updateTransAction.Commit();
 
@@ -571,9 +570,12 @@ namespace roadwork_portal_service.Controllers
             {
                 pgConn.Open();
                 NpgsqlCommand deleteComm = pgConn.CreateCommand();
-                deleteComm.CommandText = @"DELETE FROM ""wtb_ssp_activities_to_needs""
-                                WHERE uuid=@uuid";
-                if(!releaseOnly)
+                if(releaseOnly)
+                {
+                    deleteComm.CommandText = @"DELETE FROM ""wtb_ssp_activities_to_needs""
+                                WHERE uuid_roadwork_need=@uuid";
+                }
+                else
                 {
                     deleteComm.CommandText = @"DELETE FROM ""wtb_ssp_roadworkneeds""
                                 WHERE uuid=@uuid";
@@ -593,51 +595,6 @@ namespace roadwork_portal_service.Controllers
             _logger.LogError("Fatal error.");
             errorResult.errorMessage = "KOPAL-3";
             return Ok(errorResult);
-        }
-
-        private static List<(string, Point)> _getFromToListFromDb(
-                        Polygon roadWorkNeedPoly, NpgsqlConnection pgConn)
-        {
-            List<(string, Point)> fromToNamesList = new List<(string, Point)>();
-            NpgsqlCommand selectFromToNames = pgConn.CreateCommand();
-            selectFromToNames.CommandText = @"SELECT address, geom
-                                    FROM ""addresses""
-                                    WHERE ST_Intersects(@geom, geom)";
-            selectFromToNames.Parameters.AddWithValue("geom", roadWorkNeedPoly);
-
-            using (NpgsqlDataReader reader = selectFromToNames.ExecuteReader())
-            {
-                while (reader.Read())
-                {
-                    string address = reader.IsDBNull(0) ? "" : reader.GetString(0);
-                    Point p = reader.IsDBNull(1) ? Point.Empty : reader.GetValue(1) as Point;
-                    fromToNamesList.Add((address, p));
-                }
-            }
-            return fromToNamesList;
-        }
-
-        private static (string, Point)[] _calcGreatestDistanceTuple(List<(string, Point)> fromToNamesList)
-        {
-
-            double distance = 0d;
-            double greatestDistance = 0d;
-            (string, Point)[] greatestDistanceTuple = new (string, Point)[2];
-            foreach ((string, Point) fromToNamesTuple1 in fromToNamesList)
-            {
-                foreach ((string, Point) fromToNamesTuple2 in fromToNamesList)
-                {
-                    distance = fromToNamesTuple1.Item2.Distance(fromToNamesTuple2.Item2);
-                    if (distance >= greatestDistance)
-                    {
-                        greatestDistance = distance;
-                        greatestDistanceTuple[0] = fromToNamesTuple1;
-                        greatestDistanceTuple[1] = fromToNamesTuple2;
-                    }
-                }
-            }
-            return greatestDistanceTuple;
-
         }
 
     }

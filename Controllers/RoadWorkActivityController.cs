@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using NetTopologySuite.Geometries;
 using Npgsql;
 using roadwork_portal_service.Configuration;
+using roadwork_portal_service.Helper;
 using roadwork_portal_service.Model;
 
 namespace roadwork_portal_service.Controllers
@@ -216,51 +217,9 @@ namespace roadwork_portal_service.Controllers
 
                     pgConn.Open();
 
-                    List<Guid> roadWorkNeedsUuidsList = new List<Guid>();
-                    NpgsqlCommand selectIntersectingNeedsComm = pgConn.CreateCommand();
-                    selectIntersectingNeedsComm.CommandText = @"SELECT uuid
-                                            FROM ""wtb_ssp_roadworkneeds""
-                                            WHERE ST_Intersects(@geom, geom)";
-                    selectIntersectingNeedsComm.Parameters.AddWithValue("geom", roadWorkActivityPoly);
-
-                    using (NpgsqlDataReader reader = selectIntersectingNeedsComm.ExecuteReader())
+                    if (roadWorkActivityFeature.properties.name == null || roadWorkActivityFeature.properties.name == "")
                     {
-                        while (reader.Read())
-                        {
-                            if (!reader.IsDBNull(0))
-                            {
-                                roadWorkNeedsUuidsList.Add(reader.GetGuid(0));
-                            }
-                        }
-                    }
-
-                    DateTime roadWorkActivityFinishFrom = DateTime.MaxValue;
-                    DateTime roadWorkActivityFinishTo = DateTime.MinValue;
-                    if (roadWorkNeedsUuidsList.Count() != 0)
-                    {
-                        NpgsqlCommand selectPeriodComm = pgConn.CreateCommand();
-                        selectPeriodComm.CommandText = @"SELECT finish_optimum_from, finish_optimum_to
-                                                    FROM ""wtb_ssp_roadworkneeds""
-                                                    WHERE uuid = ANY (@uuids)";
-                        selectPeriodComm.Parameters.AddWithValue("uuids", roadWorkNeedsUuidsList);
-                        using (NpgsqlDataReader reader = selectPeriodComm.ExecuteReader())
-                        {
-                            DateTime roadWorkActivityFinishFromTemp;
-                            DateTime roadWorkActivityFinishToTemp;
-                            while (reader.Read())
-                            {
-                                roadWorkActivityFinishFromTemp = reader.IsDBNull(0) ? DateTime.MaxValue : reader.GetDateTime(0);
-                                if (roadWorkActivityFinishFromTemp < roadWorkActivityFinishFrom)
-                                {
-                                    roadWorkActivityFinishFrom = roadWorkActivityFinishFromTemp;
-                                }
-                                roadWorkActivityFinishToTemp = reader.IsDBNull(1) ? DateTime.MinValue : reader.GetDateTime(1);
-                                if (roadWorkActivityFinishToTemp > roadWorkActivityFinishTo)
-                                {
-                                    roadWorkActivityFinishTo = roadWorkActivityFinishToTemp;
-                                }
-                            }
-                        }
+                        roadWorkActivityFeature.properties.name = HelperFunctions.getAddressNames(roadWorkActivityPoly, pgConn);
                     }
 
                     NpgsqlCommand selectMgmtAreaComm = pgConn.CreateCommand();
@@ -299,69 +258,49 @@ namespace roadwork_portal_service.Controllers
 
                     roadWorkActivityFeature.properties.uuid = Guid.NewGuid().ToString();
 
-                    using (NpgsqlTransaction trans = pgConn.BeginTransaction())
-                    {
-
-                        NpgsqlCommand insertComm = pgConn.CreateCommand();
-                        insertComm.CommandText = @"INSERT INTO ""wtb_ssp_roadworkactivities""
+                    NpgsqlCommand insertComm = pgConn.CreateCommand();
+                    insertComm.CommandText = @"INSERT INTO ""wtb_ssp_roadworkactivities""
                                     (uuid, name, managementarea, projectmanager, traffic_agent, description,
                                     created, last_modified, date_from, date_to,
                                     costs, costs_type, status, geom)
                                     VALUES (@uuid, @name, @managementarea, @projectmanager, @traffic_agent,
                                     @description, current_timestamp, current_timestamp, @date_from,
                                     @date_to, @costs, @costs_type, @status, @geom)";
-                        insertComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
-                        if (roadWorkActivityFeature.properties.managementarea.properties.uuid != "")
-                        {
-                            insertComm.Parameters.AddWithValue("managementarea", new Guid(roadWorkActivityFeature.properties.managementarea.properties.uuid));
-                        }
-                        else
-                        {
-                            insertComm.Parameters.AddWithValue("managementarea", DBNull.Value);
-                        }
-                        if (roadWorkActivityFeature.properties.projectManager.uuid != "")
-                        {
-                            insertComm.Parameters.AddWithValue("projectmanager", new Guid(roadWorkActivityFeature.properties.projectManager.uuid));
-                        }
-                        else
-                        {
-                            insertComm.Parameters.AddWithValue("projectmanager", DBNull.Value);
-                        }
-                        if (roadWorkActivityFeature.properties.trafficAgent.uuid != "")
-                        {
-                            insertComm.Parameters.AddWithValue("traffic_agent", new Guid(roadWorkActivityFeature.properties.trafficAgent.uuid));
-                        }
-                        else
-                        {
-                            insertComm.Parameters.AddWithValue("traffic_agent", DBNull.Value);
-                        }
-                        insertComm.Parameters.AddWithValue("name", roadWorkActivityFeature.properties.name);
-                        insertComm.Parameters.AddWithValue("description", roadWorkActivityFeature.properties.description);
-                        insertComm.Parameters.AddWithValue("date_from", roadWorkActivityFinishFrom);
-                        insertComm.Parameters.AddWithValue("date_to", roadWorkActivityFinishTo);
-                        insertComm.Parameters.AddWithValue("costs", roadWorkActivityFeature.properties.costs);
-                        insertComm.Parameters.AddWithValue("costs_type", "fullcost"); // TODO make this dynamic 
-                        insertComm.Parameters.AddWithValue("status", "inwork");
-                        insertComm.Parameters.AddWithValue("geom", roadWorkActivityPoly);
-
-                        insertComm.ExecuteNonQuery();
-
-                        if (roadWorkNeedsUuidsList.Count() != 0)
-                        {
-                            NpgsqlCommand updateComm = pgConn.CreateCommand();
-                            updateComm.CommandText = @"UPDATE ""wtb_ssp_activities_to_needs"" SET
-                                    uuid_roadwork_activity = @uuid_roadwork_activity,
-                                    activityrelationtype = 'registeredneed'
-                                    WHERE uuid_roadwork_need = ANY (@uuids)";
-                            updateComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkActivityFeature.properties.uuid));
-                            updateComm.Parameters.AddWithValue("uuids", roadWorkNeedsUuidsList);
-                            updateComm.ExecuteNonQuery();
-
-                        }
-                        trans.Commit();
-
+                    insertComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
+                    if (roadWorkActivityFeature.properties.managementarea.properties.uuid != "")
+                    {
+                        insertComm.Parameters.AddWithValue("managementarea", new Guid(roadWorkActivityFeature.properties.managementarea.properties.uuid));
                     }
+                    else
+                    {
+                        insertComm.Parameters.AddWithValue("managementarea", DBNull.Value);
+                    }
+                    if (roadWorkActivityFeature.properties.projectManager.uuid != "")
+                    {
+                        insertComm.Parameters.AddWithValue("projectmanager", new Guid(roadWorkActivityFeature.properties.projectManager.uuid));
+                    }
+                    else
+                    {
+                        insertComm.Parameters.AddWithValue("projectmanager", DBNull.Value);
+                    }
+                    if (roadWorkActivityFeature.properties.trafficAgent.uuid != "")
+                    {
+                        insertComm.Parameters.AddWithValue("traffic_agent", new Guid(roadWorkActivityFeature.properties.trafficAgent.uuid));
+                    }
+                    else
+                    {
+                        insertComm.Parameters.AddWithValue("traffic_agent", DBNull.Value);
+                    }
+                    insertComm.Parameters.AddWithValue("name", roadWorkActivityFeature.properties.name);
+                    insertComm.Parameters.AddWithValue("description", roadWorkActivityFeature.properties.description);
+                    insertComm.Parameters.AddWithValue("date_from", roadWorkActivityFeature.properties.finishFrom);
+                    insertComm.Parameters.AddWithValue("date_to", roadWorkActivityFeature.properties.finishTo);
+                    insertComm.Parameters.AddWithValue("costs", roadWorkActivityFeature.properties.costs);
+                    insertComm.Parameters.AddWithValue("costs_type", "fullcost"); // TODO make this dynamic 
+                    insertComm.Parameters.AddWithValue("status", "inwork");
+                    insertComm.Parameters.AddWithValue("geom", roadWorkActivityPoly);
 
+                    insertComm.ExecuteNonQuery();
                 }
 
             }
@@ -548,52 +487,6 @@ namespace roadwork_portal_service.Controllers
                     updateComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
 
                     updateComm.ExecuteNonQuery();
-
-                    NpgsqlCommand selectIntersectingNeeds = pgConn.CreateCommand();
-                    selectIntersectingNeeds.CommandText = @"SELECT uuid FROM ""wtb_ssp_roadworkneeds"" WHERE ST_Intersects(@geom, geom)";
-                    selectIntersectingNeeds.Parameters.AddWithValue("geom", roadWorkActivityPoly);
-
-                    List<Guid> intersectingNeedsUuids = new List<Guid>();
-                    using (NpgsqlDataReader reader = selectIntersectingNeeds.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            if (!reader.IsDBNull(0))
-                            {
-                                intersectingNeedsUuids.Add(reader.GetGuid(0));
-                            }
-                        }
-                    }
-
-                    if (intersectingNeedsUuids.Count != 0)
-                    {
-                        NpgsqlCommand cleanActivityOfNeedsComm = pgConn.CreateCommand();
-                        cleanActivityOfNeedsComm.CommandText = @"DELETE FROM ""wtb_ssp_activities_to_needs""
-                                        WHERE activityrelationtype = 'nonassignedneed'
-                                            AND uuid_roadwork_activity = @uuid_roadwork_activity";
-                        cleanActivityOfNeedsComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkActivityFeature.properties.uuid));
-                        cleanActivityOfNeedsComm.ExecuteNonQuery();
-
-
-                        NpgsqlCommand updateActivityOfNeedsComm = pgConn.CreateCommand();
-                        updateActivityOfNeedsComm.CommandText = @"UPDATE ""wtb_ssp_activities_to_needs""
-                                        SET uuid_roadwork_activity = @uuid_roadwork_activity,
-                                            activityrelationtype = 'nonassignedneed'
-                                        WHERE activityrelationtype <> 'assignedneed'
-                                            AND uuid_roadwork_need = ANY (:needs_uuids)";
-                        updateActivityOfNeedsComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkActivityFeature.properties.uuid));
-                        updateActivityOfNeedsComm.Parameters.AddWithValue("needs_uuids", intersectingNeedsUuids);
-                        updateActivityOfNeedsComm.ExecuteNonQuery();
-
-                        roadWorkActivityFeature.properties.roadWorkNeedsUuids = new string[intersectingNeedsUuids.Count];
-                        int i = 0;
-                        foreach (Guid intersectingNeedUuid in intersectingNeedsUuids)
-                        {
-                            roadWorkActivityFeature.properties.roadWorkNeedsUuids[i] = intersectingNeedUuid.ToString();
-                            i++;
-                        }
-
-                    }
 
                     if (statusOfActivityInDb != null && statusOfActivityInDb.Length != 0)
                     {
