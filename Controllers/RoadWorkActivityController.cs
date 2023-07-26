@@ -24,7 +24,7 @@ namespace roadwork_portal_service.Controllers
 
         // GET roadworkactivity/
         [HttpGet]
-        [Authorize(Roles = "orderer,territorymanager,administrator")]
+        [Authorize(Roles = "orderer,trafficmanager,territorymanager,administrator")]
         public async Task<IEnumerable<RoadWorkActivityFeature>> GetActivities
                                 (string? uuid = "", string? status = "", bool summary = false)
         {
