@@ -502,7 +502,7 @@ namespace roadwork_portal_service.Controllers
 
                         updateComm.CommandText = @"UPDATE ""wtb_ssp_activities_to_needs""
                                     SET activityrelationtype=@activityrelationtype,
-                                        uuid_roadwork_activity=@roadworkactivity
+                                        uuid_roadwork_activity=@uuid_roadwork_activity
                                     WHERE uuid_roadwork_need=@uuid_roadwork_need";
                         updateComm.Parameters.AddWithValue("activityrelationtype", roadWorkNeedFeature.properties.activityRelationType);
                         if (roadWorkNeedFeature.properties.roadWorkActivityUuid != "")
