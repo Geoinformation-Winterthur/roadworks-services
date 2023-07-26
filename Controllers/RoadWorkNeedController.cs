@@ -134,6 +134,14 @@ namespace roadwork_portal_service.Controllers
                             needFeatureFromDb.properties.isEditingAllowed = true;
                         }
 
+                        if(needFeatureFromDb.properties.status.code == "inconsult" ||
+                            needFeatureFromDb.properties.status.code == "provfixed" ||
+                            needFeatureFromDb.properties.status.code == "deffixed" ||
+                            needFeatureFromDb.properties.status.code == "executed")
+                        {
+                            needFeatureFromDb.properties.isEditingAllowed = false;
+                        }
+
                         needFeatureFromDb.properties.longer6Month = reader.IsDBNull(29) ? false : reader.GetBoolean(29);
                         needFeatureFromDb.properties.relevance = reader.IsDBNull(30) ? 0 : reader.GetInt32(30);
                         needFeatureFromDb.properties.activityRelationType = reader.IsDBNull(31) ? "" : reader.GetString(31);
