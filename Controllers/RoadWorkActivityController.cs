@@ -35,16 +35,13 @@ namespace roadwork_portal_service.Controllers
             {
                 pgConn.Open();
                 NpgsqlCommand selectComm = pgConn.CreateCommand();
-                selectComm.CommandText = @"SELECT r.uuid, r.name, r.managementarea, m.manager, am.first_name, am.last_name,
-                            m.substitute_manager, sam.first_name, sam.last_name, r.projectmanager, pm.first_name, pm.last_name, r.traffic_agent,
+                selectComm.CommandText = @"SELECT r.uuid, r.name, 
+                            r.projectmanager, pm.first_name, pm.last_name, r.traffic_agent,
                             ta.first_name, ta.last_name, description, created, last_modified, r.date_from, r.date_to,
-                            r.costs, c.code, c.name, am.e_mail, s.code, s.name, r.in_internet,
+                            r.costs, c.code, c.name, s.code, s.name, r.in_internet,
                             r.billing_address1, r.billing_address2, r.investment_no, r.pdb_fid,
                             r.strabako_no, r.geom
                         FROM ""wtb_ssp_roadworkactivities"" r
-                        LEFT JOIN ""wtb_ssp_managementareas"" m ON r.managementarea = m.uuid
-                        LEFT JOIN ""wtb_ssp_users"" am ON m.manager = am.uuid
-                        LEFT JOIN ""wtb_ssp_users"" sam ON m.substitute_manager = sam.uuid
                         LEFT JOIN ""wtb_ssp_users"" pm ON r.projectmanager = pm.uuid
                         LEFT JOIN ""wtb_ssp_users"" ta ON r.traffic_agent = ta.uuid
                         LEFT JOIN ""wtb_ssp_status"" s ON r.status = s.code
@@ -79,67 +76,48 @@ namespace roadwork_portal_service.Controllers
                         projectFeatureFromDb.properties.uuid = reader.IsDBNull(0) ? "" : reader.GetGuid(0).ToString();
                         projectFeatureFromDb.properties.name = reader.IsDBNull(1) ? "" : reader.GetString(1);
 
-                        ManagementAreaFeature managementAreaFeature = new ManagementAreaFeature();
-                        managementAreaFeature.properties.uuid = reader.IsDBNull(2) ? "" : reader.GetGuid(2).ToString();
-
-                        User areaManager = new User();
-                        areaManager.uuid = reader.IsDBNull(3) ? "" : reader.GetGuid(3).ToString();
-                        areaManager.firstName = reader.IsDBNull(4) ? "" : reader.GetString(4);
-                        areaManager.lastName = reader.IsDBNull(5) ? "" : reader.GetString(5);
-                        managementAreaFeature.properties.manager = areaManager;
-
-                        User areaSubstituteManager = new User();
-                        areaSubstituteManager.uuid = reader.IsDBNull(6) ? "" : reader.GetGuid(6).ToString();
-                        areaSubstituteManager.firstName = reader.IsDBNull(7) ? "" : reader.GetString(7);
-                        areaSubstituteManager.lastName = reader.IsDBNull(8) ? "" : reader.GetString(8);
-                        managementAreaFeature.properties.substituteManager = areaSubstituteManager;
-
-                        projectFeatureFromDb.properties.managementarea = managementAreaFeature;
-
                         User projectManager = new User();
-                        projectManager.uuid = reader.IsDBNull(9) ? "" : reader.GetGuid(9).ToString();
-                        projectManager.firstName = reader.IsDBNull(10) ? "" : reader.GetString(10);
-                        projectManager.lastName = reader.IsDBNull(11) ? "" : reader.GetString(11);
+                        projectManager.uuid = reader.IsDBNull(2) ? "" : reader.GetGuid(2).ToString();
+                        projectManager.firstName = reader.IsDBNull(3) ? "" : reader.GetString(3);
+                        projectManager.lastName = reader.IsDBNull(4) ? "" : reader.GetString(4);
                         projectFeatureFromDb.properties.projectManager = projectManager;
 
                         User trafficAgent = new User();
-                        trafficAgent.uuid = reader.IsDBNull(12) ? "" : reader.GetGuid(12).ToString();
-                        trafficAgent.firstName = reader.IsDBNull(13) ? "" : reader.GetString(13);
-                        trafficAgent.lastName = reader.IsDBNull(14) ? "" : reader.GetString(14);
+                        trafficAgent.uuid = reader.IsDBNull(5) ? "" : reader.GetGuid(5).ToString();
+                        trafficAgent.firstName = reader.IsDBNull(6) ? "" : reader.GetString(6);
+                        trafficAgent.lastName = reader.IsDBNull(7) ? "" : reader.GetString(7);
                         projectFeatureFromDb.properties.trafficAgent = trafficAgent;
 
-                        projectFeatureFromDb.properties.description = reader.IsDBNull(15) ? "" : reader.GetString(15);
-                        projectFeatureFromDb.properties.created = reader.IsDBNull(16) ? DateTime.MinValue : reader.GetDateTime(16);
-                        projectFeatureFromDb.properties.lastModified = reader.IsDBNull(17) ? DateTime.MinValue : reader.GetDateTime(17);
-                        projectFeatureFromDb.properties.finishFrom = reader.IsDBNull(18) ? DateTime.MinValue : reader.GetDateTime(18);
-                        projectFeatureFromDb.properties.finishTo = reader.IsDBNull(19) ? DateTime.MinValue : reader.GetDateTime(19);
-                        projectFeatureFromDb.properties.costs = reader.IsDBNull(20) ? 0m : reader.GetDecimal(20);
+                        projectFeatureFromDb.properties.description = reader.IsDBNull(8) ? "" : reader.GetString(8);
+                        projectFeatureFromDb.properties.created = reader.IsDBNull(9) ? DateTime.MinValue : reader.GetDateTime(9);
+                        projectFeatureFromDb.properties.lastModified = reader.IsDBNull(10) ? DateTime.MinValue : reader.GetDateTime(10);
+                        projectFeatureFromDb.properties.finishFrom = reader.IsDBNull(11) ? DateTime.MinValue : reader.GetDateTime(11);
+                        projectFeatureFromDb.properties.finishTo = reader.IsDBNull(12) ? DateTime.MinValue : reader.GetDateTime(12);
+                        projectFeatureFromDb.properties.costs = reader.IsDBNull(13) ? 0m : reader.GetDecimal(13);
 
                         CostTypes ct = new CostTypes();
-                        ct.code = reader.IsDBNull(21) ? "" : reader.GetString(21);
-                        ct.name = reader.IsDBNull(22) ? "" : reader.GetString(22);
+                        ct.code = reader.IsDBNull(14) ? "" : reader.GetString(14);
+                        ct.name = reader.IsDBNull(15) ? "" : reader.GetString(15);
                         projectFeatureFromDb.properties.costsType = ct;
 
-                        string managerMailAddress = reader.IsDBNull(23) ? "" : reader.GetString(23);
-                        string mailOfLoggedInUser = User.FindFirstValue(ClaimTypes.Email);
-                        if (User.IsInRole("administrator") || managerMailAddress == mailOfLoggedInUser)
+                        if (User.IsInRole("administrator") || User.IsInRole("territorymanager"))
                         {
                             projectFeatureFromDb.properties.isEditingAllowed = true;
                         }
 
                         Status statusFromDb = new Status();
-                        statusFromDb.code = reader.IsDBNull(24) ? "" : reader.GetString(24);
-                        statusFromDb.name = reader.IsDBNull(25) ? "" : reader.GetString(25);
+                        statusFromDb.code = reader.IsDBNull(16) ? "" : reader.GetString(16);
+                        statusFromDb.name = reader.IsDBNull(17) ? "" : reader.GetString(17);
                         projectFeatureFromDb.properties.status = statusFromDb;
 
-                        projectFeatureFromDb.properties.isInInternet = reader.IsDBNull(26) ? false : reader.GetBoolean(26);
-                        projectFeatureFromDb.properties.billingAddress1 = reader.IsDBNull(27) ? "" : reader.GetString(27);
-                        projectFeatureFromDb.properties.billingAddress2 = reader.IsDBNull(28) ? "" : reader.GetString(28);
-                        projectFeatureFromDb.properties.investmentNo = reader.IsDBNull(29) ? 0 : reader.GetInt32(29);
-                        projectFeatureFromDb.properties.pdbFid = reader.IsDBNull(30) ? 0 : reader.GetInt32(30);
-                        projectFeatureFromDb.properties.strabakoNo = reader.IsDBNull(31) ? "" : reader.GetString(31);
+                        projectFeatureFromDb.properties.isInInternet = reader.IsDBNull(18) ? false : reader.GetBoolean(18);
+                        projectFeatureFromDb.properties.billingAddress1 = reader.IsDBNull(19) ? "" : reader.GetString(19);
+                        projectFeatureFromDb.properties.billingAddress2 = reader.IsDBNull(20) ? "" : reader.GetString(20);
+                        projectFeatureFromDb.properties.investmentNo = reader.IsDBNull(21) ? 0 : reader.GetInt32(21);
+                        projectFeatureFromDb.properties.pdbFid = reader.IsDBNull(22) ? 0 : reader.GetInt32(22);
+                        projectFeatureFromDb.properties.strabakoNo = reader.IsDBNull(23) ? "" : reader.GetString(23);
 
-                        Polygon ntsPoly = reader.IsDBNull(32) ? Polygon.Empty : reader.GetValue(32) as Polygon;
+                        Polygon ntsPoly = reader.IsDBNull(24) ? Polygon.Empty : reader.GetValue(24) as Polygon;
                         projectFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
 
                         projectsFromDb.Add(projectFeatureFromDb);
@@ -231,61 +209,19 @@ namespace roadwork_portal_service.Controllers
                         roadWorkActivityFeature.properties.name = HelperFunctions.getAddressNames(roadWorkActivityPoly, pgConn);
                     }
 
-                    NpgsqlCommand selectMgmtAreaComm = pgConn.CreateCommand();
-                    selectMgmtAreaComm.CommandText = @"SELECT a.uuid,
-                                        m.first_name, m.last_name,
-                                        s.first_name, s.last_name
-                                    FROM ""wtb_ssp_managementareas"" a
-                                    LEFT JOIN ""wtb_ssp_users"" m ON a.manager = m.uuid
-                                    LEFT JOIN ""wtb_ssp_users"" s ON a.substitute_manager = s.uuid
-                                    WHERE ST_Area(ST_Intersection(@geom, geom)) > 0
-                                    ORDER BY ST_Area(ST_Intersection(@geom, geom)) DESC
-                                    LIMIT 1";
-
-                    selectMgmtAreaComm.Parameters.AddWithValue("geom", roadWorkActivityPoly);
-
-                    roadWorkActivityFeature.properties.managementarea = new ManagementAreaFeature();
-
-                    using (NpgsqlDataReader reader = selectMgmtAreaComm.ExecuteReader())
-                    {
-                        if (reader.Read())
-                        {
-                            roadWorkActivityFeature.properties.managementarea.properties.uuid = reader.IsDBNull(0) ? "" : reader.GetGuid(0).ToString();
-                            roadWorkActivityFeature.properties.managementarea.properties.manager.firstName = reader.IsDBNull(1) ? "" : reader.GetString(1);
-                            roadWorkActivityFeature.properties.managementarea.properties.manager.lastName = reader.IsDBNull(2) ? "" : reader.GetString(2);
-                            roadWorkActivityFeature.properties.managementarea.properties.substituteManager.firstName = reader.IsDBNull(3) ? "" : reader.GetString(3);
-                            roadWorkActivityFeature.properties.managementarea.properties.substituteManager.lastName = reader.IsDBNull(4) ? "" : reader.GetString(4);
-                        }
-                    }
-
-                    if (roadWorkActivityFeature.properties.managementarea.properties.uuid == "")
-                    {
-                        _logger.LogWarning("New roadworkneed does not lie in any management area.");
-                        roadWorkActivityFeature.errorMessage = "KOPAL-9";
-                        return Ok(roadWorkActivityFeature);
-                    }
-
                     roadWorkActivityFeature.properties.uuid = Guid.NewGuid().ToString();
 
                     NpgsqlCommand insertComm = pgConn.CreateCommand();
                     insertComm.CommandText = @"INSERT INTO ""wtb_ssp_roadworkactivities""
-                                    (uuid, name, managementarea, projectmanager, traffic_agent, description,
+                                    (uuid, name, projectmanager, traffic_agent, description,
                                     created, last_modified, date_from, date_to,
                                     costs, costs_type, status, in_internet, billing_address1,
                                     billing_address2, investment_no, geom)
-                                    VALUES (@uuid, @name, @managementarea, @projectmanager, @traffic_agent,
+                                    VALUES (@uuid, @name, @projectmanager, @traffic_agent,
                                     @description, current_timestamp, current_timestamp, @date_from,
                                     @date_to, @costs, @costs_type, @status, @in_internet, @billing_address1,
                                     @billing_address2, @investment_no, @geom)";
                     insertComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
-                    if (roadWorkActivityFeature.properties.managementarea.properties.uuid != "")
-                    {
-                        insertComm.Parameters.AddWithValue("managementarea", new Guid(roadWorkActivityFeature.properties.managementarea.properties.uuid));
-                    }
-                    else
-                    {
-                        insertComm.Parameters.AddWithValue("managementarea", DBNull.Value);
-                    }
                     if (roadWorkActivityFeature.properties.projectManager.uuid != "")
                     {
                         insertComm.Parameters.AddWithValue("projectmanager", new Guid(roadWorkActivityFeature.properties.projectManager.uuid));
@@ -457,7 +393,7 @@ namespace roadwork_portal_service.Controllers
 
                     NpgsqlCommand updateComm = pgConn.CreateCommand();
                     updateComm.CommandText = @"UPDATE ""wtb_ssp_roadworkactivities""
-                                    SET name=@name, managementarea=@managementarea, projectmanager=@projectmanager,
+                                    SET name=@name, projectmanager=@projectmanager,
                                     traffic_agent=@traffic_agent, description=@description,
                                     last_modified=current_timestamp,
                                     date_from=@date_from, date_to=@date_to,
@@ -469,15 +405,6 @@ namespace roadwork_portal_service.Controllers
                                     WHERE uuid=@uuid";
 
                     updateComm.Parameters.AddWithValue("name", roadWorkActivityFeature.properties.name);
-                    if (roadWorkActivityFeature.properties.managementarea.properties.uuid != "")
-                    {
-                        updateComm.Parameters.AddWithValue("managementarea",
-                                new Guid(roadWorkActivityFeature.properties.managementarea.properties.uuid));
-                    }
-                    else
-                    {
-                        updateComm.Parameters.AddWithValue("managementarea", DBNull.Value);
-                    }
                     if (roadWorkActivityFeature.properties.projectManager.uuid != "")
                     {
                         updateComm.Parameters.AddWithValue("projectmanager",

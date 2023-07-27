@@ -24,8 +24,6 @@ public class RoadWorkNeedProperties
     public int relevance { get; set; } = 0;
     public string activityRelationType { get; set; } = "";    
     public string description { get; set; } = "";
-    public ManagementAreaFeature managementarea
-                { get; set; } = new ManagementAreaFeature();
     public string roadWorkActivityUuid { get; set; } = "";
     public bool isEditingAllowed { get; set; } = false;
 }

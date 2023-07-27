@@ -8,8 +8,6 @@ public class RoadWorkActivityProperties
 {
     public string uuid { get; set; } = "";
     public string name { get; set; } = "";
-    public ManagementAreaFeature managementarea
-                { get; set; } = new ManagementAreaFeature();
     public User projectManager { get; set; } = new User();
     public User trafficAgent { get; set; } = new User();
     public string description { get; set; } = "";

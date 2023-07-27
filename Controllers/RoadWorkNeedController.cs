@@ -31,12 +31,12 @@ namespace roadwork_portal_service.Controllers
         {
             List<RoadWorkNeedFeature> projectsFromDb = new List<RoadWorkNeedFeature>();
 
-            if(uuids == null)
+            if (uuids == null)
                 uuids = "";
             else
                 uuids = uuids.Trim().ToLower();
 
-            if(roadWorkActivityUuid == null)
+            if (roadWorkActivityUuid == null)
                 roadWorkActivityUuid = "";
             else
                 roadWorkActivityUuid = roadWorkActivityUuid.Trim().ToLower();
@@ -50,8 +50,7 @@ namespace roadwork_portal_service.Controllers
                             u.first_name, u.last_name, o.name, r.finish_early_from, r.finish_early_to,
                             r.finish_optimum_from, r.finish_optimum_to, r.finish_late_from,
                             r.finish_late_to, p.code, s.code, s.name,
-                            r.description, r.managementarea, m.manager, am.first_name, am.last_name,
-                            m.substitute_manager, sam.first_name, sam.last_name,
+                            r.description, 
                             r.created, r.last_modified, an.uuid_roadwork_activity, u.e_mail,
                             r.longer_six_months, r.relevance, an.activityrelationtype, r.geom
                         FROM ""wtb_ssp_roadworkneeds"" r
@@ -60,9 +59,6 @@ namespace roadwork_portal_service.Controllers
                         LEFT JOIN ""wtb_ssp_organisationalunits"" o ON u.org_unit = o.uuid
                         LEFT JOIN ""wtb_ssp_priorities"" p ON r.priority = p.code
                         LEFT JOIN ""wtb_ssp_status"" s ON r.status = s.code
-                        LEFT JOIN ""wtb_ssp_managementareas"" m ON r.managementarea = m.uuid                        
-                        LEFT JOIN ""wtb_ssp_users"" am ON m.manager = am.uuid
-                        LEFT JOIN ""wtb_ssp_users"" sam ON m.substitute_manager = sam.uuid
                         LEFT JOIN ""wtb_ssp_roadworkneedtypes"" rwt ON r.kind = rwt.code";
 
                 if (uuids != "")
@@ -79,15 +75,12 @@ namespace roadwork_portal_service.Controllers
                     selectComm.CommandText += " WHERE r.uuid = ANY (:uuids)";
                     selectComm.Parameters.AddWithValue("uuids", uuidsList);
 
-                } else if (roadWorkActivityUuid != "")
+                }
+                else if (roadWorkActivityUuid != "")
                 {
-                    roadWorkActivityUuid = roadWorkActivityUuid.Trim().ToLower();
-                    if (roadWorkActivityUuid != "")
-                    {
-                        selectComm.CommandText += @" LEFT JOIN ""wtb_ssp_roadworkactivities"" act ON act.uuid = @act_uuid
+                    selectComm.CommandText += @" LEFT JOIN ""wtb_ssp_roadworkactivities"" act ON act.uuid = @act_uuid
                                                         WHERE ST_Intersects(act.geom, r.geom)";
-                        selectComm.Parameters.AddWithValue("act_uuid", new Guid(roadWorkActivityUuid));
-                    }
+                    selectComm.Parameters.AddWithValue("act_uuid", new Guid(roadWorkActivityUuid));
                 }
 
                 using (NpgsqlDataReader reader = selectComm.ExecuteReader())
@@ -123,28 +116,12 @@ namespace roadwork_portal_service.Controllers
                         status.name = reader.IsDBNull(16) ? "" : reader.GetString(16);
                         needFeatureFromDb.properties.status = status;
                         needFeatureFromDb.properties.description = reader.IsDBNull(17) ? "" : reader.GetString(17);
-                        ManagementAreaFeature managementAreaFeature = new ManagementAreaFeature();
-                        managementAreaFeature.properties.uuid = reader.IsDBNull(18) ? "" : reader.GetGuid(18).ToString();
 
-                        User manager = new User();
-                        manager.uuid = reader.IsDBNull(19) ? "" : reader.GetGuid(19).ToString();
-                        manager.firstName = reader.IsDBNull(20) ? "" : reader.GetString(20);
-                        manager.lastName = reader.IsDBNull(21) ? "" : reader.GetString(21);
-                        managementAreaFeature.properties.manager = manager;
+                        needFeatureFromDb.properties.created = reader.IsDBNull(18) ? DateTime.MinValue : reader.GetDateTime(18);
+                        needFeatureFromDb.properties.lastModified = reader.IsDBNull(19) ? DateTime.MinValue : reader.GetDateTime(19);
+                        needFeatureFromDb.properties.roadWorkActivityUuid = reader.IsDBNull(20) ? "" : reader.GetGuid(20).ToString();
 
-                        User substituteManager = new User();
-                        substituteManager.uuid = reader.IsDBNull(22) ? "" : reader.GetGuid(22).ToString();
-                        substituteManager.firstName = reader.IsDBNull(23) ? "" : reader.GetString(23);
-                        substituteManager.lastName = reader.IsDBNull(24) ? "" : reader.GetString(24);
-                        managementAreaFeature.properties.substituteManager = substituteManager;
-
-                        needFeatureFromDb.properties.managementarea = managementAreaFeature;
-
-                        needFeatureFromDb.properties.created = reader.IsDBNull(25) ? DateTime.MinValue : reader.GetDateTime(25);
-                        needFeatureFromDb.properties.lastModified = reader.IsDBNull(26) ? DateTime.MinValue : reader.GetDateTime(26);
-                        needFeatureFromDb.properties.roadWorkActivityUuid = reader.IsDBNull(27) ? "" : reader.GetGuid(27).ToString();
-
-                        string ordererMailAddress = reader.IsDBNull(28) ? "" : reader.GetString(28);
+                        string ordererMailAddress = reader.IsDBNull(21) ? "" : reader.GetString(21);
                         string mailOfLoggedInUser = User.FindFirstValue(ClaimTypes.Email);
                         if (User.IsInRole("administrator") || ordererMailAddress == mailOfLoggedInUser)
                         {
@@ -159,11 +136,11 @@ namespace roadwork_portal_service.Controllers
                             needFeatureFromDb.properties.isEditingAllowed = false;
                         }
 
-                        needFeatureFromDb.properties.longer6Month = reader.IsDBNull(29) ? false : reader.GetBoolean(29);
-                        needFeatureFromDb.properties.relevance = reader.IsDBNull(30) ? 0 : reader.GetInt32(30);
-                        needFeatureFromDb.properties.activityRelationType = reader.IsDBNull(31) ? "" : reader.GetString(31);
+                        needFeatureFromDb.properties.longer6Month = reader.IsDBNull(22) ? false : reader.GetBoolean(22);
+                        needFeatureFromDb.properties.relevance = reader.IsDBNull(23) ? 0 : reader.GetInt32(23);
+                        needFeatureFromDb.properties.activityRelationType = reader.IsDBNull(24) ? "" : reader.GetString(24);
 
-                        Polygon ntsPoly = reader.IsDBNull(32) ? Polygon.Empty : reader.GetValue(32) as Polygon;
+                        Polygon ntsPoly = reader.IsDBNull(25) ? Polygon.Empty : reader.GetValue(25) as Polygon;
                         needFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
 
                         projectsFromDb.Add(needFeatureFromDb);
@@ -229,40 +206,6 @@ namespace roadwork_portal_service.Controllers
                         roadWorkNeedFeature.properties.name = HelperFunctions.getAddressNames(roadWorkNeedPoly, pgConn);
                     }
 
-                    NpgsqlCommand selectMgmtAreaComm = pgConn.CreateCommand();
-                    selectMgmtAreaComm.CommandText = @"SELECT m.uuid,
-                                        am.first_name, am.last_name,
-                                        sam.first_name, sam.last_name
-                                    FROM ""wtb_ssp_managementareas"" m
-                                    LEFT JOIN ""wtb_ssp_users"" am ON m.manager = am.uuid
-                                    LEFT JOIN ""wtb_ssp_users"" sam ON m.substitute_manager = sam.uuid
-                                    WHERE ST_Area(ST_Intersection(@geom, geom)) > 0
-                                    ORDER BY ST_Area(ST_Intersection(@geom, geom)) DESC
-                                    LIMIT 1";
-
-                    selectMgmtAreaComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
-
-                    roadWorkNeedFeature.properties.managementarea = new ManagementAreaFeature();
-
-                    using (NpgsqlDataReader reader = selectMgmtAreaComm.ExecuteReader())
-                    {
-                        if (reader.Read())
-                        {
-                            roadWorkNeedFeature.properties.managementarea.properties.uuid = reader.IsDBNull(0) ? "" : reader.GetGuid(0).ToString();
-                            roadWorkNeedFeature.properties.managementarea.properties.manager.firstName = reader.IsDBNull(1) ? "" : reader.GetString(1);
-                            roadWorkNeedFeature.properties.managementarea.properties.manager.lastName = reader.IsDBNull(2) ? "" : reader.GetString(2);
-                            roadWorkNeedFeature.properties.managementarea.properties.substituteManager.firstName = reader.IsDBNull(3) ? "" : reader.GetString(3);
-                            roadWorkNeedFeature.properties.managementarea.properties.substituteManager.lastName = reader.IsDBNull(4) ? "" : reader.GetString(4);
-                        }
-                    }
-
-                    if (roadWorkNeedFeature.properties.managementarea.properties.uuid == "")
-                    {
-                        _logger.LogWarning("New roadworkneed does not lie in any management area.");
-                        roadWorkNeedFeature.errorMessage = "KOPAL-9";
-                        return Ok(roadWorkNeedFeature);
-                    }
-
                     Guid resultUuid = Guid.NewGuid();
                     roadWorkNeedFeature.properties.uuid = resultUuid.ToString();
 
@@ -270,11 +213,11 @@ namespace roadwork_portal_service.Controllers
                     insertComm.CommandText = @"INSERT INTO ""wtb_ssp_roadworkneeds""
                                     (uuid, name, kind, orderer, created, last_modified, finish_early_from, finish_early_to,
                                     finish_optimum_from, finish_optimum_to, finish_late_from,
-                                    finish_late_to, priority, status, description, managementarea, longer_six_months, relevance,
+                                    finish_late_to, priority, status, description, longer_six_months, relevance,
                                     geom)
                                     VALUES (@uuid, @name, @kind, @orderer, current_timestamp, current_timestamp,
                                     @finish_early_from, @finish_early_to, @finish_optimum_from, @finish_optimum_to, @finish_late_from,
-                                    @finish_late_to, @priority, @status, @description, @managementarea, @longer_six_months, @relevance,
+                                    @finish_late_to, @priority, @status, @description, @longer_six_months, @relevance,
                                     @geom)";
                     insertComm.Parameters.AddWithValue("uuid", new Guid(roadWorkNeedFeature.properties.uuid));
                     insertComm.Parameters.AddWithValue("name", roadWorkNeedFeature.properties.name);
@@ -296,14 +239,6 @@ namespace roadwork_portal_service.Controllers
                     insertComm.Parameters.AddWithValue("priority", roadWorkNeedFeature.properties.priority.code);
                     insertComm.Parameters.AddWithValue("status", roadWorkNeedFeature.properties.status.code);
                     insertComm.Parameters.AddWithValue("description", roadWorkNeedFeature.properties.description);
-                    if (roadWorkNeedFeature.properties.managementarea.properties.uuid != "")
-                    {
-                        insertComm.Parameters.AddWithValue("managementarea", new Guid(roadWorkNeedFeature.properties.managementarea.properties.uuid));
-                    }
-                    else
-                    {
-                        insertComm.Parameters.AddWithValue("managementarea", DBNull.Value);
-                    }
                     insertComm.Parameters.AddWithValue("longer_six_months", roadWorkNeedFeature.properties.longer6Month);
                     insertComm.Parameters.AddWithValue("relevance", roadWorkNeedFeature.properties.relevance);
                     insertComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
@@ -383,8 +318,6 @@ namespace roadwork_portal_service.Controllers
                 using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
                 {
 
-                    roadWorkNeedFeature.properties.managementarea = new ManagementAreaFeature();
-
                     pgConn.Open();
 
                     if (!User.IsInRole("administrator"))
@@ -420,38 +353,6 @@ namespace roadwork_portal_service.Controllers
 
                     }
 
-
-                    NpgsqlCommand selectMgmtAreaComm = pgConn.CreateCommand();
-                    selectMgmtAreaComm.CommandText = @"SELECT m.uuid,
-                                        am.first_name, am.last_name,
-                                        sam.first_name, sam.last_name
-                                    FROM ""wtb_ssp_managementareas"" m
-                                    LEFT JOIN ""wtb_ssp_users"" am ON m.manager = am.uuid
-                                    LEFT JOIN ""wtb_ssp_users"" sam ON m.substitute_manager = sam.uuid
-                                    WHERE ST_Intersects(@geom, geom)
-                                    ORDER BY ST_Area(ST_Intersection(@geom, geom)) DESC
-                                    LIMIT 1";
-                    selectMgmtAreaComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
-
-                    using (NpgsqlDataReader reader = selectMgmtAreaComm.ExecuteReader())
-                    {
-                        if (reader.Read())
-                        {
-                            roadWorkNeedFeature.properties.managementarea.properties.uuid = reader.IsDBNull(0) ? "" : reader.GetGuid(0).ToString();
-                            roadWorkNeedFeature.properties.managementarea.properties.manager.firstName = reader.IsDBNull(1) ? "" : reader.GetString(1);
-                            roadWorkNeedFeature.properties.managementarea.properties.manager.lastName = reader.IsDBNull(2) ? "" : reader.GetString(2);
-                            roadWorkNeedFeature.properties.managementarea.properties.substituteManager.firstName = reader.IsDBNull(3) ? "" : reader.GetString(3);
-                            roadWorkNeedFeature.properties.managementarea.properties.substituteManager.lastName = reader.IsDBNull(4) ? "" : reader.GetString(4);
-                        }
-                    }
-
-                    if (roadWorkNeedFeature.properties.managementarea.properties.uuid == "")
-                    {
-                        _logger.LogWarning("New roadworkneed does not lie in any management area.");
-                        roadWorkNeedFeature.errorMessage = "KOPAL-9";
-                        return Ok(roadWorkNeedFeature);
-                    }
-
                     using (NpgsqlTransaction updateTransAction = pgConn.BeginTransaction())
                     {
 
@@ -462,8 +363,7 @@ namespace roadwork_portal_service.Controllers
                                     finish_optimum_from=@finish_optimum_from, finish_optimum_to=@finish_optimum_to,
                                     finish_late_from=@finish_late_from, finish_late_to=@finish_late_to,
                                     priority=@priority, status=@status, description=@description,
-                                    managementarea=@managementarea, longer_six_months=@longer_six_months,
-                                    relevance=@relevance, geom=@geom
+                                    longer_six_months=@longer_six_months, relevance=@relevance, geom=@geom
                                     WHERE uuid=@uuid";
 
                         updateComm.Parameters.AddWithValue("name", roadWorkNeedFeature.properties.name);
@@ -485,44 +385,32 @@ namespace roadwork_portal_service.Controllers
                         updateComm.Parameters.AddWithValue("priority", roadWorkNeedFeature.properties.priority.code);
                         updateComm.Parameters.AddWithValue("status", roadWorkNeedFeature.properties.status.code);
                         updateComm.Parameters.AddWithValue("description", roadWorkNeedFeature.properties.description);
-                        if (roadWorkNeedFeature.properties.managementarea.properties.uuid != "")
-                        {
-                            updateComm.Parameters.AddWithValue("managementarea", new Guid(roadWorkNeedFeature.properties.managementarea.properties.uuid));
-                        }
-                        else
-                        {
-                            updateComm.Parameters.AddWithValue("managementarea", DBNull.Value);
-                        }
                         updateComm.Parameters.AddWithValue("longer_six_months", roadWorkNeedFeature.properties.longer6Month);
                         updateComm.Parameters.AddWithValue("relevance", roadWorkNeedFeature.properties.relevance);
                         updateComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
                         updateComm.Parameters.AddWithValue("uuid", new Guid(roadWorkNeedFeature.properties.uuid));
                         updateComm.ExecuteNonQuery();
 
-                        NpgsqlCommand deleteComm = pgConn.CreateCommand();
-                        deleteComm.CommandText = @"DELETE FROM ""wtb_ssp_activities_to_needs""
-                                    WHERE uuid_roadwork_need=@uuid_roadwork_need
-                                        AND activityrelationtype=@activityrelationtype";
-                        deleteComm.Parameters.AddWithValue("uuid_roadwork_need", new Guid(roadWorkNeedFeature.properties.uuid));
-                        deleteComm.Parameters.AddWithValue("activityrelationtype", roadWorkNeedFeature.properties.activityRelationType);
-                        deleteComm.ExecuteNonQuery();
-
-                        NpgsqlCommand insertComm = pgConn.CreateCommand();
-                        insertComm.CommandText = @"INSERT INTO ""wtb_ssp_activities_to_needs""
-                                        (uuid, uuid_roadwork_need, uuid_roadwork_activity, activityrelationtype)
-                                        VALUES(@uuid, @uuid_roadwork_need, @uuid_roadwork_activity, @activityrelationtype)";
-                        insertComm.Parameters.AddWithValue("uuid", Guid.NewGuid());
-                        insertComm.Parameters.AddWithValue("uuid_roadwork_need", new Guid(roadWorkNeedFeature.properties.uuid));
                         if (roadWorkNeedFeature.properties.roadWorkActivityUuid != "")
                         {
+                            NpgsqlCommand deleteComm = pgConn.CreateCommand();
+                            deleteComm.CommandText = @"DELETE FROM ""wtb_ssp_activities_to_needs""
+                                    WHERE uuid_roadwork_need=@uuid_roadwork_need
+                                        AND activityrelationtype=@activityrelationtype";
+                            deleteComm.Parameters.AddWithValue("uuid_roadwork_need", new Guid(roadWorkNeedFeature.properties.uuid));
+                            deleteComm.Parameters.AddWithValue("activityrelationtype", roadWorkNeedFeature.properties.activityRelationType);
+                            deleteComm.ExecuteNonQuery();
+
+                            NpgsqlCommand insertComm = pgConn.CreateCommand();
+                            insertComm.CommandText = @"INSERT INTO ""wtb_ssp_activities_to_needs""
+                                        (uuid, uuid_roadwork_need, uuid_roadwork_activity, activityrelationtype)
+                                        VALUES(@uuid, @uuid_roadwork_need, @uuid_roadwork_activity, @activityrelationtype)";
+                            insertComm.Parameters.AddWithValue("uuid", Guid.NewGuid());
+                            insertComm.Parameters.AddWithValue("uuid_roadwork_need", new Guid(roadWorkNeedFeature.properties.uuid));
                             insertComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkNeedFeature.properties.roadWorkActivityUuid));
+                            insertComm.Parameters.AddWithValue("activityrelationtype", roadWorkNeedFeature.properties.activityRelationType);
+                            insertComm.ExecuteNonQuery();
                         }
-                        else
-                        {
-                            insertComm.Parameters.AddWithValue("uuid_roadwork_activity", DBNull.Value);
-                        }
-                        insertComm.Parameters.AddWithValue("activityrelationtype", roadWorkNeedFeature.properties.activityRelationType);
-                        insertComm.ExecuteNonQuery();
 
                         updateTransAction.Commit();
 
@@ -570,7 +458,7 @@ namespace roadwork_portal_service.Controllers
             {
                 pgConn.Open();
                 NpgsqlCommand deleteComm = pgConn.CreateCommand();
-                if(releaseOnly)
+                if (releaseOnly)
                 {
                     deleteComm.CommandText = @"DELETE FROM ""wtb_ssp_activities_to_needs""
                                 WHERE uuid_roadwork_need=@uuid";

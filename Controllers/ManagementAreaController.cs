@@ -1,11 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using NetTopologySuite;
 using NetTopologySuite.Geometries;
 using NetTopologySuite.Features;
 using Npgsql;
 using roadwork_portal_service.Configuration;
-using System.Numerics;
 using roadwork_portal_service.Model;
 
 namespace roadwork_portal_service.Controllers
@@ -26,11 +24,11 @@ namespace roadwork_portal_service.Controllers
 
         // GET managementarea/
         [HttpGet]
-        [Authorize(Roles = "territorymanager,administrator")]
+        [Authorize]
         public ActionResult<FeatureCollection> GetManagementAreas()
         {
             FeatureCollection managementAreas = new FeatureCollection();
-            // get data of current user from database:
+
             using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
             {
                 pgConn.Open();
@@ -43,7 +41,6 @@ namespace roadwork_portal_service.Controllers
 
                 using (NpgsqlDataReader reader = selectComm.ExecuteReader())
                 {
-                    GeometryFactory geomFactory = NtsGeometryServices.Instance.CreateGeometryFactory(srid: 2056);
                     Feature managementAreaFeatureFromDb;
                     while (reader.Read())
                     {
@@ -68,31 +65,109 @@ namespace roadwork_portal_service.Controllers
             return Ok(managementAreas);
         }
 
+        // POST managementarea/
+        [HttpPost]
+        [Authorize]
+        public ActionResult<ManagementArea[]> GetIntersectingManagementAreas([FromBody] RoadworkPolygon polygon)
+        {
+            List<ManagementArea> managementAreas = new List<ManagementArea>();
+
+            Polygon roadWorkPoly = polygon.getNtsPolygon();
+            Coordinate[] coordinates = roadWorkPoly.Coordinates;
+
+            if (coordinates.Length < 3)
+            {
+                _logger.LogWarning("Roadwork polygon has less than 3 coordinates.");
+                ManagementArea managementArea = new ManagementArea();
+                return Ok(managementAreas);
+            }
+
+            ConfigurationData configData = AppConfigController.getConfigurationFromDb();
+            // only if project area is greater than min area size:
+            if (roadWorkPoly.Area <= configData.minAreaSize)
+            {
+                _logger.LogWarning("Roadwork area is less than or equal " + configData.minAreaSize + "qm.");
+                ManagementArea managementArea = new ManagementArea();
+                return Ok(managementAreas);
+            }
+
+            // only if project area is smaller than max area size:
+            if (roadWorkPoly.Area > configData.maxAreaSize)
+            {
+                _logger.LogWarning("Roadwork area is greater than " + configData.maxAreaSize + "qm.");
+                ManagementArea managementArea = new ManagementArea();
+                return Ok(managementAreas);
+            }
+
+            using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
+            {
+                pgConn.Open();
+                NpgsqlCommand selectComm = pgConn.CreateCommand();
+                selectComm.CommandText = @"SELECT m.uuid, am.uuid, am.first_name, am.last_name,
+                            sam.uuid, sam.first_name, sam.last_name
+                            FROM ""wtb_ssp_managementareas"" m
+                            LEFT JOIN ""wtb_ssp_users"" am ON m.manager = am.uuid
+                            LEFT JOIN ""wtb_ssp_users"" sam ON m.substitute_manager = sam.uuid
+                            WHERE ST_Area(ST_Intersection(@geom, m.geom)) > 0
+                                    ORDER BY ST_Area(ST_Intersection(@geom, m.geom)) DESC
+                                    LIMIT 1";
+
+                selectComm.Parameters.AddWithValue("geom", roadWorkPoly);
+
+
+                using (NpgsqlDataReader reader = selectComm.ExecuteReader())
+                {
+                    ManagementArea managementAreaFromDb;
+                    while (reader.Read())
+                    {
+                        managementAreaFromDb = new ManagementArea();
+                        managementAreaFromDb.uuid = reader.IsDBNull(0) ? "" : reader.GetGuid(0).ToString();
+
+                        User manager = new User();
+                        manager.uuid = reader.IsDBNull(1) ? "" : reader.GetGuid(1).ToString();
+                        manager.firstName = reader.IsDBNull(2) ? "" : reader.GetString(2);
+                        manager.lastName = reader.IsDBNull(3) ? "" : reader.GetString(3);
+                        managementAreaFromDb.manager = manager;
+
+                        User substituteManager = new User();
+                        substituteManager.uuid = reader.IsDBNull(4) ? "" : reader.GetGuid(4).ToString();
+                        substituteManager.firstName = reader.IsDBNull(5) ? "" : reader.GetString(5);
+                        substituteManager.lastName = reader.IsDBNull(6) ? "" : reader.GetString(6);
+                        managementAreaFromDb.substituteManager = substituteManager;
+
+                        managementAreas.Add(managementAreaFromDb);
+                    }
+                }
+                pgConn.Close();
+            }
+
+            return Ok(managementAreas);
+        }
+
         // PUT managementarea/
         [HttpPut]
         [Authorize(Roles = "administrator")]
-        public ActionResult<ManagementAreaFeature>
-                    UpdateManagementArea([FromBody] ManagementAreaFeature managementAreaFeature)
+        public ActionResult<ManagementArea>
+                    UpdateManagementArea([FromBody] ManagementArea managementArea)
         {
 
             try
             {
-                if (managementAreaFeature == null || managementAreaFeature.properties == null ||
-                        managementAreaFeature.properties.uuid == null)
+                if (managementArea == null || managementArea.uuid == null)
                 {
                     _logger.LogWarning("No management area feature provided in area feature update process.");
-                    managementAreaFeature = new ManagementAreaFeature();
-                    managementAreaFeature.errorMessage = "KOPAL-15";
-                    return Ok(managementAreaFeature);
+                    managementArea = new ManagementArea();
+                    managementArea.errorMessage = "KOPAL-15";
+                    return Ok(managementArea);
                 }
 
-                string managementAreaUuid = managementAreaFeature.properties.uuid.Trim().ToLower();
+                string managementAreaUuid = managementArea.uuid.Trim().ToLower();
                 if (managementAreaUuid == "")
                 {
                     _logger.LogWarning("No management area feature provided in area feature update process.");
-                    managementAreaFeature = new ManagementAreaFeature();
-                    managementAreaFeature.errorMessage = "KOPAL-15";
-                    return Ok(managementAreaFeature);
+                    managementArea = new ManagementArea();
+                    managementArea.errorMessage = "KOPAL-15";
+                    return Ok(managementArea);
                 }
 
                 using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
@@ -102,10 +177,10 @@ namespace roadwork_portal_service.Controllers
 
                     string managerUuid = "";
 
-                    if (managementAreaFeature.properties.manager != null
-                        && managementAreaFeature.properties.manager.uuid != null)
+                    if (managementArea.manager != null
+                        && managementArea.manager.uuid != null)
                     {
-                        managerUuid = managementAreaFeature.properties.manager.uuid.Trim().ToLower();
+                        managerUuid = managementArea.manager.uuid.Trim().ToLower();
                     }
 
                     if (managerUuid != "")
@@ -122,24 +197,24 @@ namespace roadwork_portal_service.Controllers
                         {
                             if (reader.Read())
                             {
-                                managementAreaFeature.properties.manager.role.code
+                                managementArea.manager.role.code
                                             = reader.IsDBNull(0) ? "" : reader.GetString(0);
-                                managementAreaFeature.properties.manager.firstName
+                                managementArea.manager.firstName
                                             = reader.IsDBNull(1) ? "" : reader.GetString(1);
-                                managementAreaFeature.properties.manager.lastName
+                                managementArea.manager.lastName
                                             = reader.IsDBNull(2) ? "" : reader.GetString(2);
                             }
                         }
 
-                        if (managementAreaFeature.properties.manager.role.code != "territorymanager")
+                        if (managementArea.manager.role.code != "territorymanager")
                         {
                             _logger.LogWarning("Administrator tried to set the user with UUID "
                                 + managerUuid + " as a manager of an area, though the user " +
                                 "has not the role of a territory manager. Operation forbidden " +
                                 "and canceled.");
-                            managementAreaFeature = new ManagementAreaFeature();
-                            managementAreaFeature.errorMessage = "KOPAL-17";
-                            return Ok(managementAreaFeature);
+                            managementArea = new ManagementArea();
+                            managementArea.errorMessage = "KOPAL-17";
+                            return Ok(managementArea);
                         }
 
                         NpgsqlCommand updateComm = pgConn.CreateCommand();
@@ -148,17 +223,17 @@ namespace roadwork_portal_service.Controllers
                                     WHERE uuid=@uuid";
 
                         updateComm.Parameters.AddWithValue("manager_uuid", new Guid(managerUuid));
-                        updateComm.Parameters.AddWithValue("uuid", new Guid(managementAreaFeature.properties.uuid));
+                        updateComm.Parameters.AddWithValue("uuid", new Guid(managementArea.uuid));
 
                         updateComm.ExecuteNonQuery();
                     }
 
                     string substituteManagerUuid = "";
 
-                    if (managementAreaFeature.properties.substituteManager != null
-                        && managementAreaFeature.properties.substituteManager.uuid != null)
+                    if (managementArea.substituteManager != null
+                        && managementArea.substituteManager.uuid != null)
                     {
-                        substituteManagerUuid = managementAreaFeature.properties.substituteManager.uuid.Trim().ToLower();
+                        substituteManagerUuid = managementArea.substituteManager.uuid.Trim().ToLower();
                     }
 
                     if (substituteManagerUuid != "")
@@ -175,24 +250,24 @@ namespace roadwork_portal_service.Controllers
                         {
                             if (reader.Read())
                             {
-                                managementAreaFeature.properties.substituteManager.role.code
+                                managementArea.substituteManager.role.code
                                             = reader.IsDBNull(0) ? "" : reader.GetString(0);
-                                managementAreaFeature.properties.substituteManager.firstName
+                                managementArea.substituteManager.firstName
                                             = reader.IsDBNull(1) ? "" : reader.GetString(1);
-                                managementAreaFeature.properties.substituteManager.lastName
+                                managementArea.substituteManager.lastName
                                             = reader.IsDBNull(2) ? "" : reader.GetString(2);
                             }
                         }
 
-                        if (managementAreaFeature.properties.substituteManager.role.code != "territorymanager")
+                        if (managementArea.substituteManager.role.code != "territorymanager")
                         {
                             _logger.LogWarning("Administrator tried to set the user with UUID "
                                 + managerUuid + " as a manager of an area, though the user " +
                                 "has not the role of a territory manager. Operation forbidden " +
                                 "and canceled.");
-                            managementAreaFeature = new ManagementAreaFeature();
-                            managementAreaFeature.errorMessage = "KOPAL-17";
-                            return Ok(managementAreaFeature);
+                            managementArea = new ManagementArea();
+                            managementArea.errorMessage = "KOPAL-17";
+                            return Ok(managementArea);
                         }
 
                         NpgsqlCommand updateComm = pgConn.CreateCommand();
@@ -201,7 +276,7 @@ namespace roadwork_portal_service.Controllers
                                     WHERE uuid=@uuid";
 
                         updateComm.Parameters.AddWithValue("substitute_manager_uuid", new Guid(substituteManagerUuid));
-                        updateComm.Parameters.AddWithValue("uuid", new Guid(managementAreaFeature.properties.uuid));
+                        updateComm.Parameters.AddWithValue("uuid", new Guid(managementArea.uuid));
 
                         updateComm.ExecuteNonQuery();
                     }
@@ -212,11 +287,11 @@ namespace roadwork_portal_service.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
-                managementAreaFeature = new ManagementAreaFeature();
-                managementAreaFeature.errorMessage = "KOPAL-3";
-                return Ok(managementAreaFeature);
+                managementArea = new ManagementArea();
+                managementArea.errorMessage = "KOPAL-3";
+                return Ok(managementArea);
             }
-            return managementAreaFeature;
+            return managementArea;
         }
 
     }
