@@ -23,6 +23,7 @@ public class RoadWorkActivityProperties
     public string[] roadWorkNeedsUuids { get; set; } = new string[0];
     public Status status { get; set; } = new Status();
     public bool isEditingAllowed { get; set; } = false;
+    public bool isInInternet {get; set; } = false;
 
 }
 
