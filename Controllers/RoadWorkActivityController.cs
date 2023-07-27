@@ -38,7 +38,9 @@ namespace roadwork_portal_service.Controllers
                 selectComm.CommandText = @"SELECT r.uuid, r.name, r.managementarea, m.manager, am.first_name, am.last_name,
                             m.substitute_manager, sam.first_name, sam.last_name, r.projectmanager, pm.first_name, pm.last_name, r.traffic_agent,
                             ta.first_name, ta.last_name, description, created, last_modified, r.date_from, r.date_to,
-                            r.costs, c.code, c.name, am.e_mail, s.code, s.name, r.in_internet, r.geom
+                            r.costs, c.code, c.name, am.e_mail, s.code, s.name, r.in_internet,
+                            r.billing_address1, r.billing_address2, r.investment_no, r.pdb_fid,
+                            r.strabako_no, r.geom
                         FROM ""wtb_ssp_roadworkactivities"" r
                         LEFT JOIN ""wtb_ssp_managementareas"" m ON r.managementarea = m.uuid
                         LEFT JOIN ""wtb_ssp_users"" am ON m.manager = am.uuid
@@ -131,8 +133,13 @@ namespace roadwork_portal_service.Controllers
                         projectFeatureFromDb.properties.status = statusFromDb;
 
                         projectFeatureFromDb.properties.isInInternet = reader.IsDBNull(26) ? false : reader.GetBoolean(26);
+                        projectFeatureFromDb.properties.billingAddress1 = reader.IsDBNull(27) ? "" : reader.GetString(27);
+                        projectFeatureFromDb.properties.billingAddress2 = reader.IsDBNull(28) ? "" : reader.GetString(28);
+                        projectFeatureFromDb.properties.investmentNo = reader.IsDBNull(29) ? 0 : reader.GetInt32(29);
+                        projectFeatureFromDb.properties.pdbFid = reader.IsDBNull(30) ? 0 : reader.GetInt32(30);
+                        projectFeatureFromDb.properties.strabakoNo = reader.IsDBNull(31) ? "" : reader.GetString(31);
 
-                        Polygon ntsPoly = reader.IsDBNull(27) ? Polygon.Empty : reader.GetValue(27) as Polygon;
+                        Polygon ntsPoly = reader.IsDBNull(32) ? Polygon.Empty : reader.GetValue(32) as Polygon;
                         projectFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
 
                         projectsFromDb.Add(projectFeatureFromDb);
@@ -264,10 +271,12 @@ namespace roadwork_portal_service.Controllers
                     insertComm.CommandText = @"INSERT INTO ""wtb_ssp_roadworkactivities""
                                     (uuid, name, managementarea, projectmanager, traffic_agent, description,
                                     created, last_modified, date_from, date_to,
-                                    costs, costs_type, status, in_internet, geom)
+                                    costs, costs_type, status, in_internet, billing_address1,
+                                    billing_address2, investment_no, geom)
                                     VALUES (@uuid, @name, @managementarea, @projectmanager, @traffic_agent,
                                     @description, current_timestamp, current_timestamp, @date_from,
-                                    @date_to, @costs, @costs_type, @status, in_internet, @geom)";
+                                    @date_to, @costs, @costs_type, @status, @in_internet, @billing_address1,
+                                    @billing_address2, @investment_no, @geom)";
                     insertComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
                     if (roadWorkActivityFeature.properties.managementarea.properties.uuid != "")
                     {
@@ -301,6 +310,9 @@ namespace roadwork_portal_service.Controllers
                     insertComm.Parameters.AddWithValue("costs_type", "fullcost"); // TODO make this dynamic 
                     insertComm.Parameters.AddWithValue("status", "inwork");
                     insertComm.Parameters.AddWithValue("in_internet", roadWorkActivityFeature.properties.isInInternet);
+                    insertComm.Parameters.AddWithValue("billing_address1", roadWorkActivityFeature.properties.billingAddress1);
+                    insertComm.Parameters.AddWithValue("billing_address2", roadWorkActivityFeature.properties.billingAddress2);
+                    insertComm.Parameters.AddWithValue("investment_no", roadWorkActivityFeature.properties.investmentNo);
                     insertComm.Parameters.AddWithValue("geom", roadWorkActivityPoly);
 
                     insertComm.ExecuteNonQuery();
@@ -450,7 +462,10 @@ namespace roadwork_portal_service.Controllers
                                     last_modified=current_timestamp,
                                     date_from=@date_from, date_to=@date_to,
                                     costs=@costs, costs_type=@costs_type, status=@status,
-                                    in_internet=@in_internet, geom=@geom
+                                    billing_address1=@billing_address1,
+                                    billing_address2=@billing_address2,
+                                    in_internet=@in_internet, investment_no=@investment_no,
+                                    geom=@geom
                                     WHERE uuid=@uuid";
 
                     updateComm.Parameters.AddWithValue("name", roadWorkActivityFeature.properties.name);
@@ -488,6 +503,9 @@ namespace roadwork_portal_service.Controllers
                     updateComm.Parameters.AddWithValue("costs_type", roadWorkActivityFeature.properties.costsType.code);
                     updateComm.Parameters.AddWithValue("status", roadWorkActivityFeature.properties.status.code);
                     updateComm.Parameters.AddWithValue("in_internet", roadWorkActivityFeature.properties.isInInternet);
+                    updateComm.Parameters.AddWithValue("billing_address1", roadWorkActivityFeature.properties.billingAddress1);
+                    updateComm.Parameters.AddWithValue("billing_address2", roadWorkActivityFeature.properties.billingAddress2);
+                    updateComm.Parameters.AddWithValue("investment_no", roadWorkActivityFeature.properties.investmentNo);
                     updateComm.Parameters.AddWithValue("geom", roadWorkActivityPoly);
                     updateComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
 
@@ -657,7 +675,7 @@ namespace roadwork_portal_service.Controllers
                     selectComm.CommandText = @"SELECT uuid, name, description, created, last_modified,
                                     date_from, date_to, geom
                                     FROM ""wtb_ssp_roadworkactivities""
-                                    WHERE in_internet = true";
+                                    WHERE in_internet = true AND date_to > current_timestamp";
 
                     using (NpgsqlDataReader reader = await selectComm.ExecuteReaderAsync())
                     {
@@ -719,7 +737,8 @@ namespace roadwork_portal_service.Controllers
                     selectComm.CommandText = @"SELECT uuid, name, description, created, last_modified,
                                     date_from, date_to, geom
                                     FROM ""wtb_ssp_roadworkactivities""
-                                    WHERE uuid=@uuid AND in_internet = true";
+                                    WHERE uuid=@uuid AND in_internet = true
+                                            AND date_to > current_timestampe";
                     selectComm.Parameters.AddWithValue("uuid", new Guid(uuid));
 
                     using (NpgsqlDataReader reader = await selectComm.ExecuteReaderAsync())

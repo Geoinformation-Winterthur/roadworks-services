@@ -24,6 +24,9 @@ public class RoadWorkActivityProperties
     public Status status { get; set; } = new Status();
     public bool isEditingAllowed { get; set; } = false;
     public bool isInInternet {get; set; } = false;
-
+    public string billingAddress1 { get; set; } = "";
+    public string billingAddress2 { get; set; } = "";
+    public int investmentNo { get; set; } = 0;
+    public int pdbFid { get; set; } = 0;
+    public string strabakoNo { get; set; } = "";
 }
-
