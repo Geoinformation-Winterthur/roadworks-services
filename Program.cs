@@ -10,6 +10,7 @@ using System.Text;
 using Npgsql;
 using Prometheus;
 using NetTopologySuite.IO.Converters;
+using Microsoft.OpenApi.Models;
 
 Log.Logger = new LoggerConfiguration()
             .ReadFrom.Configuration(AppConfig.Configuration)
@@ -28,7 +29,8 @@ try
 
     // Add services to the container.
 
-    string serviceUrl = AppConfig.Configuration.GetValue<string>("URL:ServiceUrl");
+    string serviceDomain = AppConfig.Configuration.GetValue<string>("URL:ServiceDomain");
+    string serviceBasePath = AppConfig.Configuration.GetValue<string>("URL:ServiceBasePath");
     string securityKey = AppConfig.Configuration.GetValue<string>("SecurityKey");
 
     builder.Services.AddAuthentication(options =>
@@ -45,8 +47,8 @@ try
                 ValidateLifetime = true,
                 RequireExpirationTime = true,
                 ValidateIssuerSigningKey = true,
-                ValidIssuer = serviceUrl,
-                ValidAudience = serviceUrl,
+                ValidIssuer = serviceDomain + serviceBasePath,
+                ValidAudience = serviceDomain + serviceBasePath,
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(securityKey))
             };
         });
@@ -57,7 +59,18 @@ try
             });
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
     builder.Services.AddEndpointsApiExplorer();
-    builder.Services.AddSwaggerGen();
+        builder.Services.AddSwaggerGen(options => {
+        string serviceDescription = AppConfig.Configuration.GetValue<string>("ServiceDescription");
+        options.SwaggerDoc("v1", new OpenApiInfo
+        {
+            Title = "Winterthur Roadworks Services API - V1",
+            Version = "v1",
+            Description = serviceDescription
+        });
+        var commentsXmlFile = Path.Combine(System.AppContext.BaseDirectory,
+                        "roadworks-services.xml");
+        options.IncludeXmlComments(commentsXmlFile);
+    });
 
     string clientUrl = AppConfig.Configuration.GetValue<string>("URL:ClientUrl");
     string policyName = "AllowCorsOrigins";
@@ -93,8 +106,26 @@ try
     {
         app.UseDeveloperExceptionPage();
     }
+    else
+    {
+        app.UsePathBase(serviceBasePath);
+    }
 
-    app.UseSwagger();
+    app.UseSwagger(options =>
+    {
+        if (!app.Environment.IsDevelopment())
+        {
+            options.PreSerializeFilters.Add((doc, httpRequest) =>
+            {
+                doc.Servers = new List<OpenApiServer> {
+                    new OpenApiServer {
+                        Url = serviceDomain + serviceBasePath
+                        }
+                        };
+
+            });
+        }
+    });
     app.UseSwaggerUI();
 
     // app.UseHttpsRedirection();

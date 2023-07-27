@@ -628,5 +628,126 @@ namespace roadwork_portal_service.Controllers
 
         }
 
+        // GET /collections/constructionsites/items/
+        /// <summary>
+        /// Retrieves a collection of all official road construction-sites
+        /// of the City of Winterthur.
+        /// </summary>
+        /// <response code="200">
+        /// The data is returned in an array of feature objects.
+        /// </response>
+        [Route("/Collections/Constructionsites/Items/")]
+        [HttpGet]
+        [ProducesResponseType(typeof(ConstructionSiteFeature[]), 200)]
+        public async Task<ConstructionSiteFeature[]> GetConstructionSiteFeatures()
+        {
+            List<ConstructionSiteFeature> result = new List<ConstructionSiteFeature>();
+
+            try
+            {
+                using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
+                {
+                    await pgConn.OpenAsync();
+                    NpgsqlCommand selectComm = pgConn.CreateCommand();
+                    selectComm.CommandText = @"SELECT uuid, name, description, created, last_modified,
+                                    date_from, date_to, geom
+                                    FROM ""wtb_ssp_roadworkactivities""
+                                    WHERE in_internet = true";
+
+                    using (NpgsqlDataReader reader = await selectComm.ExecuteReaderAsync())
+                    {
+                        ConstructionSiteFeature constructionSite;
+                        while (await reader.ReadAsync())
+                        {
+                            constructionSite = new ConstructionSiteFeature();
+                            constructionSite.properties.uuid = reader.IsDBNull(0) ? "" : reader.GetGuid(0).ToString();
+                            constructionSite.properties.name = reader.IsDBNull(1) ? "" : reader.GetString(1);
+                            constructionSite.properties.description = reader.IsDBNull(2) ? "" : reader.GetString(2);
+                            constructionSite.properties.created = reader.IsDBNull(3) ? DateTime.MinValue : reader.GetDateTime(3);
+                            constructionSite.properties.lastModified = reader.IsDBNull(4) ? DateTime.MinValue : reader.GetDateTime(4);
+                            constructionSite.properties.dateFrom = reader.IsDBNull(5) ? DateTime.MinValue : reader.GetDateTime(5);
+                            constructionSite.properties.dateTo = reader.IsDBNull(6) ? DateTime.MinValue : reader.GetDateTime(6);
+                            Polygon ntsPoly = reader.IsDBNull(7) ? Polygon.Empty : reader.GetValue(7) as Polygon;
+                            constructionSite.geometry = new RoadworkPolygon(ntsPoly);
+                            result.Add(constructionSite);
+                        }
+                        return result.ToArray();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex.Message);
+                ConstructionSiteFeature errObj = new ConstructionSiteFeature();
+                errObj.errorMessage = "Unknown critical error.";
+                return new ConstructionSiteFeature[] {errObj};
+            }
+        }
+
+        // GET /collections/constructionsites/items/638364
+        /// <summary>
+        /// Retrieves the official road construction-site of the City of Winterthur
+        /// for the given UUID.
+        /// </summary>
+        /// <response code="200">
+        /// The data is returned as a feature objects.
+        /// </response>
+        [Route("/Collections/Constructionsites/Items/{uuid}")]
+        [HttpGet]
+        [ProducesResponseType(typeof(ConstructionSiteFeature), 200)]
+        public async Task<ConstructionSiteFeature> GetConstructionSiteFeature(string uuid)
+        {
+            ConstructionSiteFeature result = new ConstructionSiteFeature();
+
+            if (uuid == null || uuid.Trim() == "")
+            {
+                result.errorMessage = "No UUID given.";
+                return result;
+            }
+
+            try
+            {
+                using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
+                {
+                    await pgConn.OpenAsync();
+                    NpgsqlCommand selectComm = pgConn.CreateCommand();
+                    selectComm.CommandText = @"SELECT uuid, name, description, created, last_modified,
+                                    date_from, date_to, geom
+                                    FROM ""wtb_ssp_roadworkactivities""
+                                    WHERE uuid=@uuid AND in_internet = true";
+                    selectComm.Parameters.AddWithValue("uuid", new Guid(uuid));
+
+                    using (NpgsqlDataReader reader = await selectComm.ExecuteReaderAsync())
+                    {
+                        if (await reader.ReadAsync())
+                        {
+                            result = new ConstructionSiteFeature();
+                            result.properties.uuid = reader.IsDBNull(0) ? "" :reader.GetGuid(0).ToString();
+                            result.properties.name = reader.IsDBNull(1) ? "" : reader.GetString(1);
+                            result.properties.description = reader.IsDBNull(2) ? "" : reader.GetString(2);
+                            result.properties.created = reader.IsDBNull(3) ? DateTime.MinValue : reader.GetDateTime(3);
+                            result.properties.lastModified = reader.IsDBNull(4) ? DateTime.MinValue : reader.GetDateTime(4);
+                            result.properties.dateFrom = reader.IsDBNull(5) ? DateTime.MinValue : reader.GetDateTime(5);
+                            result.properties.dateTo = reader.IsDBNull(6) ? DateTime.MinValue : reader.GetDateTime(6);
+                            Polygon ntsPoly = reader.IsDBNull(7) ? Polygon.Empty : reader.GetValue(7) as Polygon;
+                            result.geometry = new RoadworkPolygon(ntsPoly);
+                            return result;
+                        }
+                        else
+                        {
+                            result.errorMessage = "No construction-site found for given uuid.";
+                            return result;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex.Message);
+                result.errorMessage = "Unknown critical error.";
+                return result;
+            }
+        }
+
     }
 }
