@@ -156,7 +156,7 @@ public class UsersController : ControllerBase
         }
 
         userPassphrase = userPassphrase.Trim();
-        if(userPassphrase.Length == 0){
+        if(userPassphrase.Length < 8){
             _logger.LogWarning("Not enough user data provided in add user process.");
             user.errorMessage = "SSP-0";
             return Ok(user);
@@ -315,7 +315,12 @@ public class UsersController : ControllerBase
 
             if(changePassphrase == true){
                 userPassphrase = userPassphrase.Trim();
-                changePassphrase = userPassphrase.Length != 0;
+                if(userPassphrase.Length < 8)
+                {
+                    _logger.LogWarning("Not enough user data provided in add user process.");
+                    errorResult.errorMessage = "SSP-0";
+                    return Ok(errorResult);
+                }
             }
 
             int noAffectedRowsStep2 = 0;
