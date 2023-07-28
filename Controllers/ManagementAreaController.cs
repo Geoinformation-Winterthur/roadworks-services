@@ -157,7 +157,7 @@ namespace roadwork_portal_service.Controllers
                 {
                     _logger.LogWarning("No management area feature provided in area feature update process.");
                     managementArea = new ManagementArea();
-                    managementArea.errorMessage = "KOPAL-15";
+                    managementArea.errorMessage = "SSP-15";
                     return Ok(managementArea);
                 }
 
@@ -166,7 +166,7 @@ namespace roadwork_portal_service.Controllers
                 {
                     _logger.LogWarning("No management area feature provided in area feature update process.");
                     managementArea = new ManagementArea();
-                    managementArea.errorMessage = "KOPAL-15";
+                    managementArea.errorMessage = "SSP-15";
                     return Ok(managementArea);
                 }
 
@@ -213,7 +213,7 @@ namespace roadwork_portal_service.Controllers
                                 "has not the role of a territory manager. Operation forbidden " +
                                 "and canceled.");
                             managementArea = new ManagementArea();
-                            managementArea.errorMessage = "KOPAL-17";
+                            managementArea.errorMessage = "SSP-17";
                             return Ok(managementArea);
                         }
 
@@ -266,7 +266,7 @@ namespace roadwork_portal_service.Controllers
                                 "has not the role of a territory manager. Operation forbidden " +
                                 "and canceled.");
                             managementArea = new ManagementArea();
-                            managementArea.errorMessage = "KOPAL-17";
+                            managementArea.errorMessage = "SSP-17";
                             return Ok(managementArea);
                         }
 
@@ -288,7 +288,7 @@ namespace roadwork_portal_service.Controllers
             {
                 _logger.LogError(ex.Message);
                 managementArea = new ManagementArea();
-                managementArea.errorMessage = "KOPAL-3";
+                managementArea.errorMessage = "SSP-3";
                 return Ok(managementArea);
             }
             return managementArea;

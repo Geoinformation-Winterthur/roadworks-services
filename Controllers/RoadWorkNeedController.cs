@@ -166,7 +166,7 @@ namespace roadwork_portal_service.Controllers
                 if (coordinates.Length < 3)
                 {
                     _logger.LogWarning("Roadworkneed Polygon has less than 3 coordinates.");
-                    roadWorkNeedFeature.errorMessage = "KOPAL-7";
+                    roadWorkNeedFeature.errorMessage = "SSP-7";
                     return Ok(roadWorkNeedFeature);
                 }
 
@@ -176,7 +176,7 @@ namespace roadwork_portal_service.Controllers
                 {
                     _logger.LogWarning("Roadworkneed area is less than or equal " + configData.minAreaSize + "qm.");
                     roadWorkNeedFeature = new RoadWorkNeedFeature();
-                    roadWorkNeedFeature.errorMessage = "KOPAL-8";
+                    roadWorkNeedFeature.errorMessage = "SSP-8";
                     return Ok(roadWorkNeedFeature);
                 }
 
@@ -185,7 +185,7 @@ namespace roadwork_portal_service.Controllers
                 {
                     _logger.LogWarning("Roadworkneed area is greater than " + configData.maxAreaSize + "qm.");
                     roadWorkNeedFeature = new RoadWorkNeedFeature();
-                    roadWorkNeedFeature.errorMessage = "KOPAL-16";
+                    roadWorkNeedFeature.errorMessage = "SSP-16";
                     return Ok(roadWorkNeedFeature);
                 }
 
@@ -254,7 +254,7 @@ namespace roadwork_portal_service.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
-                roadWorkNeedFeature.errorMessage = "KOPAL-3";
+                roadWorkNeedFeature.errorMessage = "SSP-3";
                 return Ok(roadWorkNeedFeature);
             }
 
@@ -275,7 +275,7 @@ namespace roadwork_portal_service.Controllers
                 {
                     _logger.LogWarning("Roadworkneed has a geometry error.");
                     roadWorkNeedFeature = new RoadWorkNeedFeature();
-                    roadWorkNeedFeature.errorMessage = "KOPAL-3";
+                    roadWorkNeedFeature.errorMessage = "SSP-3";
                     return Ok(roadWorkNeedFeature);
                 }
 
@@ -287,7 +287,7 @@ namespace roadwork_portal_service.Controllers
                 {
                     _logger.LogWarning("Roadworkneed area is less than or equal " + configData.minAreaSize + "qm.");
                     roadWorkNeedFeature = new RoadWorkNeedFeature();
-                    roadWorkNeedFeature.errorMessage = "KOPAL-8";
+                    roadWorkNeedFeature.errorMessage = "SSP-8";
                     return Ok(roadWorkNeedFeature);
                 }
 
@@ -296,7 +296,7 @@ namespace roadwork_portal_service.Controllers
                 {
                     _logger.LogWarning("Roadworkneed area is greater than " + configData.maxAreaSize + "qm.");
                     roadWorkNeedFeature = new RoadWorkNeedFeature();
-                    roadWorkNeedFeature.errorMessage = "KOPAL-16";
+                    roadWorkNeedFeature.errorMessage = "SSP-16";
                     return Ok(roadWorkNeedFeature);
                 }
 
@@ -304,7 +304,7 @@ namespace roadwork_portal_service.Controllers
                 {
                     _logger.LogWarning("Geometry of roadworkneed " + roadWorkNeedFeature.properties.uuid +
                             " does not fulfill the criteria of geometrical simplicity.");
-                    roadWorkNeedFeature.errorMessage = "KOPAL-10";
+                    roadWorkNeedFeature.errorMessage = "SSP-10";
                     return Ok(roadWorkNeedFeature);
                 }
 
@@ -312,7 +312,7 @@ namespace roadwork_portal_service.Controllers
                 {
                     _logger.LogWarning("Geometry of roadworkneed " + roadWorkNeedFeature.properties.uuid +
                             " does not fulfill the criteria of geometrical validity.");
-                    roadWorkNeedFeature.errorMessage = "KOPAL-11";
+                    roadWorkNeedFeature.errorMessage = "SSP-11";
                     return Ok(roadWorkNeedFeature);
                 }
 
@@ -349,7 +349,7 @@ namespace roadwork_portal_service.Controllers
                             _logger.LogWarning("User " + mailOfLoggedInUser + " has no right to edit " +
                                 "roadwork need " + roadWorkNeedFeature.properties.uuid + " but tried " +
                                 "to edit it.");
-                            roadWorkNeedFeature.errorMessage = "KOPAL-14";
+                            roadWorkNeedFeature.errorMessage = "SSP-14";
                             return Ok(roadWorkNeedFeature);
                         }
 
@@ -426,7 +426,7 @@ namespace roadwork_portal_service.Controllers
             {
                 _logger.LogError(ex.Message);
                 roadWorkNeedFeature = new RoadWorkNeedFeature();
-                roadWorkNeedFeature.errorMessage = "KOPAL-3";
+                roadWorkNeedFeature.errorMessage = "SSP-3";
                 return Ok(roadWorkNeedFeature);
             }
 
@@ -444,7 +444,7 @@ namespace roadwork_portal_service.Controllers
             {
                 _logger.LogWarning("No uuid provided by user in delete roadwork need process. " +
                             "Thus process is canceled, no roadwork need is deleted.");
-                errorResult.errorMessage = "KOPAL-15";
+                errorResult.errorMessage = "SSP-15";
                 return Ok(errorResult);
             }
 
@@ -454,7 +454,7 @@ namespace roadwork_portal_service.Controllers
             {
                 _logger.LogWarning("No uuid provided by user in delete roadwork need process. " +
                             "Thus process is canceled, no roadwork need is deleted.");
-                errorResult.errorMessage = "KOPAL-15";
+                errorResult.errorMessage = "SSP-15";
                 return Ok(errorResult);
             }
 
@@ -485,7 +485,7 @@ namespace roadwork_portal_service.Controllers
             }
 
             _logger.LogError("Fatal error.");
-            errorResult.errorMessage = "KOPAL-3";
+            errorResult.errorMessage = "SSP-3";
             return Ok(errorResult);
         }
 

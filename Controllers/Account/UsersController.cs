@@ -129,7 +129,7 @@ public class UsersController : ControllerBase
         {
             _logger.LogWarning("No user data provided in add user process.");
             User resultUser = new User();
-            resultUser.errorMessage = "KOPAL-0";
+            resultUser.errorMessage = "SSP-0";
             return Ok(resultUser);
         }
 
@@ -138,14 +138,14 @@ public class UsersController : ControllerBase
         if (user.mailAddress == "")
         {
             _logger.LogWarning("No user data provided in add user process.");
-            user.errorMessage = "KOPAL-0";
+            user.errorMessage = "SSP-0";
             return Ok(user);
         }
 
         if (user.mailAddress == "new")
         {
             _logger.LogWarning("User mail address 'new' not allowed.");
-            user.errorMessage = "KOPAL-12";
+            user.errorMessage = "SSP-12";
             return Ok(user);
         }
 
@@ -161,7 +161,7 @@ public class UsersController : ControllerBase
                     userInDb.mailAddress.Trim() == user.mailAddress)
         {
             _logger.LogWarning("Adding user not possible since user is already in database.");
-            user.errorMessage = "KOPAL-13";
+            user.errorMessage = "SSP-13";
             return Ok(user);
         }
 
@@ -196,7 +196,7 @@ public class UsersController : ControllerBase
         }
 
         _logger.LogError("Something went wrong.");
-        user.errorMessage = "KOPAL-3";
+        user.errorMessage = "SSP-3";
         return Ok(user);
     }
 
@@ -209,7 +209,7 @@ public class UsersController : ControllerBase
         if (user == null || user.uuid == null)
         {
             _logger.LogInformation("No user data provided by user in update user process.");
-            errorResult.errorMessage = "KOPAL-0";
+            errorResult.errorMessage = "SSP-0";
             return Ok(errorResult);
         }
 
@@ -218,7 +218,7 @@ public class UsersController : ControllerBase
         if (user.uuid == "")
         {
             _logger.LogWarning("No user data provided by user in update user process.");
-            errorResult.errorMessage = "KOPAL-0";
+            errorResult.errorMessage = "SSP-0";
             return Ok(errorResult);
         }
 
@@ -238,7 +238,7 @@ public class UsersController : ControllerBase
         if (usersInDb == null || usersInDb.Length != 1 || usersInDb[0] == null)
         {
             _logger.LogWarning("Updating user " + user.uuid + " is not possible since user is not in the database.");
-            errorResult.errorMessage = "KOPAL-4";
+            errorResult.errorMessage = "SSP-4";
             return Ok(errorResult);
         }
 
@@ -252,7 +252,7 @@ public class UsersController : ControllerBase
                 {
                     _logger.LogWarning("Administrator tried to change role of last administrator. " +
                             "Role cannot be changed since there would be no administrator anymore.");
-                    errorResult.errorMessage = "KOPAL-5";
+                    errorResult.errorMessage = "SSP-5";
                     return Ok(errorResult);
                 }
 
@@ -260,7 +260,7 @@ public class UsersController : ControllerBase
                 {
                     _logger.LogWarning("Administrator tried to set last administrator inactive. " +
                             "This is not allowed.");
-                    errorResult.errorMessage = "KOPAL-6";
+                    errorResult.errorMessage = "SSP-6";
                     return Ok(errorResult);
                 }
             }
@@ -272,7 +272,7 @@ public class UsersController : ControllerBase
             {
                 _logger.LogWarning("Administrator tried to change role of a territory manager " +
                         "who is in active charge of a territory. This is not allowed thus ignored.");
-                errorResult.errorMessage = "KOPAL-18";
+                errorResult.errorMessage = "SSP-18";
                 return Ok(errorResult);
             }
         }
@@ -324,7 +324,7 @@ public class UsersController : ControllerBase
 
 
         _logger.LogError("Fatal error");
-        errorResult.errorMessage = "KOPAL-3";
+        errorResult.errorMessage = "SSP-3";
         return Ok(errorResult);
     }
 
@@ -339,7 +339,7 @@ public class UsersController : ControllerBase
         {
             _logger.LogWarning("No user data provided by user in delete user process. " +
                         "Thus process is canceled, no user is deleted.");
-            errorResult.errorMessage = "KOPAL-0";
+            errorResult.errorMessage = "SSP-0";
             return Ok(errorResult);
         }
 
@@ -349,7 +349,7 @@ public class UsersController : ControllerBase
         {
             _logger.LogWarning("No user data provided by user in delete user process. " +
                         "Thus process is canceled, no user is deleted.");
-            errorResult.errorMessage = "KOPAL-0";
+            errorResult.errorMessage = "SSP-0";
             return Ok(errorResult);
         }
 
@@ -359,7 +359,7 @@ public class UsersController : ControllerBase
         if (usersInDb == null || usersInDb.Length != 1 || usersInDb[0] == null)
         {
             _logger.LogWarning("User " + email + " cannot be deleted since this user is not in the database.");
-            errorResult.errorMessage = "KOPAL-1";
+            errorResult.errorMessage = "SSP-1";
             return Ok(errorResult);
         }
         else
@@ -370,7 +370,7 @@ public class UsersController : ControllerBase
                 if (_countNumberOfActiveAdmins() == 1)
                 {
                     _logger.LogWarning("User tried to delete last administrator. Last administrator cannot be removed.");
-                    errorResult.errorMessage = "KOPAL-2";
+                    errorResult.errorMessage = "SSP-2";
                     return Ok(errorResult);
                 }
             }
@@ -394,7 +394,7 @@ public class UsersController : ControllerBase
         }
 
         _logger.LogError("Fatal error.");
-        errorResult.errorMessage = "KOPAL-3";
+        errorResult.errorMessage = "SSP-3";
         return Ok(errorResult);
     }
 

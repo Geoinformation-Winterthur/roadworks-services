@@ -129,7 +129,7 @@ namespace roadwork_portal_service.Controllers
                 {
                     _logger.LogWarning("No event feature received in update event feature method.");
                     eventFeature = new EventFeature();
-                    eventFeature.errorMessage = "KOPAL-3";
+                    eventFeature.errorMessage = "SSP-3";
                     return Ok(eventFeature);
                 }
 
@@ -138,7 +138,7 @@ namespace roadwork_portal_service.Controllers
                         eventFeature.geometry.coordinates.Length < 3)
                 {
                     _logger.LogWarning("Event feature has a geometry error.");
-                    eventFeature.errorMessage = "KOPAL-3";
+                    eventFeature.errorMessage = "SSP-3";
                     return Ok(eventFeature);
                 }
 
@@ -148,7 +148,7 @@ namespace roadwork_portal_service.Controllers
                 {
                     _logger.LogWarning("Geometry of event feature " + eventFeature.properties.uuid +
                             " does not fulfill the criteria of geometrical simplicity.");
-                    eventFeature.errorMessage = "KOPAL-10";
+                    eventFeature.errorMessage = "SSP-10";
                     return Ok(eventFeature);
                 }
 
@@ -156,14 +156,14 @@ namespace roadwork_portal_service.Controllers
                 {
                     _logger.LogWarning("Geometry of event feature " + eventFeature.properties.uuid +
                             " does not fulfill the criteria of geometrical validity.");
-                    eventFeature.errorMessage = "KOPAL-11";
+                    eventFeature.errorMessage = "SSP-11";
                     return Ok(eventFeature);
                 }
 
                 if (eventFeature.properties.dateFrom > eventFeature.properties.dateTo)
                 {
                     _logger.LogWarning("The finish from date of aan event feature cannot be higher than its finish to date.");
-                    eventFeature.errorMessage = "KOPAL-19";
+                    eventFeature.errorMessage = "SSP-19";
                     return Ok(eventFeature);
                 }
 
@@ -195,7 +195,7 @@ namespace roadwork_portal_service.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
-                eventFeature.errorMessage = "KOPAL-3";
+                eventFeature.errorMessage = "SSP-3";
                 return Ok(eventFeature);
             }
 
@@ -213,7 +213,7 @@ namespace roadwork_portal_service.Controllers
                 {
                     _logger.LogWarning("No event feature received in update event feature method.");
                     eventFeature = new EventFeature();
-                    eventFeature.errorMessage = "KOPAL-3";
+                    eventFeature.errorMessage = "SSP-3";
                     return Ok(eventFeature);
                 }
 
@@ -222,7 +222,7 @@ namespace roadwork_portal_service.Controllers
                         eventFeature.geometry.coordinates.Length < 3)
                 {
                     _logger.LogWarning("Event feature has a geometry error.");
-                    eventFeature.errorMessage = "KOPAL-3";
+                    eventFeature.errorMessage = "SSP-3";
                     return Ok(eventFeature);
                 }
 
@@ -232,7 +232,7 @@ namespace roadwork_portal_service.Controllers
                 {
                     _logger.LogWarning("Geometry of event feature " + eventFeature.properties.uuid +
                             " does not fulfill the criteria of geometrical simplicity.");
-                    eventFeature.errorMessage = "KOPAL-10";
+                    eventFeature.errorMessage = "SSP-10";
                     return Ok(eventFeature);
                 }
 
@@ -240,14 +240,14 @@ namespace roadwork_portal_service.Controllers
                 {
                     _logger.LogWarning("Geometry of event feature " + eventFeature.properties.uuid +
                             " does not fulfill the criteria of geometrical validity.");
-                    eventFeature.errorMessage = "KOPAL-11";
+                    eventFeature.errorMessage = "SSP-11";
                     return Ok(eventFeature);
                 }
 
                 if (eventFeature.properties.dateFrom > eventFeature.properties.dateTo)
                 {
                     _logger.LogWarning("The finish from date of aan event feature cannot be higher than its finish to date.");
-                    eventFeature.errorMessage = "KOPAL-19";
+                    eventFeature.errorMessage = "SSP-19";
                     return Ok(eventFeature);
                 }
 
@@ -276,7 +276,7 @@ namespace roadwork_portal_service.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
-                eventFeature.errorMessage = "KOPAL-3";
+                eventFeature.errorMessage = "SSP-3";
                 return Ok(eventFeature);
             }
 
@@ -297,7 +297,7 @@ namespace roadwork_portal_service.Controllers
                 {
                     _logger.LogWarning("No uuid provided by user in delete event feature process. " +
                                 "Thus process is canceled, no event feature is deleted.");
-                    errorResult.errorMessage = "KOPAL-15";
+                    errorResult.errorMessage = "SSP-15";
                     return Ok(errorResult);
                 }
 
@@ -307,7 +307,7 @@ namespace roadwork_portal_service.Controllers
                 {
                     _logger.LogWarning("No uuid provided by user in delete event feature process. " +
                                 "Thus process is canceled, no event feature is deleted.");
-                    errorResult.errorMessage = "KOPAL-15";
+                    errorResult.errorMessage = "SSP-15";
                     return Ok(errorResult);
                 }
 
@@ -332,14 +332,14 @@ namespace roadwork_portal_service.Controllers
                 }
 
                 _logger.LogError("Unknown error.");
-                errorResult.errorMessage = "KOPAL-3";
+                errorResult.errorMessage = "SSP-3";
                 return Ok(errorResult);
 
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
-                errorResult.errorMessage = "KOPAL-3";
+                errorResult.errorMessage = "SSP-3";
                 return Ok(errorResult);
             }
 

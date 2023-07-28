@@ -195,7 +195,7 @@ namespace roadwork_portal_service.Controllers
                 {
                     _logger.LogWarning("Roadwork activity polygon has less than 3 coordinates.");
                     roadWorkActivityFeature = new RoadWorkActivityFeature();
-                    roadWorkActivityFeature.errorMessage = "KOPAL-7";
+                    roadWorkActivityFeature.errorMessage = "SSP-7";
                     return Ok(roadWorkActivityFeature);
                 }
 
@@ -206,7 +206,7 @@ namespace roadwork_portal_service.Controllers
                 {
                     _logger.LogWarning("Roadworkneed area is less than or equal " + configData.minAreaSize + "qm.");
                     roadWorkActivityFeature = new RoadWorkActivityFeature();
-                    roadWorkActivityFeature.errorMessage = "KOPAL-8";
+                    roadWorkActivityFeature.errorMessage = "SSP-8";
                     return Ok(roadWorkActivityFeature);
                 }
 
@@ -215,7 +215,7 @@ namespace roadwork_portal_service.Controllers
                 {
                     _logger.LogWarning("Roadworkneed area is greater than " + configData.maxAreaSize + "qm.");
                     roadWorkActivityFeature = new RoadWorkActivityFeature();
-                    roadWorkActivityFeature.errorMessage = "KOPAL-16";
+                    roadWorkActivityFeature.errorMessage = "SSP-16";
                     return Ok(roadWorkActivityFeature);
                 }
 
@@ -223,7 +223,7 @@ namespace roadwork_portal_service.Controllers
                 {
                     _logger.LogWarning("The finish from date of a roadworkactivity cannot be higher than its finish to date.");
                     roadWorkActivityFeature = new RoadWorkActivityFeature();
-                    roadWorkActivityFeature.errorMessage = "KOPAL-19";
+                    roadWorkActivityFeature.errorMessage = "SSP-19";
                     return Ok(roadWorkActivityFeature);
                 }
 
@@ -290,7 +290,7 @@ namespace roadwork_portal_service.Controllers
             {
                 _logger.LogError(ex.Message);
                 roadWorkActivityFeature = new RoadWorkActivityFeature();
-                roadWorkActivityFeature.errorMessage = "KOPAL-3";
+                roadWorkActivityFeature.errorMessage = "SSP-3";
                 return Ok(roadWorkActivityFeature);
             }
 
@@ -308,7 +308,7 @@ namespace roadwork_portal_service.Controllers
                 {
                     _logger.LogWarning("No roadworkactivity received in update activity method.");
                     roadWorkActivityFeature = new RoadWorkActivityFeature();
-                    roadWorkActivityFeature.errorMessage = "KOPAL-3";
+                    roadWorkActivityFeature.errorMessage = "SSP-3";
                     return Ok(roadWorkActivityFeature);
                 }
 
@@ -318,7 +318,7 @@ namespace roadwork_portal_service.Controllers
                 {
                     _logger.LogWarning("Roadworkactivity has a geometry error.");
                     roadWorkActivityFeature = new RoadWorkActivityFeature();
-                    roadWorkActivityFeature.errorMessage = "KOPAL-3";
+                    roadWorkActivityFeature.errorMessage = "SSP-3";
                     return Ok(roadWorkActivityFeature);
                 }
 
@@ -329,7 +329,7 @@ namespace roadwork_portal_service.Controllers
                     _logger.LogWarning("Geometry of roadworkactivity " + roadWorkActivityFeature.properties.uuid +
                             " does not fulfill the criteria of geometrical simplicity.");
                     roadWorkActivityFeature = new RoadWorkActivityFeature();
-                    roadWorkActivityFeature.errorMessage = "KOPAL-10";
+                    roadWorkActivityFeature.errorMessage = "SSP-10";
                     return Ok(roadWorkActivityFeature);
                 }
 
@@ -338,7 +338,7 @@ namespace roadwork_portal_service.Controllers
                     _logger.LogWarning("Geometry of roadworkactivity " + roadWorkActivityFeature.properties.uuid +
                             " does not fulfill the criteria of geometrical validity.");
                     roadWorkActivityFeature = new RoadWorkActivityFeature();
-                    roadWorkActivityFeature.errorMessage = "KOPAL-11";
+                    roadWorkActivityFeature.errorMessage = "SSP-11";
                     return Ok(roadWorkActivityFeature);
                 }
 
@@ -348,7 +348,7 @@ namespace roadwork_portal_service.Controllers
                 {
                     _logger.LogWarning("Roadworkneed area is less than or equal " + configData.minAreaSize + "qm.");
                     roadWorkActivityFeature = new RoadWorkActivityFeature();
-                    roadWorkActivityFeature.errorMessage = "KOPAL-8";
+                    roadWorkActivityFeature.errorMessage = "SSP-8";
                     return Ok(roadWorkActivityFeature);
                 }
 
@@ -357,7 +357,7 @@ namespace roadwork_portal_service.Controllers
                 {
                     _logger.LogWarning("Roadworkneed area is greater than " + configData.maxAreaSize + "qm.");
                     roadWorkActivityFeature = new RoadWorkActivityFeature();
-                    roadWorkActivityFeature.errorMessage = "KOPAL-16";
+                    roadWorkActivityFeature.errorMessage = "SSP-16";
                     return Ok(roadWorkActivityFeature);
                 }
 
@@ -365,7 +365,7 @@ namespace roadwork_portal_service.Controllers
                 {
                     _logger.LogWarning("The finish from date of a roadworkactivity cannot be higher than its finish to date.");
                     roadWorkActivityFeature = new RoadWorkActivityFeature();
-                    roadWorkActivityFeature.errorMessage = "KOPAL-19";
+                    roadWorkActivityFeature.errorMessage = "SSP-19";
                     return Ok(roadWorkActivityFeature);
                 }
 
@@ -402,7 +402,7 @@ namespace roadwork_portal_service.Controllers
                             _logger.LogWarning("User " + mailOfLoggedInUser + " has no right to edit " +
                                 "roadwork activity " + roadWorkActivityFeature.properties.uuid + " but tried " +
                                 "to edit it.");
-                            roadWorkActivityFeature.errorMessage = "KOPAL-14";
+                            roadWorkActivityFeature.errorMessage = "SSP-14";
                             return Ok(roadWorkActivityFeature);
                         }
 
@@ -521,12 +521,76 @@ namespace roadwork_portal_service.Controllers
             {
                 _logger.LogError(ex.Message);
                 roadWorkActivityFeature = new RoadWorkActivityFeature();
-                roadWorkActivityFeature.errorMessage = "KOPAL-3";
+                roadWorkActivityFeature.errorMessage = "SSP-3";
                 return Ok(roadWorkActivityFeature);
             }
 
             return Ok(roadWorkActivityFeature);
         }
+
+        // PUT /roadworkactivity/registertrafficmanager/8b5286bc-f2b9...
+        /// <summary>
+        /// Sets the current user as the traffic manager of the
+        /// rodwork activity with the given UUID. If the current user
+        /// has not the role of a traffic manager, nothing is changed.
+        /// </summary>
+        /// <response code="200">
+        /// Error message object. It has an errorMessage if there
+        /// was an error. Else, the errorMessage part is empty.
+        /// </response>
+        [HttpPut]
+        [Route("/Roadworkactivity/RegisterTrafficManager/")]
+        [ProducesResponseType(typeof(ConstructionSiteFeature[]), 200)]
+        public RoadWorkActivityFeature RegisterTrafficManager([FromBody] RoadWorkActivityFeature roadWorkActivity)
+        {
+            try
+            {
+                if (roadWorkActivity == null || roadWorkActivity.properties.uuid == null
+                            || roadWorkActivity.properties.uuid.Trim() == "")
+                {
+                    _logger.LogWarning("No roadworkactivity received in register traffic manager operation.");
+                    roadWorkActivity = new RoadWorkActivityFeature();
+                    roadWorkActivity.errorMessage = "SSP-15";
+                    return roadWorkActivity;
+                }
+
+                User userFromDb = LoginController.getAuthorizedUserFromDb(this.User);
+                if (userFromDb == null || userFromDb.uuid == null || userFromDb.uuid.Trim() == "")
+                {
+                    _logger.LogWarning("User not found in register traffic manager operation.");
+                    roadWorkActivity.errorMessage = "SSP-0";
+                    return roadWorkActivity;
+                }
+
+                if (userFromDb.role.code == "trafficmanager" || userFromDb.role.code == "administrator")
+                {
+                    using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
+                    {
+                        pgConn.Open();
+                        NpgsqlCommand updateComm = pgConn.CreateCommand();
+                        updateComm.CommandText = @"UPDATE ""wtb_ssp_roadworkactivities""
+                                        SET traffic_agent = @traffic_agent
+                                        WHERE uuid = @uuid";
+                        updateComm.Parameters.AddWithValue("traffic_agent", new Guid(userFromDb.uuid));
+                        updateComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivity.properties.uuid));
+                        updateComm.ExecuteNonQuery();
+                        roadWorkActivity.properties.trafficAgent.uuid = userFromDb.uuid;
+                        roadWorkActivity.properties.trafficAgent.firstName = userFromDb.firstName;
+                        roadWorkActivity.properties.trafficAgent.lastName = userFromDb.lastName;
+                        return roadWorkActivity;
+                    }
+
+                }
+                return roadWorkActivity;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex.Message);
+                roadWorkActivity.errorMessage = "SSP-3";
+                return roadWorkActivity;
+            }
+        }
+
 
         // DELETE /roadworkactivity?uuid=...
         [HttpDelete]
@@ -542,7 +606,7 @@ namespace roadwork_portal_service.Controllers
                 {
                     _logger.LogWarning("No uuid provided by user in delete roadwork activity process. " +
                                 "Thus process is canceled, no roadwork activity is deleted.");
-                    errorResult.errorMessage = "KOPAL-15";
+                    errorResult.errorMessage = "SSP-15";
                     return Ok(errorResult);
                 }
 
@@ -552,7 +616,7 @@ namespace roadwork_portal_service.Controllers
                 {
                     _logger.LogWarning("No uuid provided by user in delete roadwork activity process. " +
                                 "Thus process is canceled, no roadwork activity is deleted.");
-                    errorResult.errorMessage = "KOPAL-15";
+                    errorResult.errorMessage = "SSP-15";
                     return Ok(errorResult);
                 }
 
@@ -596,14 +660,14 @@ namespace roadwork_portal_service.Controllers
                 }
 
                 _logger.LogError("Unknown error.");
-                errorResult.errorMessage = "KOPAL-3";
+                errorResult.errorMessage = "SSP-3";
                 return Ok(errorResult);
 
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
-                errorResult.errorMessage = "KOPAL-3";
+                errorResult.errorMessage = "SSP-3";
                 return Ok(errorResult);
             }
 
@@ -661,7 +725,7 @@ namespace roadwork_portal_service.Controllers
                 _logger.LogWarning(ex.Message);
                 ConstructionSiteFeature errObj = new ConstructionSiteFeature();
                 errObj.errorMessage = "Unknown critical error.";
-                return new ConstructionSiteFeature[] {errObj};
+                return new ConstructionSiteFeature[] { errObj };
             }
         }
 
@@ -704,7 +768,7 @@ namespace roadwork_portal_service.Controllers
                         if (await reader.ReadAsync())
                         {
                             result = new ConstructionSiteFeature();
-                            result.properties.uuid = reader.IsDBNull(0) ? "" :reader.GetGuid(0).ToString();
+                            result.properties.uuid = reader.IsDBNull(0) ? "" : reader.GetGuid(0).ToString();
                             result.properties.name = reader.IsDBNull(1) ? "" : reader.GetString(1);
                             result.properties.description = reader.IsDBNull(2) ? "" : reader.GetString(2);
                             result.properties.created = reader.IsDBNull(3) ? DateTime.MinValue : reader.GetDateTime(3);

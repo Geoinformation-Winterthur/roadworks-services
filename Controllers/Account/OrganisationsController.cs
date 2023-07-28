@@ -64,7 +64,7 @@ public class OrganisationsController : ControllerBase
             {
                 _logger.LogWarning("No organisation data provided in add organisation process.");
                 OrganisationalUnit resultOrg = new OrganisationalUnit();
-                resultOrg.errorMessage = "KOPAL-21";
+                resultOrg.errorMessage = "SSP-21";
                 return Ok(resultOrg);
             }
 
@@ -73,7 +73,7 @@ public class OrganisationsController : ControllerBase
             if (org.name == "")
             {
                 _logger.LogWarning("No organisation data provided in add organisation process.");
-                org.errorMessage = "KOPAL-21";
+                org.errorMessage = "SSP-21";
                 return Ok(org);
             }
 
@@ -99,7 +99,7 @@ public class OrganisationsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError("Something went wrong.");
-            org.errorMessage = "KOPAL-3";
+            org.errorMessage = "SSP-3";
             return Ok(org);
         }
     }
@@ -113,7 +113,7 @@ public class OrganisationsController : ControllerBase
         if (org == null || org.uuid == null || org.name == null)
         {
             _logger.LogInformation("No organisation data provided by user in update organisation process.");
-            errorResult.errorMessage = "KOPAL-21";
+            errorResult.errorMessage = "SSP-21";
             return Ok(errorResult);
         }
 
@@ -122,7 +122,7 @@ public class OrganisationsController : ControllerBase
         if (org.uuid == "" || org.name == "")
         {
             _logger.LogWarning("No organisation data provided by user in update organisation process.");
-            errorResult.errorMessage = "KOPAL-21";
+            errorResult.errorMessage = "SSP-21";
             return Ok(errorResult);
         }
 

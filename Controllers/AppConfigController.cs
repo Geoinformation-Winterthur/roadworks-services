@@ -37,7 +37,7 @@ public class AppConfigController : ControllerBase
         {
             _logger.LogError(ex.Message);
             result = new ConfigurationData();
-            result.errorMessage = "KOPAL-3";
+            result.errorMessage = "SSP-3";
             return Ok(result);
         }
         return Ok(result);
@@ -52,7 +52,7 @@ public class AppConfigController : ControllerBase
         {
             ConfigurationData errorResult = new ConfigurationData();
             _logger.LogInformation("No configuration data provided by user in update configuration process.");
-            errorResult.errorMessage = "KOPAL-0";
+            errorResult.errorMessage = "SSP-0";
             return Ok(errorResult);
         }
 
@@ -76,7 +76,7 @@ public class AppConfigController : ControllerBase
         {
             _logger.LogError(ex.Message);
             ConfigurationData errorResult = new ConfigurationData();
-            errorResult.errorMessage = "KOPAL-3";
+            errorResult.errorMessage = "SSP-3";
             return Ok(errorResult);
         }
 
