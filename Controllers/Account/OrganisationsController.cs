@@ -53,5 +53,93 @@ public class OrganisationsController : ControllerBase
         return orgsFromDb.ToArray();
     }
 
+    // POST /account/organisations/
+    [HttpPost]
+    [Authorize(Roles = "administrator")]
+    public ActionResult<OrganisationalUnit> AddOrganisation([FromBody] OrganisationalUnit org)
+    {
+        try
+        {
+            if (org == null || org.name == null)
+            {
+                _logger.LogWarning("No organisation data provided in add organisation process.");
+                OrganisationalUnit resultOrg = new OrganisationalUnit();
+                resultOrg.errorMessage = "KOPAL-21";
+                return Ok(resultOrg);
+            }
+
+            org.name = org.name.Trim();
+
+            if (org.name == "")
+            {
+                _logger.LogWarning("No organisation data provided in add organisation process.");
+                org.errorMessage = "KOPAL-21";
+                return Ok(org);
+            }
+
+            using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
+            {
+                pgConn.Open();
+                NpgsqlCommand insertComm = pgConn.CreateCommand();
+                insertComm.CommandText = @"INSERT INTO ""wtb_ssp_organisationalunits""
+                                        (uuid, name)
+                                        VALUES(@uuid, @name)";
+                Guid orgUuid = Guid.NewGuid();
+                org.uuid = orgUuid.ToString();
+                insertComm.Parameters.AddWithValue("uuid", new Guid(org.uuid));
+                insertComm.Parameters.AddWithValue("name", org.name);
+                int noAffectedRows = insertComm.ExecuteNonQuery();
+
+                pgConn.Close();
+
+                return Ok(org);
+            }
+
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("Something went wrong.");
+            org.errorMessage = "KOPAL-3";
+            return Ok(org);
+        }
+    }
+
+    // PUT /account/organisations/
+    [HttpPut]
+    [Authorize(Roles = "administrator")]
+    public ActionResult<ErrorMessage> UpdateOrganisation([FromBody] OrganisationalUnit org)
+    {
+        ErrorMessage errorResult = new ErrorMessage();
+        if (org == null || org.uuid == null || org.name == null)
+        {
+            _logger.LogInformation("No organisation data provided by user in update organisation process.");
+            errorResult.errorMessage = "KOPAL-21";
+            return Ok(errorResult);
+        }
+
+        org.uuid = org.uuid.Trim();
+        org.name = org.name.Trim();
+        if (org.uuid == "" || org.name == "")
+        {
+            _logger.LogWarning("No organisation data provided by user in update organisation process.");
+            errorResult.errorMessage = "KOPAL-21";
+            return Ok(errorResult);
+        }
+
+        using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
+        {
+            pgConn.Open();
+            NpgsqlCommand updateComm = pgConn.CreateCommand();
+            updateComm.CommandText = @"UPDATE ""wtb_ssp_organisationalunits"" SET
+                                        name=@name WHERE uuid=@uuid";
+            updateComm.Parameters.AddWithValue("name", org.name);
+            updateComm.Parameters.AddWithValue("uuid", new Guid(org.uuid));
+            int noAffectedRowsStep1 = updateComm.ExecuteNonQuery();
+
+            pgConn.Close();
+        }
+        return Ok(org);
+    }
+
 }
 
