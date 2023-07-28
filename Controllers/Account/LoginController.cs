@@ -10,6 +10,7 @@ using System.IdentityModel.Tokens.Jwt;
 using Npgsql;
 using roadwork_portal_service.Model;
 using roadwork_portal_service.Configuration;
+using roadwork_portal_service.Helper;
 
 namespace roadwork_portal_service.Controllers;
 
@@ -94,10 +95,10 @@ public class LoginController : ControllerBase
                 }
             }
 
-            // string hashedPassphrase = HelperFunctions.hashPassphrase(receivedUser.passPhrase);
+            string hashedPassphrase = HelperFunctions.hashPassphrase(receivedUser.passPhrase);
 
             if (userFromDb.mailAddress != null && userFromDb.passPhrase != null
-                && userFromDb.passPhrase.Equals(receivedUser.passPhrase))
+                && userFromDb.passPhrase.Equals(hashedPassphrase))
             {
                 string securityKey = AppConfig.Configuration.GetValue<string>("SecurityKey");
                 byte[] securityKeyByteArray = Encoding.UTF8.GetBytes(securityKey);

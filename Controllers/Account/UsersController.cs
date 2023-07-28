@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Npgsql;
 using roadwork_portal_service.Model;
 using roadwork_portal_service.Configuration;
+using roadwork_portal_service.Helper;
 
 namespace roadwork_portal_service.Controllers;
 
@@ -40,8 +41,7 @@ public class UsersController : ControllerBase
                                 wtb_ssp_roles.name, u.org_unit, o.name, u.active
                             FROM ""wtb_ssp_users"" u
                             LEFT JOIN ""wtb_ssp_roles"" ON u.role = wtb_ssp_roles.code
-                            LEFT JOIN ""wtb_ssp_organisationalunits"" o ON u.org_unit = o.uuid
-                            ORDER BY u.first_name, u.last_name";
+                            LEFT JOIN ""wtb_ssp_organisationalunits"" o ON u.org_unit = o.uuid";
 
             if (email != null)
             {
@@ -71,7 +71,7 @@ public class UsersController : ControllerBase
                     selectComm.Parameters.AddWithValue("role", role);
                 }
             }
-
+            selectComm.CommandText += " ORDER BY u.first_name, u.last_name";
 
             using (NpgsqlDataReader reader = selectComm.ExecuteReader())
             {
@@ -125,9 +125,11 @@ public class UsersController : ControllerBase
     [Authorize(Roles = "administrator")]
     public ActionResult<User> AddUser([FromBody] User user)
     {
+        string userPassphrase = user.passPhrase;
+        user.passPhrase = "";
         if (user == null || user.mailAddress == null)
         {
-            _logger.LogWarning("No user data provided in add user process.");
+            _logger.LogWarning("Not enough user data provided in add user process.");
             User resultUser = new User();
             resultUser.errorMessage = "SSP-0";
             return Ok(resultUser);
@@ -137,7 +139,7 @@ public class UsersController : ControllerBase
 
         if (user.mailAddress == "")
         {
-            _logger.LogWarning("No user data provided in add user process.");
+            _logger.LogWarning("Not enough user data provided in add user process.");
             user.errorMessage = "SSP-0";
             return Ok(user);
         }
@@ -146,6 +148,17 @@ public class UsersController : ControllerBase
         {
             _logger.LogWarning("User mail address 'new' not allowed.");
             user.errorMessage = "SSP-12";
+            return Ok(user);
+        }
+
+        if(userPassphrase == null){
+            userPassphrase = "";
+        }
+
+        userPassphrase = userPassphrase.Trim();
+        if(userPassphrase.Length == 0){
+            _logger.LogWarning("Not enough user data provided in add user process.");
+            user.errorMessage = "SSP-0";
             return Ok(user);
         }
 
@@ -179,7 +192,8 @@ public class UsersController : ControllerBase
             insertComm.Parameters.AddWithValue("first_name", user.firstName);
             insertComm.Parameters.AddWithValue("e_mail", user.mailAddress);
             insertComm.Parameters.AddWithValue("role", user.role.code);
-            insertComm.Parameters.AddWithValue("pwd", user.passPhrase);
+            string hashedPassphrase = HelperFunctions.hashPassphrase(userPassphrase);
+            insertComm.Parameters.AddWithValue("pwd", hashedPassphrase);
             insertComm.Parameters.AddWithValue("org_unit", new Guid(user.organisationalUnit.uuid));
             insertComm.Parameters.AddWithValue("active", user.active);
 
@@ -189,7 +203,6 @@ public class UsersController : ControllerBase
 
             if (noAffectedRows == 1)
             {
-                user.passPhrase = "";
                 return Ok(user);
             }
 
@@ -200,11 +213,13 @@ public class UsersController : ControllerBase
         return Ok(user);
     }
 
-    // PUT /account/users/
+    // PUT /account/users/?changepassphrase=false
     [HttpPut]
     [Authorize(Roles = "administrator")]
-    public ActionResult<ErrorMessage> UpdateUser([FromBody] User user)
+    public ActionResult<ErrorMessage> UpdateUser([FromBody] User user, bool changePassphrase = false)
     {
+        string userPassphrase = user.passPhrase;
+        user.passPhrase = "";
         ErrorMessage errorResult = new ErrorMessage();
         if (user == null || user.uuid == null)
         {
@@ -298,14 +313,18 @@ public class UsersController : ControllerBase
             updateComm.Parameters.AddWithValue("uuid", new Guid(user.uuid));
             int noAffectedRowsStep1 = updateComm.ExecuteNonQuery();
 
-            user.passPhrase = user.passPhrase.Trim();
-            bool needToUpdatePassphrase = user.passPhrase.Length != 0;
+            if(changePassphrase == true){
+                userPassphrase = userPassphrase.Trim();
+                changePassphrase = userPassphrase.Length != 0;
+            }
+
             int noAffectedRowsStep2 = 0;
-            if (needToUpdatePassphrase)
+            if (changePassphrase == true)
             {
+                string hashedPassphrase = HelperFunctions.hashPassphrase(userPassphrase);
                 updateComm.CommandText = @"UPDATE ""wtb_ssp_users"" SET
                                     pwd=@pwd WHERE uuid=@uuid";
-                updateComm.Parameters.AddWithValue("pwd", user.passPhrase);
+                updateComm.Parameters.AddWithValue("pwd", hashedPassphrase);
                 updateComm.Parameters.AddWithValue("uuid", new Guid(user.uuid));
                 noAffectedRowsStep2 = updateComm.ExecuteNonQuery();
             }
@@ -313,20 +332,18 @@ public class UsersController : ControllerBase
             pgConn.Close();
 
             if (noAffectedRowsStep1 == 1 &&
-                (!needToUpdatePassphrase || noAffectedRowsStep2 == 1))
+                (!changePassphrase || noAffectedRowsStep2 == 1))
             {
-                user.passPhrase = "";
                 return Ok(user);
             }
 
         }
 
-
-
         _logger.LogError("Fatal error");
         errorResult.errorMessage = "SSP-3";
         return Ok(errorResult);
     }
+    
 
     // DELETE /users?email=...
     [HttpDelete]
