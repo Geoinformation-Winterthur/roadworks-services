@@ -26,7 +26,7 @@ public class UsersController : ControllerBase
     // GET /account/users/?email=...
     // GET /account/users/?uuid=...
     [HttpGet]
-    [Authorize(Roles = "administrator")]
+    [Authorize]
     public ActionResult<User[]> GetUsers(string? email, string? uuid, string? role)
     {
         List<User> usersFromDb = new List<User>();
@@ -40,7 +40,8 @@ public class UsersController : ControllerBase
                                 wtb_ssp_roles.name, u.org_unit, o.name, u.active
                             FROM ""wtb_ssp_users"" u
                             LEFT JOIN ""wtb_ssp_roles"" ON u.role = wtb_ssp_roles.code
-                            LEFT JOIN ""wtb_ssp_organisationalunits"" o ON u.org_unit = o.uuid";
+                            LEFT JOIN ""wtb_ssp_organisationalunits"" o ON u.org_unit = o.uuid
+                            ORDER BY u.first_name, u.last_name";
 
             if (email != null)
             {
