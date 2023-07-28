@@ -95,7 +95,7 @@ namespace roadwork_portal_service.Controllers
                         projectFeatureFromDb.properties.finishTo = reader.IsDBNull(12) ? DateTime.MinValue : reader.GetDateTime(12);
                         projectFeatureFromDb.properties.costs = reader.IsDBNull(13) ? 0m : reader.GetDecimal(13);
 
-                        CostTypes ct = new CostTypes();
+                        CostType ct = new CostType();
                         ct.code = reader.IsDBNull(14) ? "" : reader.GetString(14);
                         ct.name = reader.IsDBNull(15) ? "" : reader.GetString(15);
                         projectFeatureFromDb.properties.costsType = ct;
@@ -149,6 +149,37 @@ namespace roadwork_portal_service.Controllers
 
             return projectsFromDb.ToArray();
         }
+
+        // GET roadworkactivity/costtypes/
+        [HttpGet]
+        [Route("/Roadworkactivity/Costtypes/")]
+        [Authorize]
+        public IEnumerable<CostType> GetCostTypes()
+        {
+            List<CostType> result = new List<CostType>();
+            // get data of current user from database:
+            using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
+            {
+                pgConn.Open();
+                NpgsqlCommand selectComm = pgConn.CreateCommand();
+                selectComm.CommandText = "SELECT code, name FROM \"wtb_ssp_costtypes\"";
+
+                using (NpgsqlDataReader reader = selectComm.ExecuteReader())
+                {
+                    CostType costType;
+                    while (reader.Read())
+                    {
+                        costType = new CostType();
+                        costType.code = reader.IsDBNull(0) ? "" : reader.GetString(0);
+                        costType.name = reader.IsDBNull(1) ? "" : reader.GetString(1);
+                        result.Add(costType);
+                    }
+                }
+                pgConn.Close();
+            }
+            return result.ToArray();
+        }
+
 
         // POST roadworkactivity/
         [HttpPost]
@@ -243,7 +274,7 @@ namespace roadwork_portal_service.Controllers
                     insertComm.Parameters.AddWithValue("date_from", roadWorkActivityFeature.properties.finishFrom);
                     insertComm.Parameters.AddWithValue("date_to", roadWorkActivityFeature.properties.finishTo);
                     insertComm.Parameters.AddWithValue("costs", roadWorkActivityFeature.properties.costs);
-                    insertComm.Parameters.AddWithValue("costs_type", "fullcost"); // TODO make this dynamic 
+                    insertComm.Parameters.AddWithValue("costs_type", roadWorkActivityFeature.properties.costsType.code);
                     insertComm.Parameters.AddWithValue("status", "inwork");
                     insertComm.Parameters.AddWithValue("in_internet", roadWorkActivityFeature.properties.isInInternet);
                     insertComm.Parameters.AddWithValue("billing_address1", roadWorkActivityFeature.properties.billingAddress1);
@@ -586,8 +617,8 @@ namespace roadwork_portal_service.Controllers
         /// <response code="200">
         /// The data is returned in an array of feature objects.
         /// </response>
-        [Route("/Collections/Constructionsites/Items/")]
         [HttpGet]
+        [Route("/Collections/Constructionsites/Items/")]
         [ProducesResponseType(typeof(ConstructionSiteFeature[]), 200)]
         public async Task<ConstructionSiteFeature[]> GetConstructionSiteFeatures()
         {
@@ -642,8 +673,8 @@ namespace roadwork_portal_service.Controllers
         /// <response code="200">
         /// The data is returned as a feature objects.
         /// </response>
-        [Route("/Collections/Constructionsites/Items/{uuid}")]
         [HttpGet]
+        [Route("/Collections/Constructionsites/Items/{uuid}")]
         [ProducesResponseType(typeof(ConstructionSiteFeature), 200)]
         public async Task<ConstructionSiteFeature> GetConstructionSiteFeature(string uuid)
         {

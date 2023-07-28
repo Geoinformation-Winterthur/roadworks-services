@@ -16,7 +16,7 @@ public class RoadWorkActivityProperties
     public DateTime finishFrom { get; set; } = DateTime.MinValue;
     public DateTime finishTo { get; set; } = DateTime.MinValue;
     public decimal costs { get; set; } = 0m;
-    public CostTypes costsType { get; set; } = new CostTypes();
+    public CostType costsType { get; set; } = new CostType();
 
     public string[] roadWorkNeedsUuids { get; set; } = new string[0];
     public Status status { get; set; } = new Status();
