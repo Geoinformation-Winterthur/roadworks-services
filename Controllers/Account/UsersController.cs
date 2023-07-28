@@ -242,26 +242,28 @@ public class UsersController : ControllerBase
         }
 
         userInDb = usersInDb[0];
-        int noOfActiveAdmins = _countNumberOfActiveAdmins();
-        if (noOfActiveAdmins == 1 && userInDb.role.code == "administrator")
+        if (userInDb.role.code == "administrator")
         {
-            if (user.role.code != "administrator")
+            int noOfActiveAdmins = _countNumberOfActiveAdmins();
+            if (noOfActiveAdmins == 1)
             {
-                _logger.LogWarning("Administrator tried to change role of last administrator. " +
-                        "Role cannot be changed since there would be no administrator anymore.");
-                errorResult.errorMessage = "KOPAL-5";
-                return Ok(errorResult);
-            }
+                if (user.role.code != "administrator")
+                {
+                    _logger.LogWarning("Administrator tried to change role of last administrator. " +
+                            "Role cannot be changed since there would be no administrator anymore.");
+                    errorResult.errorMessage = "KOPAL-5";
+                    return Ok(errorResult);
+                }
 
-            if (!user.active)
-            {
-                _logger.LogWarning("Administrator tried to set last administrator inactive. " +
-                        "This is not allowed.");
-                errorResult.errorMessage = "KOPAL-6";
-                return Ok(errorResult);
+                if (!user.active)
+                {
+                    _logger.LogWarning("Administrator tried to set last administrator inactive. " +
+                            "This is not allowed.");
+                    errorResult.errorMessage = "KOPAL-6";
+                    return Ok(errorResult);
+                }
             }
         }
-
 
         if (userInDb.role.code == "territorymanager" && user.role.code != "territorymanager")
         {
@@ -272,6 +274,11 @@ public class UsersController : ControllerBase
                 errorResult.errorMessage = "KOPAL-18";
                 return Ok(errorResult);
             }
+        }
+
+        if(user.role.code == "projectmanager")
+        {
+            user.active = false;
         }
 
         using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
@@ -398,9 +405,9 @@ public class UsersController : ControllerBase
             pgConn.Open();
             NpgsqlCommand selectComm = pgConn.CreateCommand();
             selectComm.CommandText = @"SELECT count(*) 
-                            FROM ""wtb_ssp_users""
-                            LEFT JOIN ""wtb_ssp_roles"" ON users.role = wtb_ssp_roles.code
-                            WHERE users.active=true AND wtb_ssp_roles.code='administrator'";
+                            FROM ""wtb_ssp_users"" users
+                            LEFT JOIN ""wtb_ssp_roles"" roles ON users.role = roles.code
+                            WHERE users.active=true AND roles.code='administrator'";
 
             using (NpgsqlDataReader reader = selectComm.ExecuteReader())
             {
