@@ -426,7 +426,7 @@ namespace roadwork_portal_service.Controllers
                     updateComm.CommandText = @"UPDATE ""wtb_ssp_roadworkactivities""
                                     SET name=@name, projectmanager=@projectmanager,
                                     traffic_agent=@traffic_agent, description=@description,
-                                    last_modified=current_timestamp,
+                                    last_modified=@last_modified,
                                     date_from=@date_from, date_to=@date_to,
                                     costs=@costs, costs_type=@costs_type, status=@status,
                                     billing_address1=@billing_address1,
@@ -455,6 +455,8 @@ namespace roadwork_portal_service.Controllers
                         updateComm.Parameters.AddWithValue("traffic_agent", DBNull.Value);
                     }
                     updateComm.Parameters.AddWithValue("description", roadWorkActivityFeature.properties.description);
+                    roadWorkActivityFeature.properties.lastModified = DateTime.Now;
+                    updateComm.Parameters.AddWithValue("last_modified", roadWorkActivityFeature.properties.lastModified);
                     updateComm.Parameters.AddWithValue("date_from", roadWorkActivityFeature.properties.finishFrom);
                     updateComm.Parameters.AddWithValue("date_to", roadWorkActivityFeature.properties.finishTo);
                     updateComm.Parameters.AddWithValue("costs", roadWorkActivityFeature.properties.costs);
