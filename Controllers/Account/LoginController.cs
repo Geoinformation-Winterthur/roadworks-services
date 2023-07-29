@@ -106,6 +106,7 @@ public class LoginController : ControllerBase
                 SigningCredentials signingCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
                 List<Claim> userClaims = new List<Claim>();
+                userClaims.Add(new Claim(ClaimTypes.NameIdentifier, userFromDb.uuid));
                 userClaims.Add(new Claim(ClaimTypes.Email, userFromDb.mailAddress));
                 userClaims.Add(new Claim(ClaimTypes.GivenName, userFromDb.firstName));
                 userClaims.Add(new Claim(ClaimTypes.Name, userFromDb.lastName));
