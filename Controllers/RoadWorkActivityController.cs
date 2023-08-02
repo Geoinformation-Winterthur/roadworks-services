@@ -227,9 +227,6 @@ namespace roadwork_portal_service.Controllers
                     return Ok(roadWorkActivityFeature);
                 }
 
-                User userFromDb = LoginController.getAuthorizedUserFromDb(this.User);
-                roadWorkActivityFeature.properties.projectManager = userFromDb;
-
                 using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
                 {
 

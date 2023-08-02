@@ -400,20 +400,30 @@ namespace roadwork_portal_service.Controllers
                             NpgsqlCommand deleteComm = pgConn.CreateCommand();
                             deleteComm.CommandText = @"DELETE FROM ""wtb_ssp_activities_to_needs""
                                     WHERE uuid_roadwork_need=@uuid_roadwork_need
-                                        AND activityrelationtype=@activityrelationtype";
+                                        AND uuid_roadwork_activity=@uuid_roadwork_activity";
                             deleteComm.Parameters.AddWithValue("uuid_roadwork_need", new Guid(roadWorkNeedFeature.properties.uuid));
-                            deleteComm.Parameters.AddWithValue("activityrelationtype", roadWorkNeedFeature.properties.activityRelationType);
+                            deleteComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkNeedFeature.properties.roadWorkActivityUuid));
                             deleteComm.ExecuteNonQuery();
 
-                            NpgsqlCommand insertComm = pgConn.CreateCommand();
-                            insertComm.CommandText = @"INSERT INTO ""wtb_ssp_activities_to_needs""
+                            deleteComm.CommandText = @"DELETE FROM ""wtb_ssp_activities_to_needs""
+                                    WHERE uuid_roadwork_need=@uuid_roadwork_need
+                                        AND activityrelationtype='assignedneed'";
+                            deleteComm.ExecuteNonQuery();
+
+                            if (roadWorkNeedFeature.properties.activityRelationType != null &&
+                                    roadWorkNeedFeature.properties.activityRelationType.Trim() != "")
+                            {
+                                NpgsqlCommand insertComm = pgConn.CreateCommand();
+                                insertComm.CommandText = @"INSERT INTO ""wtb_ssp_activities_to_needs""
                                         (uuid, uuid_roadwork_need, uuid_roadwork_activity, activityrelationtype)
                                         VALUES(@uuid, @uuid_roadwork_need, @uuid_roadwork_activity, @activityrelationtype)";
-                            insertComm.Parameters.AddWithValue("uuid", Guid.NewGuid());
-                            insertComm.Parameters.AddWithValue("uuid_roadwork_need", new Guid(roadWorkNeedFeature.properties.uuid));
-                            insertComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkNeedFeature.properties.roadWorkActivityUuid));
-                            insertComm.Parameters.AddWithValue("activityrelationtype", roadWorkNeedFeature.properties.activityRelationType);
-                            insertComm.ExecuteNonQuery();
+                                insertComm.Parameters.AddWithValue("uuid", Guid.NewGuid());
+                                insertComm.Parameters.AddWithValue("uuid_roadwork_need", new Guid(roadWorkNeedFeature.properties.uuid));
+                                insertComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkNeedFeature.properties.roadWorkActivityUuid));
+                                insertComm.Parameters.AddWithValue("activityrelationtype", roadWorkNeedFeature.properties.activityRelationType);
+                                insertComm.ExecuteNonQuery();
+
+                            }
                         }
 
                         updateTransAction.Commit();
