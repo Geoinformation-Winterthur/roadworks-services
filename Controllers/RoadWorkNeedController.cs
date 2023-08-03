@@ -169,6 +169,42 @@ namespace roadwork_portal_service.Controllers
         {
             try
             {
+                if (roadWorkNeedFeature == null)
+                {
+                    _logger.LogWarning("No roadworkneed data received.");
+                    RoadWorkNeedFeature errorObj = new RoadWorkNeedFeature();
+                    errorObj.errorMessage = "SSP-22";
+                    return Ok(errorObj);
+                }
+
+                if (roadWorkNeedFeature.properties.description == null) {
+                    roadWorkNeedFeature.properties.description = "";
+                } else {
+                    roadWorkNeedFeature.properties.description = roadWorkNeedFeature.properties.description.Trim();
+                }
+
+                if (roadWorkNeedFeature.properties.kind.code == null) {
+                    roadWorkNeedFeature.properties.kind.code = "";
+                } else {
+                    roadWorkNeedFeature.properties.kind.code = roadWorkNeedFeature.properties.kind.code.Trim();
+                }
+
+                if (roadWorkNeedFeature.properties.description == "")
+                {
+                    _logger.LogWarning("The provided roadworkneed data has no description attribute value." +
+                                " But description is mandatory.");
+                    roadWorkNeedFeature.errorMessage = "SSP-23";
+                    return Ok(roadWorkNeedFeature);
+                }
+
+                if (roadWorkNeedFeature.properties.kind.code == "")
+                {
+                    _logger.LogWarning("The provided roadworkneed data has no kind attribute value." +
+                                " But a kind value is mandatory.");
+                    roadWorkNeedFeature.errorMessage = "SSP-24";
+                    return Ok(roadWorkNeedFeature);
+                }
+
                 Polygon roadWorkNeedPoly = roadWorkNeedFeature.geometry.getNtsPolygon();
                 Coordinate[] coordinates = roadWorkNeedPoly.Coordinates;
 
@@ -225,7 +261,7 @@ namespace roadwork_portal_service.Controllers
                                     finish_optimum_from, finish_optimum_to, finish_late_from,
                                     finish_late_to, priority, status, description, longer_six_months, relevance,
                                     costs, geom)
-                                    VALUES (@uuid, @name, @kind, @orderer, current_timestamp, current_timestamp,
+                                    VALUES (@uuid, @name, @kind, @orderer, @created, @last_modified,
                                     @finish_early_from, @finish_early_to, @finish_optimum_from, @finish_optimum_to, @finish_late_from,
                                     @finish_late_to, @priority, @status, @description, @longer_six_months, @relevance,
                                     @costs, @geom)";
@@ -240,6 +276,10 @@ namespace roadwork_portal_service.Controllers
                     {
                         insertComm.Parameters.AddWithValue("orderer", DBNull.Value);
                     }
+                    roadWorkNeedFeature.properties.created = DateTime.Now;
+                    insertComm.Parameters.AddWithValue("created", roadWorkNeedFeature.properties.created);
+                    roadWorkNeedFeature.properties.lastModified = DateTime.Now;
+                    insertComm.Parameters.AddWithValue("last_modified", roadWorkNeedFeature.properties.lastModified);
                     insertComm.Parameters.AddWithValue("finish_early_from", roadWorkNeedFeature.properties.finishEarlyFrom);
                     insertComm.Parameters.AddWithValue("finish_early_to", roadWorkNeedFeature.properties.finishEarlyTo);
                     insertComm.Parameters.AddWithValue("finish_optimum_from", roadWorkNeedFeature.properties.finishOptimumFrom);
@@ -251,7 +291,7 @@ namespace roadwork_portal_service.Controllers
                     insertComm.Parameters.AddWithValue("description", roadWorkNeedFeature.properties.description);
                     insertComm.Parameters.AddWithValue("longer_six_months", roadWorkNeedFeature.properties.longer6Month);
                     insertComm.Parameters.AddWithValue("relevance", roadWorkNeedFeature.properties.relevance);
-                    insertComm.Parameters.AddWithValue("costs", roadWorkNeedFeature.properties.costs);
+                    insertComm.Parameters.AddWithValue("costs", roadWorkNeedFeature.properties.costs != 0 ? roadWorkNeedFeature.properties.costs : DBNull.Value);
                     insertComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
 
                     insertComm.ExecuteNonQuery();
@@ -278,7 +318,44 @@ namespace roadwork_portal_service.Controllers
 
             try
             {
-                if (roadWorkNeedFeature == null || roadWorkNeedFeature.geometry == null ||
+
+                if (roadWorkNeedFeature == null)
+                {
+                    _logger.LogWarning("No roadworkneed data received.");
+                    RoadWorkNeedFeature errorObj = new RoadWorkNeedFeature();
+                    errorObj.errorMessage = "SSP-22";
+                    return Ok(errorObj);
+                }
+
+                if (roadWorkNeedFeature.properties.description == null) {
+                    roadWorkNeedFeature.properties.description = "";
+                } else {
+                    roadWorkNeedFeature.properties.description = roadWorkNeedFeature.properties.description.Trim();
+                }
+
+                if (roadWorkNeedFeature.properties.kind.code == null) {
+                    roadWorkNeedFeature.properties.kind.code = "";
+                } else {
+                    roadWorkNeedFeature.properties.kind.code = roadWorkNeedFeature.properties.kind.code.Trim();
+                }
+
+                if (roadWorkNeedFeature.properties.description == "")
+                {
+                    _logger.LogWarning("The provided roadworkneed data has no description attribute value." +
+                                " But description is mandatory.");
+                    roadWorkNeedFeature.errorMessage = "SSP-23";
+                    return Ok(roadWorkNeedFeature);
+                }
+
+                if (roadWorkNeedFeature.properties.kind.code == "")
+                {
+                    _logger.LogWarning("The provided roadworkneed data has no kind attribute value." +
+                                " But a kind value is mandatory.");
+                    roadWorkNeedFeature.errorMessage = "SSP-24";
+                    return Ok(roadWorkNeedFeature);
+                }
+
+                if (roadWorkNeedFeature.geometry == null ||
                         roadWorkNeedFeature.geometry.coordinates == null ||
                             roadWorkNeedFeature.geometry.coordinates.Length < 3)
                 {
@@ -369,7 +446,7 @@ namespace roadwork_portal_service.Controllers
 
                         NpgsqlCommand updateComm = pgConn.CreateCommand();
                         updateComm.CommandText = @"UPDATE ""wtb_ssp_roadworkneeds""
-                                    SET name=@name, kind=@kind, orderer=@orderer, last_modified=current_timestamp,
+                                    SET name=@name, kind=@kind, orderer=@orderer, last_modified=@last_modified,
                                     finish_early_from=@finish_early_from, finish_early_to=@finish_early_to,
                                     finish_optimum_from=@finish_optimum_from, finish_optimum_to=@finish_optimum_to,
                                     finish_late_from=@finish_late_from, finish_late_to=@finish_late_to,
@@ -388,6 +465,8 @@ namespace roadwork_portal_service.Controllers
                         {
                             updateComm.Parameters.AddWithValue("orderer", DBNull.Value);
                         }
+                        roadWorkNeedFeature.properties.lastModified = DateTime.Now;
+                        updateComm.Parameters.AddWithValue("last_modified", roadWorkNeedFeature.properties.lastModified);
                         updateComm.Parameters.AddWithValue("finish_early_from", roadWorkNeedFeature.properties.finishEarlyFrom);
                         updateComm.Parameters.AddWithValue("finish_early_to", roadWorkNeedFeature.properties.finishEarlyTo);
                         updateComm.Parameters.AddWithValue("finish_optimum_from", roadWorkNeedFeature.properties.finishOptimumFrom);
@@ -399,7 +478,7 @@ namespace roadwork_portal_service.Controllers
                         updateComm.Parameters.AddWithValue("description", roadWorkNeedFeature.properties.description);
                         updateComm.Parameters.AddWithValue("longer_six_months", roadWorkNeedFeature.properties.longer6Month);
                         updateComm.Parameters.AddWithValue("relevance", roadWorkNeedFeature.properties.relevance);
-                        updateComm.Parameters.AddWithValue("costs", roadWorkNeedFeature.properties.costs);
+                        updateComm.Parameters.AddWithValue("costs", roadWorkNeedFeature.properties.costs != 0 ? roadWorkNeedFeature.properties.costs : DBNull.Value);
                         updateComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
                         updateComm.Parameters.AddWithValue("uuid", new Guid(roadWorkNeedFeature.properties.uuid));
                         updateComm.ExecuteNonQuery();
