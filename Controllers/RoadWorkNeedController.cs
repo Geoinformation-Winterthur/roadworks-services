@@ -23,13 +23,16 @@ namespace roadwork_portal_service.Controllers
             this.Configuration = configuration;
         }
 
-        // GET roadworkneed/
+        // GET roadworkneed/?year=2023&uuids=...&roadworkactivityuuid=...
         [HttpGet]
         [Authorize(Roles = "orderer,trefficmanager,territorymanager,administrator")]
-        public IEnumerable<RoadWorkNeedFeature> GetNeeds(string? uuids = "", string? roadWorkActivityUuid = "",
-                bool summary = false)
+        public IEnumerable<RoadWorkNeedFeature> GetNeeds(int? year = 0, string? uuids = "",
+                string? roadWorkActivityUuid = "", bool summary = false)
         {
             List<RoadWorkNeedFeature> projectsFromDb = new List<RoadWorkNeedFeature>();
+
+            if(year == null)
+                year = 0;
 
             if (uuids == null)
                 uuids = "";
@@ -61,6 +64,12 @@ namespace roadwork_portal_service.Controllers
                         LEFT JOIN ""wtb_ssp_priorities"" p ON r.priority = p.code
                         LEFT JOIN ""wtb_ssp_status"" s ON r.status = s.code
                         LEFT JOIN ""wtb_ssp_roadworkneedtypes"" rwt ON r.kind = rwt.code";
+
+                if (year != 0 && uuids == "" && roadWorkActivityUuid == "")
+                {
+                    selectComm.CommandText += " WHERE EXTRACT(YEAR FROM finish_optimum_from) = @year";
+                    selectComm.Parameters.AddWithValue("year", year);
+                }
 
                 if (uuids != "")
                 {
