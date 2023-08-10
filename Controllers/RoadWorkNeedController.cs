@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using NetTopologySuite.Geometries;
 using Npgsql;
 using roadwork_portal_service.Configuration;
+using roadwork_portal_service.DAO;
 using roadwork_portal_service.Helper;
 using roadwork_portal_service.Model;
 
@@ -169,136 +170,40 @@ namespace roadwork_portal_service.Controllers
         {
             try
             {
-                if (roadWorkNeedFeature == null)
-                {
-                    _logger.LogWarning("No roadworkneed data received.");
-                    RoadWorkNeedFeature errorObj = new RoadWorkNeedFeature();
-                    errorObj.errorMessage = "SSP-22";
-                    return Ok(errorObj);
-                }
-
-                if (roadWorkNeedFeature.properties.description == null) {
-                    roadWorkNeedFeature.properties.description = "";
-                } else {
-                    roadWorkNeedFeature.properties.description = roadWorkNeedFeature.properties.description.Trim();
-                }
-
-                if (roadWorkNeedFeature.properties.kind.code == null) {
-                    roadWorkNeedFeature.properties.kind.code = "";
-                } else {
-                    roadWorkNeedFeature.properties.kind.code = roadWorkNeedFeature.properties.kind.code.Trim();
-                }
-
-                if (roadWorkNeedFeature.properties.description == "")
-                {
-                    _logger.LogWarning("The provided roadworkneed data has no description attribute value." +
-                                " But description is mandatory.");
-                    roadWorkNeedFeature.errorMessage = "SSP-23";
-                    return Ok(roadWorkNeedFeature);
-                }
-
-                if (roadWorkNeedFeature.properties.kind.code == "")
-                {
-                    _logger.LogWarning("The provided roadworkneed data has no kind attribute value." +
-                                " But a kind value is mandatory.");
-                    roadWorkNeedFeature.errorMessage = "SSP-24";
-                    return Ok(roadWorkNeedFeature);
-                }
-
-                Polygon roadWorkNeedPoly = roadWorkNeedFeature.geometry.getNtsPolygon();
-                Coordinate[] coordinates = roadWorkNeedPoly.Coordinates;
-
-                if (coordinates.Length < 3)
-                {
-                    _logger.LogWarning("Roadworkneed Polygon has less than 3 coordinates.");
-                    roadWorkNeedFeature.errorMessage = "SSP-7";
-                    return Ok(roadWorkNeedFeature);
-                }
-
-                ConfigurationData configData = AppConfigController.getConfigurationFromDb();
-                // only if project area is greater than min area size:
-                if (roadWorkNeedPoly.Area <= configData.minAreaSize)
-                {
-                    _logger.LogWarning("Roadworkneed area is less than or equal " + configData.minAreaSize + "qm.");
-                    roadWorkNeedFeature = new RoadWorkNeedFeature();
-                    roadWorkNeedFeature.errorMessage = "SSP-8";
-                    return Ok(roadWorkNeedFeature);
-                }
-
-                // only if project area is smaller than max area size:
-                if (roadWorkNeedPoly.Area > configData.maxAreaSize)
-                {
-                    _logger.LogWarning("Roadworkneed area is greater than " + configData.maxAreaSize + "qm.");
-                    roadWorkNeedFeature = new RoadWorkNeedFeature();
-                    roadWorkNeedFeature.errorMessage = "SSP-16";
-                    return Ok(roadWorkNeedFeature);
-                }
-
                 User userFromDb = LoginController.getAuthorizedUserFromDb(this.User);
                 roadWorkNeedFeature.properties.orderer = userFromDb;
 
-                if (roadWorkNeedFeature.properties.name != null)
-                {
-                    roadWorkNeedFeature.properties.name = roadWorkNeedFeature.properties.name.Trim();
-                }
-
+                Polygon roadWorkNeedPoly = roadWorkNeedFeature.geometry.getNtsPolygon();
                 using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
                 {
-
                     pgConn.Open();
-
                     if (roadWorkNeedFeature.properties.name == null || roadWorkNeedFeature.properties.name == "")
                     {
                         roadWorkNeedFeature.properties.name = HelperFunctions.getAddressNames(roadWorkNeedPoly, pgConn);
                     }
-
-                    Guid resultUuid = Guid.NewGuid();
-                    roadWorkNeedFeature.properties.uuid = resultUuid.ToString();
-
-                    NpgsqlCommand insertComm = pgConn.CreateCommand();
-                    insertComm.CommandText = @"INSERT INTO ""wtb_ssp_roadworkneeds""
-                                    (uuid, name, kind, orderer, created, last_modified, finish_early_from, finish_early_to,
-                                    finish_optimum_from, finish_optimum_to, finish_late_from,
-                                    finish_late_to, priority, status, description, longer_six_months, relevance,
-                                    costs, geom)
-                                    VALUES (@uuid, @name, @kind, @orderer, @created, @last_modified,
-                                    @finish_early_from, @finish_early_to, @finish_optimum_from, @finish_optimum_to, @finish_late_from,
-                                    @finish_late_to, @priority, @status, @description, @longer_six_months, @relevance,
-                                    @costs, @geom)";
-                    insertComm.Parameters.AddWithValue("uuid", new Guid(roadWorkNeedFeature.properties.uuid));
-                    insertComm.Parameters.AddWithValue("name", roadWorkNeedFeature.properties.name);
-                    insertComm.Parameters.AddWithValue("kind", roadWorkNeedFeature.properties.kind.code);
-                    if (roadWorkNeedFeature.properties.orderer.uuid != "")
-                    {
-                        insertComm.Parameters.AddWithValue("orderer", new Guid(roadWorkNeedFeature.properties.orderer.uuid));
-                    }
-                    else
-                    {
-                        insertComm.Parameters.AddWithValue("orderer", DBNull.Value);
-                    }
-                    roadWorkNeedFeature.properties.created = DateTime.Now;
-                    insertComm.Parameters.AddWithValue("created", roadWorkNeedFeature.properties.created);
-                    roadWorkNeedFeature.properties.lastModified = DateTime.Now;
-                    insertComm.Parameters.AddWithValue("last_modified", roadWorkNeedFeature.properties.lastModified);
-                    insertComm.Parameters.AddWithValue("finish_early_from", roadWorkNeedFeature.properties.finishEarlyFrom);
-                    insertComm.Parameters.AddWithValue("finish_early_to", roadWorkNeedFeature.properties.finishEarlyTo);
-                    insertComm.Parameters.AddWithValue("finish_optimum_from", roadWorkNeedFeature.properties.finishOptimumFrom);
-                    insertComm.Parameters.AddWithValue("finish_optimum_to", roadWorkNeedFeature.properties.finishOptimumTo);
-                    insertComm.Parameters.AddWithValue("finish_late_from", roadWorkNeedFeature.properties.finishLateFrom);
-                    insertComm.Parameters.AddWithValue("finish_late_to", roadWorkNeedFeature.properties.finishLateTo);
-                    insertComm.Parameters.AddWithValue("priority", roadWorkNeedFeature.properties.priority.code);
-                    insertComm.Parameters.AddWithValue("status", roadWorkNeedFeature.properties.status.code);
-                    insertComm.Parameters.AddWithValue("description", roadWorkNeedFeature.properties.description);
-                    insertComm.Parameters.AddWithValue("longer_six_months", roadWorkNeedFeature.properties.longer6Month);
-                    insertComm.Parameters.AddWithValue("relevance", roadWorkNeedFeature.properties.relevance);
-                    insertComm.Parameters.AddWithValue("costs", roadWorkNeedFeature.properties.costs != 0 ? roadWorkNeedFeature.properties.costs : DBNull.Value);
-                    insertComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
-
-                    insertComm.ExecuteNonQuery();
-
-
                 }
 
+                ConfigurationData configData = AppConfigController.getConfigurationFromDb();
+
+                RoadWorkNeedDAO roadWorkNeedDAO = new RoadWorkNeedDAO(false);
+                roadWorkNeedFeature = roadWorkNeedDAO.Insert(roadWorkNeedFeature, configData);
+
+                if (roadWorkNeedFeature.errorMessage == "SSP-23")
+                    _logger.LogWarning("The provided roadworkneed data has no description attribute value." +
+                                " But description is mandatory.");
+                else if (roadWorkNeedFeature.errorMessage == "SSP-24")
+                    _logger.LogWarning("The provided roadworkneed data has no kind attribute value." +
+                                " But a kind value is mandatory.");
+                else if (roadWorkNeedFeature.errorMessage == "SSP-7")
+                    _logger.LogWarning("Roadworkneed Polygon has less than 3 coordinates.");
+                else if (roadWorkNeedFeature.errorMessage == "SSP-8")
+                    _logger.LogWarning("Roadworkneed area is less than or equal " + configData.minAreaSize + "qm.");
+                else if (roadWorkNeedFeature.errorMessage == "SSP-16")
+                    _logger.LogWarning("Roadworkneed area is less than or equal " + configData.minAreaSize + "qm.");
+                else if (roadWorkNeedFeature.errorMessage == "SSP-22")
+                    _logger.LogWarning("No roadworkneed data received.");
+
+                return Ok(roadWorkNeedFeature);
             }
             catch (Exception ex)
             {
@@ -307,7 +212,6 @@ namespace roadwork_portal_service.Controllers
                 return Ok(roadWorkNeedFeature);
             }
 
-            return Ok(roadWorkNeedFeature);
         }
 
         // PUT roadworkneed/
@@ -327,17 +231,15 @@ namespace roadwork_portal_service.Controllers
                     return Ok(errorObj);
                 }
 
-                if (roadWorkNeedFeature.properties.description == null) {
+                if (roadWorkNeedFeature.properties.description == null)
                     roadWorkNeedFeature.properties.description = "";
-                } else {
+                else
                     roadWorkNeedFeature.properties.description = roadWorkNeedFeature.properties.description.Trim();
-                }
 
-                if (roadWorkNeedFeature.properties.kind.code == null) {
+                if (roadWorkNeedFeature.properties.kind.code == null)
                     roadWorkNeedFeature.properties.kind.code = "";
-                } else {
+                else
                     roadWorkNeedFeature.properties.kind.code = roadWorkNeedFeature.properties.kind.code.Trim();
-                }
 
                 if (roadWorkNeedFeature.properties.description == "")
                 {

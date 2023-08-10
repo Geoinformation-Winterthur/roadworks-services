@@ -1,0 +1,157 @@
+// <copyright company="Geoinformation Winterthur">
+//      Author: Edgar Butwilowski
+//      Copyright (c) Geoinformation Winterthur. All rights reserved.
+// </copyright>
+
+using NetTopologySuite.Geometries;
+using Npgsql;
+using roadwork_portal_service.Configuration;
+using roadwork_portal_service.Model;
+
+namespace roadwork_portal_service.DAO;
+public class RoadWorkNeedDAO
+{
+    public bool isDryRun;
+
+    public  RoadWorkNeedDAO(bool isDryRun)
+    {
+        this.isDryRun = isDryRun;
+    }
+
+    public RoadWorkNeedFeature Insert(RoadWorkNeedFeature roadWorkNeedFeature,
+                    ConfigurationData configData)
+    {
+
+        if (roadWorkNeedFeature == null)
+        {
+            RoadWorkNeedFeature errorObj = new RoadWorkNeedFeature();
+            errorObj.errorMessage = "SSP-22";
+            return errorObj;
+        }
+
+        if (roadWorkNeedFeature.properties.description == null)
+        {
+            roadWorkNeedFeature.properties.description = "";
+        }
+        else
+        {
+            roadWorkNeedFeature.properties.description = roadWorkNeedFeature.properties.description.Trim();
+        }
+
+        if (roadWorkNeedFeature.properties.kind.code == null)
+        {
+            roadWorkNeedFeature.properties.kind.code = "";
+        }
+        else
+        {
+            roadWorkNeedFeature.properties.kind.code = roadWorkNeedFeature.properties.kind.code.Trim();
+        }
+
+        if (roadWorkNeedFeature.properties.description == "")
+        {
+            roadWorkNeedFeature.errorMessage = "SSP-23";
+            return roadWorkNeedFeature;
+        }
+
+        if (roadWorkNeedFeature.properties.kind.code == "")
+        {
+            roadWorkNeedFeature.errorMessage = "SSP-24";
+            return roadWorkNeedFeature;
+        }
+
+        Polygon roadWorkNeedPoly = roadWorkNeedFeature.geometry.getNtsPolygon();
+        Coordinate[] coordinates = roadWorkNeedPoly.Coordinates;
+
+        if (coordinates.Length < 3)
+        {
+
+            roadWorkNeedFeature.errorMessage = "SSP-7";
+            return roadWorkNeedFeature;
+        }
+
+        // only if project area is greater than min area size:
+        if (roadWorkNeedPoly.Area <= configData.minAreaSize)
+        {
+            roadWorkNeedFeature = new RoadWorkNeedFeature();
+            roadWorkNeedFeature.errorMessage = "SSP-8";
+            return roadWorkNeedFeature;
+        }
+
+        // only if project area is smaller than max area size:
+        if (roadWorkNeedPoly.Area > configData.maxAreaSize)
+        {
+            roadWorkNeedFeature = new RoadWorkNeedFeature();
+            roadWorkNeedFeature.errorMessage = "SSP-16";
+            return roadWorkNeedFeature;
+        }
+
+        if (roadWorkNeedFeature.properties.name != null)
+        {
+            roadWorkNeedFeature.properties.name = roadWorkNeedFeature.properties.name.Trim();
+        }
+
+        Guid resultUuid = Guid.NewGuid();
+        roadWorkNeedFeature.properties.uuid = resultUuid.ToString();
+
+        if (isDryRun)
+        {
+            roadWorkNeedFeature.errorMessage = "SSP-25";
+            return roadWorkNeedFeature;
+        }
+
+        using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
+        {
+            pgConn.Open();
+            NpgsqlCommand insertComm = _CreatePreparedStatementForInsert(roadWorkNeedFeature,
+                            roadWorkNeedPoly, pgConn);
+            insertComm.ExecuteNonQuery();
+        }
+        return roadWorkNeedFeature;
+    }
+
+    private NpgsqlCommand _CreatePreparedStatementForInsert(RoadWorkNeedFeature roadWorkNeedFeature,
+                        Polygon roadWorkNeedPoly, NpgsqlConnection pgConn)
+    {
+        NpgsqlCommand insertComm = pgConn.CreateCommand();
+        insertComm.CommandText = @"INSERT INTO ""wtb_ssp_roadworkneeds""
+                                    (uuid, name, kind, orderer, created, last_modified, finish_early_from, finish_early_to,
+                                    finish_optimum_from, finish_optimum_to, finish_late_from,
+                                    finish_late_to, priority, status, description, longer_six_months, relevance,
+                                    costs, geom)
+                                    VALUES (@uuid, @name, @kind, @orderer, @created, @last_modified,
+                                    @finish_early_from, @finish_early_to, @finish_optimum_from, @finish_optimum_to, @finish_late_from,
+                                    @finish_late_to, @priority, @status, @description, @longer_six_months, @relevance,
+                                    @costs, @geom)";
+        insertComm.Parameters.AddWithValue("uuid", new Guid(roadWorkNeedFeature.properties.uuid));
+        insertComm.Parameters.AddWithValue("name", roadWorkNeedFeature.properties.name);
+        insertComm.Parameters.AddWithValue("kind", roadWorkNeedFeature.properties.kind.code);
+        if (roadWorkNeedFeature.properties.orderer.uuid != "")
+        {
+            insertComm.Parameters.AddWithValue("orderer", new Guid(roadWorkNeedFeature.properties.orderer.uuid));
+        }
+        else
+        {
+            insertComm.Parameters.AddWithValue("orderer", DBNull.Value);
+        }
+        roadWorkNeedFeature.properties.created = DateTime.Now;
+        insertComm.Parameters.AddWithValue("created", roadWorkNeedFeature.properties.created);
+        roadWorkNeedFeature.properties.lastModified = DateTime.Now;
+        insertComm.Parameters.AddWithValue("last_modified", roadWorkNeedFeature.properties.lastModified);
+        insertComm.Parameters.AddWithValue("finish_early_from", roadWorkNeedFeature.properties.finishEarlyFrom);
+        insertComm.Parameters.AddWithValue("finish_early_to", roadWorkNeedFeature.properties.finishEarlyTo);
+        insertComm.Parameters.AddWithValue("finish_optimum_from", roadWorkNeedFeature.properties.finishOptimumFrom);
+        insertComm.Parameters.AddWithValue("finish_optimum_to", roadWorkNeedFeature.properties.finishOptimumTo);
+        insertComm.Parameters.AddWithValue("finish_late_from", roadWorkNeedFeature.properties.finishLateFrom);
+        insertComm.Parameters.AddWithValue("finish_late_to", roadWorkNeedFeature.properties.finishLateTo);
+        insertComm.Parameters.AddWithValue("priority", roadWorkNeedFeature.properties.priority.code);
+        insertComm.Parameters.AddWithValue("status", roadWorkNeedFeature.properties.status.code);
+        insertComm.Parameters.AddWithValue("description", roadWorkNeedFeature.properties.description);
+        insertComm.Parameters.AddWithValue("longer_six_months", roadWorkNeedFeature.properties.longer6Month);
+        insertComm.Parameters.AddWithValue("relevance", roadWorkNeedFeature.properties.relevance);
+        insertComm.Parameters.AddWithValue("costs", roadWorkNeedFeature.properties.costs != 0 ? roadWorkNeedFeature.properties.costs : DBNull.Value);
+        insertComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
+
+        return insertComm;
+    }
+
+}
