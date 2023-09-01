@@ -170,7 +170,7 @@ namespace roadwork_portal_service.Controllers
         {
             try
             {
-                User userFromDb = LoginController.getAuthorizedUserFromDb(this.User);
+                User userFromDb = LoginController.getAuthorizedUserFromDb(this.User, false);
                 roadWorkNeedFeature.properties.orderer = userFromDb;
 
                 Polygon roadWorkNeedPoly = roadWorkNeedFeature.geometry.getNtsPolygon();

@@ -27,7 +27,7 @@ public class RoadWorkNeedTypesController : ControllerBase
     [Authorize]
     public ActionResult<RoadWorkNeedEnum[]> GetRoadWorkNeedTypes()
     {
-        User userFromDb = LoginController.getAuthorizedUserFromDb(this.User);
+        User userFromDb = LoginController.getAuthorizedUserFromDb(this.User, false);
         List<RoadWorkNeedEnum> roadWorkNeedEnumsFromDb = new List<RoadWorkNeedEnum>();
         using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
         {

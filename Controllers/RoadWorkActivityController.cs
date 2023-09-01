@@ -553,7 +553,7 @@ namespace roadwork_portal_service.Controllers
                     return roadWorkActivity;
                 }
 
-                User userFromDb = LoginController.getAuthorizedUserFromDb(this.User);
+                User userFromDb = LoginController.getAuthorizedUserFromDb(this.User, false);
                 if (userFromDb == null || userFromDb.uuid == null || userFromDb.uuid.Trim() == "")
                 {
                     _logger.LogWarning("User not found in register traffic manager operation.");
