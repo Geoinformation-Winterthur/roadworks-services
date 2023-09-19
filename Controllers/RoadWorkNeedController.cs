@@ -28,11 +28,11 @@ namespace roadwork_portal_service.Controllers
         [HttpGet]
         [Authorize(Roles = "orderer,trefficmanager,territorymanager,administrator")]
         public IEnumerable<RoadWorkNeedFeature> GetNeeds(int? year = 0, string? uuids = "",
-                string? roadWorkActivityUuid = "", bool summary = false)
+                string? roadWorkActivityUuid = "", string? name = "", bool summary = false)
         {
             List<RoadWorkNeedFeature> projectsFromDb = new List<RoadWorkNeedFeature>();
 
-            if(year == null)
+            if (year == null)
                 year = 0;
 
             if (uuids == null)
@@ -44,6 +44,11 @@ namespace roadwork_portal_service.Controllers
                 roadWorkActivityUuid = "";
             else
                 roadWorkActivityUuid = roadWorkActivityUuid.Trim().ToLower();
+
+            if (name == null)
+                name = "";
+            else
+                name = name.Trim().ToLower();
 
             // get data of current user from database:
             using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
@@ -66,12 +71,6 @@ namespace roadwork_portal_service.Controllers
                         LEFT JOIN ""wtb_ssp_status"" s ON r.status = s.code
                         LEFT JOIN ""wtb_ssp_roadworkneedtypes"" rwt ON r.kind = rwt.code";
 
-                if (year != 0 && uuids == "" && roadWorkActivityUuid == "")
-                {
-                    selectComm.CommandText += " WHERE EXTRACT(YEAR FROM finish_optimum_from) = @year";
-                    selectComm.Parameters.AddWithValue("year", year);
-                }
-
                 if (uuids != "")
                 {
                     List<Guid> uuidsList = new List<Guid>();
@@ -92,6 +91,17 @@ namespace roadwork_portal_service.Controllers
                     selectComm.CommandText += @" LEFT JOIN ""wtb_ssp_roadworkactivities"" act ON act.uuid = @act_uuid
                                                         WHERE ST_Intersects(act.geom, r.geom)";
                     selectComm.Parameters.AddWithValue("act_uuid", new Guid(roadWorkActivityUuid));
+                }
+                else
+                {
+                    selectComm.CommandText += " WHERE EXTRACT(YEAR FROM r.finish_optimum_from) = @year";
+                    selectComm.Parameters.AddWithValue("year", year);
+
+                    if (name != "")
+                    {
+                        selectComm.CommandText += " AND LOWER(r.name) LIKE @name";
+                        selectComm.Parameters.AddWithValue("name", "%" + name + "%");
+                    }
                 }
 
                 using (NpgsqlDataReader reader = selectComm.ExecuteReader())
@@ -166,7 +176,7 @@ namespace roadwork_portal_service.Controllers
         // POST roadworkneed/
         [HttpPost]
         [Authorize(Roles = "orderer,administrator")]
-        public ActionResult<RoadWorkNeedFeature> AddNeed([FromBody] RoadWorkNeedFeature roadWorkNeedFeature)
+        public ActionResult<RoadWorkNeedFeature> AddNeed([FromBody] RoadWorkNeedFeature roadWorkNeedFeature, bool isDryRun = false)
         {
             try
             {
@@ -185,7 +195,7 @@ namespace roadwork_portal_service.Controllers
 
                 ConfigurationData configData = AppConfigController.getConfigurationFromDb();
 
-                RoadWorkNeedDAO roadWorkNeedDAO = new RoadWorkNeedDAO(false);
+                RoadWorkNeedDAO roadWorkNeedDAO = new RoadWorkNeedDAO(isDryRun);
                 roadWorkNeedFeature = roadWorkNeedDAO.Insert(roadWorkNeedFeature, configData);
 
                 if (roadWorkNeedFeature.errorMessage == "SSP-23")
