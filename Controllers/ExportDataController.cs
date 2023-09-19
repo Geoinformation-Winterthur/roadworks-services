@@ -1,12 +1,7 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using NetTopologySuite.Geometries;
 using Npgsql;
 using roadwork_portal_service.Configuration;
-using roadwork_portal_service.DAO;
-using roadwork_portal_service.Helper;
-using roadwork_portal_service.Model;
 
 namespace roadwork_portal_service.Controllers
 {
@@ -30,7 +25,36 @@ namespace roadwork_portal_service.Controllers
         public string GetExportAsync()
         {
             // TODO make async
-            return "";
+
+            string resultCsv = "UUID;Bezeichnung;Typ;Vorname;Nachname\r\n";
+
+            using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
+            {
+                pgConn.Open();
+                NpgsqlCommand selectComm = pgConn.CreateCommand();
+                selectComm.CommandText = @"SELECT r.uuid, r.name, rwt.name,
+                            u.first_name, u.last_name
+                        FROM ""wtb_ssp_roadworkneeds"" r
+                        LEFT JOIN ""wtb_ssp_users"" u ON r.orderer = u.uuid
+                        LEFT JOIN ""wtb_ssp_roadworkneedtypes"" rwt ON r.kind = rwt.code";
+
+
+                using (NpgsqlDataReader reader = selectComm.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        resultCsv += reader.IsDBNull(0) ? "" : reader.GetGuid(0).ToString() + ";";
+                        resultCsv += reader.IsDBNull(1) ? "" : reader.GetString(1) + ";";
+                        resultCsv += reader.IsDBNull(2) ? "" : reader.GetString(2) + ";";
+                        resultCsv += reader.IsDBNull(3) ? "" : reader.GetString(3) + ";";
+                        resultCsv += reader.IsDBNull(4) ? "" : reader.GetString(4);
+                        resultCsv += "\r\n";
+                    }
+                }
+                pgConn.Close();
+            }
+
+            return resultCsv;
         }
 
     }
