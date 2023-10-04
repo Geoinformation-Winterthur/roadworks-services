@@ -468,35 +468,43 @@ namespace roadwork_portal_service.Controllers
                 return Ok(errorResult);
             }
 
-            using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
+            try
             {
-                pgConn.Open();
-                NpgsqlCommand deleteComm = pgConn.CreateCommand();
-                if (releaseOnly)
+                using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
                 {
-                    deleteComm.CommandText = @"DELETE FROM ""wtb_ssp_activities_to_needs""
+                    pgConn.Open();
+
+                    NpgsqlCommand deleteRelationComm = pgConn.CreateCommand();
+                    deleteRelationComm.CommandText = @"DELETE FROM ""wtb_ssp_activities_to_needs""
                                 WHERE uuid_roadwork_need=@uuid";
-                }
-                else
-                {
-                    deleteComm.CommandText = @"DELETE FROM ""wtb_ssp_roadworkneeds""
+                    deleteRelationComm.Parameters.AddWithValue("uuid", new Guid(uuid));
+
+                    NpgsqlCommand deleteNeedComm = pgConn.CreateCommand();
+                    deleteNeedComm.CommandText = @"DELETE FROM ""wtb_ssp_roadworkneeds""
                                 WHERE uuid=@uuid";
-                }
-                deleteComm.Parameters.AddWithValue("uuid", new Guid(uuid));
+                    deleteNeedComm.Parameters.AddWithValue("uuid", new Guid(uuid));
 
-                int noAffectedRows = deleteComm.ExecuteNonQuery();
+                    using NpgsqlTransaction trans = pgConn.BeginTransaction();
 
-                pgConn.Close();
+                    deleteRelationComm.ExecuteNonQuery();
 
-                if (noAffectedRows == 1)
-                {
-                    return Ok();
+                    if (!releaseOnly)
+                    {
+                        deleteNeedComm.ExecuteNonQuery();
+                    }
+
+                    trans.Commit();
                 }
             }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                errorResult.errorMessage = "SSP-3";
+                return Ok(errorResult);
+            }
 
-            _logger.LogError("Fatal error.");
-            errorResult.errorMessage = "SSP-3";
-            return Ok(errorResult);
+            return Ok();
+
         }
 
     }
