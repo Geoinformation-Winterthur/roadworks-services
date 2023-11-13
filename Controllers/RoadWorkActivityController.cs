@@ -126,13 +126,13 @@ namespace roadwork_portal_service.Controllers
 
                 foreach (RoadWorkActivityFeature activityFromDb in projectsFromDb)
                 {
-                    NpgsqlCommand selectRoadWorkNeedComm = pgConn.CreateCommand();
-                    selectRoadWorkNeedComm.CommandText = @"SELECT uuid_roadwork_need
+                    NpgsqlCommand selectRoadWorkNeedsComm = pgConn.CreateCommand();
+                    selectRoadWorkNeedsComm.CommandText = @"SELECT uuid_roadwork_need
                             FROM ""wtb_ssp_activities_to_needs""
                             WHERE uuid_roadwork_activity = @uuid_roadwork_activity";
-                    selectRoadWorkNeedComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(activityFromDb.properties.uuid));
+                    selectRoadWorkNeedsComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(activityFromDb.properties.uuid));
 
-                    using (NpgsqlDataReader roadWorkNeedReader = await selectRoadWorkNeedComm.ExecuteReaderAsync())
+                    using (NpgsqlDataReader roadWorkNeedReader = await selectRoadWorkNeedsComm.ExecuteReaderAsync())
                     {
                         List<string> roadWorkNeedsUuids = new List<string>();
                         while (roadWorkNeedReader.Read())
@@ -141,6 +141,31 @@ namespace roadwork_portal_service.Controllers
                                 roadWorkNeedsUuids.Add(roadWorkNeedReader.GetGuid(0).ToString());
                         }
                         activityFromDb.properties.roadWorkNeedsUuids = roadWorkNeedsUuids.ToArray();
+                    }
+
+                    if (!summary)
+                    {
+                        NpgsqlCommand selectHistoryComm = pgConn.CreateCommand();
+                        selectHistoryComm.CommandText = @"SELECT uuid, changedate, who, what, usercomment
+                            FROM ""wtb_ssp_activities_history"" WHERE uuid_roadwork_activity = :uuid_roadwork_activity";
+                        selectHistoryComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(activityFromDb.properties.uuid));
+
+                        using (NpgsqlDataReader activityHistoryReader = await selectHistoryComm.ExecuteReaderAsync())
+                        {
+                            List<ActivityHistoryItem> activityHistoryItems = new List<ActivityHistoryItem>();
+                            while (activityHistoryReader.Read())
+                            {
+                                ActivityHistoryItem activityHistoryItem = new ActivityHistoryItem();
+                                activityHistoryItem.uuid = activityHistoryReader.IsDBNull(0) ? "" : activityHistoryReader.GetGuid(0).ToString();
+                                activityHistoryItem.changeDate = activityHistoryReader.IsDBNull(1) ? DateTime.MinValue : activityHistoryReader.GetDateTime(1);
+                                activityHistoryItem.who = activityHistoryReader.IsDBNull(2) ? "" : activityHistoryReader.GetString(2);
+                                activityHistoryItem.what = activityHistoryReader.IsDBNull(3) ? "" : activityHistoryReader.GetString(3);
+                                activityHistoryItem.userComment = activityHistoryReader.IsDBNull(4) ? "" : activityHistoryReader.GetString(4);
+
+                                activityHistoryItems.Add(activityHistoryItem);
+                            }
+                            activityFromDb.properties.activityHistory = activityHistoryItems.ToArray();
+                        }
                     }
                 }
 
@@ -227,6 +252,8 @@ namespace roadwork_portal_service.Controllers
                     return Ok(roadWorkActivityFeature);
                 }
 
+                User userFromDb = LoginController.getAuthorizedUserFromDb(this.User, false);
+
                 using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
                 {
 
@@ -238,6 +265,8 @@ namespace roadwork_portal_service.Controllers
                     }
 
                     roadWorkActivityFeature.properties.uuid = Guid.NewGuid().ToString();
+
+                    using NpgsqlTransaction trans = pgConn.BeginTransaction();
 
                     NpgsqlCommand insertComm = pgConn.CreateCommand();
                     insertComm.CommandText = @"INSERT INTO ""wtb_ssp_roadworkactivities""
@@ -280,6 +309,32 @@ namespace roadwork_portal_service.Controllers
                     insertComm.Parameters.AddWithValue("geom", roadWorkActivityPoly);
 
                     insertComm.ExecuteNonQuery();
+
+                    ActivityHistoryItem activityHistoryItem = new ActivityHistoryItem();
+                    activityHistoryItem.uuid = Guid.NewGuid().ToString();
+                    activityHistoryItem.changeDate = DateTime.Now;
+                    activityHistoryItem.who = userFromDb.firstName + " " + userFromDb.lastName;
+                    activityHistoryItem.what = "Massnahme erstellt";
+                    activityHistoryItem.userComment = "";
+
+                    roadWorkActivityFeature.properties.activityHistory = new ActivityHistoryItem[1];
+                    roadWorkActivityFeature.properties.activityHistory[0] = activityHistoryItem;
+
+                    NpgsqlCommand insertHistoryComm = pgConn.CreateCommand();
+                    insertHistoryComm.CommandText = @"INSERT INTO ""wtb_ssp_activities_history""
+                            (uuid, uuid_roadwork_activity, changedate, who, what)
+                            VALUES
+                            (@uuid, @uuid_roadwork_activity, @changedate, @who, @what)";
+
+                    insertHistoryComm.Parameters.AddWithValue("uuid", new Guid(activityHistoryItem.uuid));
+                    insertHistoryComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkActivityFeature.properties.uuid));
+                    insertHistoryComm.Parameters.AddWithValue("changedate", activityHistoryItem.changeDate);
+                    insertHistoryComm.Parameters.AddWithValue("who", activityHistoryItem.who);
+                    insertHistoryComm.Parameters.AddWithValue("what", activityHistoryItem.what);
+
+                    insertHistoryComm.ExecuteNonQuery();
+
+                    trans.Commit();
                 }
 
             }

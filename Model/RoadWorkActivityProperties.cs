@@ -27,4 +27,5 @@ public class RoadWorkActivityProperties
     public int investmentNo { get; set; } = 0;
     public int pdbFid { get; set; } = 0;
     public string strabakoNo { get; set; } = "";
+    public ActivityHistoryItem[] activityHistory { get; set; } = new ActivityHistoryItem[0];
 }
