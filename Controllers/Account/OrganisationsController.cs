@@ -25,7 +25,7 @@ public class OrganisationsController : ControllerBase
     // GET /account/organisations/
     [HttpGet]
     [Authorize]
-    public ActionResult<OrganisationalUnit[]> GetOrganisations()
+    public ActionResult<OrganisationalUnit[]> GetOrganisations(bool withContactPerson = false)
     {
         List<OrganisationalUnit> orgsFromDb = new List<OrganisationalUnit>();
         using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
@@ -33,6 +33,18 @@ public class OrganisationsController : ControllerBase
             pgConn.Open();
             NpgsqlCommand selectComm = pgConn.CreateCommand();
             selectComm.CommandText = @"SELECT uuid, name FROM ""wtb_ssp_organisationalunits""";
+            if(withContactPerson){
+                selectComm.CommandText = @"SELECT o.uuid, o.name,
+                                u.first_name, u.last_name
+                            FROM ""wtb_ssp_organisationalunits"" o
+                            LEFT JOIN (
+                                SELECT DISTINCT ON (org_unit) org_unit, first_name, last_name
+                                FROM ""wtb_ssp_users""
+                                GROUP BY org_unit, last_name, first_name
+                                )
+                            u ON u.org_unit = o.uuid";
+
+            }
             using (NpgsqlDataReader reader = selectComm.ExecuteReader())
             {
                 OrganisationalUnit orgFromDb;
@@ -44,6 +56,15 @@ public class OrganisationsController : ControllerBase
                     orgFromDb.name =
                             reader.IsDBNull(1) ? "" :
                                     reader.GetString(1);
+                    if(withContactPerson){
+                        orgFromDb.contactPerson =
+                            reader.IsDBNull(2) ? "" :
+                                    "" + reader.GetString(2);
+
+                        orgFromDb.contactPerson +=
+                            reader.IsDBNull(3) ? "" :
+                                    " " + reader.GetString(3);
+                    }
                     orgsFromDb.Add(orgFromDb);
                 }
             }
