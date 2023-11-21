@@ -156,9 +156,8 @@ namespace roadwork_portal_service.Controllers
                             needFeatureFromDb.properties.isEditingAllowed = true;
                         }
 
-                        if (needFeatureFromDb.properties.status.code == "provfixed" ||
-                            needFeatureFromDb.properties.status.code == "deffixed" ||
-                            needFeatureFromDb.properties.status.code == "executed")
+                        if (needFeatureFromDb.properties.status.code == "inconsult" ||
+                            needFeatureFromDb.properties.status.code == "coordinated")
                         {
                             needFeatureFromDb.properties.isEditingAllowed = false;
                         }
