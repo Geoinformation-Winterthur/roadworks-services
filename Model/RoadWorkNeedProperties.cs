@@ -27,5 +27,8 @@ public class RoadWorkNeedProperties
     public string description { get; set; } = "";
     public string roadWorkActivityUuid { get; set; } = "";
     public bool isEditingAllowed { get; set; } = false;
+    public string noteOfAreaManager { get; set; } = "";
+    public DateTime areaManagerNoteDate { get; set; } = DateTime.MinValue;
+    public User areaManagerOfNote { get; set; } = new User();
 }
 

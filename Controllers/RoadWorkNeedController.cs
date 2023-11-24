@@ -62,6 +62,7 @@ namespace roadwork_portal_service.Controllers
                             r.description, 
                             r.created, r.last_modified, an.uuid_roadwork_activity, u.e_mail,
                             r.longer_six_months, r.relevance, an.activityrelationtype, r.costs,
+                            r.note_of_area_man, r.area_man_note_date, n.first_name, n.last_name,
                             r.geom
                         FROM ""wtb_ssp_roadworkneeds"" r
                         LEFT JOIN ""wtb_ssp_activities_to_needs"" an ON an.uuid_roadwork_need = r.uuid
@@ -69,7 +70,8 @@ namespace roadwork_portal_service.Controllers
                         LEFT JOIN ""wtb_ssp_organisationalunits"" o ON u.org_unit = o.uuid
                         LEFT JOIN ""wtb_ssp_priorities"" p ON r.priority = p.code
                         LEFT JOIN ""wtb_ssp_status"" s ON r.status = s.code
-                        LEFT JOIN ""wtb_ssp_roadworkneedtypes"" rwt ON r.kind = rwt.code";
+                        LEFT JOIN ""wtb_ssp_roadworkneedtypes"" rwt ON r.kind = rwt.code
+                        LEFT JOIN ""wtb_ssp_users"" n ON r.area_man_of_note = n.uuid";
 
                 if (uuids != "")
                 {
@@ -166,8 +168,15 @@ namespace roadwork_portal_service.Controllers
                         needFeatureFromDb.properties.relevance = reader.IsDBNull(23) ? 0 : reader.GetInt32(23);
                         needFeatureFromDb.properties.activityRelationType = reader.IsDBNull(24) ? "" : reader.GetString(24);
                         needFeatureFromDb.properties.costs = reader.IsDBNull(25) ? 0 : reader.GetInt32(25);
+                        needFeatureFromDb.properties.noteOfAreaManager = reader.IsDBNull(26) ? "" : reader.GetString(26);
+                        needFeatureFromDb.properties.created = reader.IsDBNull(27) ? DateTime.MinValue : reader.GetDateTime(27);
 
-                        Polygon ntsPoly = reader.IsDBNull(26) ? Polygon.Empty : reader.GetValue(26) as Polygon;
+                        User areaManagerOfNote = new User();
+                        areaManagerOfNote.firstName = reader.IsDBNull(28) ? "" : reader.GetString(28);
+                        areaManagerOfNote.lastName = reader.IsDBNull(29) ? "" : reader.GetString(29);
+                        needFeatureFromDb.properties.areaManagerOfNote = areaManagerOfNote;
+
+                        Polygon ntsPoly = reader.IsDBNull(30) ? Polygon.Empty : reader.GetValue(30) as Polygon;
                         needFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
 
                         projectsFromDb.Add(needFeatureFromDb);
@@ -177,6 +186,7 @@ namespace roadwork_portal_service.Controllers
             }
 
             return projectsFromDb.ToArray();
+
         }
 
         // POST roadworkneed/
