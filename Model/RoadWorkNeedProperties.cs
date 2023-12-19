@@ -21,7 +21,6 @@ public class RoadWorkNeedProperties
     public Priority priority { get; set; } = new Priority();
     public Status status { get; set; } = new Status();
     public decimal costs { get; set; } = 0m;
-    public bool longer6Month { get; set; } = false;
     public int relevance { get; set; } = 0;
     public string activityRelationType { get; set; } = "";    
     public string description { get; set; } = "";

@@ -61,7 +61,7 @@ namespace roadwork_portal_service.Controllers
                             r.finish_late_to, p.code, s.code, s.name,
                             r.description, 
                             r.created, r.last_modified, an.uuid_roadwork_activity, u.e_mail,
-                            r.longer_six_months, r.relevance, an.activityrelationtype, r.costs,
+                            r.relevance, an.activityrelationtype, r.costs,
                             r.note_of_area_man, r.area_man_note_date, n.first_name, n.last_name,
                             r.geom
                         FROM ""wtb_ssp_roadworkneeds"" r
@@ -164,19 +164,18 @@ namespace roadwork_portal_service.Controllers
                             needFeatureFromDb.properties.isEditingAllowed = false;
                         }
 
-                        needFeatureFromDb.properties.longer6Month = reader.IsDBNull(22) ? false : reader.GetBoolean(22);
-                        needFeatureFromDb.properties.relevance = reader.IsDBNull(23) ? 0 : reader.GetInt32(23);
-                        needFeatureFromDb.properties.activityRelationType = reader.IsDBNull(24) ? "" : reader.GetString(24);
-                        needFeatureFromDb.properties.costs = reader.IsDBNull(25) ? 0 : reader.GetInt32(25);
-                        needFeatureFromDb.properties.noteOfAreaManager = reader.IsDBNull(26) ? "" : reader.GetString(26);
-                        needFeatureFromDb.properties.created = reader.IsDBNull(27) ? DateTime.MinValue : reader.GetDateTime(27);
+                        needFeatureFromDb.properties.relevance = reader.IsDBNull(22) ? 0 : reader.GetInt32(22);
+                        needFeatureFromDb.properties.activityRelationType = reader.IsDBNull(23) ? "" : reader.GetString(23);
+                        needFeatureFromDb.properties.costs = reader.IsDBNull(24) ? 0 : reader.GetInt32(24);
+                        needFeatureFromDb.properties.noteOfAreaManager = reader.IsDBNull(25) ? "" : reader.GetString(25);
+                        needFeatureFromDb.properties.created = reader.IsDBNull(26) ? DateTime.MinValue : reader.GetDateTime(26);
 
                         User areaManagerOfNote = new User();
-                        areaManagerOfNote.firstName = reader.IsDBNull(28) ? "" : reader.GetString(28);
-                        areaManagerOfNote.lastName = reader.IsDBNull(29) ? "" : reader.GetString(29);
+                        areaManagerOfNote.firstName = reader.IsDBNull(27) ? "" : reader.GetString(27);
+                        areaManagerOfNote.lastName = reader.IsDBNull(28) ? "" : reader.GetString(28);
                         needFeatureFromDb.properties.areaManagerOfNote = areaManagerOfNote;
 
-                        Polygon ntsPoly = reader.IsDBNull(30) ? Polygon.Empty : reader.GetValue(30) as Polygon;
+                        Polygon ntsPoly = reader.IsDBNull(29) ? Polygon.Empty : reader.GetValue(29) as Polygon;
                         needFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
 
                         projectsFromDb.Add(needFeatureFromDb);
@@ -380,7 +379,7 @@ namespace roadwork_portal_service.Controllers
                                     finish_optimum_from=@finish_optimum_from, finish_optimum_to=@finish_optimum_to,
                                     finish_late_from=@finish_late_from, finish_late_to=@finish_late_to,
                                     priority=@priority, status=@status, description=@description,
-                                    longer_six_months=@longer_six_months, relevance=@relevance, 
+                                    relevance=@relevance, 
                                     costs=@costs, geom=@geom
                                     WHERE uuid=@uuid";
 
@@ -405,7 +404,6 @@ namespace roadwork_portal_service.Controllers
                         updateComm.Parameters.AddWithValue("priority", roadWorkNeedFeature.properties.priority.code);
                         updateComm.Parameters.AddWithValue("status", roadWorkNeedFeature.properties.status.code);
                         updateComm.Parameters.AddWithValue("description", roadWorkNeedFeature.properties.description);
-                        updateComm.Parameters.AddWithValue("longer_six_months", roadWorkNeedFeature.properties.longer6Month);
                         updateComm.Parameters.AddWithValue("relevance", roadWorkNeedFeature.properties.relevance);
                         updateComm.Parameters.AddWithValue("costs", roadWorkNeedFeature.properties.costs != 0 ? roadWorkNeedFeature.properties.costs : DBNull.Value);
                         updateComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
