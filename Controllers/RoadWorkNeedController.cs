@@ -28,7 +28,8 @@ namespace roadwork_portal_service.Controllers
         [HttpGet]
         [Authorize(Roles = "orderer,trefficmanager,territorymanager,administrator")]
         public IEnumerable<RoadWorkNeedFeature> GetNeeds(int? year = 0, string? uuids = "",
-                string? roadWorkActivityUuid = "", string? name = "", bool summary = false)
+                string? roadWorkActivityUuid = "", string? name = "", string? status = "",
+                bool summary = false)
         {
             List<RoadWorkNeedFeature> projectsFromDb = new List<RoadWorkNeedFeature>();
 
@@ -49,6 +50,13 @@ namespace roadwork_portal_service.Controllers
                 name = "";
             else
                 name = name.Trim().ToLower();
+
+            if (status == null)
+                status = "";
+            else
+                status = status.Trim().ToLower();
+
+            string[] statusArray = status.Split(",");
 
             // get data of current user from database:
             using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
@@ -96,20 +104,46 @@ namespace roadwork_portal_service.Controllers
                 }
                 else
                 {
+                    bool hasParameters = false;
                     if(year != 0) {
                         selectComm.CommandText += " WHERE EXTRACT(YEAR FROM r.finish_optimum_from) = @year";
                         selectComm.Parameters.AddWithValue("year", year);
+                        hasParameters = true;
                     }
 
                     if (name != "")
                     {
-                        if(year != 0)
+                        if(hasParameters)
                             selectComm.CommandText += " AND ";
                         else
                             selectComm.CommandText += " WHERE ";
+                        hasParameters = true;
                         
                         selectComm.CommandText += "LOWER(r.name) LIKE @name";
                         selectComm.Parameters.AddWithValue("name", "%" + name + "%");
+                    }
+
+                    if (statusArray.Length != 0)
+                    {
+                        if(hasParameters)
+                            selectComm.CommandText += " AND ";
+                        else
+                            selectComm.CommandText += " WHERE ";
+                        hasParameters = true;
+                        
+                        selectComm.CommandText += "r.status=@status0";
+                        selectComm.Parameters.AddWithValue("status0", statusArray[0]);
+
+                        if(statusArray.Length > 1)
+                        {
+                            for(int i = 1; i < statusArray.Length; i++)
+                            {
+                                selectComm.CommandText += " OR ";
+                                selectComm.CommandText += "r.status=@status" + i;
+                                selectComm.Parameters.AddWithValue("status" + i, statusArray[i]);
+                            }
+                        }
+
                     }
                 }
 
@@ -141,10 +175,10 @@ namespace roadwork_portal_service.Controllers
                         Priority priority = new Priority();
                         priority.code = reader.IsDBNull(14) ? "" : reader.GetString(14);
                         needFeatureFromDb.properties.priority = priority;
-                        Status status = new Status();
-                        status.code = reader.IsDBNull(15) ? "" : reader.GetString(15);
-                        status.name = reader.IsDBNull(16) ? "" : reader.GetString(16);
-                        needFeatureFromDb.properties.status = status;
+                        Status statusObj = new Status();
+                        statusObj.code = reader.IsDBNull(15) ? "" : reader.GetString(15);
+                        statusObj.name = reader.IsDBNull(16) ? "" : reader.GetString(16);
+                        needFeatureFromDb.properties.status = statusObj;
                         needFeatureFromDb.properties.description = reader.IsDBNull(17) ? "" : reader.GetString(17);
 
                         needFeatureFromDb.properties.created = reader.IsDBNull(18) ? DateTime.MinValue : reader.GetDateTime(18);
