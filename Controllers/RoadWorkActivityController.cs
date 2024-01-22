@@ -301,7 +301,7 @@ namespace roadwork_portal_service.Controllers
                     insertComm.Parameters.AddWithValue("date_to", roadWorkActivityFeature.properties.finishTo);
                     insertComm.Parameters.AddWithValue("costs", roadWorkActivityFeature.properties.costs == 0 ? DBNull.Value : roadWorkActivityFeature.properties.costs);
                     insertComm.Parameters.AddWithValue("costs_type", roadWorkActivityFeature.properties.costsType.code);
-                    insertComm.Parameters.AddWithValue("status", "verified");
+                    insertComm.Parameters.AddWithValue("status", "review");
                     insertComm.Parameters.AddWithValue("in_internet", roadWorkActivityFeature.properties.isInInternet);
                     insertComm.Parameters.AddWithValue("billing_address1", roadWorkActivityFeature.properties.billingAddress1);
                     insertComm.Parameters.AddWithValue("billing_address2", roadWorkActivityFeature.properties.billingAddress2);
