@@ -48,7 +48,7 @@ namespace roadwork_portal_service.Controllers
                 NpgsqlCommand selectConsultationComm = pgConn.CreateCommand();
                 selectConsultationComm.CommandText = @"SELECT c.uuid, c.last_edit, c.decline, 
                                             u.e_mail, u.last_name, u.first_name, c.feedback,
-                                            c.valuation
+                                            c.valuation, c.feedback_phase
                                         FROM ""wtb_ssp_activity_declines"" c
                                         LEFT JOIN ""wtb_ssp_users"" u ON c.input_by = u.uuid
                                         WHERE uuid_roadwork_activity = @uuid_roadwork_activity";
@@ -77,6 +77,7 @@ namespace roadwork_portal_service.Controllers
                         activityConsulationInput.inputBy = consultationUser;
                         activityConsulationInput.inputText = activityConsultationReader.IsDBNull(6) ? "" : activityConsultationReader.GetString(6);
                         activityConsulationInput.valuation = activityConsultationReader.IsDBNull(7) ? 0 : activityConsultationReader.GetInt32(7);
+                        activityConsulationInput.feedbackPhase = activityConsultationReader.IsDBNull(8) ? "" : activityConsultationReader.GetString(8);
 
                         consultationInputs.Add(activityConsulationInput);
                     }
@@ -107,9 +108,9 @@ namespace roadwork_portal_service.Controllers
                     NpgsqlCommand insertComm = pgConn.CreateCommand();
                     insertComm.CommandText = @"INSERT INTO ""wtb_ssp_activity_declines""
                                     (uuid, uuid_roadwork_activity, last_edit,
-                                    input_by, feedback, decline, valuation)
+                                    input_by, feedback, decline, valuation, feedback_phase)
                                     VALUES (@uuid, @uuid_roadwork_activity, @last_edit,
-                                    @input_by, @feedback, @decline, @valuation)";
+                                    @input_by, @feedback, @decline, @valuation, @feedback_phase)";
                     insertComm.Parameters.AddWithValue("uuid", new Guid(consultationInput.uuid));
                     insertComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadworkActivityUuid));
                     insertComm.Parameters.AddWithValue("last_edit", DateTime.Now);
@@ -119,6 +120,7 @@ namespace roadwork_portal_service.Controllers
                     insertComm.Parameters.AddWithValue("feedback", consultationInput.inputText);
                     insertComm.Parameters.AddWithValue("decline", consultationInput.decline);
                     insertComm.Parameters.AddWithValue("valuation", consultationInput.valuation);
+                    insertComm.Parameters.AddWithValue("feedback_phase", consultationInput.feedbackPhase);
 
                     insertComm.ExecuteNonQuery();
 
@@ -186,7 +188,8 @@ namespace roadwork_portal_service.Controllers
                     NpgsqlCommand updateComm = pgConn.CreateCommand();
                     updateComm.CommandText = @"UPDATE ""wtb_ssp_activity_declines""
                                     SET last_edit=@last_edit, feedback=@feedback,
-                                    decline=@decline, valuation=@valuation
+                                    decline=@decline, valuation=@valuation,
+                                    feedback_phase=@feedback_phase
                                     WHERE uuid=@uuid AND input_by=@input_by";
 
                     updateComm.Parameters.AddWithValue("uuid", new Guid(consultationInput.uuid));
@@ -199,6 +202,7 @@ namespace roadwork_portal_service.Controllers
                     updateComm.Parameters.AddWithValue("feedback", consultationInput.inputText);
                     updateComm.Parameters.AddWithValue("decline", consultationInput.decline);
                     updateComm.Parameters.AddWithValue("valuation", consultationInput.valuation);
+                    updateComm.Parameters.AddWithValue("feedback_phase", consultationInput.feedbackPhase);
 
                     updateComm.ExecuteNonQuery();
 
