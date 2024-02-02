@@ -285,7 +285,7 @@ namespace roadwork_portal_service.Controllers
                                     VALUES (@uuid, @name, @projectmanager, @traffic_agent,
                                     @description, current_timestamp, current_timestamp, @date_from,
                                     @date_to, @costs, @costs_type, @status, @in_internet, @billing_address1,
-                                    @billing_address2, @investment_no, @date_sks, @date_kap, date_oks,
+                                    @billing_address2, @investment_no, @date_sks, @date_kap, @date_oks,
                                     @date_gl_tba, @geom)";
                     insertComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
                     if (roadWorkActivityFeature.properties.projectManager.uuid != "")
