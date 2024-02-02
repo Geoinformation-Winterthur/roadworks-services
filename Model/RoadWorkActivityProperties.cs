@@ -27,5 +27,9 @@ public class RoadWorkActivityProperties
     public int investmentNo { get; set; } = 0;
     public int pdbFid { get; set; } = 0;
     public string strabakoNo { get; set; } = "";
+    public string dateSks { get; set; } = "";
+    public string dateKap { get; set; } = "";
+    public string dateOks { get; set; } = "";
+    public DateTime dateGlTba { get; set; } = DateTime.MinValue;
     public ActivityHistoryItem[] activityHistory { get; set; } = new ActivityHistoryItem[0];
 }
