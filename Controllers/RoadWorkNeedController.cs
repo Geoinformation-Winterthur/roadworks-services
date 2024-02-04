@@ -124,7 +124,7 @@ namespace roadwork_portal_service.Controllers
                         selectComm.Parameters.AddWithValue("name", "%" + name + "%");
                     }
 
-                    if (statusArray.Length != 0)
+                    if (statusArray[0] != "")
                     {
                         if (hasParameters)
                             selectComm.CommandText += " AND ";
