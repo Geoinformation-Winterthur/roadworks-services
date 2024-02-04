@@ -512,9 +512,8 @@ namespace roadwork_portal_service.Controllers
 
                                 insertHistoryComm.ExecuteNonQuery();
                             }
-
-                            updateTransAction.Commit();
                         }
+                        updateTransAction.Commit();
                     }
                 }
             }
