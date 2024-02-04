@@ -203,7 +203,7 @@ namespace roadwork_portal_service.Controllers
                         needFeatureFromDb.properties.activityRelationType = reader.IsDBNull(23) ? "" : reader.GetString(23);
                         needFeatureFromDb.properties.costs = reader.IsDBNull(24) ? 0 : reader.GetInt32(24);
                         needFeatureFromDb.properties.noteOfAreaManager = reader.IsDBNull(25) ? "" : reader.GetString(25);
-                        needFeatureFromDb.properties.created = reader.IsDBNull(26) ? DateTime.MinValue : reader.GetDateTime(26);
+                        needFeatureFromDb.properties.areaManagerNoteDate = reader.IsDBNull(26) ? DateTime.MinValue : reader.GetDateTime(26);
 
                         User areaManagerOfNote = new User();
                         areaManagerOfNote.firstName = reader.IsDBNull(27) ? "" : reader.GetString(27);
