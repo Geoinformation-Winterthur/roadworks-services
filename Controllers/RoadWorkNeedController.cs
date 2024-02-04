@@ -105,7 +105,8 @@ namespace roadwork_portal_service.Controllers
                 else
                 {
                     bool hasParameters = false;
-                    if(year != 0) {
+                    if (year != 0)
+                    {
                         selectComm.CommandText += " WHERE EXTRACT(YEAR FROM r.finish_optimum_from) = @year";
                         selectComm.Parameters.AddWithValue("year", year);
                         hasParameters = true;
@@ -113,30 +114,30 @@ namespace roadwork_portal_service.Controllers
 
                     if (name != "")
                     {
-                        if(hasParameters)
+                        if (hasParameters)
                             selectComm.CommandText += " AND ";
                         else
                             selectComm.CommandText += " WHERE ";
                         hasParameters = true;
-                        
+
                         selectComm.CommandText += "LOWER(r.name) LIKE @name";
                         selectComm.Parameters.AddWithValue("name", "%" + name + "%");
                     }
 
                     if (statusArray.Length != 0)
                     {
-                        if(hasParameters)
+                        if (hasParameters)
                             selectComm.CommandText += " AND ";
                         else
                             selectComm.CommandText += " WHERE ";
                         hasParameters = true;
-                        
+
                         selectComm.CommandText += "r.status=@status0";
                         selectComm.Parameters.AddWithValue("status0", statusArray[0]);
 
-                        if(statusArray.Length > 1)
+                        if (statusArray.Length > 1)
                         {
-                            for(int i = 1; i < statusArray.Length; i++)
+                            for (int i = 1; i < statusArray.Length; i++)
                             {
                                 selectComm.CommandText += " OR ";
                                 selectComm.CommandText += "r.status=@status" + i;
@@ -412,10 +413,8 @@ namespace roadwork_portal_service.Controllers
                                     finish_early_from=@finish_early_from, finish_early_to=@finish_early_to,
                                     finish_optimum_from=@finish_optimum_from, finish_optimum_to=@finish_optimum_to,
                                     finish_late_from=@finish_late_from, finish_late_to=@finish_late_to,
-                                    priority=@priority, status=@status, description=@description,
-                                    relevance=@relevance, 
-                                    costs=@costs, geom=@geom
-                                    WHERE uuid=@uuid";
+                                    priority=@priority, description=@description, relevance=@relevance, 
+                                    costs=@costs, geom=@geom";
 
                         updateComm.Parameters.AddWithValue("name", roadWorkNeedFeature.properties.name);
                         updateComm.Parameters.AddWithValue("kind", roadWorkNeedFeature.properties.kind.code);
@@ -436,12 +435,30 @@ namespace roadwork_portal_service.Controllers
                         updateComm.Parameters.AddWithValue("finish_late_from", roadWorkNeedFeature.properties.finishLateFrom);
                         updateComm.Parameters.AddWithValue("finish_late_to", roadWorkNeedFeature.properties.finishLateTo);
                         updateComm.Parameters.AddWithValue("priority", roadWorkNeedFeature.properties.priority.code);
-                        updateComm.Parameters.AddWithValue("status", roadWorkNeedFeature.properties.status.code);
                         updateComm.Parameters.AddWithValue("description", roadWorkNeedFeature.properties.description);
                         updateComm.Parameters.AddWithValue("relevance", roadWorkNeedFeature.properties.relevance);
                         updateComm.Parameters.AddWithValue("costs", roadWorkNeedFeature.properties.costs != 0 ? roadWorkNeedFeature.properties.costs : DBNull.Value);
                         updateComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
+
+                        string activityRelationType = "";
+                        if (roadWorkNeedFeature.properties.activityRelationType != null)
+                        {
+                            activityRelationType = roadWorkNeedFeature.properties.activityRelationType.Trim();
+                        }
+
+                        if (activityRelationType == "assignedneed")
+                        {
+                            updateComm.CommandText += ", status=(SELECT status FROM wtb_ssp_roadworkactivities WHERE uuid = @uuid_roadwork_activity)";
+                            updateComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkNeedFeature.properties.roadWorkActivityUuid));
+                        }
+                        else
+                        {
+                            updateComm.CommandText += ", status='requirement'";
+                        }
+
+                        updateComm.CommandText += " WHERE uuid=@uuid";
                         updateComm.Parameters.AddWithValue("uuid", new Guid(roadWorkNeedFeature.properties.uuid));
+
                         updateComm.ExecuteNonQuery();
 
                         if (roadWorkNeedFeature.properties.roadWorkActivityUuid != "")
@@ -459,46 +476,41 @@ namespace roadwork_portal_service.Controllers
                                         AND activityrelationtype='assignedneed'";
                             deleteComm.ExecuteNonQuery();
 
-                            string activityRelationType = "";
-                            if (roadWorkNeedFeature.properties.activityRelationType != null)
+                            if (activityRelationType != "")
                             {
-                                activityRelationType = roadWorkNeedFeature.properties.activityRelationType.Trim();
-                                if (activityRelationType != "")
-                                {
-                                    NpgsqlCommand insertComm = pgConn.CreateCommand();
-                                    insertComm.CommandText = @"INSERT INTO ""wtb_ssp_activities_to_needs""
+                                NpgsqlCommand insertComm = pgConn.CreateCommand();
+                                insertComm.CommandText = @"INSERT INTO ""wtb_ssp_activities_to_needs""
                                         (uuid, uuid_roadwork_need, uuid_roadwork_activity, activityrelationtype)
                                         VALUES(@uuid, @uuid_roadwork_need, @uuid_roadwork_activity, @activityrelationtype)";
-                                    insertComm.Parameters.AddWithValue("uuid", Guid.NewGuid());
-                                    insertComm.Parameters.AddWithValue("uuid_roadwork_need", new Guid(roadWorkNeedFeature.properties.uuid));
-                                    insertComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkNeedFeature.properties.roadWorkActivityUuid));
-                                    insertComm.Parameters.AddWithValue("activityrelationtype", activityRelationType);
-                                    insertComm.ExecuteNonQuery();
+                                insertComm.Parameters.AddWithValue("uuid", Guid.NewGuid());
+                                insertComm.Parameters.AddWithValue("uuid_roadwork_need", new Guid(roadWorkNeedFeature.properties.uuid));
+                                insertComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkNeedFeature.properties.roadWorkActivityUuid));
+                                insertComm.Parameters.AddWithValue("activityrelationtype", activityRelationType);
+                                insertComm.ExecuteNonQuery();
 
-                                    NpgsqlCommand insertHistoryComm = pgConn.CreateCommand();
-                                    insertHistoryComm.CommandText = @"INSERT INTO ""wtb_ssp_activities_history""
+                                NpgsqlCommand insertHistoryComm = pgConn.CreateCommand();
+                                insertHistoryComm.CommandText = @"INSERT INTO ""wtb_ssp_activities_history""
                                     (uuid, uuid_roadwork_activity, changedate, who, what)
                                     VALUES
                                     (@uuid, @uuid_roadwork_activity, @changedate, @who, @what)";
 
-                                    insertHistoryComm.Parameters.AddWithValue("uuid", Guid.NewGuid());
-                                    insertHistoryComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkNeedFeature.properties.roadWorkActivityUuid));
-                                    insertHistoryComm.Parameters.AddWithValue("changedate", DateTime.Now);
-                                    insertHistoryComm.Parameters.AddWithValue("who", userFromDb.firstName + " " + userFromDb.lastName);
-                                    string whatText = "Das Baubedürfnis '" + roadWorkNeedFeature.properties.name +
-                                                        "' wurde neu zugewiesen. Die neue Zuweisung ist: ";
-                                    if (activityRelationType == "assignedneed")
-                                    {
-                                        whatText += "Zugewiesenes Bedürfnis";
-                                    }
-                                    else if (activityRelationType == "registeredneed")
-                                    {
-                                        whatText += "Angemeldetes Bedürfnis";
-                                    }
-                                    insertHistoryComm.Parameters.AddWithValue("what", whatText);
-
-                                    insertHistoryComm.ExecuteNonQuery();
+                                insertHistoryComm.Parameters.AddWithValue("uuid", Guid.NewGuid());
+                                insertHistoryComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkNeedFeature.properties.roadWorkActivityUuid));
+                                insertHistoryComm.Parameters.AddWithValue("changedate", DateTime.Now);
+                                insertHistoryComm.Parameters.AddWithValue("who", userFromDb.firstName + " " + userFromDb.lastName);
+                                string whatText = "Das Baubedürfnis '" + roadWorkNeedFeature.properties.name +
+                                                    "' wurde neu zugewiesen. Die neue Zuweisung ist: ";
+                                if (activityRelationType == "assignedneed")
+                                {
+                                    whatText += "Zugewiesenes Bedürfnis";
                                 }
+                                else if (activityRelationType == "registeredneed")
+                                {
+                                    whatText += "Angemeldetes Bedürfnis";
+                                }
+                                insertHistoryComm.Parameters.AddWithValue("what", whatText);
+
+                                insertHistoryComm.ExecuteNonQuery();
                             }
 
                             updateTransAction.Commit();
@@ -575,14 +587,20 @@ namespace roadwork_portal_service.Controllers
 
                     deleteRelationComm.ExecuteNonQuery();
 
-                    if (!releaseOnly)
+                    NpgsqlCommand changeNeedComm = pgConn.CreateCommand();
+                    if (releaseOnly)
                     {
-                        NpgsqlCommand deleteNeedComm = pgConn.CreateCommand();
-                        deleteNeedComm.CommandText = @"DELETE FROM ""wtb_ssp_roadworkneeds""
+                        changeNeedComm.CommandText = @"UPDATE ""wtb_ssp_roadworkneeds""
+                                SET status='requirement'
                                 WHERE uuid=@uuid";
-                        deleteNeedComm.Parameters.AddWithValue("uuid", new Guid(uuid));
-                        deleteNeedComm.ExecuteNonQuery();
                     }
+                    else
+                    {
+                        changeNeedComm.CommandText = @"DELETE FROM ""wtb_ssp_roadworkneeds""
+                                WHERE uuid=@uuid";
+                    }
+                    changeNeedComm.Parameters.AddWithValue("uuid", new Guid(uuid));
+                    changeNeedComm.ExecuteNonQuery();
 
                     NpgsqlCommand insertHistoryComm = pgConn.CreateCommand();
                     insertHistoryComm.CommandText = @"INSERT INTO ""wtb_ssp_activities_history""

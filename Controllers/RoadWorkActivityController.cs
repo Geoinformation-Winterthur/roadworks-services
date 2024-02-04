@@ -347,6 +347,42 @@ namespace roadwork_portal_service.Controllers
 
                     insertHistoryComm.ExecuteNonQuery();
 
+                    if (roadWorkActivityFeature.properties.roadWorkNeedsUuids != null &&
+                            roadWorkActivityFeature.properties.roadWorkNeedsUuids.Length != 0)
+                    {
+                        NpgsqlCommand insertRelationComm = pgConn.CreateCommand();
+                        insertRelationComm.CommandText = @"INSERT INTO ""wtb_ssp_activities_to_needs""
+                                        (uuid, uuid_roadwork_need, uuid_roadwork_activity, activityrelationtype)
+                                        VALUES(@uuid, @uuid_roadwork_need, @uuid_roadwork_activity, 'assignedneed')";
+                        insertRelationComm.Parameters.AddWithValue("uuid", Guid.NewGuid());
+                        insertRelationComm.Parameters.AddWithValue("uuid_roadwork_need", new Guid(roadWorkActivityFeature.properties.roadWorkNeedsUuids[0]));
+                        insertRelationComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkActivityFeature.properties.uuid));
+                        insertRelationComm.ExecuteNonQuery();
+
+                        NpgsqlCommand updateNeedComm = pgConn.CreateCommand();
+                        updateNeedComm.CommandText = @"UPDATE ""wtb_ssp_roadworkneeds""
+                                    SET status='review'
+                                    WHERE uuid=@uuid";
+                        updateNeedComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.roadWorkNeedsUuids[0]));
+                        updateNeedComm.ExecuteNonQuery();
+
+                        insertHistoryComm = pgConn.CreateCommand();
+                        insertHistoryComm.CommandText = @"INSERT INTO ""wtb_ssp_activities_history""
+                                    (uuid, uuid_roadwork_activity, changedate, who, what)
+                                    VALUES
+                                    (@uuid, @uuid_roadwork_activity, @changedate, @who, @what)";
+
+                        insertHistoryComm.Parameters.AddWithValue("uuid", Guid.NewGuid());
+                        insertHistoryComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkActivityFeature.properties.uuid));
+                        insertHistoryComm.Parameters.AddWithValue("changedate", DateTime.Now);
+                        insertHistoryComm.Parameters.AddWithValue("who", userFromDb.firstName + " " + userFromDb.lastName);
+                        string whatText = "Das Baubedürfnis '" + roadWorkActivityFeature.properties.roadWorkNeedsUuids[0] +
+                                            "' wurde neu zugewiesen. Die neue Zuweisung ist: Zugewiesenes Bedürfnis";
+                        insertHistoryComm.Parameters.AddWithValue("what", whatText);
+
+                        insertHistoryComm.ExecuteNonQuery();
+                    }
+
                     trans.Commit();
                 }
 
