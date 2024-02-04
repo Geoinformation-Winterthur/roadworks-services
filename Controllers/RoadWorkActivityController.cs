@@ -470,6 +470,8 @@ namespace roadwork_portal_service.Controllers
                     return Ok(roadWorkActivityFeature);
                 }
 
+                User userFromDb = LoginController.getAuthorizedUserFromDb(this.User, false);
+
                 using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
                 {
 
@@ -534,7 +536,7 @@ namespace roadwork_portal_service.Controllers
                                     billing_address2=@billing_address2,
                                     in_internet=@in_internet, investment_no=@investment_no,
                                     date_sks=@date_sks, date_kap=@date_kap, date_oks=@date_oks,
-                                    date_gl_tba=@date_gl_tba
+                                    date_gl_tba=@date_gl_tba,
                                     geom=@geom
                                     WHERE uuid=@uuid";
 
@@ -582,6 +584,31 @@ namespace roadwork_portal_service.Controllers
                     {
                         if (statusOfActivityInDb != roadWorkActivityFeature.properties.status.code)
                         {
+
+                            NpgsqlCommand insertHistoryComm = pgConn.CreateCommand();
+                            insertHistoryComm.CommandText = @"INSERT INTO ""wtb_ssp_activities_history""
+                                    (uuid, uuid_roadwork_activity, changedate, who, what)
+                                    VALUES
+                                    (@uuid, @uuid_roadwork_activity, @changedate, @who, @what)";
+
+                            insertHistoryComm.Parameters.AddWithValue("uuid", Guid.NewGuid());
+                            insertHistoryComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkActivityFeature.properties.uuid));
+                            insertHistoryComm.Parameters.AddWithValue("changedate", DateTime.Now);
+                            insertHistoryComm.Parameters.AddWithValue("who", userFromDb.firstName + " " + userFromDb.lastName);
+                            string whatText = "Status des Bauvorhabens wurde geändert zu: ";
+                            if (roadWorkActivityFeature.properties.status.code == "review")
+                                whatText += "in Prüfung";
+                            else if (roadWorkActivityFeature.properties.status.code == "inconsult")
+                                whatText += "in Bedarfsklärung";
+                            else if (roadWorkActivityFeature.properties.status.code == "verified")
+                                whatText += "verifiziert";
+                            else if (roadWorkActivityFeature.properties.status.code == "reporting")
+                                whatText += "in Stellungnahme";
+                            else if (roadWorkActivityFeature.properties.status.code == "coordinated")
+                                whatText += "koordiniert";
+                            insertHistoryComm.Parameters.AddWithValue("what", whatText);
+                            insertHistoryComm.ExecuteNonQuery();
+
                             NpgsqlCommand updateActivityStatusComm = pgConn.CreateCommand();
                             updateActivityStatusComm.CommandText = @"UPDATE wtb_ssp_roadworkactivities
                                                     SET status=@status WHERE uuid=@uuid";
