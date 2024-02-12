@@ -620,7 +620,7 @@ namespace roadwork_portal_service.Controllers
                             {
                                 NpgsqlCommand updateNeedsStatusComm = pgConn.CreateCommand();
                                 updateNeedsStatusComm.CommandText = @"UPDATE ""wtb_ssp_roadworkneeds""
-                                                    SET status='coordinated'
+                                                    SET status='verified'
                                                     WHERE uuid IN
                                                     (SELECT n.uuid
                                                         FROM ""wtb_ssp_roadworkneeds"" n
