@@ -117,11 +117,11 @@ public class RoadWorkNeedDAO
                                     (uuid, name, kind, orderer, created, last_modified, finish_early_from, finish_early_to,
                                     finish_optimum_from, finish_optimum_to, finish_late_from,
                                     finish_late_to, priority, status, description, relevance,
-                                    costs, geom)
+                                    costs, private, geom)
                                     VALUES (@uuid, @name, @kind, @orderer, @created, @last_modified,
                                     @finish_early_from, @finish_early_to, @finish_optimum_from, @finish_optimum_to, @finish_late_from,
                                     @finish_late_to, @priority, @status, @description, @relevance,
-                                    @costs, @geom)";
+                                    @costs, @private, @geom)";
         insertComm.Parameters.AddWithValue("uuid", new Guid(roadWorkNeedFeature.properties.uuid));
         insertComm.Parameters.AddWithValue("name", roadWorkNeedFeature.properties.name);
         insertComm.Parameters.AddWithValue("kind", roadWorkNeedFeature.properties.kind.code);
@@ -148,6 +148,7 @@ public class RoadWorkNeedDAO
         insertComm.Parameters.AddWithValue("description", roadWorkNeedFeature.properties.description);
         insertComm.Parameters.AddWithValue("relevance", roadWorkNeedFeature.properties.relevance);
         insertComm.Parameters.AddWithValue("costs", roadWorkNeedFeature.properties.costs != 0 ? roadWorkNeedFeature.properties.costs : DBNull.Value);
+        insertComm.Parameters.AddWithValue("private", roadWorkNeedFeature.properties.isPrivate);
         insertComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
 
         return insertComm;

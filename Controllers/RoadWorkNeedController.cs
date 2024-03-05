@@ -58,6 +58,8 @@ namespace roadwork_portal_service.Controllers
 
             string[] statusArray = status.Split(",");
 
+            User userFromDb = LoginController.getAuthorizedUserFromDb(this.User, false);
+
             // get data of current user from database:
             using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
             {
@@ -71,7 +73,7 @@ namespace roadwork_portal_service.Controllers
                             r.created, r.last_modified, an.uuid_roadwork_activity, u.e_mail,
                             r.relevance, an.activityrelationtype, r.costs,
                             r.note_of_area_man, r.area_man_note_date, n.first_name, n.last_name,
-                            r.geom
+                            r.private, r.geom
                         FROM ""wtb_ssp_roadworkneeds"" r
                         LEFT JOIN ""wtb_ssp_activities_to_needs"" an ON an.uuid_roadwork_need = r.uuid
                         LEFT JOIN ""wtb_ssp_users"" u ON r.orderer = u.uuid
@@ -80,6 +82,15 @@ namespace roadwork_portal_service.Controllers
                         LEFT JOIN ""wtb_ssp_status"" s ON r.status = s.code
                         LEFT JOIN ""wtb_ssp_roadworkneedtypes"" rwt ON r.kind = rwt.code
                         LEFT JOIN ""wtb_ssp_users"" n ON r.area_man_of_note = n.uuid";
+
+                if (roadWorkActivityUuid != "")
+                {
+                    selectComm.CommandText += @" LEFT JOIN ""wtb_ssp_roadworkactivities"" act ON act.uuid = @act_uuid";
+                    selectComm.Parameters.AddWithValue("act_uuid", new Guid(roadWorkActivityUuid));
+                }
+
+                selectComm.CommandText += " WHERE (r.private = false OR r.orderer = @orderer_uuid)";
+                selectComm.Parameters.AddWithValue("orderer_uuid", new Guid(userFromDb.uuid));
 
                 if (uuids != "")
                 {
@@ -92,47 +103,32 @@ namespace roadwork_portal_service.Controllers
                             uuidsList.Add(new Guid(uuid));
                         }
                     }
-                    selectComm.CommandText += " WHERE r.uuid = ANY (:uuids)";
+                    selectComm.CommandText += " AND r.uuid = ANY (:uuids)";
                     selectComm.Parameters.AddWithValue("uuids", uuidsList);
 
                 }
                 else if (roadWorkActivityUuid != "")
                 {
-                    selectComm.CommandText += @" LEFT JOIN ""wtb_ssp_roadworkactivities"" act ON act.uuid = @act_uuid
-                                                        WHERE ST_Intersects(act.geom, r.geom)";
+                    selectComm.CommandText += @" AND ST_Intersects(act.geom, r.geom)";
                     selectComm.Parameters.AddWithValue("act_uuid", new Guid(roadWorkActivityUuid));
                 }
                 else
                 {
-                    bool hasParameters = false;
                     if (year != 0)
                     {
-                        selectComm.CommandText += " WHERE EXTRACT(YEAR FROM r.finish_optimum_from) = @year";
+                        selectComm.CommandText += " AND EXTRACT(YEAR FROM r.finish_optimum_from) = @year";
                         selectComm.Parameters.AddWithValue("year", year);
-                        hasParameters = true;
                     }
 
                     if (name != "")
                     {
-                        if (hasParameters)
-                            selectComm.CommandText += " AND ";
-                        else
-                            selectComm.CommandText += " WHERE ";
-                        hasParameters = true;
-
-                        selectComm.CommandText += "LOWER(r.name) LIKE @name";
+                        selectComm.CommandText += " AND LOWER(r.name) LIKE @name";
                         selectComm.Parameters.AddWithValue("name", "%" + name + "%");
                     }
 
                     if (statusArray[0] != "")
                     {
-                        if (hasParameters)
-                            selectComm.CommandText += " AND ";
-                        else
-                            selectComm.CommandText += " WHERE ";
-                        hasParameters = true;
-
-                        selectComm.CommandText += "r.status=@status0";
+                        selectComm.CommandText += " AND (r.status=@status0";
                         selectComm.Parameters.AddWithValue("status0", statusArray[0]);
 
                         if (statusArray.Length > 1)
@@ -144,7 +140,7 @@ namespace roadwork_portal_service.Controllers
                                 selectComm.Parameters.AddWithValue("status" + i, statusArray[i]);
                             }
                         }
-
+                        selectComm.CommandText += ")";
                     }
                 }
 
@@ -210,7 +206,8 @@ namespace roadwork_portal_service.Controllers
                         areaManagerOfNote.lastName = reader.IsDBNull(28) ? "" : reader.GetString(28);
                         needFeatureFromDb.properties.areaManagerOfNote = areaManagerOfNote;
 
-                        Polygon ntsPoly = reader.IsDBNull(29) ? Polygon.Empty : reader.GetValue(29) as Polygon;
+                        needFeatureFromDb.properties.isPrivate = reader.IsDBNull(29) ? true : reader.GetBoolean(29);
+                        Polygon ntsPoly = reader.IsDBNull(30) ? Polygon.Empty : reader.GetValue(30) as Polygon;
                         needFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
 
                         projectsFromDb.Add(needFeatureFromDb);
@@ -601,21 +598,24 @@ namespace roadwork_portal_service.Controllers
                     changeNeedComm.Parameters.AddWithValue("uuid", new Guid(uuid));
                     changeNeedComm.ExecuteNonQuery();
 
-                    NpgsqlCommand insertHistoryComm = pgConn.CreateCommand();
-                    insertHistoryComm.CommandText = @"INSERT INTO ""wtb_ssp_activities_history""
+                    if (affectedActivityUuid != String.Empty)
+                    {
+                        NpgsqlCommand insertHistoryComm = pgConn.CreateCommand();
+                        insertHistoryComm.CommandText = @"INSERT INTO ""wtb_ssp_activities_history""
                                     (uuid, uuid_roadwork_activity, changedate, who, what)
                                     VALUES
                                     (@uuid, @uuid_roadwork_activity, @changedate, @who, @what)";
 
-                    insertHistoryComm.Parameters.AddWithValue("uuid", Guid.NewGuid());
-                    insertHistoryComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(affectedActivityUuid));
-                    insertHistoryComm.Parameters.AddWithValue("changedate", DateTime.Now);
-                    insertHistoryComm.Parameters.AddWithValue("who", userFromDb.firstName + " " + userFromDb.lastName);
-                    string whatText = "Das Baubedürfnis '" + uuid +
-                                        "' wurde von dieser Massnahme entfernt.";
-                    insertHistoryComm.Parameters.AddWithValue("what", whatText);
+                        insertHistoryComm.Parameters.AddWithValue("uuid", Guid.NewGuid());
+                        insertHistoryComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(affectedActivityUuid));
+                        insertHistoryComm.Parameters.AddWithValue("changedate", DateTime.Now);
+                        insertHistoryComm.Parameters.AddWithValue("who", userFromDb.firstName + " " + userFromDb.lastName);
+                        string whatText = "Das Baubedürfnis '" + uuid +
+                                            "' wurde von dieser Massnahme entfernt.";
+                        insertHistoryComm.Parameters.AddWithValue("what", whatText);
 
-                    insertHistoryComm.ExecuteNonQuery();
+                        insertHistoryComm.ExecuteNonQuery();
+                    }
 
                     trans.Commit();
                 }

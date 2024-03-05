@@ -137,7 +137,7 @@ public class UsersController : ControllerBase
 
         user.mailAddress = user.mailAddress.ToLower().Trim();
 
-        if (user.mailAddress == "")
+        if (user.mailAddress == "" || user.mailAddress.Any(Char.IsWhiteSpace))
         {
             _logger.LogWarning("Not enough user data provided in add user process.");
             user.errorMessage = "SSP-0";
