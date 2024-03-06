@@ -116,11 +116,11 @@ public class RoadWorkNeedDAO
         insertComm.CommandText = @"INSERT INTO ""wtb_ssp_roadworkneeds""
                                     (uuid, name, kind, orderer, created, last_modified, finish_early_to,
                                     finish_optimum_to, finish_late_to, priority, status, description, relevance,
-                                    costs, private, section, comment, geom)
+                                    costs, private, section, comment, url, geom)
                                     VALUES (@uuid, @name, @kind, @orderer, @created, @last_modified,
                                     @finish_early_to, @finish_optimum_to,
                                     @finish_late_to, @priority, @status, @description, @relevance,
-                                    @costs, @private, @section, @comment, @geom)";
+                                    @costs, @private, @section, @comment, @url, @geom)";
         insertComm.Parameters.AddWithValue("uuid", new Guid(roadWorkNeedFeature.properties.uuid));
         insertComm.Parameters.AddWithValue("name", roadWorkNeedFeature.properties.name);
         insertComm.Parameters.AddWithValue("kind", roadWorkNeedFeature.properties.kind.code);
@@ -147,6 +147,7 @@ public class RoadWorkNeedDAO
         insertComm.Parameters.AddWithValue("private", roadWorkNeedFeature.properties.isPrivate);
         insertComm.Parameters.AddWithValue("section", roadWorkNeedFeature.properties.section);
         insertComm.Parameters.AddWithValue("comment", roadWorkNeedFeature.properties.comment);
+        insertComm.Parameters.AddWithValue("url", roadWorkNeedFeature.properties.url);
         insertComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
 
         return insertComm;

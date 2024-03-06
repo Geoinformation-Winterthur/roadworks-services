@@ -72,7 +72,7 @@ namespace roadwork_portal_service.Controllers
                             r.created, r.last_modified, an.uuid_roadwork_activity, u.e_mail,
                             r.relevance, an.activityrelationtype, r.costs,
                             r.note_of_area_man, r.area_man_note_date, n.first_name, n.last_name,
-                            r.private, r.section, r.comment, r.geom
+                            r.private, r.section, r.comment, r.url, r.geom
                         FROM ""wtb_ssp_roadworkneeds"" r
                         LEFT JOIN ""wtb_ssp_activities_to_needs"" an ON an.uuid_roadwork_need = r.uuid
                         LEFT JOIN ""wtb_ssp_users"" u ON r.orderer = u.uuid
@@ -205,7 +205,8 @@ namespace roadwork_portal_service.Controllers
                         needFeatureFromDb.properties.isPrivate = reader.IsDBNull(26) ? true : reader.GetBoolean(26);
                         needFeatureFromDb.properties.section = reader.IsDBNull(27) ? "" : reader.GetString(27);
                         needFeatureFromDb.properties.comment = reader.IsDBNull(28) ? "" : reader.GetString(28);
-                        Polygon ntsPoly = reader.IsDBNull(29) ? Polygon.Empty : reader.GetValue(29) as Polygon;
+                        needFeatureFromDb.properties.url = reader.IsDBNull(29) ? "" : reader.GetString(29);
+                        Polygon ntsPoly = reader.IsDBNull(30) ? Polygon.Empty : reader.GetValue(30) as Polygon;
                         needFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
 
                         projectsFromDb.Add(needFeatureFromDb);
@@ -408,7 +409,8 @@ namespace roadwork_portal_service.Controllers
                                     finish_early_to=@finish_early_to, finish_optimum_to=@finish_optimum_to,
                                     finish_late_to=@finish_late_to, priority=@priority,
                                     description=@description, relevance=@relevance, 
-                                    costs=@costs, section=@section, comment=@comment, geom=@geom";
+                                    costs=@costs, section=@section, comment=@comment, 
+                                    url=@url, geom=@geom";
 
                         updateComm.Parameters.AddWithValue("name", roadWorkNeedFeature.properties.name);
                         updateComm.Parameters.AddWithValue("kind", roadWorkNeedFeature.properties.kind.code);
@@ -431,6 +433,7 @@ namespace roadwork_portal_service.Controllers
                         updateComm.Parameters.AddWithValue("costs", roadWorkNeedFeature.properties.costs != 0 ? roadWorkNeedFeature.properties.costs : DBNull.Value);
                         updateComm.Parameters.AddWithValue("section", roadWorkNeedFeature.properties.section);
                         updateComm.Parameters.AddWithValue("comment", roadWorkNeedFeature.properties.comment);
+                        updateComm.Parameters.AddWithValue("url", roadWorkNeedFeature.properties.url);
                         updateComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
 
                         string activityRelationType = "";
