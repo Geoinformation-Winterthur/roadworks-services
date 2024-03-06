@@ -27,5 +27,6 @@ public class RoadWorkNeedProperties
     public DateTime areaManagerNoteDate { get; set; } = DateTime.MinValue;
     public User areaManagerOfNote { get; set; } = new User();
     public bool isPrivate { get; set; } = false;
+    public string section { get; set; } = "";
 }
 
