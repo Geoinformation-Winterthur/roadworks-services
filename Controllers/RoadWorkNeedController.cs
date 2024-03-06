@@ -66,9 +66,8 @@ namespace roadwork_portal_service.Controllers
                 pgConn.Open();
                 NpgsqlCommand selectComm = pgConn.CreateCommand();
                 selectComm.CommandText = @"SELECT r.uuid, r.name, rwt.code, rwt.name, r.orderer,
-                            u.first_name, u.last_name, o.name, r.finish_early_from, r.finish_early_to,
-                            r.finish_optimum_from, r.finish_optimum_to, r.finish_late_from,
-                            r.finish_late_to, p.code, s.code, s.name,
+                            u.first_name, u.last_name, o.name, r.finish_early_to,
+                            r.finish_optimum_to, r.finish_late_to, p.code, s.code, s.name,
                             r.description, 
                             r.created, r.last_modified, an.uuid_roadwork_activity, u.e_mail,
                             r.relevance, an.activityrelationtype, r.costs,
@@ -116,7 +115,7 @@ namespace roadwork_portal_service.Controllers
                 {
                     if (year != 0)
                     {
-                        selectComm.CommandText += " AND EXTRACT(YEAR FROM r.finish_optimum_from) = @year";
+                        selectComm.CommandText += " AND EXTRACT(YEAR FROM r.finish_optimum_to) = @year";
                         selectComm.Parameters.AddWithValue("year", year);
                     }
 
@@ -163,26 +162,23 @@ namespace roadwork_portal_service.Controllers
                         orgUnit.name = reader.IsDBNull(7) ? "" : reader.GetString(7);
                         orderer.organisationalUnit = orgUnit;
                         needFeatureFromDb.properties.orderer = orderer;
-                        needFeatureFromDb.properties.finishEarlyFrom = reader.IsDBNull(8) ? DateTime.MinValue : reader.GetDateTime(8);
-                        needFeatureFromDb.properties.finishEarlyTo = reader.IsDBNull(9) ? DateTime.MinValue : reader.GetDateTime(9);
-                        needFeatureFromDb.properties.finishOptimumFrom = reader.IsDBNull(10) ? DateTime.MinValue : reader.GetDateTime(10);
-                        needFeatureFromDb.properties.finishOptimumTo = reader.IsDBNull(11) ? DateTime.MinValue : reader.GetDateTime(11);
-                        needFeatureFromDb.properties.finishLateFrom = reader.IsDBNull(12) ? DateTime.MinValue : reader.GetDateTime(12);
-                        needFeatureFromDb.properties.finishLateTo = reader.IsDBNull(13) ? DateTime.MinValue : reader.GetDateTime(13);
+                        needFeatureFromDb.properties.finishEarlyTo = reader.IsDBNull(8) ? DateTime.MinValue : reader.GetDateTime(8);
+                        needFeatureFromDb.properties.finishOptimumTo = reader.IsDBNull(9) ? DateTime.MinValue : reader.GetDateTime(9);
+                        needFeatureFromDb.properties.finishLateTo = reader.IsDBNull(10) ? DateTime.MinValue : reader.GetDateTime(10);
                         Priority priority = new Priority();
-                        priority.code = reader.IsDBNull(14) ? "" : reader.GetString(14);
+                        priority.code = reader.IsDBNull(11) ? "" : reader.GetString(11);
                         needFeatureFromDb.properties.priority = priority;
                         Status statusObj = new Status();
-                        statusObj.code = reader.IsDBNull(15) ? "" : reader.GetString(15);
-                        statusObj.name = reader.IsDBNull(16) ? "" : reader.GetString(16);
+                        statusObj.code = reader.IsDBNull(12) ? "" : reader.GetString(12);
+                        statusObj.name = reader.IsDBNull(13) ? "" : reader.GetString(13);
                         needFeatureFromDb.properties.status = statusObj;
-                        needFeatureFromDb.properties.description = reader.IsDBNull(17) ? "" : reader.GetString(17);
+                        needFeatureFromDb.properties.description = reader.IsDBNull(14) ? "" : reader.GetString(14);
 
-                        needFeatureFromDb.properties.created = reader.IsDBNull(18) ? DateTime.MinValue : reader.GetDateTime(18);
-                        needFeatureFromDb.properties.lastModified = reader.IsDBNull(19) ? DateTime.MinValue : reader.GetDateTime(19);
-                        needFeatureFromDb.properties.roadWorkActivityUuid = reader.IsDBNull(20) ? "" : reader.GetGuid(20).ToString();
+                        needFeatureFromDb.properties.created = reader.IsDBNull(15) ? DateTime.MinValue : reader.GetDateTime(15);
+                        needFeatureFromDb.properties.lastModified = reader.IsDBNull(16) ? DateTime.MinValue : reader.GetDateTime(16);
+                        needFeatureFromDb.properties.roadWorkActivityUuid = reader.IsDBNull(17) ? "" : reader.GetGuid(17).ToString();
 
-                        string ordererMailAddress = reader.IsDBNull(21) ? "" : reader.GetString(21);
+                        string ordererMailAddress = reader.IsDBNull(18) ? "" : reader.GetString(18);
                         string mailOfLoggedInUser = User.FindFirstValue(ClaimTypes.Email);
                         if (User.IsInRole("administrator") || ordererMailAddress == mailOfLoggedInUser)
                         {
@@ -195,19 +191,19 @@ namespace roadwork_portal_service.Controllers
                             needFeatureFromDb.properties.isEditingAllowed = false;
                         }
 
-                        needFeatureFromDb.properties.relevance = reader.IsDBNull(22) ? 0 : reader.GetInt32(22);
-                        needFeatureFromDb.properties.activityRelationType = reader.IsDBNull(23) ? "" : reader.GetString(23);
-                        needFeatureFromDb.properties.costs = reader.IsDBNull(24) ? 0 : reader.GetInt32(24);
-                        needFeatureFromDb.properties.noteOfAreaManager = reader.IsDBNull(25) ? "" : reader.GetString(25);
-                        needFeatureFromDb.properties.areaManagerNoteDate = reader.IsDBNull(26) ? DateTime.MinValue : reader.GetDateTime(26);
+                        needFeatureFromDb.properties.relevance = reader.IsDBNull(19) ? 0 : reader.GetInt32(19);
+                        needFeatureFromDb.properties.activityRelationType = reader.IsDBNull(20) ? "" : reader.GetString(20);
+                        needFeatureFromDb.properties.costs = reader.IsDBNull(21) ? 0 : reader.GetInt32(21);
+                        needFeatureFromDb.properties.noteOfAreaManager = reader.IsDBNull(22) ? "" : reader.GetString(22);
+                        needFeatureFromDb.properties.areaManagerNoteDate = reader.IsDBNull(23) ? DateTime.MinValue : reader.GetDateTime(23);
 
                         User areaManagerOfNote = new User();
-                        areaManagerOfNote.firstName = reader.IsDBNull(27) ? "" : reader.GetString(27);
-                        areaManagerOfNote.lastName = reader.IsDBNull(28) ? "" : reader.GetString(28);
+                        areaManagerOfNote.firstName = reader.IsDBNull(24) ? "" : reader.GetString(24);
+                        areaManagerOfNote.lastName = reader.IsDBNull(25) ? "" : reader.GetString(25);
                         needFeatureFromDb.properties.areaManagerOfNote = areaManagerOfNote;
 
-                        needFeatureFromDb.properties.isPrivate = reader.IsDBNull(29) ? true : reader.GetBoolean(29);
-                        Polygon ntsPoly = reader.IsDBNull(30) ? Polygon.Empty : reader.GetValue(30) as Polygon;
+                        needFeatureFromDb.properties.isPrivate = reader.IsDBNull(26) ? true : reader.GetBoolean(26);
+                        Polygon ntsPoly = reader.IsDBNull(27) ? Polygon.Empty : reader.GetValue(27) as Polygon;
                         needFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
 
                         projectsFromDb.Add(needFeatureFromDb);
@@ -407,10 +403,9 @@ namespace roadwork_portal_service.Controllers
                         NpgsqlCommand updateComm = pgConn.CreateCommand();
                         updateComm.CommandText = @"UPDATE ""wtb_ssp_roadworkneeds""
                                     SET name=@name, kind=@kind, orderer=@orderer, last_modified=@last_modified,
-                                    finish_early_from=@finish_early_from, finish_early_to=@finish_early_to,
-                                    finish_optimum_from=@finish_optimum_from, finish_optimum_to=@finish_optimum_to,
-                                    finish_late_from=@finish_late_from, finish_late_to=@finish_late_to,
-                                    priority=@priority, description=@description, relevance=@relevance, 
+                                    finish_early_to=@finish_early_to, finish_optimum_to=@finish_optimum_to,
+                                    finish_late_to=@finish_late_to, priority=@priority,
+                                    description=@description, relevance=@relevance, 
                                     costs=@costs, geom=@geom";
 
                         updateComm.Parameters.AddWithValue("name", roadWorkNeedFeature.properties.name);
@@ -425,11 +420,8 @@ namespace roadwork_portal_service.Controllers
                         }
                         roadWorkNeedFeature.properties.lastModified = DateTime.Now;
                         updateComm.Parameters.AddWithValue("last_modified", roadWorkNeedFeature.properties.lastModified);
-                        updateComm.Parameters.AddWithValue("finish_early_from", roadWorkNeedFeature.properties.finishEarlyFrom);
                         updateComm.Parameters.AddWithValue("finish_early_to", roadWorkNeedFeature.properties.finishEarlyTo);
-                        updateComm.Parameters.AddWithValue("finish_optimum_from", roadWorkNeedFeature.properties.finishOptimumFrom);
                         updateComm.Parameters.AddWithValue("finish_optimum_to", roadWorkNeedFeature.properties.finishOptimumTo);
-                        updateComm.Parameters.AddWithValue("finish_late_from", roadWorkNeedFeature.properties.finishLateFrom);
                         updateComm.Parameters.AddWithValue("finish_late_to", roadWorkNeedFeature.properties.finishLateTo);
                         updateComm.Parameters.AddWithValue("priority", roadWorkNeedFeature.properties.priority.code);
                         updateComm.Parameters.AddWithValue("description", roadWorkNeedFeature.properties.description);

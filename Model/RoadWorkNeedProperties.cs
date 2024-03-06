@@ -12,11 +12,8 @@ public class RoadWorkNeedProperties
     public User orderer { get; set; } = new User();
     public DateTime created { get; set; } = DateTime.MinValue;
     public DateTime lastModified { get; set; } = DateTime.MinValue;
-    public DateTime finishEarlyFrom { get; set; } = DateTime.MinValue;
     public DateTime finishEarlyTo { get; set; } = DateTime.MinValue;
-    public DateTime finishOptimumFrom { get; set; } = DateTime.MinValue;
     public DateTime finishOptimumTo { get; set; } = DateTime.MinValue;
-    public DateTime finishLateFrom { get; set; } = DateTime.MinValue;
     public DateTime finishLateTo { get; set; } = DateTime.MinValue;
     public Priority priority { get; set; } = new Priority();
     public Status status { get; set; } = new Status();

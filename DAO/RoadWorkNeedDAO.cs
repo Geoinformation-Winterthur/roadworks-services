@@ -114,12 +114,11 @@ public class RoadWorkNeedDAO
     {
         NpgsqlCommand insertComm = pgConn.CreateCommand();
         insertComm.CommandText = @"INSERT INTO ""wtb_ssp_roadworkneeds""
-                                    (uuid, name, kind, orderer, created, last_modified, finish_early_from, finish_early_to,
-                                    finish_optimum_from, finish_optimum_to, finish_late_from,
-                                    finish_late_to, priority, status, description, relevance,
+                                    (uuid, name, kind, orderer, created, last_modified, finish_early_to,
+                                    finish_optimum_to, finish_late_to, priority, status, description, relevance,
                                     costs, private, geom)
                                     VALUES (@uuid, @name, @kind, @orderer, @created, @last_modified,
-                                    @finish_early_from, @finish_early_to, @finish_optimum_from, @finish_optimum_to, @finish_late_from,
+                                    @finish_early_to, @finish_optimum_to,
                                     @finish_late_to, @priority, @status, @description, @relevance,
                                     @costs, @private, @geom)";
         insertComm.Parameters.AddWithValue("uuid", new Guid(roadWorkNeedFeature.properties.uuid));
@@ -137,11 +136,8 @@ public class RoadWorkNeedDAO
         insertComm.Parameters.AddWithValue("created", roadWorkNeedFeature.properties.created);
         roadWorkNeedFeature.properties.lastModified = DateTime.Now;
         insertComm.Parameters.AddWithValue("last_modified", roadWorkNeedFeature.properties.lastModified);
-        insertComm.Parameters.AddWithValue("finish_early_from", roadWorkNeedFeature.properties.finishEarlyFrom);
         insertComm.Parameters.AddWithValue("finish_early_to", roadWorkNeedFeature.properties.finishEarlyTo);
-        insertComm.Parameters.AddWithValue("finish_optimum_from", roadWorkNeedFeature.properties.finishOptimumFrom);
         insertComm.Parameters.AddWithValue("finish_optimum_to", roadWorkNeedFeature.properties.finishOptimumTo);
-        insertComm.Parameters.AddWithValue("finish_late_from", roadWorkNeedFeature.properties.finishLateFrom);
         insertComm.Parameters.AddWithValue("finish_late_to", roadWorkNeedFeature.properties.finishLateTo);
         insertComm.Parameters.AddWithValue("priority", roadWorkNeedFeature.properties.priority.code);
         insertComm.Parameters.AddWithValue("status", roadWorkNeedFeature.properties.status.code);

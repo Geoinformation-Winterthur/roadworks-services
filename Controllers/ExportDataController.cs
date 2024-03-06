@@ -40,8 +40,7 @@ namespace roadwork_portal_service.Controllers
                     NpgsqlCommand selectComm = pgConn.CreateCommand();
                     selectComm.CommandText = @"SELECT r.uuid, r.name, rwt.name,
                             o.first_name, o.last_name, r.created, r.last_modified,
-                            r.finish_early_from, r.finish_early_to, r.finish_optimum_from,
-                            r.finish_optimum_to, r.finish_late_from, r.finish_late_to,
+                            r.finish_early_to, r.finish_optimum_to, r.finish_late_to,
                             prio.name, status.name, r.costs, r.description,
                             r.note_of_area_man, r.area_man_note_date,
                             areaman.first_name, areaman.last_name, r.relevance
@@ -64,21 +63,18 @@ namespace roadwork_portal_service.Controllers
                             resultCsv += reader.IsDBNull(4) ? ";" : reader.GetString(4) + ";";
                             resultCsv += reader.IsDBNull(5) ? ";" : reader.GetDateTime(5).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
                             resultCsv += reader.IsDBNull(6) ? ";" : reader.GetDateTime(6).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(7) ? ";" : reader.GetDateTime(7).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
                             resultCsv += reader.IsDBNull(8) ? ";" : reader.GetDateTime(8).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(9) ? ";" : reader.GetDateTime(9).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(10) ? ";" : reader.GetDateTime(10).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(11) ? ";" : reader.GetDateTime(11).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(12) ? ";" : reader.GetDateTime(12).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(13) ? ";" : reader.GetString(13) + ";";
-                            resultCsv += reader.IsDBNull(14) ? ";" : reader.GetString(14) + ";";
-                            resultCsv += reader.IsDBNull(15) ? ";" : reader.GetInt32(15) + ";";
-                            resultCsv += reader.IsDBNull(16) ? ";" : reader.GetString(16) + ";";
-                            resultCsv += reader.IsDBNull(17) ? ";" : reader.GetString(17) + ";";
-                            resultCsv += reader.IsDBNull(18) ? ";" : reader.GetDateTime(18).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(19) ? ";" : reader.GetString(19) + ";";
-                            resultCsv += reader.IsDBNull(20) ? ";" : reader.GetString(20) + ";";
-                            resultCsv += reader.IsDBNull(21) ? "" : reader.GetInt32(21);
+                            resultCsv += reader.IsDBNull(9) ? ";" : reader.GetDateTime(10).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(10) ? ";" : reader.GetDateTime(12).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(11) ? ";" : reader.GetString(13) + ";";
+                            resultCsv += reader.IsDBNull(12) ? ";" : reader.GetString(14) + ";";
+                            resultCsv += reader.IsDBNull(13) ? ";" : reader.GetInt32(15) + ";";
+                            resultCsv += reader.IsDBNull(14) ? ";" : reader.GetString(16) + ";";
+                            resultCsv += reader.IsDBNull(15) ? ";" : reader.GetString(17) + ";";
+                            resultCsv += reader.IsDBNull(16) ? ";" : reader.GetDateTime(18).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(17) ? ";" : reader.GetString(19) + ";";
+                            resultCsv += reader.IsDBNull(18) ? ";" : reader.GetString(20) + ";";
+                            resultCsv += reader.IsDBNull(19) ? "" : reader.GetInt32(21);
                             resultCsv += "\r\n";
                         }
                     }
