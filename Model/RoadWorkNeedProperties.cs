@@ -28,5 +28,6 @@ public class RoadWorkNeedProperties
     public User areaManagerOfNote { get; set; } = new User();
     public bool isPrivate { get; set; } = false;
     public string section { get; set; } = "";
+    public string comment { get; set; } = "";
 }
 
