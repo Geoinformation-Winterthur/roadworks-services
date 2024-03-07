@@ -10,5 +10,6 @@ public class OrganisationalUnit
     public string name { get; set; } = "";
     public string errorMessage { get; set; } = "";
     public string contactPerson { get; set; } = "";
+    public bool isCivilEngineering { get; set; } = false;
 }
 
