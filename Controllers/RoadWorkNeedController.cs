@@ -72,7 +72,7 @@ namespace roadwork_portal_service.Controllers
                             r.created, r.last_modified, an.uuid_roadwork_activity, u.e_mail,
                             r.relevance, an.activityrelationtype, r.costs,
                             r.note_of_area_man, r.area_man_note_date, n.first_name, n.last_name,
-                            r.private, r.section, r.comment, r.url, r.geom
+                            r.private, r.section, r.comment, r.url, o.is_civil_eng, r.geom
                         FROM ""wtb_ssp_roadworkneeds"" r
                         LEFT JOIN ""wtb_ssp_activities_to_needs"" an ON an.uuid_roadwork_need = r.uuid
                         LEFT JOIN ""wtb_ssp_users"" u ON r.orderer = u.uuid
@@ -206,7 +206,8 @@ namespace roadwork_portal_service.Controllers
                         needFeatureFromDb.properties.section = reader.IsDBNull(27) ? "" : reader.GetString(27);
                         needFeatureFromDb.properties.comment = reader.IsDBNull(28) ? "" : reader.GetString(28);
                         needFeatureFromDb.properties.url = reader.IsDBNull(29) ? "" : reader.GetString(29);
-                        Polygon ntsPoly = reader.IsDBNull(30) ? Polygon.Empty : reader.GetValue(30) as Polygon;
+                        needFeatureFromDb.properties.orderer.organisationalUnit.isCivilEngineering = reader.IsDBNull(30) ? false : reader.GetBoolean(30);
+                        Polygon ntsPoly = reader.IsDBNull(31) ? Polygon.Empty : reader.GetValue(31) as Polygon;
                         needFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
 
                         projectsFromDb.Add(needFeatureFromDb);

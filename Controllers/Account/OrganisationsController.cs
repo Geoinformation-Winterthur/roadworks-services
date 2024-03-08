@@ -34,7 +34,7 @@ public class OrganisationsController : ControllerBase
             NpgsqlCommand selectComm = pgConn.CreateCommand();
             selectComm.CommandText = @"SELECT uuid, name, is_civil_eng FROM ""wtb_ssp_organisationalunits""";
             if(withContactPerson){
-                selectComm.CommandText = @"SELECT o.uuid, o.name, o.is_civil_eng
+                selectComm.CommandText = @"SELECT o.uuid, o.name, o.is_civil_eng,
                                 u.first_name, u.last_name
                             FROM ""wtb_ssp_organisationalunits"" o
                             LEFT JOIN (
