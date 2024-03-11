@@ -3,6 +3,7 @@
 //      Copyright (c) Geoinformation Winterthur. All rights reserved.
 // </copyright>
 
+using Microsoft.AspNetCore.Mvc.Routing;
 using NetTopologySuite.Geometries;
 using Npgsql;
 using roadwork_portal_service.Configuration;
@@ -56,6 +57,20 @@ public class RoadWorkNeedDAO
         if (roadWorkNeedFeature.properties.kind.code == "")
         {
             roadWorkNeedFeature.errorMessage = "SSP-24";
+            return roadWorkNeedFeature;
+        }
+
+        if(roadWorkNeedFeature.properties.url == null)
+            roadWorkNeedFeature.properties.url = "";
+
+        roadWorkNeedFeature.properties.url = roadWorkNeedFeature.properties.url.Trim();
+
+        Uri uri;
+        bool isUri = Uri.TryCreate(roadWorkNeedFeature.properties.url, UriKind.Absolute, out uri);
+
+        if (roadWorkNeedFeature.properties.url != "" && !isUri)
+        {
+            roadWorkNeedFeature.errorMessage = "SSP-26";
             return roadWorkNeedFeature;
         }
 

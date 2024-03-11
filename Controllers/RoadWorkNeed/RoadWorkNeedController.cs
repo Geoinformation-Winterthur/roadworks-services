@@ -259,6 +259,8 @@ namespace roadwork_portal_service.Controllers
                     _logger.LogWarning("Roadworkneed area is less than or equal " + configData.minAreaSize + "qm.");
                 else if (roadWorkNeedFeature.errorMessage == "SSP-22")
                     _logger.LogWarning("No roadworkneed data received.");
+                else if (roadWorkNeedFeature.errorMessage == "SSP-26")
+                    _logger.LogWarning("URI of given roadwork need is not valid.");
 
                 return Ok(roadWorkNeedFeature);
             }
@@ -311,6 +313,15 @@ namespace roadwork_portal_service.Controllers
                     _logger.LogWarning("The provided roadworkneed data has no kind attribute value." +
                                 " But a kind value is mandatory.");
                     roadWorkNeedFeature.errorMessage = "SSP-24";
+                    return Ok(roadWorkNeedFeature);
+                }
+
+                Uri uri;
+                bool isUri = Uri.TryCreate(roadWorkNeedFeature.properties.url, UriKind.Absolute, out uri);
+                if (roadWorkNeedFeature.properties.url != "" && !isUri)
+                {
+                    _logger.LogWarning("URI of given roadwork need is not valid.");
+                    roadWorkNeedFeature.errorMessage = "SSP-26";
                     return Ok(roadWorkNeedFeature);
                 }
 
