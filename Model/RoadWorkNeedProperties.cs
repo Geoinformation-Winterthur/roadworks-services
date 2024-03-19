@@ -8,7 +8,6 @@ public class RoadWorkNeedProperties
 {
     public string uuid { get; set; } = "";
     public string name { get; set; } = "";
-    public RoadWorkNeedEnum kind { get; set; } = new RoadWorkNeedEnum();
     public User orderer { get; set; } = new User();
     public DateTime created { get; set; } = DateTime.MinValue;
     public DateTime lastModified { get; set; } = DateTime.MinValue;

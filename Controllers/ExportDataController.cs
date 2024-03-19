@@ -36,7 +36,7 @@ namespace roadwork_portal_service.Controllers
             {
                 pgConn.Open();
                 NpgsqlCommand selectComm = pgConn.CreateCommand();
-                selectComm.CommandText = @"SELECT r.uuid, r.name, rwt.name,
+                selectComm.CommandText = @"SELECT r.uuid, r.name,
                             o.first_name, o.last_name, r.created, r.last_modified,
                             r.finish_early_to, r.finish_optimum_to, r.finish_late_to,
                             prio.name, status.name, r.costs, r.description,
@@ -44,7 +44,6 @@ namespace roadwork_portal_service.Controllers
                             areaman.first_name, areaman.last_name, r.relevance
                         FROM ""wtb_ssp_roadworkneeds"" r
                         LEFT JOIN ""wtb_ssp_users"" o ON r.orderer = o.uuid
-                        LEFT JOIN ""wtb_ssp_roadworkneedtypes"" rwt ON r.kind = rwt.code
                         LEFT JOIN ""wtb_ssp_priorities"" prio ON r.priority = prio.code
                         LEFT JOIN ""wtb_ssp_status"" status ON r.status = status.code
                         LEFT JOIN ""wtb_ssp_users"" areaman ON r.area_man_of_note = areaman.uuid";

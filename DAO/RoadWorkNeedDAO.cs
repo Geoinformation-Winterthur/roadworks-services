@@ -39,24 +39,9 @@ public class RoadWorkNeedDAO
             roadWorkNeedFeature.properties.description = roadWorkNeedFeature.properties.description.Trim();
         }
 
-        if (roadWorkNeedFeature.properties.kind.code == null)
-        {
-            roadWorkNeedFeature.properties.kind.code = "";
-        }
-        else
-        {
-            roadWorkNeedFeature.properties.kind.code = roadWorkNeedFeature.properties.kind.code.Trim();
-        }
-
         if (roadWorkNeedFeature.properties.description == "")
         {
             roadWorkNeedFeature.errorMessage = "SSP-23";
-            return roadWorkNeedFeature;
-        }
-
-        if (roadWorkNeedFeature.properties.kind.code == "")
-        {
-            roadWorkNeedFeature.errorMessage = "SSP-24";
             return roadWorkNeedFeature;
         }
 
@@ -129,16 +114,15 @@ public class RoadWorkNeedDAO
     {
         NpgsqlCommand insertComm = pgConn.CreateCommand();
         insertComm.CommandText = @"INSERT INTO ""wtb_ssp_roadworkneeds""
-                                    (uuid, name, kind, orderer, created, last_modified, finish_early_to,
+                                    (uuid, name, orderer, created, last_modified, finish_early_to,
                                     finish_optimum_to, finish_late_to, priority, status, description, relevance,
                                     costs, private, section, comment, url, geom)
-                                    VALUES (@uuid, @name, @kind, @orderer, @created, @last_modified,
+                                    VALUES (@uuid, @name, @orderer, @created, @last_modified,
                                     @finish_early_to, @finish_optimum_to,
                                     @finish_late_to, @priority, @status, @description, @relevance,
                                     @costs, @private, @section, @comment, @url, @geom)";
         insertComm.Parameters.AddWithValue("uuid", new Guid(roadWorkNeedFeature.properties.uuid));
         insertComm.Parameters.AddWithValue("name", roadWorkNeedFeature.properties.name);
-        insertComm.Parameters.AddWithValue("kind", roadWorkNeedFeature.properties.kind.code);
         if (roadWorkNeedFeature.properties.orderer.uuid != "")
         {
             insertComm.Parameters.AddWithValue("orderer", new Guid(roadWorkNeedFeature.properties.orderer.uuid));
