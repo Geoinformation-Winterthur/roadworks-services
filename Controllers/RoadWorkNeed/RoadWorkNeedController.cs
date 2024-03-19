@@ -410,7 +410,7 @@ namespace roadwork_portal_service.Controllers
                                     finish_late_to=@finish_late_to, priority=@priority,
                                     description=@description, relevance=@relevance, 
                                     costs=@costs, section=@section, comment=@comment, 
-                                    url=@url, geom=@geom";
+                                    url=@url, private=@private, geom=@geom";
 
                         updateComm.Parameters.AddWithValue("name", roadWorkNeedFeature.properties.name);
                         if (roadWorkNeedFeature.properties.orderer.uuid != "")
@@ -433,6 +433,7 @@ namespace roadwork_portal_service.Controllers
                         updateComm.Parameters.AddWithValue("section", roadWorkNeedFeature.properties.section);
                         updateComm.Parameters.AddWithValue("comment", roadWorkNeedFeature.properties.comment);
                         updateComm.Parameters.AddWithValue("url", roadWorkNeedFeature.properties.url);
+                        updateComm.Parameters.AddWithValue("private", roadWorkNeedFeature.properties.isPrivate);
                         updateComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
 
                         string activityRelationType = "";
