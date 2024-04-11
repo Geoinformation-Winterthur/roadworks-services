@@ -152,7 +152,7 @@ namespace roadwork_portal_service.Controllers
                         needFeatureFromDb.properties.uuid =
                                 reader.IsDBNull(reader.GetOrdinal("uuid")) ?
                                     "" : reader.GetGuid(reader.GetOrdinal("uuid")).ToString();
-                        needFeatureFromDb.properties.name = 
+                        needFeatureFromDb.properties.name =
                                 reader.IsDBNull(reader.GetOrdinal("name")) ?
                                     "" : reader.GetString(reader.GetOrdinal("name"));
                         User orderer = new User();
@@ -249,9 +249,6 @@ namespace roadwork_portal_service.Controllers
                 if (roadWorkNeedFeature.errorMessage == "SSP-23")
                     _logger.LogWarning("The provided roadworkneed data has no description attribute value." +
                                 " But description is mandatory.");
-                else if (roadWorkNeedFeature.errorMessage == "SSP-24")
-                    _logger.LogWarning("The provided roadworkneed data has no kind attribute value." +
-                                " But a kind value is mandatory.");
                 else if (roadWorkNeedFeature.errorMessage == "SSP-7")
                     _logger.LogWarning("Roadworkneed Polygon has less than 3 coordinates.");
                 else if (roadWorkNeedFeature.errorMessage == "SSP-8")
@@ -526,7 +523,7 @@ namespace roadwork_portal_service.Controllers
 
         // DELETE /roadworkneed?uuid=...&releaseonly=true
         [HttpDelete]
-        [Authorize(Roles = "administrator")]
+        [Authorize(Roles = "orderer,administrator")]
         public ActionResult<ErrorMessage> DeleteNeed(string uuid, bool releaseOnly = false)
         {
             ErrorMessage errorResult = new ErrorMessage();
@@ -556,6 +553,39 @@ namespace roadwork_portal_service.Controllers
                 using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
                 {
                     pgConn.Open();
+
+                    if (!User.IsInRole("administrator"))
+                    {
+
+                        NpgsqlCommand selectOrdererOfNeedComm = pgConn.CreateCommand();
+                        selectOrdererOfNeedComm.CommandText = @"SELECT u.e_mail
+                                    FROM ""wtb_ssp_roadworkneeds"" r
+                                    LEFT JOIN ""wtb_ssp_users"" u ON r.orderer = u.uuid
+                                    WHERE r.uuid=@uuid";
+                        selectOrdererOfNeedComm.Parameters.AddWithValue("uuid", new Guid(uuid));
+
+                        string eMailOfOrderer = "";
+
+                        using (NpgsqlDataReader reader = selectOrdererOfNeedComm.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                eMailOfOrderer = reader.IsDBNull(0) ? "" : reader.GetString(0);
+                            }
+                        }
+
+                        string mailOfLoggedInUser = User.FindFirstValue(ClaimTypes.Email);
+
+                        if (mailOfLoggedInUser != eMailOfOrderer)
+                        {
+                            _logger.LogWarning("User " + mailOfLoggedInUser + " has no right to delete " +
+                                "roadwork need " + uuid + " but tried " +
+                                "to delete it.");
+                            errorResult.errorMessage = "SSP-14";
+                            return Ok(errorResult);
+                        }
+
+                    }
 
                     NpgsqlCommand selectCommand = pgConn.CreateCommand();
                     selectCommand.CommandText = @"SELECT uuid_roadwork_activity
