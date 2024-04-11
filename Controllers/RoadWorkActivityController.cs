@@ -730,7 +730,7 @@ namespace roadwork_portal_service.Controllers
 
         // DELETE /roadworkactivity?uuid=...
         [HttpDelete]
-        [Authorize(Roles = "territorymanager,administrator")]
+        [Authorize(Roles = "administrator")]
         public ActionResult<ErrorMessage> DeleteActivity(string uuid)
         {
             ErrorMessage errorResult = new ErrorMessage();
