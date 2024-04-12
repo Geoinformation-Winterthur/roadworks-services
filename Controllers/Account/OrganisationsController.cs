@@ -32,9 +32,9 @@ public class OrganisationsController : ControllerBase
         {
             pgConn.Open();
             NpgsqlCommand selectComm = pgConn.CreateCommand();
-            selectComm.CommandText = @"SELECT uuid, name, is_civil_eng FROM ""wtb_ssp_organisationalunits""";
+            selectComm.CommandText = @"SELECT uuid, name, abbreviation, is_civil_eng FROM ""wtb_ssp_organisationalunits""";
             if(withContactPerson){
-                selectComm.CommandText = @"SELECT o.uuid, o.name, o.is_civil_eng,
+                selectComm.CommandText = @"SELECT o.uuid, o.name, o.abbreviation, o.is_civil_eng,
                                 u.first_name, u.last_name
                             FROM ""wtb_ssp_organisationalunits"" o
                             LEFT JOIN (
@@ -50,23 +50,28 @@ public class OrganisationsController : ControllerBase
                 OrganisationalUnit orgFromDb;
                 while (reader.Read())
                 {
-                    orgFromDb = new OrganisationalUnit();
-                    orgFromDb.uuid = reader.IsDBNull(0) ? "" :
-                                reader.GetGuid(0).ToString();
-                    orgFromDb.name =
+                    orgFromDb = new OrganisationalUnit
+                    {
+                        uuid = reader.IsDBNull(0) ? "" :
+                                reader.GetGuid(0).ToString(),
+                        name =
                             reader.IsDBNull(1) ? "" :
-                                    reader.GetString(1);
-                    orgFromDb.isCivilEngineering =
-                            reader.IsDBNull(2) ? false :
-                                    reader.GetBoolean(2);
-                    if(withContactPerson){
+                                    reader.GetString(1),
+                        abbreviation =
+                            reader.IsDBNull(2) ? "" :
+                                    reader.GetString(2),
+                        isCivilEngineering =
+                            reader.IsDBNull(3) ? false :
+                                    reader.GetBoolean(3)
+                    };
+                    if (withContactPerson){
                         orgFromDb.contactPerson =
-                            reader.IsDBNull(3) ? "" :
-                                    "" + reader.GetString(3);
+                            reader.IsDBNull(4) ? "" :
+                                    "" + reader.GetString(4);
 
                         orgFromDb.contactPerson +=
-                            reader.IsDBNull(4) ? "" :
-                                    " " + reader.GetString(4);
+                            reader.IsDBNull(5) ? "" :
+                                    " " + reader.GetString(5);
                     }
                     orgsFromDb.Add(orgFromDb);
                 }
@@ -106,12 +111,13 @@ public class OrganisationsController : ControllerBase
                 pgConn.Open();
                 NpgsqlCommand insertComm = pgConn.CreateCommand();
                 insertComm.CommandText = @"INSERT INTO ""wtb_ssp_organisationalunits""
-                                        (uuid, name, is_civil_eng)
-                                        VALUES(@uuid, @name, @is_civil_eng)";
+                                        (uuid, name, abbreviation, is_civil_eng)
+                                        VALUES(@uuid, @name, @abbreviation, @is_civil_eng)";
                 Guid orgUuid = Guid.NewGuid();
                 org.uuid = orgUuid.ToString();
                 insertComm.Parameters.AddWithValue("uuid", new Guid(org.uuid));
                 insertComm.Parameters.AddWithValue("name", org.name);
+                insertComm.Parameters.AddWithValue("abbreviation", org.abbreviation);
                 insertComm.Parameters.AddWithValue("is_civil_eng", org.isCivilEngineering);
                 int noAffectedRows = insertComm.ExecuteNonQuery();
 
@@ -156,8 +162,9 @@ public class OrganisationsController : ControllerBase
             pgConn.Open();
             NpgsqlCommand updateComm = pgConn.CreateCommand();
             updateComm.CommandText = @"UPDATE ""wtb_ssp_organisationalunits"" SET
-                                        name=@name, is_civil_eng=@is_civil_eng WHERE uuid=@uuid";
+                                        name=@name, abbreviation=@abbreviation, is_civil_eng=@is_civil_eng WHERE uuid=@uuid";
             updateComm.Parameters.AddWithValue("name", org.name);
+            updateComm.Parameters.AddWithValue("abbreviation", org.abbreviation);
             updateComm.Parameters.AddWithValue("is_civil_eng", org.isCivilEngineering);
             updateComm.Parameters.AddWithValue("uuid", new Guid(org.uuid));
             int noAffectedRowsStep1 = updateComm.ExecuteNonQuery();

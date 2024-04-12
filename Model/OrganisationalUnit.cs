@@ -8,8 +8,9 @@ public class OrganisationalUnit
 {
     public string uuid { get; set; } = "";
     public string name { get; set; } = "";
-    public string errorMessage { get; set; } = "";
+    public string abbreviation { get; set; } = "";
     public string contactPerson { get; set; } = "";
     public bool isCivilEngineering { get; set; } = false;
+    public string errorMessage { get; set; } = "";
 }
 

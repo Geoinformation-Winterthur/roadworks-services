@@ -38,7 +38,8 @@ public class UsersController : ControllerBase
             NpgsqlCommand selectComm = pgConn.CreateCommand();
             selectComm.CommandText = @"SELECT u.uuid, u.last_name, u.first_name,
                                 trim(lower(u.e_mail)), wtb_ssp_roles.code,
-                                wtb_ssp_roles.name, u.org_unit, o.name, u.active
+                                wtb_ssp_roles.name, u.org_unit, o.name,
+                                o.abbreviation, u.active
                             FROM ""wtb_ssp_users"" u
                             LEFT JOIN ""wtb_ssp_roles"" ON u.role = wtb_ssp_roles.code
                             LEFT JOIN ""wtb_ssp_organisationalunits"" o ON u.org_unit = o.uuid";
@@ -97,8 +98,9 @@ public class UsersController : ControllerBase
                         OrganisationalUnit orgUnit = new OrganisationalUnit();
                         orgUnit.uuid = reader.GetGuid(6).ToString();
                         orgUnit.name = reader.GetString(7);
+                        orgUnit.abbreviation = reader.GetString(8);
                         userFromDb.organisationalUnit = orgUnit;
-                        userFromDb.active = reader.GetBoolean(8);
+                        userFromDb.active = reader.GetBoolean(9);
 
                         if (userFromDb.lastName == null || userFromDb.lastName.Trim().Equals(""))
                         {

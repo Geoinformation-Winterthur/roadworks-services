@@ -187,7 +187,8 @@ public class LoginController : ControllerBase
             NpgsqlCommand selectComm = pgConn.CreateCommand();
             selectComm.CommandText = @"SELECT u.uuid, u.last_name, u.first_name, u.e_mail, u.pwd,
                         u.last_login_attempt, CURRENT_TIMESTAMP(0)::TIMESTAMP,
-                        wtb_ssp_roles.code, wtb_ssp_roles.name, u.org_unit, o.name, u.active
+                        wtb_ssp_roles.code, wtb_ssp_roles.name, u.org_unit, o.name,
+                        o.abbreviation, u.active
                         FROM ""wtb_ssp_users"" u
                         LEFT JOIN ""wtb_ssp_roles"" ON u.role = wtb_ssp_roles.code
                         LEFT JOIN ""wtb_ssp_organisationalunits"" o ON u.org_unit = o.uuid
@@ -215,8 +216,9 @@ public class LoginController : ControllerBase
                     OrganisationalUnit orgUnit = new OrganisationalUnit();
                     orgUnit.uuid = reader.GetGuid(9).ToString();
                     orgUnit.name = reader.GetString(10);
+                    orgUnit.abbreviation = reader.GetString(11);
                     userFromDb.organisationalUnit = orgUnit;
-                    userFromDb.active = reader.GetBoolean(11);
+                    userFromDb.active = reader.GetBoolean(12);
 
                     if (userFromDb.lastName == null || userFromDb.lastName.Trim().Equals(""))
                     {

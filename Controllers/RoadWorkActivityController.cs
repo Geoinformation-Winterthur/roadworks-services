@@ -41,7 +41,9 @@ namespace roadwork_portal_service.Controllers
                             r.costs, c.code, c.name, s.code, s.name, r.in_internet,
                             r.billing_address1, r.billing_address2, r.investment_no, r.pdb_fid,
                             r.strabako_no, r.date_sks, r.date_kap, r.date_oks, r.date_gl_tba,
-                            r.geom
+                            r.comment, r.section, r.type, r.projecttype, r.overarching_measure,
+                            r.disered_year, r.prestudy, r.start_of_construction, r.end_of_construction,
+                            r.consult_due, r.project_no, r.geom
                         FROM ""wtb_ssp_roadworkactivities"" r
                         LEFT JOIN ""wtb_ssp_users"" pm ON r.projectmanager = pm.uuid
                         LEFT JOIN ""wtb_ssp_users"" ta ON r.traffic_agent = ta.uuid
@@ -124,7 +126,19 @@ namespace roadwork_portal_service.Controllers
 
                         projectFeatureFromDb.properties.dateGlTba = reader.IsDBNull(27) ? DateTime.MinValue : reader.GetDateTime(27);
 
-                        Polygon ntsPoly = reader.IsDBNull(28) ? Polygon.Empty : reader.GetValue(28) as Polygon;
+                        projectFeatureFromDb.properties.comment = reader.IsDBNull(28) ? "" : reader.GetString(28);
+                        projectFeatureFromDb.properties.section = reader.IsDBNull(29) ? "" : reader.GetString(29);
+                        projectFeatureFromDb.properties.type = reader.IsDBNull(30) ? "" : reader.GetString(30);
+                        projectFeatureFromDb.properties.projectType = reader.IsDBNull(31) ? "" : reader.GetString(31);
+                        projectFeatureFromDb.properties.overarchingMeasure = reader.IsDBNull(32) ? false : reader.GetBoolean(32);
+                        projectFeatureFromDb.properties.diseredYear = reader.IsDBNull(33) ? -1 : reader.GetInt32(33);
+                        projectFeatureFromDb.properties.prestudy = reader.IsDBNull(34) ? false : reader.GetBoolean(34);
+                        projectFeatureFromDb.properties.startOfConstruction = reader.IsDBNull(35) ? DateTime.MinValue : reader.GetDateTime(35);
+                        projectFeatureFromDb.properties.endOfConstruction = reader.IsDBNull(36) ? DateTime.MinValue : reader.GetDateTime(36);
+                        projectFeatureFromDb.properties.consultDue = reader.IsDBNull(37) ? DateTime.MinValue : reader.GetDateTime(37);
+                        projectFeatureFromDb.properties.projectNo = reader.IsDBNull(38) ? "" : reader.GetString(38);
+
+                        Polygon ntsPoly = reader.IsDBNull(39) ? Polygon.Empty : reader.GetValue(39) as Polygon;
                         projectFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
 
                         projectsFromDb.Add(projectFeatureFromDb);
@@ -278,12 +292,18 @@ namespace roadwork_portal_service.Controllers
                     NpgsqlCommand insertComm = pgConn.CreateCommand();
                     insertComm.CommandText = @"INSERT INTO ""wtb_ssp_roadworkactivities""
                                     (uuid, name, projectmanager, traffic_agent, description,
+                                    project_no, comment, section, type, projecttype,
+                                    overarching_measure, disered_year, prestudy, 
+                                    start_of_construction, end_of_construction, consult_due,
                                     created, last_modified, date_from, date_to,
                                     costs, costs_type, status, in_internet, billing_address1,
                                     billing_address2, investment_no, date_sks, date_kap,
                                     date_oks, date_gl_tba, geom)
                                     VALUES (@uuid, @name, @projectmanager, @traffic_agent,
-                                    @description, current_timestamp, current_timestamp, @date_from,
+                                    @description, @project_no, @comment, @section, @type, @projecttype,
+                                    @overarching_measure, @disered_year, @prestudy, 
+                                    @start_of_construction, @end_of_construction, @consult_due,
+                                    current_timestamp, current_timestamp, @date_from,
                                     @date_to, @costs, @costs_type, @status, @in_internet, @billing_address1,
                                     @billing_address2, @investment_no, @date_sks, @date_kap, @date_oks,
                                     @date_gl_tba, @geom)";
@@ -319,7 +339,18 @@ namespace roadwork_portal_service.Controllers
                     insertComm.Parameters.AddWithValue("date_kap", roadWorkActivityFeature.properties.dateKap);
                     insertComm.Parameters.AddWithValue("date_oks", roadWorkActivityFeature.properties.dateOks);
                     insertComm.Parameters.AddWithValue("date_gl_tba", roadWorkActivityFeature.properties.dateGlTba);
-                    insertComm.Parameters.AddWithValue("geom", roadWorkActivityPoly);
+                    insertComm.Parameters.AddWithValue("comment", roadWorkActivityFeature.properties.comment);
+                    insertComm.Parameters.AddWithValue("section", roadWorkActivityFeature.properties.section);
+                    insertComm.Parameters.AddWithValue("type", roadWorkActivityFeature.properties.type);
+                    insertComm.Parameters.AddWithValue("projecttype", roadWorkActivityFeature.properties.projectType);
+                    insertComm.Parameters.AddWithValue("overarching_measure", roadWorkActivityFeature.properties.overarchingMeasure);
+                    insertComm.Parameters.AddWithValue("disered_year", roadWorkActivityFeature.properties.diseredYear);
+                    insertComm.Parameters.AddWithValue("prestudy", roadWorkActivityFeature.properties.prestudy);
+                    insertComm.Parameters.AddWithValue("start_of_construction", roadWorkActivityFeature.properties.startOfConstruction);
+                    insertComm.Parameters.AddWithValue("end_of_construction", roadWorkActivityFeature.properties.endOfConstruction);
+                    insertComm.Parameters.AddWithValue("consult_due", roadWorkActivityFeature.properties.consultDue);
+                    insertComm.Parameters.AddWithValue("project_no", roadWorkActivityFeature.properties.projectNo);
+                    insertComm.Parameters.AddWithValue("geom", roadWorkActivityPoly);                    
 
                     insertComm.ExecuteNonQuery();
 
@@ -529,7 +560,12 @@ namespace roadwork_portal_service.Controllers
                     updateComm.CommandText = @"UPDATE ""wtb_ssp_roadworkactivities""
                                     SET name=@name, projectmanager=@projectmanager,
                                     traffic_agent=@traffic_agent, description=@description,
-                                    last_modified=@last_modified,
+                                    comment=@comment, section=@section, type=@type,
+                                    projecttype=@projecttype, overarching_measure=@overarching_measure,
+                                    disered_year=@disered_year, prestudy=@prestudy, 
+                                    start_of_construction=@start_of_construction,
+                                    end_of_construction=@end_of_construction, consult_due=@consult_due,
+                                    last_modified=@last_modified, project_no=@project_no,
                                     date_from=@date_from, date_to=@date_to,
                                     costs=@costs, costs_type=@costs_type, status=@status,
                                     billing_address1=@billing_address1,
@@ -575,6 +611,17 @@ namespace roadwork_portal_service.Controllers
                     updateComm.Parameters.AddWithValue("date_kap", roadWorkActivityFeature.properties.dateKap);
                     updateComm.Parameters.AddWithValue("date_oks", roadWorkActivityFeature.properties.dateOks);
                     updateComm.Parameters.AddWithValue("date_gl_tba", roadWorkActivityFeature.properties.dateGlTba);
+                    updateComm.Parameters.AddWithValue("comment", roadWorkActivityFeature.properties.comment);
+                    updateComm.Parameters.AddWithValue("section", roadWorkActivityFeature.properties.section);
+                    updateComm.Parameters.AddWithValue("type", roadWorkActivityFeature.properties.type);
+                    updateComm.Parameters.AddWithValue("projecttype", roadWorkActivityFeature.properties.projectType);
+                    updateComm.Parameters.AddWithValue("overarching_measure", roadWorkActivityFeature.properties.overarchingMeasure);
+                    updateComm.Parameters.AddWithValue("disered_year", roadWorkActivityFeature.properties.diseredYear);
+                    updateComm.Parameters.AddWithValue("prestudy", roadWorkActivityFeature.properties.prestudy);
+                    updateComm.Parameters.AddWithValue("start_of_construction", roadWorkActivityFeature.properties.startOfConstruction);
+                    updateComm.Parameters.AddWithValue("end_of_construction", roadWorkActivityFeature.properties.endOfConstruction);
+                    updateComm.Parameters.AddWithValue("consult_due", roadWorkActivityFeature.properties.consultDue);
+                    updateComm.Parameters.AddWithValue("project_no", roadWorkActivityFeature.properties.projectNo);
                     updateComm.Parameters.AddWithValue("geom", roadWorkActivityPoly);
                     updateComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
 
