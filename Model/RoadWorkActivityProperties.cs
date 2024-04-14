@@ -17,7 +17,7 @@ public class RoadWorkActivityProperties
     public string type { get; set; } = "";
     public string projectType { get; set; } = "";
     public bool overarchingMeasure { get; set; } = false;
-    public int diseredYear { get; set; } = -1;
+    public int desiredYear { get; set; } = -1;
     public bool prestudy { get; set; } = false;
     public DateTime created { get; set; } = DateTime.MinValue;
     public DateTime lastModified { get; set; } = DateTime.MinValue;

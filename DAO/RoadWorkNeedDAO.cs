@@ -14,7 +14,7 @@ public class RoadWorkNeedDAO
 {
     public bool isDryRun;
 
-    public  RoadWorkNeedDAO(bool isDryRun)
+    public RoadWorkNeedDAO(bool isDryRun)
     {
         this.isDryRun = isDryRun;
     }
@@ -45,7 +45,15 @@ public class RoadWorkNeedDAO
             return roadWorkNeedFeature;
         }
 
-        if(roadWorkNeedFeature.properties.url == null)
+        if (roadWorkNeedFeature.properties.overarchingMeasure &&
+        (roadWorkNeedFeature.properties.desiredYear == null
+            || roadWorkNeedFeature.properties.desiredYear < DateTime.Now.Year))
+        {
+            roadWorkNeedFeature.errorMessage = "SSP-27";
+            return roadWorkNeedFeature;
+        }
+
+        if (roadWorkNeedFeature.properties.url == null)
             roadWorkNeedFeature.properties.url = "";
 
         roadWorkNeedFeature.properties.url = roadWorkNeedFeature.properties.url.Trim();
@@ -116,11 +124,13 @@ public class RoadWorkNeedDAO
         insertComm.CommandText = @"INSERT INTO ""wtb_ssp_roadworkneeds""
                                     (uuid, name, orderer, created, last_modified, finish_early_to,
                                     finish_optimum_to, finish_late_to, priority, status, description, relevance,
-                                    costs, private, section, comment, url, geom)
+                                    costs, private, section, comment, url, overarching_measure,
+                                    desired_year, geom)
                                     VALUES (@uuid, @name, @orderer, @created, @last_modified,
                                     @finish_early_to, @finish_optimum_to,
                                     @finish_late_to, @priority, @status, @description, @relevance,
-                                    @costs, @private, @section, @comment, @url, @geom)";
+                                    @costs, @private, @section, @comment, @url,
+                                    @overarching_measure, @desired_year, @geom)";
         insertComm.Parameters.AddWithValue("uuid", new Guid(roadWorkNeedFeature.properties.uuid));
         insertComm.Parameters.AddWithValue("name", roadWorkNeedFeature.properties.name);
         if (roadWorkNeedFeature.properties.orderer.uuid != "")
@@ -147,6 +157,11 @@ public class RoadWorkNeedDAO
         insertComm.Parameters.AddWithValue("section", roadWorkNeedFeature.properties.section);
         insertComm.Parameters.AddWithValue("comment", roadWorkNeedFeature.properties.comment);
         insertComm.Parameters.AddWithValue("url", roadWorkNeedFeature.properties.url);
+        insertComm.Parameters.AddWithValue("overarching_measure", roadWorkNeedFeature.properties.overarchingMeasure);
+        if (roadWorkNeedFeature.properties.desiredYear != null)
+            insertComm.Parameters.AddWithValue("desired_year", roadWorkNeedFeature.properties.desiredYear);
+        else
+            insertComm.Parameters.AddWithValue("desired_year", DBNull.Value);
         insertComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
 
         return insertComm;

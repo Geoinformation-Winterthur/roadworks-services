@@ -29,5 +29,7 @@ public class RoadWorkNeedProperties
     public string section { get; set; } = "";
     public string comment { get; set; } = "";
     public string url { get; set; } = "";
+    public bool overarchingMeasure { get; set; } = false;
+    public int? desiredYear { get; set; }
 }
 

@@ -73,7 +73,8 @@ namespace roadwork_portal_service.Controllers
                             r.relevance, an.activityrelationtype, r.costs,
                             r.note_of_area_man, r.area_man_note_date,
                             n.first_name as area_manager_first_name, n.last_name as area_manager_last_name,
-                            r.private, r.section, r.comment, r.url, o.is_civil_eng, o.abbreviation, r.geom
+                            r.private, r.section, r.comment, r.url, o.is_civil_eng, o.abbreviation,
+                            r.overarching_measure, r.desired_year, r.geom
                         FROM ""wtb_ssp_roadworkneeds"" r
                         LEFT JOIN ""wtb_ssp_activities_to_needs"" an ON an.uuid_roadwork_need = r.uuid
                         LEFT JOIN ""wtb_ssp_users"" u ON r.orderer = u.uuid
@@ -197,16 +198,20 @@ namespace roadwork_portal_service.Controllers
                         needFeatureFromDb.properties.comment = reader.IsDBNull(26) ? "" : reader.GetString(26);
                         needFeatureFromDb.properties.url = reader.IsDBNull(27) ? "" : reader.GetString(27);
                         needFeatureFromDb.properties.orderer.organisationalUnit.isCivilEngineering = reader.IsDBNull(28) ? false : reader.GetBoolean(28);
-                        
+
                         orgUnit.abbreviation = reader.IsDBNull(29) ? "" : reader.GetString(29);
 
-                        Polygon ntsPoly = reader.IsDBNull(30) ? Polygon.Empty : reader.GetValue(30) as Polygon;
+                        needFeatureFromDb.properties.overarchingMeasure = reader.IsDBNull(30) ? false : reader.GetBoolean(30);
+                        needFeatureFromDb.properties.desiredYear = reader.IsDBNull(31) ? null : reader.GetInt32(31);
+
+                        Polygon ntsPoly = reader.IsDBNull(32) ? Polygon.Empty : reader.GetValue(32) as Polygon;
                         needFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
 
                         if (User.IsInRole("administrator"))
                         {
                             needFeatureFromDb.properties.isEditingAllowed = true;
-                        } else if (ordererMailAddress == mailOfLoggedInUser
+                        }
+                        else if (ordererMailAddress == mailOfLoggedInUser
                                     && needFeatureFromDb.properties.isPrivate)
                         {
                             // editing for the orderer is only allowed as long as the need is not public (is private):
@@ -261,6 +266,8 @@ namespace roadwork_portal_service.Controllers
                     _logger.LogWarning("No roadworkneed data received.");
                 else if (roadWorkNeedFeature.errorMessage == "SSP-26")
                     _logger.LogWarning("URI of given roadwork need is not valid.");
+                else if (roadWorkNeedFeature.errorMessage == "SSP-27")
+                    _logger.LogWarning("The given desired year value of a newly created roadwork need is invalid.");
 
                 return Ok(roadWorkNeedFeature);
             }
@@ -300,6 +307,15 @@ namespace roadwork_portal_service.Controllers
                     _logger.LogWarning("The provided roadworkneed data has no description attribute value." +
                                 " But description is mandatory.");
                     roadWorkNeedFeature.errorMessage = "SSP-23";
+                    return Ok(roadWorkNeedFeature);
+                }
+
+                if (roadWorkNeedFeature.properties.overarchingMeasure &&
+                        (roadWorkNeedFeature.properties.desiredYear == null 
+                            || roadWorkNeedFeature.properties.desiredYear < DateTime.Now.Year))
+                {
+                    _logger.LogWarning("The given desired year value of an updated roadwork need is invalid.");
+                    roadWorkNeedFeature.errorMessage = "SSP-27";
                     return Ok(roadWorkNeedFeature);
                 }
 
@@ -409,7 +425,8 @@ namespace roadwork_portal_service.Controllers
                                     finish_late_to=@finish_late_to, priority=@priority,
                                     description=@description, relevance=@relevance, 
                                     costs=@costs, section=@section, comment=@comment, 
-                                    url=@url, private=@private, geom=@geom";
+                                    url=@url, private=@private, overarching_measure=@overarching_measure,
+                                    desired_year=@desired_year, geom=@geom";
 
                         updateComm.Parameters.AddWithValue("name", roadWorkNeedFeature.properties.name);
                         if (roadWorkNeedFeature.properties.orderer.uuid != "")
@@ -433,6 +450,11 @@ namespace roadwork_portal_service.Controllers
                         updateComm.Parameters.AddWithValue("comment", roadWorkNeedFeature.properties.comment);
                         updateComm.Parameters.AddWithValue("url", roadWorkNeedFeature.properties.url);
                         updateComm.Parameters.AddWithValue("private", roadWorkNeedFeature.properties.isPrivate);
+                        updateComm.Parameters.AddWithValue("overarching_measure", roadWorkNeedFeature.properties.overarchingMeasure);
+                        if (roadWorkNeedFeature.properties.desiredYear != null)
+                            updateComm.Parameters.AddWithValue("desired_year", roadWorkNeedFeature.properties.desiredYear);
+                        else
+                            updateComm.Parameters.AddWithValue("desired_year", DBNull.Value);
                         updateComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
 
                         string activityRelationType = "";
