@@ -181,16 +181,6 @@ namespace roadwork_portal_service.Controllers
 
                         string ordererMailAddress = reader.IsDBNull(16) ? "" : reader.GetString(16);
                         string mailOfLoggedInUser = User.FindFirstValue(ClaimTypes.Email);
-                        if (User.IsInRole("administrator") || ordererMailAddress == mailOfLoggedInUser)
-                        {
-                            needFeatureFromDb.properties.isEditingAllowed = true;
-                        }
-
-                        if (needFeatureFromDb.properties.status.code == "inconsult" ||
-                            needFeatureFromDb.properties.status.code == "coordinated")
-                        {
-                            needFeatureFromDb.properties.isEditingAllowed = false;
-                        }
 
                         needFeatureFromDb.properties.relevance = reader.IsDBNull(17) ? 0 : reader.GetInt32(17);
                         needFeatureFromDb.properties.activityRelationType = reader.IsDBNull(18) ? "" : reader.GetString(18);
@@ -202,7 +192,6 @@ namespace roadwork_portal_service.Controllers
                         areaManagerOfNote.firstName = reader.IsDBNull(22) ? "" : reader.GetString(22);
                         areaManagerOfNote.lastName = reader.IsDBNull(23) ? "" : reader.GetString(23);
                         needFeatureFromDb.properties.areaManagerOfNote = areaManagerOfNote;
-
                         needFeatureFromDb.properties.isPrivate = reader.IsDBNull(24) ? true : reader.GetBoolean(24);
                         needFeatureFromDb.properties.section = reader.IsDBNull(25) ? "" : reader.GetString(25);
                         needFeatureFromDb.properties.comment = reader.IsDBNull(26) ? "" : reader.GetString(26);
@@ -213,6 +202,16 @@ namespace roadwork_portal_service.Controllers
 
                         Polygon ntsPoly = reader.IsDBNull(30) ? Polygon.Empty : reader.GetValue(30) as Polygon;
                         needFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
+
+                        if (User.IsInRole("administrator"))
+                        {
+                            needFeatureFromDb.properties.isEditingAllowed = true;
+                        } else if (ordererMailAddress == mailOfLoggedInUser
+                                    && needFeatureFromDb.properties.isPrivate)
+                        {
+                            // editing for the orderer is only allowed as long as the need is not public (is private):
+                            needFeatureFromDb.properties.isEditingAllowed = true;
+                        }
 
                         projectsFromDb.Add(needFeatureFromDb);
                     }
