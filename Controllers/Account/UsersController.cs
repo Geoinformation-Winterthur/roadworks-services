@@ -39,7 +39,7 @@ public class UsersController : ControllerBase
             selectComm.CommandText = @"SELECT u.uuid, u.last_name, u.first_name,
                                 trim(lower(u.e_mail)), wtb_ssp_roles.code,
                                 wtb_ssp_roles.name, u.org_unit, o.name,
-                                o.abbreviation, u.active
+                                o.abbreviation, o.is_civil_eng, u.active
                             FROM ""wtb_ssp_users"" u
                             LEFT JOIN ""wtb_ssp_roles"" ON u.role = wtb_ssp_roles.code
                             LEFT JOIN ""wtb_ssp_organisationalunits"" o ON u.org_unit = o.uuid";
@@ -91,16 +91,21 @@ public class UsersController : ControllerBase
                     {
                         userFromDb.lastName = reader.GetString(1);
                         userFromDb.firstName = reader.GetString(2);
-                        Role roleObj = new Role();
-                        roleObj.code = reader.GetString(4);
-                        roleObj.name = reader.GetString(5);
+                        Role roleObj = new Role
+                        {
+                            code = reader.GetString(4),
+                            name = reader.GetString(5)
+                        };
                         userFromDb.role = roleObj;
-                        OrganisationalUnit orgUnit = new OrganisationalUnit();
-                        orgUnit.uuid = reader.GetGuid(6).ToString();
-                        orgUnit.name = reader.GetString(7);
-                        orgUnit.abbreviation = reader.GetString(8);
+                        OrganisationalUnit orgUnit = new OrganisationalUnit
+                        {
+                            uuid = reader.GetGuid(6).ToString(),
+                            name = reader.GetString(7),
+                            abbreviation = reader.GetString(8),
+                            isCivilEngineering = reader.GetBoolean(9)
+                        };
                         userFromDb.organisationalUnit = orgUnit;
-                        userFromDb.active = reader.GetBoolean(9);
+                        userFromDb.active = reader.GetBoolean(10);
 
                         if (userFromDb.lastName == null || userFromDb.lastName.Trim().Equals(""))
                         {
