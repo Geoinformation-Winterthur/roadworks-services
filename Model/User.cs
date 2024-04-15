@@ -12,6 +12,7 @@ public class User
     public string lastName { get; set; } = "";
     public string firstName { get; set; } = "";
     public bool active { get; set; } = false;
+    public bool prefTableView { get; set; } = false;
     public OrganisationalUnit organisationalUnit
             { get; set; } = new OrganisationalUnit();
     public DateTime? lastLoginAttempt { get; set; }

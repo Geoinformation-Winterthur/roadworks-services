@@ -57,7 +57,7 @@ public class LoginController : ControllerBase
 
         receivedUser.mailAddress = receivedUser.mailAddress.ToLower().Trim();
 
-        if (receivedUser.mailAddress.Equals("") || receivedUser.mailAddress.Any(Char.IsWhiteSpace))
+        if (receivedUser.mailAddress == String.Empty || receivedUser.mailAddress.Any(Char.IsWhiteSpace))
         {
             // login data is missing something important, thus:
             _logger.LogWarning("No or bad login credentials provided in a login attempt.");
