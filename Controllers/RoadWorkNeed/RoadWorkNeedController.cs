@@ -647,9 +647,8 @@ namespace roadwork_portal_service.Controllers
                         if (assignedNeedsCount <= 1)
                         {
                             _logger.LogWarning("The roadwork need cannot be deleted since it is the last need of the roadwork activity " + affectedActivityUuid);
-                            roadWorkActivityFeature = new RoadWorkActivityFeature();
-                            roadWorkActivityFeature.errorMessage = "SSP-29";
-                            return Ok(roadWorkActivityFeature);
+                            errorResult.errorMessage = "SSP-29";
+                            return Ok(errorResult);
                         }
                     }
 
