@@ -239,7 +239,7 @@ namespace roadwork_portal_service.Controllers
 
                 if (coordinates.Length < 3)
                 {
-                    _logger.LogWarning("Roadwork activity polygon has less than 3 coordinates.");
+                    _logger.LogWarning("Roadwork activity polygon has less than 3 coordinates");
                     roadWorkActivityFeature = new RoadWorkActivityFeature();
                     roadWorkActivityFeature.errorMessage = "SSP-7";
                     return Ok(roadWorkActivityFeature);
@@ -250,7 +250,7 @@ namespace roadwork_portal_service.Controllers
                 // only if project area is greater than min area size:
                 if (roadWorkActivityPoly.Area <= configData.minAreaSize)
                 {
-                    _logger.LogWarning("Roadworkneed area is less than or equal " + configData.minAreaSize + "qm.");
+                    _logger.LogWarning("Roadwork need area is less than or equal " + configData.minAreaSize + "qm");
                     roadWorkActivityFeature = new RoadWorkActivityFeature();
                     roadWorkActivityFeature.errorMessage = "SSP-8";
                     return Ok(roadWorkActivityFeature);
@@ -259,7 +259,7 @@ namespace roadwork_portal_service.Controllers
                 // only if project area is smaller than max area size:
                 if (roadWorkActivityPoly.Area > configData.maxAreaSize)
                 {
-                    _logger.LogWarning("Roadworkneed area is greater than " + configData.maxAreaSize + "qm.");
+                    _logger.LogWarning("Roadwork need area is greater than " + configData.maxAreaSize + "qm");
                     roadWorkActivityFeature = new RoadWorkActivityFeature();
                     roadWorkActivityFeature.errorMessage = "SSP-16";
                     return Ok(roadWorkActivityFeature);
@@ -267,7 +267,7 @@ namespace roadwork_portal_service.Controllers
 
                 if (roadWorkActivityFeature.properties.finishFrom > roadWorkActivityFeature.properties.finishTo)
                 {
-                    _logger.LogWarning("The finish from date of a roadworkactivity cannot be higher than its finish to date.");
+                    _logger.LogWarning("The finish from date of a roadwork activity cannot be higher than its finish to date");
                     roadWorkActivityFeature = new RoadWorkActivityFeature();
                     roadWorkActivityFeature.errorMessage = "SSP-19";
                     return Ok(roadWorkActivityFeature);
@@ -279,6 +279,29 @@ namespace roadwork_portal_service.Controllers
                 {
 
                     pgConn.Open();
+
+                    NpgsqlCommand selectCountAssignedNeedsComm = pgConn.CreateCommand();
+                    selectCountAssignedNeedsComm.CommandText = @"SELECT count(*) FROM ""wtb_ssp_activities_to_needs""
+                                                        WHERE uuid_roadwork_activity=@uuid_roadwork_activity
+                                                        AND activityrelationtype='assignedneed'";
+                    selectCountAssignedNeedsComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkActivityFeature.properties.uuid));
+
+                    int assignedNeedsCount = 0;
+                    using (NpgsqlDataReader reader = selectCountAssignedNeedsComm.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            assignedNeedsCount = reader.IsDBNull(0) ? 0 : reader.GetInt32(0);
+                        }
+                    }
+
+                    if (assignedNeedsCount == 0)
+                    {
+                        _logger.LogWarning("The roadwork activity does not relate to at least one roadwork need");
+                        roadWorkActivityFeature = new RoadWorkActivityFeature();
+                        roadWorkActivityFeature.errorMessage = "SSP-28";
+                        return Ok(roadWorkActivityFeature);
+                    }
 
                     if (roadWorkActivityFeature.properties.name == null || roadWorkActivityFeature.properties.name == "")
                     {
@@ -350,7 +373,7 @@ namespace roadwork_portal_service.Controllers
                     insertComm.Parameters.AddWithValue("end_of_construction", roadWorkActivityFeature.properties.endOfConstruction);
                     insertComm.Parameters.AddWithValue("consult_due", roadWorkActivityFeature.properties.consultDue);
                     insertComm.Parameters.AddWithValue("project_no", roadWorkActivityFeature.properties.projectNo);
-                    insertComm.Parameters.AddWithValue("geom", roadWorkActivityPoly);                    
+                    insertComm.Parameters.AddWithValue("geom", roadWorkActivityPoly);
 
                     insertComm.ExecuteNonQuery();
 
@@ -784,14 +807,8 @@ namespace roadwork_portal_service.Controllers
 
             try
             {
-
                 if (uuid == null)
-                {
-                    _logger.LogWarning("No uuid provided by user in delete roadwork activity process. " +
-                                "Thus process is canceled, no roadwork activity is deleted.");
-                    errorResult.errorMessage = "SSP-15";
-                    return Ok(errorResult);
-                }
+                    uuid = "";
 
                 uuid = uuid.ToLower().Trim();
 
@@ -803,7 +820,7 @@ namespace roadwork_portal_service.Controllers
                     return Ok(errorResult);
                 }
 
-                int noAffectedRows = 0;
+                int countAffectedRows = 0;
                 using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
                 {
                     pgConn.Open();
@@ -830,14 +847,14 @@ namespace roadwork_portal_service.Controllers
                         deleteComm.CommandText = @"DELETE FROM ""wtb_ssp_roadworkactivities""
                                 WHERE uuid=@uuid";
                         deleteComm.Parameters.AddWithValue("uuid", new Guid(uuid));
-                        noAffectedRows = deleteComm.ExecuteNonQuery();
+                        countAffectedRows = deleteComm.ExecuteNonQuery();
                         deleteTransAction.Commit();
                     }
 
                     pgConn.Close();
                 }
 
-                if (noAffectedRows == 1)
+                if (countAffectedRows == 1)
                 {
                     return Ok();
                 }

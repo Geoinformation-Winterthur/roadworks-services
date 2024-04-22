@@ -311,7 +311,7 @@ namespace roadwork_portal_service.Controllers
                 }
 
                 if (roadWorkNeedFeature.properties.overarchingMeasure &&
-                        (roadWorkNeedFeature.properties.desiredYear == null 
+                        (roadWorkNeedFeature.properties.desiredYear == null
                             || roadWorkNeedFeature.properties.desiredYear < DateTime.Now.Year))
                 {
                     _logger.LogWarning("The given desired year value of an updated roadwork need is invalid.");
@@ -624,6 +624,32 @@ namespace roadwork_portal_service.Controllers
                         if (reader.Read())
                         {
                             affectedActivityUuid = reader.IsDBNull(0) ? "" : reader.GetGuid(0).ToString();
+                        }
+                    }
+
+                    if (affectedActivityUuid != String.Empty)
+                    {
+                        NpgsqlCommand selectCountAssignedNeedsComm = pgConn.CreateCommand();
+                        selectCountAssignedNeedsComm.CommandText = @"SELECT count(*) FROM ""wtb_ssp_activities_to_needs""
+                                                        WHERE uuid_roadwork_activity=@uuid_roadwork_activity
+                                                        AND activityrelationtype='assignedneed'";
+                        selectCountAssignedNeedsComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(affectedActivityUuid));
+
+                        int assignedNeedsCount = 0;
+                        using (NpgsqlDataReader reader = selectCountAssignedNeedsComm.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                assignedNeedsCount = reader.IsDBNull(0) ? 0 : reader.GetInt32(0);
+                            }
+                        }
+
+                        if (assignedNeedsCount <= 1)
+                        {
+                            _logger.LogWarning("The roadwork need cannot be deleted since it is the last need of the roadwork activity " + affectedActivityUuid);
+                            roadWorkActivityFeature = new RoadWorkActivityFeature();
+                            roadWorkActivityFeature.errorMessage = "SSP-29";
+                            return Ok(roadWorkActivityFeature);
                         }
                     }
 
