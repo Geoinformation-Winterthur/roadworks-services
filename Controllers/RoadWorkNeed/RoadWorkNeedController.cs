@@ -74,7 +74,7 @@ namespace roadwork_portal_service.Controllers
                             r.note_of_area_man, r.area_man_note_date,
                             n.first_name as area_manager_first_name, n.last_name as area_manager_last_name,
                             r.private, r.section, r.comment, r.url, o.is_civil_eng, o.abbreviation,
-                            r.overarching_measure, r.desired_year, r.geom
+                            r.overarching_measure, r.desired_year_from, r.desired_year_to, r.geom
                         FROM ""wtb_ssp_roadworkneeds"" r
                         LEFT JOIN ""wtb_ssp_activities_to_needs"" an ON an.uuid_roadwork_need = r.uuid
                         LEFT JOIN ""wtb_ssp_users"" u ON r.orderer = u.uuid
@@ -202,9 +202,10 @@ namespace roadwork_portal_service.Controllers
                         orgUnit.abbreviation = reader.IsDBNull(29) ? "" : reader.GetString(29);
 
                         needFeatureFromDb.properties.overarchingMeasure = reader.IsDBNull(30) ? false : reader.GetBoolean(30);
-                        needFeatureFromDb.properties.desiredYear = reader.IsDBNull(31) ? null : reader.GetInt32(31);
+                        needFeatureFromDb.properties.desiredYearFrom = reader.IsDBNull(31) ? null : reader.GetInt32(31);
+                        needFeatureFromDb.properties.desiredYearTo = reader.IsDBNull(32) ? null : reader.GetInt32(32);
 
-                        Polygon ntsPoly = reader.IsDBNull(32) ? Polygon.Empty : reader.GetValue(32) as Polygon;
+                        Polygon ntsPoly = reader.IsDBNull(33) ? Polygon.Empty : reader.GetValue(33) as Polygon;
                         needFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
 
                         if (User.IsInRole("administrator"))
@@ -311,8 +312,10 @@ namespace roadwork_portal_service.Controllers
                 }
 
                 if (roadWorkNeedFeature.properties.overarchingMeasure &&
-                        (roadWorkNeedFeature.properties.desiredYear == null
-                            || roadWorkNeedFeature.properties.desiredYear < DateTime.Now.Year))
+                        ((roadWorkNeedFeature.properties.desiredYearFrom == null
+                            || roadWorkNeedFeature.properties.desiredYearFrom < DateTime.Now.Year) ||
+                        (roadWorkNeedFeature.properties.desiredYearTo == null
+                            || roadWorkNeedFeature.properties.desiredYearTo < DateTime.Now.Year)))
                 {
                     _logger.LogWarning("The given desired year value of an updated roadwork need is invalid.");
                     roadWorkNeedFeature.errorMessage = "SSP-27";
@@ -426,7 +429,8 @@ namespace roadwork_portal_service.Controllers
                                     description=@description, relevance=@relevance, 
                                     costs=@costs, section=@section, comment=@comment, 
                                     url=@url, private=@private, overarching_measure=@overarching_measure,
-                                    desired_year=@desired_year, geom=@geom";
+                                    desired_year_from=@desired_year_from,
+                                    desired_year_to=@desired_year_to, geom=@geom";
 
                         updateComm.Parameters.AddWithValue("name", roadWorkNeedFeature.properties.name);
                         if (roadWorkNeedFeature.properties.orderer.uuid != "")
@@ -451,10 +455,14 @@ namespace roadwork_portal_service.Controllers
                         updateComm.Parameters.AddWithValue("url", roadWorkNeedFeature.properties.url);
                         updateComm.Parameters.AddWithValue("private", roadWorkNeedFeature.properties.isPrivate);
                         updateComm.Parameters.AddWithValue("overarching_measure", roadWorkNeedFeature.properties.overarchingMeasure);
-                        if (roadWorkNeedFeature.properties.desiredYear != null)
-                            updateComm.Parameters.AddWithValue("desired_year", roadWorkNeedFeature.properties.desiredYear);
+                        if (roadWorkNeedFeature.properties.desiredYearFrom != null)
+                            updateComm.Parameters.AddWithValue("desired_year_from", roadWorkNeedFeature.properties.desiredYearFrom);
                         else
-                            updateComm.Parameters.AddWithValue("desired_year", DBNull.Value);
+                            updateComm.Parameters.AddWithValue("desired_year_from", DBNull.Value);
+                        if (roadWorkNeedFeature.properties.desiredYearTo != null)
+                            updateComm.Parameters.AddWithValue("desired_year_to", roadWorkNeedFeature.properties.desiredYearTo);
+                        else
+                            updateComm.Parameters.AddWithValue("desired_year_to", DBNull.Value);
                         updateComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
 
                         string activityRelationType = "";

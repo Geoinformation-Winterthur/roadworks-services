@@ -46,8 +46,10 @@ public class RoadWorkNeedDAO
         }
 
         if (roadWorkNeedFeature.properties.overarchingMeasure &&
-        (roadWorkNeedFeature.properties.desiredYear == null
-            || roadWorkNeedFeature.properties.desiredYear < DateTime.Now.Year))
+        ((roadWorkNeedFeature.properties.desiredYearFrom == null
+            || roadWorkNeedFeature.properties.desiredYearFrom < DateTime.Now.Year) ||
+            (roadWorkNeedFeature.properties.desiredYearTo == null
+            || roadWorkNeedFeature.properties.desiredYearTo < DateTime.Now.Year)))
         {
             roadWorkNeedFeature.errorMessage = "SSP-27";
             return roadWorkNeedFeature;
@@ -125,12 +127,12 @@ public class RoadWorkNeedDAO
                                     (uuid, name, orderer, created, last_modified, finish_early_to,
                                     finish_optimum_to, finish_late_to, priority, status, description, relevance,
                                     costs, private, section, comment, url, overarching_measure,
-                                    desired_year, geom)
+                                    desired_year_from, desired_year_to, geom)
                                     VALUES (@uuid, @name, @orderer, @created, @last_modified,
                                     @finish_early_to, @finish_optimum_to,
                                     @finish_late_to, @priority, @status, @description, @relevance,
                                     @costs, @private, @section, @comment, @url,
-                                    @overarching_measure, @desired_year, @geom)";
+                                    @overarching_measure, @desired_year_from, @desired_year_to, @geom)";
         insertComm.Parameters.AddWithValue("uuid", new Guid(roadWorkNeedFeature.properties.uuid));
         insertComm.Parameters.AddWithValue("name", roadWorkNeedFeature.properties.name);
         if (roadWorkNeedFeature.properties.orderer.uuid != "")
@@ -158,10 +160,14 @@ public class RoadWorkNeedDAO
         insertComm.Parameters.AddWithValue("comment", roadWorkNeedFeature.properties.comment);
         insertComm.Parameters.AddWithValue("url", roadWorkNeedFeature.properties.url);
         insertComm.Parameters.AddWithValue("overarching_measure", roadWorkNeedFeature.properties.overarchingMeasure);
-        if (roadWorkNeedFeature.properties.desiredYear != null)
-            insertComm.Parameters.AddWithValue("desired_year", roadWorkNeedFeature.properties.desiredYear);
+        if (roadWorkNeedFeature.properties.desiredYearFrom != null)
+            insertComm.Parameters.AddWithValue("desired_year_from", roadWorkNeedFeature.properties.desiredYearFrom);
         else
-            insertComm.Parameters.AddWithValue("desired_year", DBNull.Value);
+            insertComm.Parameters.AddWithValue("desired_year_from", DBNull.Value);
+        if (roadWorkNeedFeature.properties.desiredYearTo != null)
+            insertComm.Parameters.AddWithValue("desired_year_to", roadWorkNeedFeature.properties.desiredYearTo);
+        else
+            insertComm.Parameters.AddWithValue("desired_year_to", DBNull.Value);
         insertComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
 
         return insertComm;

@@ -42,8 +42,8 @@ namespace roadwork_portal_service.Controllers
                             r.billing_address1, r.billing_address2, r.investment_no, r.pdb_fid,
                             r.strabako_no, r.date_sks, r.date_kap, r.date_oks, r.date_gl_tba,
                             r.comment, r.section, r.type, r.projecttype, r.overarching_measure,
-                            r.desired_year, r.prestudy, r.start_of_construction, r.end_of_construction,
-                            r.consult_due, r.project_no, r.geom
+                            r.desired_year_from, r.desired_year_to, r.prestudy, r.start_of_construction,
+                            r.end_of_construction, r.consult_due, r.project_no, r.geom
                         FROM ""wtb_ssp_roadworkactivities"" r
                         LEFT JOIN ""wtb_ssp_users"" pm ON r.projectmanager = pm.uuid
                         LEFT JOIN ""wtb_ssp_users"" ta ON r.traffic_agent = ta.uuid
@@ -131,14 +131,15 @@ namespace roadwork_portal_service.Controllers
                         projectFeatureFromDb.properties.type = reader.IsDBNull(30) ? "" : reader.GetString(30);
                         projectFeatureFromDb.properties.projectType = reader.IsDBNull(31) ? "" : reader.GetString(31);
                         projectFeatureFromDb.properties.overarchingMeasure = reader.IsDBNull(32) ? false : reader.GetBoolean(32);
-                        projectFeatureFromDb.properties.desiredYear = reader.IsDBNull(33) ? -1 : reader.GetInt32(33);
-                        projectFeatureFromDb.properties.prestudy = reader.IsDBNull(34) ? false : reader.GetBoolean(34);
-                        projectFeatureFromDb.properties.startOfConstruction = reader.IsDBNull(35) ? DateTime.MinValue : reader.GetDateTime(35);
-                        projectFeatureFromDb.properties.endOfConstruction = reader.IsDBNull(36) ? DateTime.MinValue : reader.GetDateTime(36);
-                        projectFeatureFromDb.properties.consultDue = reader.IsDBNull(37) ? DateTime.MinValue : reader.GetDateTime(37);
-                        projectFeatureFromDb.properties.projectNo = reader.IsDBNull(38) ? "" : reader.GetString(38);
+                        projectFeatureFromDb.properties.desiredYearFrom = reader.IsDBNull(33) ? -1 : reader.GetInt32(33);
+                        projectFeatureFromDb.properties.desiredYearTo = reader.IsDBNull(34) ? -1 : reader.GetInt32(34);
+                        projectFeatureFromDb.properties.prestudy = reader.IsDBNull(35) ? false : reader.GetBoolean(35);
+                        projectFeatureFromDb.properties.startOfConstruction = reader.IsDBNull(36) ? DateTime.MinValue : reader.GetDateTime(36);
+                        projectFeatureFromDb.properties.endOfConstruction = reader.IsDBNull(37) ? DateTime.MinValue : reader.GetDateTime(37);
+                        projectFeatureFromDb.properties.consultDue = reader.IsDBNull(38) ? DateTime.MinValue : reader.GetDateTime(38);
+                        projectFeatureFromDb.properties.projectNo = reader.IsDBNull(39) ? "" : reader.GetString(39);
 
-                        Polygon ntsPoly = reader.IsDBNull(39) ? Polygon.Empty : reader.GetValue(39) as Polygon;
+                        Polygon ntsPoly = reader.IsDBNull(40) ? Polygon.Empty : reader.GetValue(40) as Polygon;
                         projectFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
 
                         projectsFromDb.Add(projectFeatureFromDb);
@@ -316,7 +317,7 @@ namespace roadwork_portal_service.Controllers
                     insertComm.CommandText = @"INSERT INTO ""wtb_ssp_roadworkactivities""
                                     (uuid, name, projectmanager, traffic_agent, description,
                                     project_no, comment, section, type, projecttype,
-                                    overarching_measure, desired_year, prestudy, 
+                                    overarching_measure, desired_year_from, desired_year_to, prestudy, 
                                     start_of_construction, end_of_construction, consult_due,
                                     created, last_modified, date_from, date_to,
                                     costs, costs_type, status, in_internet, billing_address1,
@@ -324,7 +325,7 @@ namespace roadwork_portal_service.Controllers
                                     date_oks, date_gl_tba, geom)
                                     VALUES (@uuid, @name, @projectmanager, @traffic_agent,
                                     @description, @project_no, @comment, @section, @type, @projecttype,
-                                    @overarching_measure, @desired_year, @prestudy, 
+                                    @overarching_measure, @desired_year_from, @desired_year_to, @prestudy, 
                                     @start_of_construction, @end_of_construction, @consult_due,
                                     current_timestamp, current_timestamp, @date_from,
                                     @date_to, @costs, @costs_type, @status, @in_internet, @billing_address1,
@@ -367,7 +368,8 @@ namespace roadwork_portal_service.Controllers
                     insertComm.Parameters.AddWithValue("type", roadWorkActivityFeature.properties.type);
                     insertComm.Parameters.AddWithValue("projecttype", roadWorkActivityFeature.properties.projectType);
                     insertComm.Parameters.AddWithValue("overarching_measure", roadWorkActivityFeature.properties.overarchingMeasure);
-                    insertComm.Parameters.AddWithValue("desired_year", roadWorkActivityFeature.properties.desiredYear);
+                    insertComm.Parameters.AddWithValue("desired_year_from", roadWorkActivityFeature.properties.desiredYearFrom);
+                    insertComm.Parameters.AddWithValue("desired_year_to", roadWorkActivityFeature.properties.desiredYearTo);
                     insertComm.Parameters.AddWithValue("prestudy", roadWorkActivityFeature.properties.prestudy);
                     insertComm.Parameters.AddWithValue("start_of_construction", roadWorkActivityFeature.properties.startOfConstruction);
                     insertComm.Parameters.AddWithValue("end_of_construction", roadWorkActivityFeature.properties.endOfConstruction);
@@ -585,7 +587,7 @@ namespace roadwork_portal_service.Controllers
                                     traffic_agent=@traffic_agent, description=@description,
                                     comment=@comment, section=@section, type=@type,
                                     projecttype=@projecttype, overarching_measure=@overarching_measure,
-                                    desired_year=@desired_year, prestudy=@prestudy, 
+                                    desired_year_from=@desired_year_from, desired_year_to=@desired_year_to, prestudy=@prestudy, 
                                     start_of_construction=@start_of_construction,
                                     end_of_construction=@end_of_construction, consult_due=@consult_due,
                                     last_modified=@last_modified, project_no=@project_no,
@@ -639,7 +641,8 @@ namespace roadwork_portal_service.Controllers
                     updateComm.Parameters.AddWithValue("type", roadWorkActivityFeature.properties.type);
                     updateComm.Parameters.AddWithValue("projecttype", roadWorkActivityFeature.properties.projectType);
                     updateComm.Parameters.AddWithValue("overarching_measure", roadWorkActivityFeature.properties.overarchingMeasure);
-                    updateComm.Parameters.AddWithValue("desired_year", roadWorkActivityFeature.properties.desiredYear);
+                    updateComm.Parameters.AddWithValue("desired_year_from", roadWorkActivityFeature.properties.desiredYearFrom);
+                    updateComm.Parameters.AddWithValue("desired_year_to", roadWorkActivityFeature.properties.desiredYearTo);
                     updateComm.Parameters.AddWithValue("prestudy", roadWorkActivityFeature.properties.prestudy);
                     updateComm.Parameters.AddWithValue("start_of_construction", roadWorkActivityFeature.properties.startOfConstruction);
                     updateComm.Parameters.AddWithValue("end_of_construction", roadWorkActivityFeature.properties.endOfConstruction);
