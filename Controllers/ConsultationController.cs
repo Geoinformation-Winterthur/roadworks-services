@@ -47,9 +47,9 @@ namespace roadwork_portal_service.Controllers
 
                 NpgsqlCommand selectConsultationComm = pgConn.CreateCommand();
                 selectConsultationComm.CommandText = @"SELECT c.uuid, c.last_edit, c.decline, 
-                                            u.e_mail, u.last_name, u.first_name, c.feedback,
-                                            c.valuation, c.feedback_phase
-                                        FROM ""wtb_ssp_activity_declines"" c
+                                            u.e_mail, u.last_name, u.first_name, c.orderer_feedback,
+                                            c.manager_feedback, c.valuation, c.feedback_phase
+                                        FROM ""wtb_ssp_activity_consult"" c
                                         LEFT JOIN ""wtb_ssp_users"" u ON c.input_by = u.uuid
                                         WHERE uuid_roadwork_activity = @uuid_roadwork_activity";
                 selectConsultationComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadworkActivityUuid));
@@ -75,9 +75,10 @@ namespace roadwork_portal_service.Controllers
                         consultationUser.lastName = activityConsultationReader.IsDBNull(4) ? "" : activityConsultationReader.GetString(4);
                         consultationUser.firstName = activityConsultationReader.IsDBNull(5) ? "" : activityConsultationReader.GetString(5);
                         activityConsulationInput.inputBy = consultationUser;
-                        activityConsulationInput.inputText = activityConsultationReader.IsDBNull(6) ? "" : activityConsultationReader.GetString(6);
-                        activityConsulationInput.valuation = activityConsultationReader.IsDBNull(7) ? 0 : activityConsultationReader.GetInt32(7);
-                        activityConsulationInput.feedbackPhase = activityConsultationReader.IsDBNull(8) ? "" : activityConsultationReader.GetString(8);
+                        activityConsulationInput.ordererFeedback = activityConsultationReader.IsDBNull(6) ? "" : activityConsultationReader.GetString(6);
+                        activityConsulationInput.managerFeedback = activityConsultationReader.IsDBNull(7) ? "" : activityConsultationReader.GetString(7);
+                        activityConsulationInput.valuation = activityConsultationReader.IsDBNull(8) ? 0 : activityConsultationReader.GetInt32(8);
+                        activityConsulationInput.feedbackPhase = activityConsultationReader.IsDBNull(9) ? "" : activityConsultationReader.GetString(9);
 
                         consultationInputs.Add(activityConsulationInput);
                     }
@@ -106,18 +107,19 @@ namespace roadwork_portal_service.Controllers
 
                     consultationInput.uuid = Guid.NewGuid().ToString();
                     NpgsqlCommand insertComm = pgConn.CreateCommand();
-                    insertComm.CommandText = @"INSERT INTO ""wtb_ssp_activity_declines""
+                    insertComm.CommandText = @"INSERT INTO ""wtb_ssp_activity_consult""
                                     (uuid, uuid_roadwork_activity, last_edit,
-                                    input_by, feedback, decline, valuation, feedback_phase)
+                                    input_by, orderer_feedback, manager_feedback, decline, valuation, feedback_phase)
                                     VALUES (@uuid, @uuid_roadwork_activity, @last_edit,
-                                    @input_by, @feedback, @decline, @valuation, @feedback_phase)";
+                                    @input_by, @orderer_feedback, @manager_feedback, @decline, @valuation, @feedback_phase)";
                     insertComm.Parameters.AddWithValue("uuid", new Guid(consultationInput.uuid));
                     insertComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadworkActivityUuid));
                     insertComm.Parameters.AddWithValue("last_edit", DateTime.Now);
                     insertComm.Parameters.AddWithValue("input_by", new Guid(userFromDb.uuid));
-                    if(consultationInput.decline)
-                        consultationInput.inputText = "";
-                    insertComm.Parameters.AddWithValue("feedback", consultationInput.inputText);
+                    if (consultationInput.decline)
+                        consultationInput.ordererFeedback = "";
+                    insertComm.Parameters.AddWithValue("orderer_feedback", consultationInput.ordererFeedback);
+                    insertComm.Parameters.AddWithValue("manager_feedback", consultationInput.managerFeedback);
                     insertComm.Parameters.AddWithValue("decline", consultationInput.decline);
                     insertComm.Parameters.AddWithValue("valuation", consultationInput.valuation);
                     insertComm.Parameters.AddWithValue("feedback_phase", consultationInput.feedbackPhase);
@@ -178,6 +180,13 @@ namespace roadwork_portal_service.Controllers
 
                 User userFromDb = LoginController.getAuthorizedUserFromDb(this.User, false);
 
+                if (userFromDb == null || userFromDb.uuid == null || userFromDb.role == null
+                        || (userFromDb.role.code != "administrator" && userFromDb.mailAddress != consultationInput.inputBy.mailAddress))
+                {
+                    _logger.LogWarning("Unauthorized access.");
+                    return Unauthorized();
+                }
+
                 using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
                 {
 
@@ -186,20 +195,28 @@ namespace roadwork_portal_service.Controllers
                     using NpgsqlTransaction trans = pgConn.BeginTransaction();
 
                     NpgsqlCommand updateComm = pgConn.CreateCommand();
-                    updateComm.CommandText = @"UPDATE ""wtb_ssp_activity_declines""
-                                    SET last_edit=@last_edit, feedback=@feedback,
+                    updateComm.CommandText = @"UPDATE ""wtb_ssp_activity_consult""
+                                    SET last_edit=@last_edit, orderer_feedback=@orderer_feedback,
                                     decline=@decline, valuation=@valuation,
-                                    feedback_phase=@feedback_phase
-                                    WHERE uuid=@uuid AND input_by=@input_by";
+                                    feedback_phase=@feedback_phase";
+                    if (consultationInput.managerFeedback != null)
+                        updateComm.CommandText += ", manager_feedback=@manager_feedback";
+                    updateComm.CommandText += " WHERE uuid=@uuid";
 
                     updateComm.Parameters.AddWithValue("uuid", new Guid(consultationInput.uuid));
-                    updateComm.Parameters.AddWithValue("input_by", new Guid(userFromDb.uuid));
 
                     consultationInput.lastEdit = DateTime.Now;
                     updateComm.Parameters.AddWithValue("last_edit", consultationInput.lastEdit);
-                    if(consultationInput.decline)
-                        consultationInput.inputText = "";
-                    updateComm.Parameters.AddWithValue("feedback", consultationInput.inputText);
+                    if (consultationInput.decline)
+                        consultationInput.ordererFeedback = "";
+                    updateComm.Parameters.AddWithValue("orderer_feedback", consultationInput.ordererFeedback);
+
+                    if (consultationInput.managerFeedback != null)
+                    {
+                        consultationInput.managerFeedback = consultationInput.managerFeedback.Trim();
+                        updateComm.Parameters.AddWithValue("manager_feedback", consultationInput.managerFeedback);
+                    }
+
                     updateComm.Parameters.AddWithValue("decline", consultationInput.decline);
                     updateComm.Parameters.AddWithValue("valuation", consultationInput.valuation);
                     updateComm.Parameters.AddWithValue("feedback_phase", consultationInput.feedbackPhase);
