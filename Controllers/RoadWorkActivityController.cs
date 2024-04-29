@@ -43,7 +43,7 @@ namespace roadwork_portal_service.Controllers
                             r.strabako_no, r.date_sks, r.date_kap, r.date_oks, r.date_gl_tba,
                             r.comment, r.section, r.type, r.projecttype, r.overarching_measure,
                             r.desired_year_from, r.desired_year_to, r.prestudy, r.start_of_construction,
-                            r.end_of_construction, r.consult_due, r.project_no, r.geom
+                            r.end_of_construction, r.consult_due, r.project_no, r.private, r.geom
                         FROM ""wtb_ssp_roadworkactivities"" r
                         LEFT JOIN ""wtb_ssp_users"" pm ON r.projectmanager = pm.uuid
                         LEFT JOIN ""wtb_ssp_users"" ta ON r.traffic_agent = ta.uuid
@@ -138,8 +138,9 @@ namespace roadwork_portal_service.Controllers
                         projectFeatureFromDb.properties.endOfConstruction = reader.IsDBNull(37) ? DateTime.MinValue : reader.GetDateTime(37);
                         projectFeatureFromDb.properties.consultDue = reader.IsDBNull(38) ? DateTime.MinValue : reader.GetDateTime(38);
                         projectFeatureFromDb.properties.projectNo = reader.IsDBNull(39) ? "" : reader.GetString(39);
+                        projectFeatureFromDb.properties.isPrivate = reader.IsDBNull(40) ? false : reader.GetBoolean(40);
 
-                        Polygon ntsPoly = reader.IsDBNull(40) ? Polygon.Empty : reader.GetValue(40) as Polygon;
+                        Polygon ntsPoly = reader.IsDBNull(41) ? Polygon.Empty : reader.GetValue(41) as Polygon;
                         projectFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
 
                         projectsFromDb.Add(projectFeatureFromDb);
@@ -238,6 +239,14 @@ namespace roadwork_portal_service.Controllers
                 Polygon roadWorkActivityPoly = roadWorkActivityFeature.geometry.getNtsPolygon();
                 Coordinate[] coordinates = roadWorkActivityPoly.Coordinates;
 
+                if (!roadWorkActivityFeature.properties.isPrivate)
+                {
+                    _logger.LogError("User tried to add a non-private roadwork activity");
+                    roadWorkActivityFeature = new RoadWorkActivityFeature();
+                    roadWorkActivityFeature.errorMessage = "SSP-3";
+                    return Ok(roadWorkActivityFeature);
+                }
+
                 if (coordinates.Length < 3)
                 {
                     _logger.LogWarning("Roadwork activity polygon has less than 3 coordinates");
@@ -281,29 +290,6 @@ namespace roadwork_portal_service.Controllers
 
                     pgConn.Open();
 
-                    NpgsqlCommand selectCountAssignedNeedsComm = pgConn.CreateCommand();
-                    selectCountAssignedNeedsComm.CommandText = @"SELECT count(*) FROM ""wtb_ssp_activities_to_needs""
-                                                        WHERE uuid_roadwork_activity=@uuid_roadwork_activity
-                                                        AND activityrelationtype='assignedneed'";
-                    selectCountAssignedNeedsComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkActivityFeature.properties.uuid));
-
-                    int assignedNeedsCount = 0;
-                    using (NpgsqlDataReader reader = selectCountAssignedNeedsComm.ExecuteReader())
-                    {
-                        if (reader.Read())
-                        {
-                            assignedNeedsCount = reader.IsDBNull(0) ? 0 : reader.GetInt32(0);
-                        }
-                    }
-
-                    if (assignedNeedsCount == 0)
-                    {
-                        _logger.LogWarning("The roadwork activity does not relate to at least one roadwork need");
-                        roadWorkActivityFeature = new RoadWorkActivityFeature();
-                        roadWorkActivityFeature.errorMessage = "SSP-28";
-                        return Ok(roadWorkActivityFeature);
-                    }
-
                     if (roadWorkActivityFeature.properties.name == null || roadWorkActivityFeature.properties.name == "")
                     {
                         roadWorkActivityFeature.properties.name = HelperFunctions.getAddressNames(roadWorkActivityPoly, pgConn);
@@ -322,7 +308,7 @@ namespace roadwork_portal_service.Controllers
                                     created, last_modified, date_from, date_to,
                                     costs, costs_type, status, in_internet, billing_address1,
                                     billing_address2, investment_no, date_sks, date_kap,
-                                    date_oks, date_gl_tba, geom)
+                                    date_oks, date_gl_tba, private, geom)
                                     VALUES (@uuid, @name, @projectmanager, @traffic_agent,
                                     @description, @project_no, @comment, @section, @type, @projecttype,
                                     @overarching_measure, @desired_year_from, @desired_year_to, @prestudy, 
@@ -330,7 +316,7 @@ namespace roadwork_portal_service.Controllers
                                     current_timestamp, current_timestamp, @date_from,
                                     @date_to, @costs, @costs_type, @status, @in_internet, @billing_address1,
                                     @billing_address2, @investment_no, @date_sks, @date_kap, @date_oks,
-                                    @date_gl_tba, @geom)";
+                                    @date_gl_tba, @private, @geom)";
                     insertComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
                     if (roadWorkActivityFeature.properties.projectManager.uuid != "")
                     {
@@ -366,7 +352,8 @@ namespace roadwork_portal_service.Controllers
                     insertComm.Parameters.AddWithValue("comment", roadWorkActivityFeature.properties.comment);
                     insertComm.Parameters.AddWithValue("section", roadWorkActivityFeature.properties.section);
                     insertComm.Parameters.AddWithValue("type", roadWorkActivityFeature.properties.type);
-                    insertComm.Parameters.AddWithValue("projecttype", roadWorkActivityFeature.properties.projectType);
+                    insertComm.Parameters.AddWithValue("projecttype", roadWorkActivityFeature.properties.projectType == "" ?
+                                        DBNull.Value : roadWorkActivityFeature.properties.projectType);
                     insertComm.Parameters.AddWithValue("overarching_measure", roadWorkActivityFeature.properties.overarchingMeasure);
                     insertComm.Parameters.AddWithValue("desired_year_from", roadWorkActivityFeature.properties.desiredYearFrom);
                     insertComm.Parameters.AddWithValue("desired_year_to", roadWorkActivityFeature.properties.desiredYearTo);
@@ -375,6 +362,7 @@ namespace roadwork_portal_service.Controllers
                     insertComm.Parameters.AddWithValue("end_of_construction", roadWorkActivityFeature.properties.endOfConstruction);
                     insertComm.Parameters.AddWithValue("consult_due", roadWorkActivityFeature.properties.consultDue);
                     insertComm.Parameters.AddWithValue("project_no", roadWorkActivityFeature.properties.projectNo);
+                    insertComm.Parameters.AddWithValue("private", roadWorkActivityFeature.properties.isPrivate);
                     insertComm.Parameters.AddWithValue("geom", roadWorkActivityPoly);
 
                     insertComm.ExecuteNonQuery();
@@ -567,6 +555,29 @@ namespace roadwork_portal_service.Controllers
 
                     }
 
+                    NpgsqlCommand selectCountAssignedNeedsComm = pgConn.CreateCommand();
+                    selectCountAssignedNeedsComm.CommandText = @"SELECT count(*) FROM ""wtb_ssp_activities_to_needs""
+                                                        WHERE uuid_roadwork_activity=@uuid_roadwork_activity
+                                                        AND activityrelationtype='assignedneed'";
+                    selectCountAssignedNeedsComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkActivityFeature.properties.uuid));
+
+                    int assignedNeedsCount = 0;
+                    using (NpgsqlDataReader reader = selectCountAssignedNeedsComm.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            assignedNeedsCount = reader.IsDBNull(0) ? 0 : reader.GetInt32(0);
+                        }
+                    }
+
+                    if (!roadWorkActivityFeature.properties.isPrivate && assignedNeedsCount == 0)
+                    {
+                        _logger.LogWarning("The roadwork activity does not relate to at least one roadwork need");
+                        roadWorkActivityFeature = new RoadWorkActivityFeature();
+                        roadWorkActivityFeature.errorMessage = "SSP-28";
+                        return Ok(roadWorkActivityFeature);
+                    }
+
                     NpgsqlCommand selectStatusComm = pgConn.CreateCommand();
                     selectStatusComm.CommandText = @"SELECT status FROM ""wtb_ssp_roadworkactivities""
                                                         WHERE uuid=@uuid";
@@ -597,7 +608,7 @@ namespace roadwork_portal_service.Controllers
                                     billing_address2=@billing_address2,
                                     in_internet=@in_internet, investment_no=@investment_no,
                                     date_sks=@date_sks, date_kap=@date_kap, date_oks=@date_oks,
-                                    date_gl_tba=@date_gl_tba,
+                                    date_gl_tba=@date_gl_tba, private=@private,
                                     geom=@geom
                                     WHERE uuid=@uuid";
 
@@ -639,7 +650,8 @@ namespace roadwork_portal_service.Controllers
                     updateComm.Parameters.AddWithValue("comment", roadWorkActivityFeature.properties.comment);
                     updateComm.Parameters.AddWithValue("section", roadWorkActivityFeature.properties.section);
                     updateComm.Parameters.AddWithValue("type", roadWorkActivityFeature.properties.type);
-                    updateComm.Parameters.AddWithValue("projecttype", roadWorkActivityFeature.properties.projectType);
+                    updateComm.Parameters.AddWithValue("projecttype", roadWorkActivityFeature.properties.projectType == "" ?
+                                            DBNull.Value : roadWorkActivityFeature.properties.projectType);
                     updateComm.Parameters.AddWithValue("overarching_measure", roadWorkActivityFeature.properties.overarchingMeasure);
                     updateComm.Parameters.AddWithValue("desired_year_from", roadWorkActivityFeature.properties.desiredYearFrom);
                     updateComm.Parameters.AddWithValue("desired_year_to", roadWorkActivityFeature.properties.desiredYearTo);
@@ -648,6 +660,7 @@ namespace roadwork_portal_service.Controllers
                     updateComm.Parameters.AddWithValue("end_of_construction", roadWorkActivityFeature.properties.endOfConstruction);
                     updateComm.Parameters.AddWithValue("consult_due", roadWorkActivityFeature.properties.consultDue);
                     updateComm.Parameters.AddWithValue("project_no", roadWorkActivityFeature.properties.projectNo);
+                    updateComm.Parameters.AddWithValue("private", roadWorkActivityFeature.properties.isPrivate);
                     updateComm.Parameters.AddWithValue("geom", roadWorkActivityPoly);
                     updateComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
 

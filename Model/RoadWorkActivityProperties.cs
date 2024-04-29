@@ -44,4 +44,5 @@ public class RoadWorkActivityProperties
     public string dateOks { get; set; } = "";
     public DateTime dateGlTba { get; set; } = DateTime.MinValue;
     public ActivityHistoryItem[] activityHistory { get; set; } = new ActivityHistoryItem[0];
+    public bool isPrivate { get; set; } = false;
 }
