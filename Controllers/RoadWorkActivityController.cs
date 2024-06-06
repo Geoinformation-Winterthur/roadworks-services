@@ -190,6 +190,39 @@ namespace roadwork_portal_service.Controllers
                             activityFromDb.properties.activityHistory = activityHistoryItems.ToArray();
                         }
                     }
+
+                    NpgsqlCommand selectInvolvedUsersComm = pgConn.CreateCommand();
+                    selectInvolvedUsersComm.CommandText = @"SELECT users.uuid, users.last_name,
+                                        users.first_name, users.e_mail, org.uuid,
+                                        org.name, org.abbreviation
+                                    FROM ""wtb_ssp_act_partic"" partic
+                                    LEFT JOIN ""wtb_ssp_users"" users
+                                    ON partic.participant = users.uuid
+                                    LEFT JOIN ""wtb_ssp_organisationalunits"" org
+                                    ON users.org_unit = org.uuid
+                                    WHERE partic.road_act=@uuid";
+                    selectInvolvedUsersComm.Parameters.AddWithValue("uuid", new Guid(activityFromDb.properties.uuid));
+
+                    using (NpgsqlDataReader involvedUsersReader = await selectInvolvedUsersComm.ExecuteReaderAsync())
+                    {
+                        List<User> involvedUsers = new List<User>();
+                        while (involvedUsersReader.Read())
+                        {
+                            if (!involvedUsersReader.IsDBNull(0)){
+                                User involvedUser = new User();
+                                involvedUser.uuid = involvedUsersReader.GetGuid(0).ToString();
+                                involvedUser.lastName = involvedUsersReader.GetString(1);
+                                involvedUser.firstName = involvedUsersReader.GetString(2);
+                                involvedUser.mailAddress = involvedUsersReader.GetString(3);
+                                involvedUser.organisationalUnit.uuid = involvedUsersReader.GetGuid(4).ToString();
+                                involvedUser.organisationalUnit.name = involvedUsersReader.GetString(5);
+                                involvedUser.organisationalUnit.abbreviation = involvedUsersReader.GetString(6);
+
+                                involvedUsers.Add(involvedUser);
+                            }
+                        }
+                        activityFromDb.properties.involvedUsers = involvedUsers.ToArray();
+                    }
                 }
 
                 pgConn.Close();
@@ -366,6 +399,18 @@ namespace roadwork_portal_service.Controllers
                     insertComm.Parameters.AddWithValue("geom", roadWorkActivityPoly);
 
                     insertComm.ExecuteNonQuery();
+
+                    NpgsqlCommand insertInvolvedUsersComm;
+                    foreach (User involvedUser in roadWorkActivityFeature.properties.involvedUsers)
+                    {
+                        insertInvolvedUsersComm = pgConn.CreateCommand();
+                        insertInvolvedUsersComm.CommandText = @"INSERT INTO ""wtb_ssp_act_partic""
+                                    VALUES(@uuid, @road_act, @participant)";
+                        insertInvolvedUsersComm.Parameters.AddWithValue("uuid", Guid.NewGuid());
+                        insertInvolvedUsersComm.Parameters.AddWithValue("road_act", new Guid(roadWorkActivityFeature.properties.uuid));
+                        insertInvolvedUsersComm.Parameters.AddWithValue("participant", new Guid(involvedUser.uuid));
+                        insertInvolvedUsersComm.ExecuteNonQuery();
+                    }
 
                     ActivityHistoryItem activityHistoryItem = new ActivityHistoryItem();
                     activityHistoryItem.uuid = Guid.NewGuid().ToString();
@@ -666,6 +711,24 @@ namespace roadwork_portal_service.Controllers
 
                     updateComm.ExecuteNonQuery();
 
+                    NpgsqlCommand deleteInvolvedUsersComm = pgConn.CreateCommand();
+                    deleteInvolvedUsersComm.CommandText = @"DELETE FROM ""wtb_ssp_act_partic""
+                                    WHERE road_act=@uuid";
+                    deleteInvolvedUsersComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
+                    deleteInvolvedUsersComm.ExecuteNonQuery();
+
+                    NpgsqlCommand insertInvolvedUsersComm;
+                    foreach (User involvedUser in roadWorkActivityFeature.properties.involvedUsers)
+                    {
+                        insertInvolvedUsersComm = pgConn.CreateCommand();
+                        insertInvolvedUsersComm.CommandText = @"INSERT INTO ""wtb_ssp_act_partic""
+                                    VALUES(@uuid, @road_act, @participant)";
+                        insertInvolvedUsersComm.Parameters.AddWithValue("uuid", Guid.NewGuid());
+                        insertInvolvedUsersComm.Parameters.AddWithValue("road_act", new Guid(roadWorkActivityFeature.properties.uuid));
+                        insertInvolvedUsersComm.Parameters.AddWithValue("participant", new Guid(involvedUser.uuid));
+                        insertInvolvedUsersComm.ExecuteNonQuery();
+                    }
+
                     if (statusOfActivityInDb != null && statusOfActivityInDb.Length != 0)
                     {
                         if (statusOfActivityInDb != roadWorkActivityFeature.properties.status.code)
@@ -853,17 +916,13 @@ namespace roadwork_portal_service.Controllers
                         updateComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(uuid));
                         updateComm.ExecuteNonQuery();
 
-                        updateComm.CommandText = @"DELETE FROM ""wtb_ssp_activities_to_needs""
-                                WHERE uuid_roadwork_activity=@uuid_roadwork_activity";
-                        updateComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(uuid));
-                        updateComm.ExecuteNonQuery();
-
-                        NpgsqlCommand deleteComm = pgConn.CreateCommand();
-                        deleteComm = pgConn.CreateCommand();
-                        deleteComm.CommandText = @"DELETE FROM ""wtb_ssp_roadworkactivities""
+                        NpgsqlCommand deleteActivityComm = pgConn.CreateCommand();
+                        deleteActivityComm = pgConn.CreateCommand();
+                        deleteActivityComm.CommandText = @"DELETE CASCADE FROM ""wtb_ssp_roadworkactivities""
                                 WHERE uuid=@uuid";
-                        deleteComm.Parameters.AddWithValue("uuid", new Guid(uuid));
-                        countAffectedRows = deleteComm.ExecuteNonQuery();
+                        deleteActivityComm.Parameters.AddWithValue("uuid", new Guid(uuid));
+                        countAffectedRows = deleteActivityComm.ExecuteNonQuery();
+
                         deleteTransAction.Commit();
                     }
 

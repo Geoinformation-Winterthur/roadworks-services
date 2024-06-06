@@ -45,4 +45,5 @@ public class RoadWorkActivityProperties
     public DateTime dateGlTba { get; set; } = DateTime.MinValue;
     public ActivityHistoryItem[] activityHistory { get; set; } = new ActivityHistoryItem[0];
     public bool isPrivate { get; set; } = false;
+    public User[] involvedUsers { get; set; } = new User[0];
 }
