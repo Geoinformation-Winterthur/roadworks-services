@@ -918,7 +918,7 @@ namespace roadwork_portal_service.Controllers
 
                         NpgsqlCommand deleteActivityComm = pgConn.CreateCommand();
                         deleteActivityComm = pgConn.CreateCommand();
-                        deleteActivityComm.CommandText = @"DELETE CASCADE FROM ""wtb_ssp_roadworkactivities""
+                        deleteActivityComm.CommandText = @"DELETE FROM ""wtb_ssp_roadworkactivities""
                                 WHERE uuid=@uuid";
                         deleteActivityComm.Parameters.AddWithValue("uuid", new Guid(uuid));
                         countAffectedRows = deleteActivityComm.ExecuteNonQuery();
