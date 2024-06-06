@@ -9,6 +9,7 @@ using roadwork_portal_service.Model;
 using roadwork_portal_service.Configuration;
 using roadwork_portal_service.Helper;
 using System.Security.Claims;
+using System.Net.Mail;
 
 namespace roadwork_portal_service.Controllers;
 
@@ -260,14 +261,14 @@ public class UsersController : ControllerBase
 
             user.mailAddress = user.mailAddress.Trim().ToLower();
 
-            if (user.mailAddress == String.Empty || user.mailAddress.Any(Char.IsWhiteSpace))
+            try
             {
-                return BadRequest("Bad e-mail address provided.");
+                MailAddress userMailAddress = new MailAddress(user.mailAddress);
             }
-
-            if (user.mailAddress == "new")
+            catch (Exception ex)
             {
-                return BadRequest("User mail address 'new' not allowed.");
+                _logger.LogInformation(ex.Message);
+                return BadRequest("Bad e-mail address provided.");
             }
 
             string loggedInUserMail = "";
@@ -336,16 +337,28 @@ public class UsersController : ControllerBase
             {
                 pgConn.Open();
                 NpgsqlCommand updateComm = pgConn.CreateCommand();
-                updateComm.CommandText = @"UPDATE ""wtb_ssp_users"" SET
-                        last_name=@last_name, first_name=@first_name, e_mail=@e_mail,
-                        role=@role, org_unit=@org_unit, active=@active,
+                updateComm.CommandText = "UPDATE \"wtb_ssp_users\" SET ";
+
+                if (userInDb.role.code == "administrator")
+                {
+                    updateComm.CommandText += @"last_name=@last_name,
+                        first_name=@first_name, e_mail=@e_mail,
+                        role=@role, org_unit=@org_unit, ";
+                }
+
+                updateComm.CommandText += @"active=@active,
                         pref_table_view=@pref_table_view
                         WHERE uuid=@uuid";
-                updateComm.Parameters.AddWithValue("last_name", user.lastName);
-                updateComm.Parameters.AddWithValue("first_name", user.firstName);
-                updateComm.Parameters.AddWithValue("e_mail", user.mailAddress);
-                updateComm.Parameters.AddWithValue("role", user.role.code);
-                updateComm.Parameters.AddWithValue("org_unit", new Guid(user.organisationalUnit.uuid));
+
+                if (userInDb.role.code == "administrator")
+                {
+                    updateComm.Parameters.AddWithValue("last_name", user.lastName);
+                    updateComm.Parameters.AddWithValue("first_name", user.firstName);
+                    updateComm.Parameters.AddWithValue("e_mail", user.mailAddress);
+                    updateComm.Parameters.AddWithValue("role", user.role.code);
+                    updateComm.Parameters.AddWithValue("org_unit", new Guid(user.organisationalUnit.uuid));
+                }
+
                 updateComm.Parameters.AddWithValue("active", user.active);
                 updateComm.Parameters.AddWithValue("pref_table_view", user.prefTableView);
                 updateComm.Parameters.AddWithValue("uuid", new Guid(user.uuid));
