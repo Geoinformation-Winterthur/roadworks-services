@@ -451,7 +451,7 @@ public class UsersController : ControllerBase
             {
                 if (_countNumberOfActiveAdmins() == 1)
                 {
-                    _logger.LogWarning("User tried to delete last administrator. Last administrator cannot be removed.");
+                    _logger.LogWarning("User tried to deactivate last administrator. Last administrator cannot be deactivated.");
                     errorResult.errorMessage = "SSP-2";
                     return Ok(errorResult);
                 }
@@ -460,7 +460,8 @@ public class UsersController : ControllerBase
             {
                 pgConn.Open();
                 NpgsqlCommand deleteComm = pgConn.CreateCommand();
-                deleteComm.CommandText = @"DELETE FROM ""wtb_ssp_users""
+                deleteComm.CommandText = @"UPDATE ""wtb_ssp_users""
+                                SET active=false
                                 WHERE e_mail=@e_mail";
                 deleteComm.Parameters.AddWithValue("e_mail", email);
 
