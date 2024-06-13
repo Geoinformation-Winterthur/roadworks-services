@@ -269,6 +269,8 @@ namespace roadwork_portal_service.Controllers
                     _logger.LogWarning("URI of given roadwork need is not valid.");
                 else if (roadWorkNeedFeature.errorMessage == "SSP-27")
                     _logger.LogWarning("The given desired year value of a newly created roadwork need is invalid.");
+                else if (roadWorkNeedFeature.errorMessage == "SSP-30")
+                    _logger.LogWarning("The given relevance value of a newly created roadwork need is invalid.");
 
                 return Ok(roadWorkNeedFeature);
             }

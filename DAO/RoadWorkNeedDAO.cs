@@ -69,6 +69,13 @@ public class RoadWorkNeedDAO
             return roadWorkNeedFeature;
         }
 
+        if (roadWorkNeedFeature.properties.relevance < 1 ||
+                roadWorkNeedFeature.properties.relevance > 4)
+        {
+            roadWorkNeedFeature.errorMessage = "SSP-30";
+            return roadWorkNeedFeature;
+        }
+
         Polygon roadWorkNeedPoly = roadWorkNeedFeature.geometry.getNtsPolygon();
         Coordinate[] coordinates = roadWorkNeedPoly.Coordinates;
 
