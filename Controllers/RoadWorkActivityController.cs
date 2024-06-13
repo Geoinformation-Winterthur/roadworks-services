@@ -568,7 +568,7 @@ namespace roadwork_portal_service.Controllers
 
                     using NpgsqlTransaction trans = pgConn.BeginTransaction();
 
-                    if (!User.IsInRole("administrator"))
+                    if (!User.IsInRole("administrator") && !User.IsInRole("territorymanager"))
                     {
                         NpgsqlCommand selectManagerOfActivityComm = pgConn.CreateCommand();
                         selectManagerOfActivityComm.CommandText = @"SELECT u.e_mail
@@ -577,24 +577,24 @@ namespace roadwork_portal_service.Controllers
                                     WHERE r.uuid=@uuid";
                         selectManagerOfActivityComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
 
-                        string eMailOfManager = "";
+                        string eMailOfProjectManager = "";
 
                         using (NpgsqlDataReader reader = selectManagerOfActivityComm.ExecuteReader())
                         {
                             if (reader.Read())
                             {
-                                eMailOfManager = reader.IsDBNull(0) ? "" : reader.GetString(0);
+                                eMailOfProjectManager = reader.IsDBNull(0) ? "" : reader.GetString(0);
                             }
                         }
 
                         string mailOfLoggedInUser = User.FindFirstValue(ClaimTypes.Email);
 
-                        if (mailOfLoggedInUser != eMailOfManager)
+                        if (mailOfLoggedInUser != eMailOfProjectManager)
                         {
                             _logger.LogWarning("User " + mailOfLoggedInUser + " has no right to edit " +
                                 "roadwork activity " + roadWorkActivityFeature.properties.uuid + " but tried " +
                                 "to edit it.");
-                            roadWorkActivityFeature.errorMessage = "SSP-14";
+                            roadWorkActivityFeature.errorMessage = "SSP-31";
                             return Ok(roadWorkActivityFeature);
                         }
 
