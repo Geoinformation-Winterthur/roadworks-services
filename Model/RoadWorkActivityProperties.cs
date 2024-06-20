@@ -40,10 +40,39 @@ public class RoadWorkActivityProperties
     public int pdbFid { get; set; } = 0;
     public string strabakoNo { get; set; } = "";
     public string dateSks { get; set; } = "";
+    public string dateSksReal { get; set; } = "";
     public string dateKap { get; set; } = "";
+    public string dateKapReal { get; set; } = "";
     public string dateOks { get; set; } = "";
+    public string dateOksReal { get; set; } = "";
     public DateTime dateGlTba { get; set; } = DateTime.MinValue;
+    public DateTime? dateGlTbaReal { get; set; }
     public ActivityHistoryItem[] activityHistory { get; set; } = new ActivityHistoryItem[0];
     public bool isPrivate { get; set; } = false;
     public User[] involvedUsers { get; set; } = new User[0];
+    public DateTime? datePlanned { get; set; }
+    public DateTime? dateAccept { get; set; }
+    public DateTime? dateGuarantee { get; set; }
+    public bool isStudy { get; set; } = false;
+    public DateTime? dateStudyStart { get; set; }
+    public DateTime? dateStudyEnd { get; set; }
+    public bool isDesire { get; set; } = false;
+    public DateTime? dateDesireStart { get; set; }
+    public DateTime? dateDesireEnd { get; set; }
+    public bool isParticip { get; set; } = false;
+    public DateTime? dateParticipStart { get; set; }
+    public DateTime? dateParticipEnd { get; set; }
+    public bool isPlanCirc { get; set; } = false;
+    public DateTime? datePlanCircStart { get; set; }
+    public DateTime? datePlanCircEnd { get; set; }
+    public DateTime? dateConsultStart { get; set; }
+    public DateTime? dateConsultEnd { get; set; }
+    public DateTime? dateConsultClose { get; set; }
+    public DateTime? dateReportStart { get; set; }
+    public DateTime? dateReportEnd { get; set; }
+    public DateTime? dateReportClose { get; set; }
+    public DateTime? dateInfoStart { get; set; }
+    public DateTime? dateInfoEnd { get; set; }
+    public DateTime? dateInfoClose { get; set; }
+    public bool isAggloprog { get; set; } = false;
 }
