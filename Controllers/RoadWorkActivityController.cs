@@ -350,6 +350,8 @@ namespace roadwork_portal_service.Controllers
 
                 User userFromDb = LoginController.getAuthorizedUserFromDb(this.User, false);
 
+                ConfigurationData configurationData = AppConfigController.getConfigurationFromDb();
+
                 using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
                 {
 
@@ -373,7 +375,9 @@ namespace roadwork_portal_service.Controllers
                                     created, last_modified, date_from, date_to,
                                     costs, costs_type, status, in_internet, billing_address1,
                                     billing_address2, investment_no, date_sks, date_kap,
-                                    date_oks, date_gl_tba, private, geom)
+                                    date_oks, date_gl_tba, private, date_consult_start,
+                                    date_consult_end, date_report_start, date_report_end,
+                                    date_info_start, date_info_end, geom)
                                     VALUES (@uuid, @name, @projectmanager, @traffic_agent,
                                     @description, @project_no, @comment, @section, @type, @projecttype,
                                     @overarching_measure, @desired_year_from, @desired_year_to, @prestudy, 
@@ -381,7 +385,9 @@ namespace roadwork_portal_service.Controllers
                                     current_timestamp, current_timestamp, @date_from,
                                     @date_to, @costs, @costs_type, @status, @in_internet, @billing_address1,
                                     @billing_address2, @investment_no, @date_sks, @date_kap, @date_oks,
-                                    @date_gl_tba, @private, @geom)";
+                                    @date_gl_tba, @private, @date_consult_start, @date_consult_end,
+                                    @date_report_start, @date_report_end, @date_info_start, @date_info_end,
+                                    @geom)";
                     insertComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
                     if (roadWorkActivityFeature.properties.projectManager.uuid != "")
                     {
@@ -425,10 +431,27 @@ namespace roadwork_portal_service.Controllers
                     insertComm.Parameters.AddWithValue("prestudy", roadWorkActivityFeature.properties.prestudy);
                     insertComm.Parameters.AddWithValue("start_of_construction", roadWorkActivityFeature.properties.startOfConstruction);
                     insertComm.Parameters.AddWithValue("end_of_construction", roadWorkActivityFeature.properties.endOfConstruction);
-                    insertComm.Parameters.AddWithValue("consult_due", roadWorkActivityFeature.properties.consultDue);
                     insertComm.Parameters.AddWithValue("project_no", roadWorkActivityFeature.properties.projectNo);
                     insertComm.Parameters.AddWithValue("private", roadWorkActivityFeature.properties.isPrivate);
+                    insertComm.Parameters.AddWithValue("date_consult_start", DateTime.Now.AddDays(7));
+                    insertComm.Parameters.AddWithValue("date_consult_end", DateTime.Now.AddDays(28));
+                    insertComm.Parameters.AddWithValue("date_report_start", DateTime.Now.AddDays(35));
+                    insertComm.Parameters.AddWithValue("date_report_end", DateTime.Now.AddDays(56));
+                    insertComm.Parameters.AddWithValue("date_info_start", DateTime.Now.AddDays(62));
+                    insertComm.Parameters.AddWithValue("date_info_end", DateTime.Now.AddDays(66));
                     insertComm.Parameters.AddWithValue("geom", roadWorkActivityPoly);
+
+                    DateTime nextSks = DateTime.Now.AddDays(66);
+                    if(configurationData.dateSks1 != null && configurationData.dateSks1 > nextSks)
+                        nextSks = (DateTime) configurationData.dateSks1;
+                    else if(configurationData.dateSks2 != null && configurationData.dateSks2 > nextSks)
+                        nextSks = (DateTime) configurationData.dateSks2;
+                    else if(configurationData.dateSks3 != null && configurationData.dateSks3 > nextSks)
+                        nextSks = (DateTime) configurationData.dateSks3;
+                    else if(configurationData.dateSks4 != null && configurationData.dateSks4 > nextSks)
+                        nextSks = (DateTime) configurationData.dateSks4;
+
+                    insertComm.Parameters.AddWithValue("consult_due", nextSks);
 
                     insertComm.ExecuteNonQuery();
 
