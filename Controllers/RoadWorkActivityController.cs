@@ -147,30 +147,30 @@ namespace roadwork_portal_service.Controllers
                         projectFeatureFromDb.properties.consultDue = reader.IsDBNull(38) ? DateTime.MinValue : reader.GetDateTime(38);
                         projectFeatureFromDb.properties.projectNo = reader.IsDBNull(39) ? "" : reader.GetString(39);
                         projectFeatureFromDb.properties.isPrivate = reader.IsDBNull(40) ? false : reader.GetBoolean(40);
-                        if(!reader.IsDBNull(41)) projectFeatureFromDb.properties.dateAccept = reader.GetDateTime(41);
-                        if(!reader.IsDBNull(42)) projectFeatureFromDb.properties.dateGuarantee = reader.GetDateTime(42);
-                        if(!reader.IsDBNull(43)) projectFeatureFromDb.properties.isStudy = reader.GetBoolean(43);
-                        if(!reader.IsDBNull(44)) projectFeatureFromDb.properties.dateStudyStart = reader.GetDateTime(44);
-                        if(!reader.IsDBNull(45)) projectFeatureFromDb.properties.dateStudyEnd = reader.GetDateTime(45);
-                        if(!reader.IsDBNull(46)) projectFeatureFromDb.properties.isDesire = reader.GetBoolean(46);
-                        if(!reader.IsDBNull(47)) projectFeatureFromDb.properties.dateDesireStart = reader.GetDateTime(47);
-                        if(!reader.IsDBNull(48)) projectFeatureFromDb.properties.dateDesireEnd = reader.GetDateTime(48);
-                        if(!reader.IsDBNull(49)) projectFeatureFromDb.properties.isParticip = reader.GetBoolean(49);
-                        if(!reader.IsDBNull(50)) projectFeatureFromDb.properties.dateParticipStart = reader.GetDateTime(50);
-                        if(!reader.IsDBNull(51)) projectFeatureFromDb.properties.dateParticipEnd = reader.GetDateTime(51);
-                        if(!reader.IsDBNull(52)) projectFeatureFromDb.properties.isPlanCirc = reader.GetBoolean(52);
-                        if(!reader.IsDBNull(53)) projectFeatureFromDb.properties.datePlanCircStart = reader.GetDateTime(53);
-                        if(!reader.IsDBNull(54)) projectFeatureFromDb.properties.datePlanCircEnd = reader.GetDateTime(54);
-                        if(!reader.IsDBNull(55)) projectFeatureFromDb.properties.dateConsultStart = reader.GetDateTime(55);
-                        if(!reader.IsDBNull(56)) projectFeatureFromDb.properties.dateConsultEnd = reader.GetDateTime(56);
-                        if(!reader.IsDBNull(57)) projectFeatureFromDb.properties.dateConsultClose = reader.GetDateTime(57);
-                        if(!reader.IsDBNull(58)) projectFeatureFromDb.properties.dateReportStart = reader.GetDateTime(58);
-                        if(!reader.IsDBNull(59)) projectFeatureFromDb.properties.dateReportEnd = reader.GetDateTime(59);
-                        if(!reader.IsDBNull(60)) projectFeatureFromDb.properties.dateReportClose = reader.GetDateTime(60);
-                        if(!reader.IsDBNull(61)) projectFeatureFromDb.properties.dateInfoStart = reader.GetDateTime(61);
-                        if(!reader.IsDBNull(62)) projectFeatureFromDb.properties.dateInfoEnd = reader.GetDateTime(62);
-                        if(!reader.IsDBNull(63)) projectFeatureFromDb.properties.dateInfoClose = reader.GetDateTime(63);
-                        if(!reader.IsDBNull(64)) projectFeatureFromDb.properties.isAggloprog = reader.GetBoolean(64);
+                        if (!reader.IsDBNull(41)) projectFeatureFromDb.properties.dateAccept = reader.GetDateTime(41);
+                        if (!reader.IsDBNull(42)) projectFeatureFromDb.properties.dateGuarantee = reader.GetDateTime(42);
+                        if (!reader.IsDBNull(43)) projectFeatureFromDb.properties.isStudy = reader.GetBoolean(43);
+                        if (!reader.IsDBNull(44)) projectFeatureFromDb.properties.dateStudyStart = reader.GetDateTime(44);
+                        if (!reader.IsDBNull(45)) projectFeatureFromDb.properties.dateStudyEnd = reader.GetDateTime(45);
+                        if (!reader.IsDBNull(46)) projectFeatureFromDb.properties.isDesire = reader.GetBoolean(46);
+                        if (!reader.IsDBNull(47)) projectFeatureFromDb.properties.dateDesireStart = reader.GetDateTime(47);
+                        if (!reader.IsDBNull(48)) projectFeatureFromDb.properties.dateDesireEnd = reader.GetDateTime(48);
+                        if (!reader.IsDBNull(49)) projectFeatureFromDb.properties.isParticip = reader.GetBoolean(49);
+                        if (!reader.IsDBNull(50)) projectFeatureFromDb.properties.dateParticipStart = reader.GetDateTime(50);
+                        if (!reader.IsDBNull(51)) projectFeatureFromDb.properties.dateParticipEnd = reader.GetDateTime(51);
+                        if (!reader.IsDBNull(52)) projectFeatureFromDb.properties.isPlanCirc = reader.GetBoolean(52);
+                        if (!reader.IsDBNull(53)) projectFeatureFromDb.properties.datePlanCircStart = reader.GetDateTime(53);
+                        if (!reader.IsDBNull(54)) projectFeatureFromDb.properties.datePlanCircEnd = reader.GetDateTime(54);
+                        if (!reader.IsDBNull(55)) projectFeatureFromDb.properties.dateConsultStart = reader.GetDateTime(55);
+                        if (!reader.IsDBNull(56)) projectFeatureFromDb.properties.dateConsultEnd = reader.GetDateTime(56);
+                        if (!reader.IsDBNull(57)) projectFeatureFromDb.properties.dateConsultClose = reader.GetDateTime(57);
+                        if (!reader.IsDBNull(58)) projectFeatureFromDb.properties.dateReportStart = reader.GetDateTime(58);
+                        if (!reader.IsDBNull(59)) projectFeatureFromDb.properties.dateReportEnd = reader.GetDateTime(59);
+                        if (!reader.IsDBNull(60)) projectFeatureFromDb.properties.dateReportClose = reader.GetDateTime(60);
+                        if (!reader.IsDBNull(61)) projectFeatureFromDb.properties.dateInfoStart = reader.GetDateTime(61);
+                        if (!reader.IsDBNull(62)) projectFeatureFromDb.properties.dateInfoEnd = reader.GetDateTime(62);
+                        if (!reader.IsDBNull(63)) projectFeatureFromDb.properties.dateInfoClose = reader.GetDateTime(63);
+                        if (!reader.IsDBNull(64)) projectFeatureFromDb.properties.isAggloprog = reader.GetBoolean(64);
 
                         Polygon ntsPoly = reader.IsDBNull(65) ? Polygon.Empty : reader.GetValue(65) as Polygon;
                         projectFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
@@ -240,7 +240,8 @@ namespace roadwork_portal_service.Controllers
                         List<User> involvedUsers = new List<User>();
                         while (involvedUsersReader.Read())
                         {
-                            if (!involvedUsersReader.IsDBNull(0)){
+                            if (!involvedUsersReader.IsDBNull(0))
+                            {
                                 User involvedUser = new User();
                                 involvedUser.uuid = involvedUsersReader.GetGuid(0).ToString();
                                 involvedUser.lastName = involvedUsersReader.GetString(1);
@@ -442,14 +443,14 @@ namespace roadwork_portal_service.Controllers
                     insertComm.Parameters.AddWithValue("geom", roadWorkActivityPoly);
 
                     DateTime nextSks = DateTime.Now.AddDays(66);
-                    if(configurationData.dateSks1 != null && configurationData.dateSks1 > nextSks)
-                        nextSks = (DateTime) configurationData.dateSks1;
-                    else if(configurationData.dateSks2 != null && configurationData.dateSks2 > nextSks)
-                        nextSks = (DateTime) configurationData.dateSks2;
-                    else if(configurationData.dateSks3 != null && configurationData.dateSks3 > nextSks)
-                        nextSks = (DateTime) configurationData.dateSks3;
-                    else if(configurationData.dateSks4 != null && configurationData.dateSks4 > nextSks)
-                        nextSks = (DateTime) configurationData.dateSks4;
+                    if (configurationData.dateSks1 != null && configurationData.dateSks1 > nextSks)
+                        nextSks = (DateTime)configurationData.dateSks1;
+                    else if (configurationData.dateSks2 != null && configurationData.dateSks2 > nextSks)
+                        nextSks = (DateTime)configurationData.dateSks2;
+                    else if (configurationData.dateSks3 != null && configurationData.dateSks3 > nextSks)
+                        nextSks = (DateTime)configurationData.dateSks3;
+                    else if (configurationData.dateSks4 != null && configurationData.dateSks4 > nextSks)
+                        nextSks = (DateTime)configurationData.dateSks4;
 
                     insertComm.Parameters.AddWithValue("consult_due", nextSks);
 
@@ -692,6 +693,12 @@ namespace roadwork_portal_service.Controllers
                         }
                     }
 
+                    bool hasStatusChanged = false;
+                    if (statusOfActivityInDb != null && statusOfActivityInDb.Length != 0)
+                    {
+                        hasStatusChanged = statusOfActivityInDb != roadWorkActivityFeature.properties.status.code;
+                    }
+
                     NpgsqlCommand updateComm = pgConn.CreateCommand();
                     updateComm.CommandText = @"UPDATE ""wtb_ssp_roadworkactivities""
                                     SET name=@name, projectmanager=@projectmanager,
@@ -722,9 +729,23 @@ namespace roadwork_portal_service.Controllers
                                     date_report_start=@date_report_start,
                                     date_report_end=@date_report_end, date_report_close=@date_report_close,
                                     date_info_start=@date_info_start, date_info_end=@date_info_end,
-                                    date_info_close=@date_info_close, is_aggloprog=@is_aggloprog,
-                                    geom=@geom
-                                    WHERE uuid=@uuid";
+                                    date_info_close=@date_info_close, is_aggloprog=@is_aggloprog, ";
+
+                    if (hasStatusChanged)
+                    {
+                        if (roadWorkActivityFeature.properties.status.code == "inconsult")
+                            updateComm.CommandText += "date_start_inconsult=@date_start_inconsult, ";
+                        else if (roadWorkActivityFeature.properties.status.code == "verified")
+                            updateComm.CommandText += "date_start_verified=@date_start_verified, ";
+                        else if (roadWorkActivityFeature.properties.status.code == "reporting")
+                            updateComm.CommandText += "date_start_reporting=@date_start_reporting, ";
+                        else if (roadWorkActivityFeature.properties.status.code == "suspended")
+                            updateComm.CommandText += "date_start_suspended=@date_start_suspended, ";
+                        else if (roadWorkActivityFeature.properties.status.code == "coordinated")
+                            updateComm.CommandText += "date_start_coordinated=@date_start_coordinated, ";
+                    }
+
+                    updateComm.CommandText += "geom=@geom WHERE uuid=@uuid";
 
                     updateComm.Parameters.AddWithValue("name", roadWorkActivityFeature.properties.name);
                     if (roadWorkActivityFeature.properties.projectManager.uuid != "")
@@ -802,6 +823,24 @@ namespace roadwork_portal_service.Controllers
                     updateComm.Parameters.AddWithValue("geom", roadWorkActivityPoly);
                     updateComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
 
+                    if (hasStatusChanged)
+                    {
+                        if (roadWorkActivityFeature.properties.status.code == "inconsult")
+                            updateComm.Parameters.AddWithValue("date_start_inconsult", DateTime.Now);
+                        else if (roadWorkActivityFeature.properties.status.code == "verified")
+                            updateComm.Parameters.AddWithValue("date_start_verified", DateTime.Now);
+                        else if (roadWorkActivityFeature.properties.status.code == "reporting")
+                            updateComm.Parameters.AddWithValue("date_start_reporting", DateTime.Now);
+                        else if (roadWorkActivityFeature.properties.status.code == "suspended")
+                            updateComm.Parameters.AddWithValue("date_start_suspended", DateTime.Now);
+                        else if (roadWorkActivityFeature.properties.status.code == "coordinated")
+                            updateComm.Parameters.AddWithValue("date_start_coordinated", DateTime.Now);
+                    }
+
+                    if (hasStatusChanged)
+                    {
+                    }
+
                     updateComm.ExecuteNonQuery();
 
                     NpgsqlCommand deleteInvolvedUsersComm = pgConn.CreateCommand();
@@ -822,46 +861,43 @@ namespace roadwork_portal_service.Controllers
                         insertInvolvedUsersComm.ExecuteNonQuery();
                     }
 
-                    if (statusOfActivityInDb != null && statusOfActivityInDb.Length != 0)
+                    if (hasStatusChanged)
                     {
-                        if (statusOfActivityInDb != roadWorkActivityFeature.properties.status.code)
-                        {
-
-                            NpgsqlCommand insertHistoryComm = pgConn.CreateCommand();
-                            insertHistoryComm.CommandText = @"INSERT INTO ""wtb_ssp_activities_history""
+                        NpgsqlCommand insertHistoryComm = pgConn.CreateCommand();
+                        insertHistoryComm.CommandText = @"INSERT INTO ""wtb_ssp_activities_history""
                                     (uuid, uuid_roadwork_activity, changedate, who, what)
                                     VALUES
                                     (@uuid, @uuid_roadwork_activity, @changedate, @who, @what)";
 
-                            insertHistoryComm.Parameters.AddWithValue("uuid", Guid.NewGuid());
-                            insertHistoryComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkActivityFeature.properties.uuid));
-                            insertHistoryComm.Parameters.AddWithValue("changedate", DateTime.Now);
-                            insertHistoryComm.Parameters.AddWithValue("who", userFromDb.firstName + " " + userFromDb.lastName);
-                            string whatText = "Status des Bauvorhabens wurde geändert zu: ";
-                            if (roadWorkActivityFeature.properties.status.code == "review")
-                                whatText += "in Prüfung";
-                            else if (roadWorkActivityFeature.properties.status.code == "inconsult")
-                                whatText += "in Bedarfsklärung";
-                            else if (roadWorkActivityFeature.properties.status.code == "verified")
-                                whatText += "verifiziert";
-                            else if (roadWorkActivityFeature.properties.status.code == "reporting")
-                                whatText += "in Stellungnahme";
-                            else if (roadWorkActivityFeature.properties.status.code == "coordinated")
-                                whatText += "koordiniert";
-                            insertHistoryComm.Parameters.AddWithValue("what", whatText);
-                            insertHistoryComm.ExecuteNonQuery();
+                        insertHistoryComm.Parameters.AddWithValue("uuid", Guid.NewGuid());
+                        insertHistoryComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkActivityFeature.properties.uuid));
+                        insertHistoryComm.Parameters.AddWithValue("changedate", DateTime.Now);
+                        insertHistoryComm.Parameters.AddWithValue("who", userFromDb.firstName + " " + userFromDb.lastName);
+                        string whatText = "Status des Bauvorhabens wurde geändert zu: ";
+                        if (roadWorkActivityFeature.properties.status.code == "review")
+                            whatText += "in Prüfung";
+                        else if (roadWorkActivityFeature.properties.status.code == "inconsult")
+                            whatText += "in Bedarfsklärung";
+                        else if (roadWorkActivityFeature.properties.status.code == "verified")
+                            whatText += "verifiziert";
+                        else if (roadWorkActivityFeature.properties.status.code == "reporting")
+                            whatText += "in Stellungnahme";
+                        else if (roadWorkActivityFeature.properties.status.code == "coordinated")
+                            whatText += "koordiniert";
+                        insertHistoryComm.Parameters.AddWithValue("what", whatText);
+                        insertHistoryComm.ExecuteNonQuery();
 
-                            NpgsqlCommand updateActivityStatusComm = pgConn.CreateCommand();
-                            updateActivityStatusComm.CommandText = @"UPDATE wtb_ssp_roadworkactivities
+                        NpgsqlCommand updateActivityStatusComm = pgConn.CreateCommand();
+                        updateActivityStatusComm.CommandText = @"UPDATE wtb_ssp_roadworkactivities
                                                     SET status=@status WHERE uuid=@uuid";
-                            updateActivityStatusComm.Parameters.AddWithValue("status", roadWorkActivityFeature.properties.status.code);
-                            updateActivityStatusComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
-                            updateActivityStatusComm.ExecuteNonQuery();
+                        updateActivityStatusComm.Parameters.AddWithValue("status", roadWorkActivityFeature.properties.status.code);
+                        updateActivityStatusComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
+                        updateActivityStatusComm.ExecuteNonQuery();
 
-                            if (roadWorkActivityFeature.properties.status.code == "verified")
-                            {
-                                NpgsqlCommand updateNeedsStatusComm = pgConn.CreateCommand();
-                                updateNeedsStatusComm.CommandText = @"UPDATE ""wtb_ssp_roadworkneeds""
+                        if (roadWorkActivityFeature.properties.status.code == "verified")
+                        {
+                            NpgsqlCommand updateNeedsStatusComm = pgConn.CreateCommand();
+                            updateNeedsStatusComm.CommandText = @"UPDATE ""wtb_ssp_roadworkneeds""
                                                     SET status='verified'
                                                     WHERE uuid IN
                                                     (SELECT n.uuid
@@ -869,13 +905,13 @@ namespace roadwork_portal_service.Controllers
                                                         LEFT JOIN ""wtb_ssp_activities_to_needs"" an ON an.uuid_roadwork_need = n.uuid
                                                         WHERE an.activityrelationtype='assignedneed'
                                                         AND an.uuid_roadwork_activity=@uuid_roadwork_activity)";
-                                updateNeedsStatusComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkActivityFeature.properties.uuid));
-                                updateNeedsStatusComm.ExecuteNonQuery();
-                            }
-                            else
-                            {
-                                NpgsqlCommand updateNeedsStatusComm = pgConn.CreateCommand();
-                                updateNeedsStatusComm.CommandText = @"UPDATE ""wtb_ssp_roadworkneeds""
+                            updateNeedsStatusComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkActivityFeature.properties.uuid));
+                            updateNeedsStatusComm.ExecuteNonQuery();
+                        }
+                        else
+                        {
+                            NpgsqlCommand updateNeedsStatusComm = pgConn.CreateCommand();
+                            updateNeedsStatusComm.CommandText = @"UPDATE ""wtb_ssp_roadworkneeds""
                                                     SET status=@status
                                                     WHERE uuid IN
                                                     (SELECT n.uuid
@@ -883,11 +919,11 @@ namespace roadwork_portal_service.Controllers
                                                         LEFT JOIN ""wtb_ssp_activities_to_needs"" an ON an.uuid_roadwork_need = n.uuid
                                                         WHERE an.activityrelationtype='assignedneed'
                                                             AND an.uuid_roadwork_activity=@uuid_roadwork_activity)";
-                                updateNeedsStatusComm.Parameters.AddWithValue("status", roadWorkActivityFeature.properties.status.code);
-                                updateNeedsStatusComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkActivityFeature.properties.uuid));
-                                updateNeedsStatusComm.ExecuteNonQuery();
-                            }
+                            updateNeedsStatusComm.Parameters.AddWithValue("status", roadWorkActivityFeature.properties.status.code);
+                            updateNeedsStatusComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkActivityFeature.properties.uuid));
+                            updateNeedsStatusComm.ExecuteNonQuery();
                         }
+
                     }
 
                     trans.Commit();

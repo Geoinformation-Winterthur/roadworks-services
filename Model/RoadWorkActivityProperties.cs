@@ -75,4 +75,9 @@ public class RoadWorkActivityProperties
     public DateTime? dateInfoEnd { get; set; }
     public DateTime? dateInfoClose { get; set; }
     public bool isAggloprog { get; set; } = false;
+    public DateTime? dateStartInconsult { get; set; }
+    public DateTime? dateStartVerified { get; set; }
+    public DateTime? dateStartReporting { get; set; }
+    public DateTime? dateStartSuspended { get; set; }
+    public DateTime? dateStartCoordinated { get; set; }
 }
