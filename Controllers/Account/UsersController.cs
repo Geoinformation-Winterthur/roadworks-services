@@ -301,7 +301,7 @@ public class UsersController : ControllerBase
                 {
                     if (user.role.code != "administrator")
                     {
-                        _logger.LogWarning("Administrator tried to change role of last administrator. " +
+                        _logger.LogWarning("User tried to change role of last administrator. " +
                                 "Role cannot be changed since there would be no administrator anymore.");
                         errorResult.errorMessage = "SSP-5";
                         return Ok(errorResult);
@@ -339,7 +339,7 @@ public class UsersController : ControllerBase
                 NpgsqlCommand updateComm = pgConn.CreateCommand();
                 updateComm.CommandText = "UPDATE \"wtb_ssp_users\" SET ";
 
-                if (userInDb.role.code == "administrator")
+                if (User.IsInRole("administrator"))
                 {
                     updateComm.CommandText += @"last_name=@last_name,
                         first_name=@first_name, e_mail=@e_mail,
@@ -350,7 +350,7 @@ public class UsersController : ControllerBase
                         pref_table_view=@pref_table_view
                         WHERE uuid=@uuid";
 
-                if (userInDb.role.code == "administrator")
+                if (User.IsInRole("administrator"))
                 {
                     updateComm.Parameters.AddWithValue("last_name", user.lastName);
                     updateComm.Parameters.AddWithValue("first_name", user.firstName);
