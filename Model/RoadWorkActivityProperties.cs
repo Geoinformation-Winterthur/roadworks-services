@@ -25,8 +25,9 @@ public class RoadWorkActivityProperties
     public DateTime finishEarlyTo { get; set; } = DateTime.MinValue;
     public DateTime finishOptimumTo { get; set; } = DateTime.MinValue;
     public DateTime finishLateTo { get; set; } = DateTime.MinValue;
-    public DateTime startOfConstruction { get; set; } = DateTime.MinValue;
-    public DateTime endOfConstruction { get; set; } = DateTime.MinValue;
+    public DateTime? startOfConstruction { get; set; }
+    public DateTime? endOfConstruction { get; set; }
+    public DateTime? dateOfAcceptance { get; set; }
     public DateTime consultDue { get; set; } = DateTime.MinValue;
     public decimal costs { get; set; } = 0m;
     public CostType costsType { get; set; } = new CostType();

@@ -51,7 +51,7 @@ namespace roadwork_portal_service.Controllers
                             r.date_consult_end, r.date_consult_close, r.date_report_start,
                             r.date_report_end, r.date_report_close, r.date_info_start,
                             r.date_info_end, r.date_info_close, r.is_aggloprog, r.date_optimum,
-                            r.geom
+                            r.date_of_acceptance, r.geom
                         FROM ""wtb_ssp_roadworkactivities"" r
                         LEFT JOIN ""wtb_ssp_users"" pm ON r.projectmanager = pm.uuid
                         LEFT JOIN ""wtb_ssp_users"" ta ON r.traffic_agent = ta.uuid
@@ -142,8 +142,8 @@ namespace roadwork_portal_service.Controllers
                         projectFeatureFromDb.properties.desiredYearFrom = reader.IsDBNull(33) ? -1 : reader.GetInt32(33);
                         projectFeatureFromDb.properties.desiredYearTo = reader.IsDBNull(34) ? -1 : reader.GetInt32(34);
                         projectFeatureFromDb.properties.prestudy = reader.IsDBNull(35) ? false : reader.GetBoolean(35);
-                        projectFeatureFromDb.properties.startOfConstruction = reader.IsDBNull(36) ? DateTime.MinValue : reader.GetDateTime(36);
-                        projectFeatureFromDb.properties.endOfConstruction = reader.IsDBNull(37) ? DateTime.MinValue : reader.GetDateTime(37);
+                        if (!reader.IsDBNull(36)) projectFeatureFromDb.properties.startOfConstruction = reader.GetDateTime(36);
+                        if (!reader.IsDBNull(37)) projectFeatureFromDb.properties.endOfConstruction = reader.GetDateTime(37);
                         projectFeatureFromDb.properties.consultDue = reader.IsDBNull(38) ? DateTime.MinValue : reader.GetDateTime(38);
                         projectFeatureFromDb.properties.projectNo = reader.IsDBNull(39) ? "" : reader.GetString(39);
                         projectFeatureFromDb.properties.isPrivate = reader.IsDBNull(40) ? false : reader.GetBoolean(40);
@@ -172,8 +172,9 @@ namespace roadwork_portal_service.Controllers
                         if (!reader.IsDBNull(63)) projectFeatureFromDb.properties.dateInfoClose = reader.GetDateTime(63);
                         if (!reader.IsDBNull(64)) projectFeatureFromDb.properties.isAggloprog = reader.GetBoolean(64);
                         projectFeatureFromDb.properties.finishOptimumTo = reader.IsDBNull(65) ? DateTime.MinValue : reader.GetDateTime(65);
+                        if (!reader.IsDBNull(66)) projectFeatureFromDb.properties.dateOfAcceptance = reader.GetDateTime(66);
 
-                        Polygon ntsPoly = reader.IsDBNull(66) ? Polygon.Empty : reader.GetValue(66) as Polygon;
+                        Polygon ntsPoly = reader.IsDBNull(67) ? Polygon.Empty : reader.GetValue(67) as Polygon;
                         projectFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
 
                         projectsFromDb.Add(projectFeatureFromDb);
@@ -432,8 +433,9 @@ namespace roadwork_portal_service.Controllers
                     insertComm.Parameters.AddWithValue("desired_year_from", roadWorkActivityFeature.properties.desiredYearFrom);
                     insertComm.Parameters.AddWithValue("desired_year_to", roadWorkActivityFeature.properties.desiredYearTo);
                     insertComm.Parameters.AddWithValue("prestudy", roadWorkActivityFeature.properties.prestudy);
-                    insertComm.Parameters.AddWithValue("start_of_construction", roadWorkActivityFeature.properties.startOfConstruction);
-                    insertComm.Parameters.AddWithValue("end_of_construction", roadWorkActivityFeature.properties.endOfConstruction);
+                    insertComm.Parameters.AddWithValue("start_of_construction", roadWorkActivityFeature.properties.startOfConstruction != null ? roadWorkActivityFeature.properties.startOfConstruction : DBNull.Value);
+                    insertComm.Parameters.AddWithValue("end_of_construction", roadWorkActivityFeature.properties.endOfConstruction != null ? roadWorkActivityFeature.properties.endOfConstruction : DBNull.Value);
+                    insertComm.Parameters.AddWithValue("date_of_acceptance", roadWorkActivityFeature.properties.dateOfAcceptance != null ? roadWorkActivityFeature.properties.dateOfAcceptance : DBNull.Value);
                     insertComm.Parameters.AddWithValue("project_no", roadWorkActivityFeature.properties.projectNo);
                     insertComm.Parameters.AddWithValue("private", roadWorkActivityFeature.properties.isPrivate);
                     insertComm.Parameters.AddWithValue("date_consult_start", DateTime.Now.AddDays(7));
@@ -708,7 +710,7 @@ namespace roadwork_portal_service.Controllers
                                     comment=@comment, section=@section, type=@type,
                                     projecttype=@projecttype, overarching_measure=@overarching_measure,
                                     desired_year_from=@desired_year_from, desired_year_to=@desired_year_to, prestudy=@prestudy, 
-                                    start_of_construction=@start_of_construction,
+                                    start_of_construction=@start_of_construction, date_of_acceptance=@date_of_acceptance,
                                     end_of_construction=@end_of_construction, consult_due=@consult_due,
                                     last_modified=@last_modified, project_no=@project_no,
                                     date_from=@date_from, date_optimum=@date_optimum, date_to=@date_to,
@@ -794,8 +796,9 @@ namespace roadwork_portal_service.Controllers
                     updateComm.Parameters.AddWithValue("desired_year_from", roadWorkActivityFeature.properties.desiredYearFrom);
                     updateComm.Parameters.AddWithValue("desired_year_to", roadWorkActivityFeature.properties.desiredYearTo);
                     updateComm.Parameters.AddWithValue("prestudy", roadWorkActivityFeature.properties.prestudy);
-                    updateComm.Parameters.AddWithValue("start_of_construction", roadWorkActivityFeature.properties.startOfConstruction);
-                    updateComm.Parameters.AddWithValue("end_of_construction", roadWorkActivityFeature.properties.endOfConstruction);
+                    updateComm.Parameters.AddWithValue("start_of_construction", roadWorkActivityFeature.properties.startOfConstruction != null ? roadWorkActivityFeature.properties.startOfConstruction : DBNull.Value);
+                    updateComm.Parameters.AddWithValue("end_of_construction", roadWorkActivityFeature.properties.endOfConstruction != null ? roadWorkActivityFeature.properties.endOfConstruction : DBNull.Value);
+                    updateComm.Parameters.AddWithValue("date_of_acceptance", roadWorkActivityFeature.properties.dateOfAcceptance != null ? roadWorkActivityFeature.properties.dateOfAcceptance : DBNull.Value);                    
                     updateComm.Parameters.AddWithValue("consult_due", roadWorkActivityFeature.properties.consultDue);
                     updateComm.Parameters.AddWithValue("project_no", roadWorkActivityFeature.properties.projectNo);
                     updateComm.Parameters.AddWithValue("private", roadWorkActivityFeature.properties.isPrivate);
