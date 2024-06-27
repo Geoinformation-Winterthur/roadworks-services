@@ -74,7 +74,8 @@ namespace roadwork_portal_service.Controllers
                             r.note_of_area_man, r.area_man_note_date,
                             n.first_name as area_manager_first_name, n.last_name as area_manager_last_name,
                             r.private, r.section, r.comment, r.url, o.is_civil_eng, o.abbreviation,
-                            r.overarching_measure, r.desired_year_from, r.desired_year_to, r.geom
+                            r.overarching_measure, r.desired_year_from, r.desired_year_to,
+                            u.e_mail, r.geom
                         FROM ""wtb_ssp_roadworkneeds"" r
                         LEFT JOIN ""wtb_ssp_activities_to_needs"" an ON an.uuid_roadwork_need = r.uuid
                         LEFT JOIN ""wtb_ssp_users"" u ON r.orderer = u.uuid
@@ -205,7 +206,9 @@ namespace roadwork_portal_service.Controllers
                         needFeatureFromDb.properties.desiredYearFrom = reader.IsDBNull(31) ? null : reader.GetInt32(31);
                         needFeatureFromDb.properties.desiredYearTo = reader.IsDBNull(32) ? null : reader.GetInt32(32);
 
-                        Polygon ntsPoly = reader.IsDBNull(33) ? Polygon.Empty : reader.GetValue(33) as Polygon;
+                        needFeatureFromDb.properties.orderer.mailAddress = reader.IsDBNull(33) ? "" : reader.GetString(33);
+
+                        Polygon ntsPoly = reader.IsDBNull(34) ? Polygon.Empty : reader.GetValue(34) as Polygon;
                         needFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
 
                         if (User.IsInRole("administrator"))
