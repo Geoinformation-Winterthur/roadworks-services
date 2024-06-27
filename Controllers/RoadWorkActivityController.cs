@@ -798,7 +798,7 @@ namespace roadwork_portal_service.Controllers
                     updateComm.Parameters.AddWithValue("prestudy", roadWorkActivityFeature.properties.prestudy);
                     updateComm.Parameters.AddWithValue("start_of_construction", roadWorkActivityFeature.properties.startOfConstruction != null ? roadWorkActivityFeature.properties.startOfConstruction : DBNull.Value);
                     updateComm.Parameters.AddWithValue("end_of_construction", roadWorkActivityFeature.properties.endOfConstruction != null ? roadWorkActivityFeature.properties.endOfConstruction : DBNull.Value);
-                    updateComm.Parameters.AddWithValue("date_of_acceptance", roadWorkActivityFeature.properties.dateOfAcceptance != null ? roadWorkActivityFeature.properties.dateOfAcceptance : DBNull.Value);                    
+                    updateComm.Parameters.AddWithValue("date_of_acceptance", roadWorkActivityFeature.properties.dateOfAcceptance != null ? roadWorkActivityFeature.properties.dateOfAcceptance : DBNull.Value);
                     updateComm.Parameters.AddWithValue("consult_due", roadWorkActivityFeature.properties.consultDue);
                     updateComm.Parameters.AddWithValue("project_no", roadWorkActivityFeature.properties.projectNo);
                     updateComm.Parameters.AddWithValue("private", roadWorkActivityFeature.properties.isPrivate);
@@ -841,10 +841,6 @@ namespace roadwork_portal_service.Controllers
                             updateComm.Parameters.AddWithValue("date_start_suspended", DateTime.Now);
                         else if (roadWorkActivityFeature.properties.status.code == "coordinated")
                             updateComm.Parameters.AddWithValue("date_start_coordinated", DateTime.Now);
-                    }
-
-                    if (hasStatusChanged)
-                    {
                     }
 
                     updateComm.ExecuteNonQuery();
@@ -899,6 +895,26 @@ namespace roadwork_portal_service.Controllers
                         updateActivityStatusComm.Parameters.AddWithValue("status", roadWorkActivityFeature.properties.status.code);
                         updateActivityStatusComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
                         updateActivityStatusComm.ExecuteNonQuery();
+
+                        if (roadWorkActivityFeature.properties.status.code == "inconsult" ||
+                            roadWorkActivityFeature.properties.status.code == "reporting")
+                        {
+                            foreach (User involvedUser in roadWorkActivityFeature.properties.involvedUsers)
+                            {
+                                NpgsqlCommand insertEmptyCommentsComm = pgConn.CreateCommand();
+                                insertEmptyCommentsComm.CommandText = @"INSERT INTO ""wtb_ssp_activity_consult""
+                                    (uuid, uuid_roadwork_activity, input_by, feedback_phase, feedback_given)
+                                    VALUES
+                                    (@uuid, @uuid_roadwork_activity, @input_by, @feedback_phase, @feedback_given)";
+
+                                insertEmptyCommentsComm.Parameters.AddWithValue("uuid", Guid.NewGuid());
+                                insertEmptyCommentsComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkActivityFeature.properties.uuid));
+                                insertEmptyCommentsComm.Parameters.AddWithValue("input_by", new Guid(involvedUser.uuid));
+                                insertEmptyCommentsComm.Parameters.AddWithValue("feedback_phase", roadWorkActivityFeature.properties.status.code);
+                                insertEmptyCommentsComm.Parameters.AddWithValue("feedback_given", false);
+                                insertEmptyCommentsComm.ExecuteNonQuery();
+                            }
+                        }
 
                         if (roadWorkActivityFeature.properties.status.code == "verified")
                         {
