@@ -307,7 +307,7 @@ namespace roadwork_portal_service.Controllers
                 Polygon roadWorkActivityPoly = roadWorkActivityFeature.geometry.getNtsPolygon();
                 Coordinate[] coordinates = roadWorkActivityPoly.Coordinates;
 
-                if (!roadWorkActivityFeature.properties.isPrivate)
+                if (!(bool)roadWorkActivityFeature.properties.isPrivate)
                 {
                     _logger.LogError("User tried to add a non-private roadwork activity");
                     roadWorkActivityFeature = new RoadWorkActivityFeature();
@@ -675,7 +675,7 @@ namespace roadwork_portal_service.Controllers
                         }
                     }
 
-                    if (!roadWorkActivityFeature.properties.isPrivate && assignedNeedsCount == 0)
+                    if (!(bool)roadWorkActivityFeature.properties.isPrivate && assignedNeedsCount == 0)
                     {
                         _logger.LogWarning("The roadwork activity does not relate to at least one roadwork need");
                         roadWorkActivityFeature = new RoadWorkActivityFeature();
@@ -786,7 +786,7 @@ namespace roadwork_portal_service.Controllers
                     updateComm.Parameters.AddWithValue("date_sks", roadWorkActivityFeature.properties.dateSks);
                     updateComm.Parameters.AddWithValue("date_kap", roadWorkActivityFeature.properties.dateKap);
                     updateComm.Parameters.AddWithValue("date_oks", roadWorkActivityFeature.properties.dateOks);
-                    updateComm.Parameters.AddWithValue("date_gl_tba", roadWorkActivityFeature.properties.dateGlTba);
+                    updateComm.Parameters.AddWithValue("date_gl_tba", roadWorkActivityFeature.properties.dateGlTba != null ? roadWorkActivityFeature.properties.dateGlTba : DBNull.Value);
                     updateComm.Parameters.AddWithValue("comment", roadWorkActivityFeature.properties.comment);
                     updateComm.Parameters.AddWithValue("section", roadWorkActivityFeature.properties.section);
                     updateComm.Parameters.AddWithValue("type", roadWorkActivityFeature.properties.type);

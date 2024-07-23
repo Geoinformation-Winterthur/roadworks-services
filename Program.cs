@@ -72,12 +72,12 @@ try
         options.IncludeXmlComments(commentsXmlFile);
     });
 
-    string clientUrl = AppConfig.Configuration.GetValue<string>("URL:ClientUrl");
+    string clientDomain = AppConfig.Configuration.GetValue<string>("URL:ClientDomain");
     string policyName = "AllowCorsOrigins";
 
 
     List<string> allowedOrigins = new List<string>();
-    allowedOrigins.Add(clientUrl);
+    allowedOrigins.Add(clientDomain);
 
     builder.Services.AddCors(opt =>
     {
