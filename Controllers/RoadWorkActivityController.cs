@@ -998,7 +998,7 @@ namespace roadwork_portal_service.Controllers
                     return roadWorkActivity;
                 }
 
-                if (userFromDb.role.code == "trafficmanager" || userFromDb.role.code == "administrator")
+                if (User.IsInRole("trafficmanager") || User.IsInRole("administrator"))
                 {
                     using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
                     {

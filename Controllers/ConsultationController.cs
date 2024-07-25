@@ -55,9 +55,8 @@ namespace roadwork_portal_service.Controllers
                                         WHERE uuid_roadwork_activity = @uuid_roadwork_activity";
                 selectConsultationComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadworkActivityUuid));
 
-                if (userFromDb != null && userFromDb.mailAddress != null && userFromDb.mailAddress != "" &&
-                        userFromDb.role != null && userFromDb.role.code != null &&
-                        userFromDb.role.code == "orderer")
+                if (userFromDb != null && userFromDb.mailAddress != null &&
+                        userFromDb.mailAddress != "" && User.IsInRole("orderer"))
                 {
                     selectConsultationComm.CommandText += " AND u.e_mail = @e_mail";
                     selectConsultationComm.Parameters.AddWithValue("e_mail", userFromDb.mailAddress);
@@ -185,8 +184,8 @@ namespace roadwork_portal_service.Controllers
 
                 User userFromDb = LoginController.getAuthorizedUserFromDb(this.User, false);
 
-                if (userFromDb == null || userFromDb.uuid == null || userFromDb.role == null
-                        || (userFromDb.role.code != "administrator" && userFromDb.mailAddress != consultationInput.inputBy.mailAddress))
+                if (userFromDb == null || userFromDb.uuid == null ||
+                        (!User.IsInRole("administrator") && userFromDb.mailAddress != consultationInput.inputBy.mailAddress))
                 {
                     _logger.LogWarning("Unauthorized access.");
                     return Unauthorized();

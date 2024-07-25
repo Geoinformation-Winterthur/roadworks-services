@@ -39,12 +39,13 @@ public class UsersController : ControllerBase
             pgConn.Open();
             NpgsqlCommand selectComm = pgConn.CreateCommand();
             selectComm.CommandText = @"SELECT u.uuid, u.last_name, u.first_name,
-                                trim(lower(u.e_mail)), wtb_ssp_roles.code,
-                                wtb_ssp_roles.name, u.org_unit, o.name,
+                                trim(lower(u.e_mail)), u.org_unit, o.name,
                                 o.abbreviation, o.is_civil_eng, u.active,
-                                u.pref_table_view
+                                u.pref_table_view,
+                                u.role_projectmanager, u.role_eventmanager,
+                                u.role_orderer, u.role_trafficmanager,
+                                u.role_territorymanager, u.role_administrator
                             FROM ""wtb_ssp_users"" u
-                            LEFT JOIN ""wtb_ssp_roles"" ON u.role = wtb_ssp_roles.code
                             LEFT JOIN ""wtb_ssp_organisationalunits"" o ON u.org_unit = o.uuid";
 
             if (email != null)
@@ -94,21 +95,15 @@ public class UsersController : ControllerBase
                     {
                         userFromDb.lastName = reader.GetString(1);
                         userFromDb.firstName = reader.GetString(2);
-                        Role roleObj = new Role
-                        {
-                            code = reader.GetString(4),
-                            name = reader.GetString(5)
-                        };
-                        userFromDb.role = roleObj;
                         OrganisationalUnit orgUnit = new OrganisationalUnit
                         {
-                            uuid = reader.GetGuid(6).ToString(),
-                            name = reader.GetString(7),
-                            abbreviation = reader.GetString(8),
-                            isCivilEngineering = reader.GetBoolean(9)
+                            uuid = reader.GetGuid(4).ToString(),
+                            name = reader.GetString(5),
+                            abbreviation = reader.GetString(6),
+                            isCivilEngineering = reader.GetBoolean(7)
                         };
                         userFromDb.organisationalUnit = orgUnit;
-                        userFromDb.active = reader.GetBoolean(10);
+                        userFromDb.active = reader.GetBoolean(8);
 
                         if (userFromDb.lastName == null || userFromDb.lastName.Trim().Equals(""))
                         {
@@ -119,7 +114,14 @@ public class UsersController : ControllerBase
                         {
                             userFromDb.firstName = "unbekannt";
                         }
-                        userFromDb.prefTableView = reader.GetBoolean(11);
+                        userFromDb.prefTableView = reader.GetBoolean(9);
+
+                        userFromDb.grantedRoles.projectmanager = reader.GetBoolean(10);
+                        userFromDb.grantedRoles.eventmanager = reader.GetBoolean(11);
+                        userFromDb.grantedRoles.orderer = reader.GetBoolean(12);
+                        userFromDb.grantedRoles.trafficmanager = reader.GetBoolean(13);
+                        userFromDb.grantedRoles.territorymanager = reader.GetBoolean(14);
+                        userFromDb.grantedRoles.administrator = reader.GetBoolean(15);
 
                         usersFromDb.Add(userFromDb);
                     }
@@ -196,22 +198,33 @@ public class UsersController : ControllerBase
             pgConn.Open();
             NpgsqlCommand insertComm = pgConn.CreateCommand();
             insertComm.CommandText = @"INSERT INTO ""wtb_ssp_users""(uuid,
-                    last_name, first_name, e_mail, role, pwd, org_unit, active,
-                    pref_table_view)
-                    VALUES(@uuid, @last_name, @first_name, @e_mail, @role, @pwd,
-                    @org_unit, @active, false)";
+                    last_name, first_name, e_mail, pwd, org_unit, active,
+                    pref_table_view, role_projectmanager, role_eventmanager,
+                    role_orderer, role_trafficmanager, role_territorymanager,
+                    role_administrator)
+                    VALUES(@uuid, @last_name, @first_name, @e_mail, @pwd,
+                    @org_unit, @active, false, @role_projectmanager,
+                    @role_eventmanager, @role_orderer, @role_trafficmanager,
+                    @role_territorymanager, @role_administrator)";
+
             Guid userUuid = Guid.NewGuid();
             user.uuid = userUuid.ToString();
             insertComm.Parameters.AddWithValue("uuid", new Guid(user.uuid));
             insertComm.Parameters.AddWithValue("last_name", user.lastName);
             insertComm.Parameters.AddWithValue("first_name", user.firstName);
             insertComm.Parameters.AddWithValue("e_mail", user.mailAddress);
-            insertComm.Parameters.AddWithValue("role", user.role.code);
             string hashedPassphrase = HelperFunctions.hashPassphrase(userPassphrase);
             insertComm.Parameters.AddWithValue("pwd", hashedPassphrase);
             insertComm.Parameters.AddWithValue("org_unit", new Guid(user.organisationalUnit.uuid));
             insertComm.Parameters.AddWithValue("active", user.active);
 
+            insertComm.Parameters.AddWithValue("role_projectmanager", user.grantedRoles.projectmanager);
+            insertComm.Parameters.AddWithValue("role_eventmanager", user.grantedRoles.eventmanager);
+            insertComm.Parameters.AddWithValue("role_orderer", user.grantedRoles.orderer);
+            insertComm.Parameters.AddWithValue("role_trafficmanager", user.grantedRoles.trafficmanager);
+            insertComm.Parameters.AddWithValue("role_territorymanager", user.grantedRoles.territorymanager);
+            insertComm.Parameters.AddWithValue("role_administrator", user.grantedRoles.administrator);
+                    
             int noAffectedRows = insertComm.ExecuteNonQuery();
 
             pgConn.Close();
@@ -233,37 +246,38 @@ public class UsersController : ControllerBase
     [Authorize]
     public ActionResult<ErrorMessage> UpdateUser([FromBody] User user, bool changePassphrase = false)
     {
+        User userToUpdate = user;
         ErrorMessage errorResult = new ErrorMessage();
         try
         {
-            string userPassphrase = user.passPhrase;
-            user.passPhrase = "";
-            if (user == null || user.uuid == null)
+            string userPassphrase = userToUpdate.passPhrase;
+            userToUpdate.passPhrase = "";
+            if (userToUpdate == null || userToUpdate.uuid == null)
             {
                 _logger.LogInformation("No user data provided by user in update user process.");
                 errorResult.errorMessage = "SSP-0";
                 return Ok(errorResult);
             }
 
-            user.uuid = user.uuid.ToLower().Trim();
+            userToUpdate.uuid = userToUpdate.uuid.ToLower().Trim();
 
-            if (user.uuid == "")
+            if (userToUpdate.uuid == "")
             {
                 _logger.LogWarning("No user data provided by user in update user process.");
                 errorResult.errorMessage = "SSP-0";
                 return Ok(errorResult);
             }
 
-            if (user.mailAddress == null)
+            if (userToUpdate.mailAddress == null)
             {
-                user.mailAddress = "";
+                userToUpdate.mailAddress = "";
             }
 
-            user.mailAddress = user.mailAddress.Trim().ToLower();
+            userToUpdate.mailAddress = userToUpdate.mailAddress.Trim().ToLower();
 
             try
             {
-                MailAddress userMailAddress = new MailAddress(user.mailAddress);
+                MailAddress userMailAddress = new MailAddress(userToUpdate.mailAddress);
             }
             catch (Exception ex)
             {
@@ -278,28 +292,28 @@ public class UsersController : ControllerBase
                 loggedInUserMail = loggedInUserMailClaim.Value.Trim().ToLower();
             }
 
-            if (!User.IsInRole("administrator") && user.mailAddress != loggedInUserMail)
+            if (!User.IsInRole("administrator") && userToUpdate.mailAddress != loggedInUserMail)
             {
                 return Unauthorized();
             }
 
             User userInDb = new User();
-            ActionResult<User[]> usersInDbResult = this.GetUsers("", user.uuid, "");
+            ActionResult<User[]> usersInDbResult = this.GetUsers("", userToUpdate.uuid, "");
             User[]? usersInDb = usersInDbResult.Value;
             if (usersInDb == null || usersInDb.Length != 1 || usersInDb[0] == null)
             {
-                _logger.LogWarning("Updating user " + user.uuid + " is not possible since user is not in the database.");
+                _logger.LogWarning("Updating user " + userToUpdate.uuid + " is not possible since user is not in the database.");
                 errorResult.errorMessage = "SSP-4";
                 return Ok(errorResult);
             }
 
             userInDb = usersInDb[0];
-            if (userInDb.role.code == "administrator")
+            if (userInDb.hasRole("administrator"))
             {
                 int noOfActiveAdmins = _countNumberOfActiveAdmins();
                 if (noOfActiveAdmins == 1)
                 {
-                    if (user.role.code != "administrator")
+                    if (userToUpdate.hasRole("administrator"))
                     {
                         _logger.LogWarning("User tried to change role of last administrator. " +
                                 "Role cannot be changed since there would be no administrator anymore.");
@@ -307,7 +321,7 @@ public class UsersController : ControllerBase
                         return Ok(errorResult);
                     }
 
-                    if (!user.active)
+                    if (!userToUpdate.active)
                     {
                         _logger.LogWarning("Administrator tried to set last administrator inactive. " +
                                 "This is not allowed.");
@@ -317,9 +331,9 @@ public class UsersController : ControllerBase
                 }
             }
 
-            if (userInDb.role.code == "territorymanager" && user.role.code != "territorymanager")
+            if (userInDb.hasRole("territorymanager") && !userToUpdate.hasRole("territorymanager"))
             {
-                if (_isAreaManagerAssigned(user.uuid))
+                if (_isAreaManagerAssigned(userToUpdate.uuid))
                 {
                     _logger.LogWarning("Administrator tried to change role of a territory manager " +
                             "who is in active charge of a territory. This is not allowed thus ignored.");
@@ -328,9 +342,9 @@ public class UsersController : ControllerBase
                 }
             }
 
-            if (user.role.code == "projectmanager")
+            if (userToUpdate.hasRole("projectmanager"))
             {
-                user.active = false;
+                userToUpdate.active = false;
             }
 
             using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
@@ -343,7 +357,13 @@ public class UsersController : ControllerBase
                 {
                     updateComm.CommandText += @"last_name=@last_name,
                         first_name=@first_name, e_mail=@e_mail,
-                        role=@role, org_unit=@org_unit, ";
+                        role_projectmanager=@role_projectmanager,
+                        role_eventmanager=@role_eventmanager,
+                        role_orderer=@role_orderer,
+                        role_trafficmanager=@role_trafficmanager,
+                        role_territorymanager=@role_territorymanager,
+                        role_administrator=@role_administrator,
+                        org_unit=@org_unit, ";
                 }
 
                 updateComm.CommandText += @"active=@active,
@@ -352,16 +372,21 @@ public class UsersController : ControllerBase
 
                 if (User.IsInRole("administrator"))
                 {
-                    updateComm.Parameters.AddWithValue("last_name", user.lastName);
-                    updateComm.Parameters.AddWithValue("first_name", user.firstName);
-                    updateComm.Parameters.AddWithValue("e_mail", user.mailAddress);
-                    updateComm.Parameters.AddWithValue("role", user.role.code);
-                    updateComm.Parameters.AddWithValue("org_unit", new Guid(user.organisationalUnit.uuid));
+                    updateComm.Parameters.AddWithValue("last_name", userToUpdate.lastName);
+                    updateComm.Parameters.AddWithValue("first_name", userToUpdate.firstName);
+                    updateComm.Parameters.AddWithValue("e_mail", userToUpdate.mailAddress);
+                    updateComm.Parameters.AddWithValue("role_projectmanager", userToUpdate.grantedRoles.projectmanager);
+                    updateComm.Parameters.AddWithValue("role_eventmanager", userToUpdate.grantedRoles.eventmanager);
+                    updateComm.Parameters.AddWithValue("role_orderer", userToUpdate.grantedRoles.orderer);
+                    updateComm.Parameters.AddWithValue("role_trafficmanager", userToUpdate.grantedRoles.trafficmanager);
+                    updateComm.Parameters.AddWithValue("role_territorymanager", userToUpdate.grantedRoles.territorymanager);
+                    updateComm.Parameters.AddWithValue("role_administrator", userToUpdate.grantedRoles.administrator);
+                    updateComm.Parameters.AddWithValue("org_unit", new Guid(userToUpdate.organisationalUnit.uuid));
                 }
 
-                updateComm.Parameters.AddWithValue("active", user.active);
-                updateComm.Parameters.AddWithValue("pref_table_view", user.prefTableView);
-                updateComm.Parameters.AddWithValue("uuid", new Guid(user.uuid));
+                updateComm.Parameters.AddWithValue("active", userToUpdate.active);
+                updateComm.Parameters.AddWithValue("pref_table_view", userToUpdate.prefTableView);
+                updateComm.Parameters.AddWithValue("uuid", new Guid(userToUpdate.uuid));
                 int noAffectedRowsStep1 = updateComm.ExecuteNonQuery();
 
                 if (changePassphrase == true)
@@ -382,7 +407,7 @@ public class UsersController : ControllerBase
                     updateComm.CommandText = @"UPDATE ""wtb_ssp_users"" SET
                                     pwd=@pwd WHERE uuid=@uuid";
                     updateComm.Parameters.AddWithValue("pwd", hashedPassphrase);
-                    updateComm.Parameters.AddWithValue("uuid", new Guid(user.uuid));
+                    updateComm.Parameters.AddWithValue("uuid", new Guid(userToUpdate.uuid));
                     noAffectedRowsStep2 = updateComm.ExecuteNonQuery();
                 }
 
@@ -447,7 +472,7 @@ public class UsersController : ControllerBase
         else
         {
             userInDb = usersInDb[0];
-            if (userInDb.role.code == "administrator")
+            if (userInDb.hasRole("administrator"))
             {
                 if (_countNumberOfActiveAdmins() == 1)
                 {

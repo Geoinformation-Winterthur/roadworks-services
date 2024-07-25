@@ -197,8 +197,7 @@ namespace roadwork_portal_service.Controllers
                         {
                             if (reader.Read())
                             {
-                                managementArea.manager.role.code
-                                            = reader.IsDBNull(0) ? "" : reader.GetString(0);
+                                managementArea.manager.setRole(reader.IsDBNull(0) ? "" : reader.GetString(0));
                                 managementArea.manager.firstName
                                             = reader.IsDBNull(1) ? "" : reader.GetString(1);
                                 managementArea.manager.lastName
@@ -206,7 +205,7 @@ namespace roadwork_portal_service.Controllers
                             }
                         }
 
-                        if (managementArea.manager.role.code != "territorymanager")
+                        if (managementArea.manager.hasRole("territorymanager"))
                         {
                             _logger.LogWarning("Administrator tried to set the user with UUID "
                                 + managerUuid + " as a manager of an area, though the user " +
@@ -250,8 +249,7 @@ namespace roadwork_portal_service.Controllers
                         {
                             if (reader.Read())
                             {
-                                managementArea.substituteManager.role.code
-                                            = reader.IsDBNull(0) ? "" : reader.GetString(0);
+                                managementArea.substituteManager.setRole(reader.IsDBNull(0) ? "" : reader.GetString(0));
                                 managementArea.substituteManager.firstName
                                             = reader.IsDBNull(1) ? "" : reader.GetString(1);
                                 managementArea.substituteManager.lastName
@@ -259,7 +257,7 @@ namespace roadwork_portal_service.Controllers
                             }
                         }
 
-                        if (managementArea.substituteManager.role.code != "territorymanager")
+                        if (managementArea.substituteManager.hasRole("territorymanager"))
                         {
                             _logger.LogWarning("Administrator tried to set the user with UUID "
                                 + managerUuid + " as a manager of an area, though the user " +

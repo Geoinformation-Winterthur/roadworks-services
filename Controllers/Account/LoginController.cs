@@ -11,6 +11,7 @@ using Npgsql;
 using roadwork_portal_service.Model;
 using roadwork_portal_service.Configuration;
 using roadwork_portal_service.Helper;
+using Microsoft.AspNetCore.Connections.Features;
 
 namespace roadwork_portal_service.Controllers;
 
@@ -33,7 +34,7 @@ public class LoginController : ControllerBase
     /// <returns>A security token string for the authenticated user</returns>
     /// <remarks>
     /// Sample request:
-    ///     POST /Account/Login
+    ///     POST /Account/Login?chosenrole=orderer
     ///     {
     ///        "mailAddress": "...",
     ///        "passPhrase": "..."
@@ -51,7 +52,7 @@ public class LoginController : ControllerBase
         if (receivedUser == null || receivedUser.mailAddress == null)
         {
             // login data is missing something important, thus:
-            _logger.LogWarning("No or bad login credentials provided in a login attempt.");
+            _logger.LogWarning("No mail address provided in a login attempt.");
             return BadRequest("No or bad login credentials provided.");
         }
 
@@ -60,7 +61,7 @@ public class LoginController : ControllerBase
         if (receivedUser.mailAddress == String.Empty || receivedUser.mailAddress.Any(Char.IsWhiteSpace))
         {
             // login data is missing something important, thus:
-            _logger.LogWarning("No or bad login credentials provided in a login attempt.");
+            _logger.LogWarning("No mail address provided in a login attempt.");
             return BadRequest("No or bad login credentials provided.");
         }
 
@@ -69,7 +70,14 @@ public class LoginController : ControllerBase
         if (receivedUser.passPhrase == null || receivedUser.passPhrase.Trim().Equals(""))
         {
             // login data is missing something important, thus:
-            _logger.LogWarning("No or bad login credentials provided by user.");
+            _logger.LogWarning("Empty passphrase provided by user " + receivedUser.mailAddress + " in a login attempt.");
+            return BadRequest("No or bad login credentials provided.");
+        }
+
+        if (receivedUser.chosenRole == null || receivedUser.chosenRole.Trim().Equals(""))
+        {
+            // login data is missing something important, thus:
+            _logger.LogWarning("No chosen role provided by user " + receivedUser.mailAddress + " in a login attempt.");
             return BadRequest("No or bad login credentials provided.");
         }
 
@@ -83,11 +91,17 @@ public class LoginController : ControllerBase
         if (userFromDb != null)
         {
             _logger.LogInformation("User " + receivedUser.mailAddress + " was found in the database.");
-            
+
             if (!userFromDb.active)
             {
                 _logger.LogWarning("User " + receivedUser.mailAddress + " was inactivated for login but still tried to login.");
-                return BadRequest("The user is inactivated for login.");
+                return BadRequest("No or bad login credentials provided.");
+            }
+
+            if (!userFromDb.hasRole(receivedUser.chosenRole))
+            {
+                _logger.LogWarning("User " + receivedUser.mailAddress + " has chosen a role that he is not assigned to, thus the login attempt is canceled.");
+                return BadRequest("No or bad login credentials provided.");
             }
 
             if (userFromDb.lastLoginAttempt != null)
@@ -96,7 +110,7 @@ public class LoginController : ControllerBase
                 DateTime currentDatabaseTime = (DateTime)userFromDb.databaseTime;
                 DateTime lastLoginAttemptTime = (DateTime)userFromDb.lastLoginAttempt;
                 double diffInSeconds = (currentDatabaseTime - lastLoginAttemptTime).TotalSeconds;
-                if(diffInSeconds < 3)
+                if (diffInSeconds < 3)
                 {
                     Thread.Sleep(3000);
                 }
@@ -117,7 +131,7 @@ public class LoginController : ControllerBase
                 userClaims.Add(new Claim(ClaimTypes.Email, userFromDb.mailAddress));
                 userClaims.Add(new Claim(ClaimTypes.GivenName, userFromDb.firstName));
                 userClaims.Add(new Claim(ClaimTypes.Name, userFromDb.lastName));
-                userClaims.Add(new Claim(ClaimTypes.Role, userFromDb.role.code));
+                userClaims.Add(new Claim(ClaimTypes.Role, receivedUser.chosenRole));
 
                 string serviceDomain = AppConfig.Configuration.GetValue<string>("URL:ServiceDomain");
                 string serviceBasePath = AppConfig.Configuration.GetValue<string>("URL:ServiceBasePath");
@@ -137,7 +151,7 @@ public class LoginController : ControllerBase
             }
             else
             {
-                _logger.LogWarning("The provided credentials of user " + receivedUser.mailAddress + 
+                _logger.LogWarning("The provided credentials of user " + receivedUser.mailAddress +
                         " did not match with the credentials in the database.");
             }
         }
@@ -146,8 +160,7 @@ public class LoginController : ControllerBase
             _logger.LogWarning("User " + receivedUser.mailAddress + " could not be found in the database.");
         }
         _logger.LogWarning("User " + receivedUser.mailAddress + " is not authenticated.");
-        return Unauthorized("Sie sind entweder nicht als Benutzer " +
-                    "erfasst oder Sie haben keine Zugriffsberechtigung.");
+        return BadRequest("No or bad login credentials provided.");
     }
 
 
@@ -176,7 +189,7 @@ public class LoginController : ControllerBase
 
     private static User _getUserFromDatabase(string eMailAddress, bool dryRun)
     {
-        if(dryRun) return null;
+        if (dryRun) return null;
 
         User userFromDb = null;
 
@@ -187,10 +200,10 @@ public class LoginController : ControllerBase
             NpgsqlCommand selectComm = pgConn.CreateCommand();
             selectComm.CommandText = @"SELECT u.uuid, u.last_name, u.first_name, u.e_mail, u.pwd,
                         u.last_login_attempt, CURRENT_TIMESTAMP(0)::TIMESTAMP,
-                        wtb_ssp_roles.code, wtb_ssp_roles.name, u.org_unit, o.name,
-                        o.abbreviation, u.active
+                        u.org_unit, o.name, o.abbreviation, u.active,
+                        u.role_projectmanager, u.role_eventmanager, u.role_orderer,
+                        u.role_trafficmanager, u.role_territorymanager, u.role_administrator
                         FROM ""wtb_ssp_users"" u
-                        LEFT JOIN ""wtb_ssp_roles"" ON u.role = wtb_ssp_roles.code
                         LEFT JOIN ""wtb_ssp_organisationalunits"" o ON u.org_unit = o.uuid
                         WHERE trim(lower(u.e_mail))=@e_mail";
             selectComm.Parameters.AddWithValue("e_mail", eMailAddress);
@@ -209,16 +222,18 @@ public class LoginController : ControllerBase
                     userFromDb.firstName = reader.GetString(2);
                     userFromDb.lastLoginAttempt = !reader.IsDBNull(5) ? reader.GetDateTime(5) : null;
                     userFromDb.databaseTime = !reader.IsDBNull(6) ? reader.GetDateTime(6) : null;
-                    Role role = new Role();
-                    role.code = reader.GetString(7);
-                    role.name = reader.GetString(8);
-                    userFromDb.role = role;
                     OrganisationalUnit orgUnit = new OrganisationalUnit();
-                    orgUnit.uuid = reader.GetGuid(9).ToString();
-                    orgUnit.name = reader.GetString(10);
-                    orgUnit.abbreviation = reader.GetString(11);
+                    orgUnit.uuid = reader.GetGuid(7).ToString();
+                    orgUnit.name = reader.GetString(8);
+                    orgUnit.abbreviation = reader.GetString(9);
                     userFromDb.organisationalUnit = orgUnit;
-                    userFromDb.active = reader.GetBoolean(12);
+                    userFromDb.active = reader.GetBoolean(10);
+                    userFromDb.grantedRoles.projectmanager = reader.GetBoolean(11);
+                    userFromDb.grantedRoles.eventmanager = reader.GetBoolean(12);
+                    userFromDb.grantedRoles.orderer = reader.GetBoolean(13);
+                    userFromDb.grantedRoles.trafficmanager = reader.GetBoolean(14);
+                    userFromDb.grantedRoles.territorymanager = reader.GetBoolean(15);
+                    userFromDb.grantedRoles.administrator = reader.GetBoolean(16);
 
                     if (userFromDb.lastName == null || userFromDb.lastName.Trim().Equals(""))
                     {
@@ -229,7 +244,6 @@ public class LoginController : ControllerBase
                     {
                         userFromDb.firstName = "Vorname unbekannt";
                     }
-
                 }
             }
             pgConn.Close();
@@ -240,7 +254,7 @@ public class LoginController : ControllerBase
 
     private static void _updateLoginTimestamp(string eMailAddress, bool dryRun)
     {
-        if(dryRun) return;
+        if (dryRun) return;
 
         using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
         {
