@@ -72,8 +72,12 @@ public class UsersController : ControllerBase
                 role = role.Trim().ToLower();
                 if (role != "")
                 {
-                    selectComm.CommandText += " WHERE wtb_ssp_roles.code=@role";
-                    selectComm.Parameters.AddWithValue("role", role);
+                    if (role == "projectmanager") selectComm.CommandText += " WHERE u.role_projectmanager=true";
+                    else if (role == "eventmanager") selectComm.CommandText += " WHERE u.role_eventmanager=true";
+                    else if (role == "orderer") selectComm.CommandText += " WHERE u.role_orderer=true";
+                    else if (role == "trafficmanager") selectComm.CommandText += " WHERE u.role_trafficmanager=true";
+                    else if (role == "territorymanager") selectComm.CommandText += " WHERE u.role_territorymanager=true";
+                    else if (role == "administrator") selectComm.CommandText += " WHERE u.role_administrator=true";
                 }
             }
             selectComm.CommandText += " ORDER BY u.first_name, u.last_name";
@@ -514,9 +518,8 @@ public class UsersController : ControllerBase
             pgConn.Open();
             NpgsqlCommand selectComm = pgConn.CreateCommand();
             selectComm.CommandText = @"SELECT count(*) 
-                            FROM ""wtb_ssp_users"" users
-                            LEFT JOIN ""wtb_ssp_roles"" roles ON users.role = roles.code
-                            WHERE users.active=true AND roles.code='administrator'";
+                            FROM ""wtb_ssp_users""
+                            WHERE role_administrator=true";
 
             using (NpgsqlDataReader reader = selectComm.ExecuteReader())
             {
