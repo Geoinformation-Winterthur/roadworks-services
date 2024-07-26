@@ -703,6 +703,14 @@ namespace roadwork_portal_service.Controllers
                         hasStatusChanged = statusOfActivityInDb != roadWorkActivityFeature.properties.status.code;
                     }
 
+                    if(hasStatusChanged && (bool)roadWorkActivityFeature.properties.isPrivate){
+                        _logger.LogWarning("The process status of a private (draft) roadwork activity has been tried to change. "+
+                                    "This is not allowed");
+                        roadWorkActivityFeature = new RoadWorkActivityFeature();
+                        roadWorkActivityFeature.errorMessage = "SSP-32";
+                        return Ok(roadWorkActivityFeature);
+                    }
+
                     NpgsqlCommand updateComm = pgConn.CreateCommand();
                     updateComm.CommandText = @"UPDATE ""wtb_ssp_roadworkactivities""
                                     SET name=@name, projectmanager=@projectmanager,
