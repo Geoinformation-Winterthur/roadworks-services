@@ -304,7 +304,7 @@ namespace roadwork_portal_service.Controllers
 
         // POST roadworkneed/
         [HttpPost]
-        [Authorize(Roles = "orderer,administrator")]
+        [Authorize(Roles = "orderer,territorymanager,administrator")]
         public ActionResult<RoadWorkNeedFeature> AddNeed([FromBody] RoadWorkNeedFeature roadWorkNeedFeature, bool isDryRun = false)
         {
             try
@@ -358,7 +358,7 @@ namespace roadwork_portal_service.Controllers
 
         // PUT roadworkneed/
         [HttpPut]
-        [Authorize(Roles = "orderer,administrator")]
+        [Authorize(Roles = "orderer,territorymanager,administrator")]
         public ActionResult<RoadWorkNeedFeature> UpdateNeed([FromBody] RoadWorkNeedFeature roadWorkNeedFeature)
         {
 
@@ -460,7 +460,7 @@ namespace roadwork_portal_service.Controllers
 
                     pgConn.Open();
 
-                    if (!User.IsInRole("administrator"))
+                    if (!User.IsInRole("administrator") && !User.IsInRole("territorymanager"))
                     {
 
                         NpgsqlCommand selectOrdererOfNeedComm = pgConn.CreateCommand();

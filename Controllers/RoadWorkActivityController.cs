@@ -309,7 +309,8 @@ namespace roadwork_portal_service.Controllers
 
                 if (!(bool)roadWorkActivityFeature.properties.isPrivate)
                 {
-                    _logger.LogError("User tried to add a non-private roadwork activity");
+                    _logger.LogError("User tried to add instead of update a public roadwork activity, " +
+                        "which is not allowed");
                     roadWorkActivityFeature = new RoadWorkActivityFeature();
                     roadWorkActivityFeature.errorMessage = "SSP-3";
                     return Ok(roadWorkActivityFeature);
@@ -660,27 +661,16 @@ namespace roadwork_portal_service.Controllers
 
                     }
 
-                    NpgsqlCommand selectCountAssignedNeedsComm = pgConn.CreateCommand();
-                    selectCountAssignedNeedsComm.CommandText = @"SELECT count(*) FROM ""wtb_ssp_activities_to_needs""
-                                                        WHERE uuid_roadwork_activity=@uuid_roadwork_activity
-                                                        AND activityrelationtype='assignedneed'";
-                    selectCountAssignedNeedsComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkActivityFeature.properties.uuid));
-
-                    int assignedNeedsCount = 0;
-                    using (NpgsqlDataReader reader = selectCountAssignedNeedsComm.ExecuteReader())
+                    if (!(bool)roadWorkActivityFeature.properties.isPrivate)
                     {
-                        if (reader.Read())
+                        int assignedNeedsCount = _countAssingedNeedsOfActivity(pgConn, roadWorkActivityFeature.properties.uuid);
+                        if (assignedNeedsCount == 0)
                         {
-                            assignedNeedsCount = reader.IsDBNull(0) ? 0 : reader.GetInt32(0);
+                            _logger.LogWarning("The roadwork activity does not relate to at least one roadwork need");
+                            roadWorkActivityFeature = new RoadWorkActivityFeature();
+                            roadWorkActivityFeature.errorMessage = "SSP-28";
+                            return Ok(roadWorkActivityFeature);
                         }
-                    }
-
-                    if (!(bool)roadWorkActivityFeature.properties.isPrivate && assignedNeedsCount == 0)
-                    {
-                        _logger.LogWarning("The roadwork activity does not relate to at least one roadwork need");
-                        roadWorkActivityFeature = new RoadWorkActivityFeature();
-                        roadWorkActivityFeature.errorMessage = "SSP-28";
-                        return Ok(roadWorkActivityFeature);
                     }
 
                     NpgsqlCommand selectStatusComm = pgConn.CreateCommand();
@@ -703,8 +693,9 @@ namespace roadwork_portal_service.Controllers
                         hasStatusChanged = statusOfActivityInDb != roadWorkActivityFeature.properties.status.code;
                     }
 
-                    if(hasStatusChanged && (bool)roadWorkActivityFeature.properties.isPrivate){
-                        _logger.LogWarning("The process status of a private (draft) roadwork activity has been tried to change. "+
+                    if (hasStatusChanged && (bool)roadWorkActivityFeature.properties.isPrivate)
+                    {
+                        _logger.LogWarning("The process status of a private (draft) roadwork activity has been tried to change. " +
                                     "This is not allowed");
                         roadWorkActivityFeature = new RoadWorkActivityFeature();
                         roadWorkActivityFeature.errorMessage = "SSP-32";
@@ -1227,6 +1218,23 @@ namespace roadwork_portal_service.Controllers
                 result.errorMessage = "Unknown critical error.";
                 return result;
             }
+        }
+
+
+        private int _countAssingedNeedsOfActivity(NpgsqlConnection pgConn, string roadWorkActivityUuid)
+        {
+            int result = 0;
+            NpgsqlCommand selectCountAssignedNeedsComm = pgConn.CreateCommand();
+            selectCountAssignedNeedsComm.CommandText = @"SELECT count(*) FROM ""wtb_ssp_activities_to_needs""
+                                                        WHERE uuid_roadwork_activity=@uuid_roadwork_activity
+                                                        AND activityrelationtype='assignedneed'";
+            selectCountAssignedNeedsComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkActivityUuid));
+
+            using (NpgsqlDataReader reader = selectCountAssignedNeedsComm.ExecuteReader())
+                if (reader.Read())
+                    result = reader.IsDBNull(0) ? 0 : reader.GetInt32(0);
+
+            return result;
         }
 
     }

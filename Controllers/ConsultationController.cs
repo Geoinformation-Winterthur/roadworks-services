@@ -93,7 +93,8 @@ namespace roadwork_portal_service.Controllers
         // POST consultation/?roadworkactivityuuid=...
         [HttpPost]
         [Authorize(Roles = "orderer,administrator")]
-        public ActionResult<ConsultationInput> AddConsultation(string roadworkActivityUuid, [FromBody] ConsultationInput consultationInput, bool isDryRun = false)
+        public ActionResult<ConsultationInput> AddConsultation(string roadworkActivityUuid,
+                    [FromBody] ConsultationInput consultationInput, bool isDryRun = false)
         {
             try
             {
@@ -105,6 +106,28 @@ namespace roadwork_portal_service.Controllers
                     pgConn.Open();
 
                     using NpgsqlTransaction trans = pgConn.BeginTransaction();
+
+                    NpgsqlCommand selectComm = pgConn.CreateCommand();
+                    selectComm.CommandText = @"SELECT status FROM ""wtb_ssp_roadworkactivities""
+                                        WHERE uuid=@uuid_roadwork_activity";
+                    selectComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadworkActivityUuid));
+
+                    string roadWorkActivityStatus = "";
+                    using (NpgsqlDataReader reader = selectComm.ExecuteReader())
+                    {
+                        if (reader.Read())
+                            roadWorkActivityStatus = reader.IsDBNull(0) ? "" :
+                                        reader.GetString(0);
+                    }
+
+                    if ((roadWorkActivityStatus != "inconsult" && roadWorkActivityStatus != "reporting") ||
+                                roadWorkActivityStatus != consultationInput.feedbackPhase)
+                    {
+                        _logger.LogWarning("User tried to add consultation feedback though "+
+                                "the consultation phase is closed");
+                        consultationInput.errorMessage = "SSP-33";
+                        return Ok(consultationInput);
+                    }
 
                     consultationInput.uuid = Guid.NewGuid().ToString();
                     NpgsqlCommand insertComm = pgConn.CreateCommand();
