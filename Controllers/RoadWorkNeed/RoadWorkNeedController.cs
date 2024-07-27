@@ -27,45 +27,56 @@ namespace roadwork_portal_service.Controllers
         // GET roadworkneed/?year=2023&uuids=...&roadworkactivityuuid=...
         [HttpGet]
         [Authorize(Roles = "orderer,trefficmanager,territorymanager,administrator")]
-        public IEnumerable<RoadWorkNeedFeature> GetNeeds(int? year = 0, string? uuids = "",
-                string? roadWorkActivityUuid = "", string? name = "", string? status = "",
+        public IEnumerable<RoadWorkNeedFeature> GetNeeds(int? relevance,
+                DateTime? dateOfCreation, int? year, string? uuids,
+                string? roadWorkActivityUuid, string? name,
+                string? areaManagerUuid, bool? onlyMyNeeds, string? status,
                 bool summary = false)
         {
             List<RoadWorkNeedFeature> projectsFromDb = new List<RoadWorkNeedFeature>();
-
-            if (year == null)
-                year = 0;
-
-            if (uuids == null)
-                uuids = "";
-            else
-                uuids = uuids.Trim().ToLower();
-
-            if (roadWorkActivityUuid == null)
-                roadWorkActivityUuid = "";
-            else
-                roadWorkActivityUuid = roadWorkActivityUuid.Trim().ToLower();
-
-            if (name == null)
-                name = "";
-            else
-                name = name.Trim().ToLower();
-
-            if (status == null)
-                status = "";
-            else
-                status = status.Trim().ToLower();
-
-            string[] statusArray = status.Split(",");
-
-            User userFromDb = LoginController.getAuthorizedUserFromDb(this.User, false);
-
-            // get data of current user from database:
-            using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
+            try
             {
-                pgConn.Open();
-                NpgsqlCommand selectComm = pgConn.CreateCommand();
-                selectComm.CommandText = @"SELECT r.uuid, r.name, r.orderer,
+
+                if (year == null)
+                    year = 0;
+
+                if (uuids == null)
+                    uuids = "";
+                else
+                    uuids = uuids.Trim().ToLower();
+
+                if (roadWorkActivityUuid == null)
+                    roadWorkActivityUuid = "";
+                else
+                    roadWorkActivityUuid = roadWorkActivityUuid.Trim().ToLower();
+
+                if (name == null)
+                    name = "";
+                else
+                    name = name.Trim().ToLower();
+
+                if (status == null)
+                    status = "";
+                else
+                    status = status.Trim().ToLower();
+                string[] statusArray = status.Split(",");
+
+                if (areaManagerUuid == null)
+                    areaManagerUuid = "";
+                else
+                    areaManagerUuid = areaManagerUuid.Trim().ToLower();
+
+                if (onlyMyNeeds == null)
+                    onlyMyNeeds = false;
+
+                User userFromDb = LoginController.getAuthorizedUserFromDb(this.User, false);
+
+                // get data of current user from database:
+                using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
+                {
+                    pgConn.Open();
+                    NpgsqlCommand selectComm = pgConn.CreateCommand();
+                    selectComm.CommandText = @"SELECT r.uuid, r.name, r.orderer,
                             u.first_name, u.last_name, o.name as orgname, r.finish_early_to,
                             r.finish_optimum_to, r.finish_late_to, p.code, s.code, s.name as statusname,
                             r.description, 
@@ -84,151 +95,210 @@ namespace roadwork_portal_service.Controllers
                         LEFT JOIN ""wtb_ssp_status"" s ON r.status = s.code
                         LEFT JOIN ""wtb_ssp_users"" n ON r.area_man_of_note = n.uuid";
 
-                if (roadWorkActivityUuid != "")
-                {
-                    selectComm.CommandText += @" LEFT JOIN ""wtb_ssp_roadworkactivities"" act ON act.uuid = @act_uuid";
-                    selectComm.Parameters.AddWithValue("act_uuid", new Guid(roadWorkActivityUuid));
-                }
-
-                selectComm.CommandText += " WHERE (r.private = false OR r.orderer = @orderer_uuid)";
-                selectComm.Parameters.AddWithValue("orderer_uuid", new Guid(userFromDb.uuid));
-
-                if (uuids != "")
-                {
-                    List<Guid> uuidsList = new List<Guid>();
-
-                    foreach (string uuid in uuids.Split(","))
+                    if (roadWorkActivityUuid != "")
                     {
-                        if (uuid != null && uuid != "")
+                        selectComm.CommandText += @" LEFT JOIN ""wtb_ssp_roadworkactivities"" act ON act.uuid = @act_uuid";
+                        selectComm.Parameters.AddWithValue("act_uuid", new Guid(roadWorkActivityUuid));
+                    }
+
+                    selectComm.CommandText += " WHERE (r.private = false OR r.orderer = @orderer_uuid)";
+                    selectComm.Parameters.AddWithValue("orderer_uuid", new Guid(userFromDb.uuid));
+
+                    if (uuids != "")
+                    {
+                        List<Guid> uuidsList = new List<Guid>();
+
+                        foreach (string uuid in uuids.Split(","))
                         {
-                            uuidsList.Add(new Guid(uuid));
-                        }
-                    }
-                    selectComm.CommandText += " AND r.uuid = ANY (:uuids)";
-                    selectComm.Parameters.AddWithValue("uuids", uuidsList);
-
-                }
-                else if (roadWorkActivityUuid != "")
-                {
-                    selectComm.CommandText += @" AND ST_Intersects(act.geom, r.geom)";
-                    selectComm.Parameters.AddWithValue("act_uuid", new Guid(roadWorkActivityUuid));
-                }
-                else
-                {
-                    if (year != 0)
-                    {
-                        selectComm.CommandText += " AND EXTRACT(YEAR FROM r.finish_optimum_to) = @year";
-                        selectComm.Parameters.AddWithValue("year", year);
-                    }
-
-                    if (name != "")
-                    {
-                        selectComm.CommandText += " AND LOWER(r.name) LIKE @name";
-                        selectComm.Parameters.AddWithValue("name", "%" + name + "%");
-                    }
-
-                    if (statusArray[0] != "")
-                    {
-                        selectComm.CommandText += " AND (r.status=@status0";
-                        selectComm.Parameters.AddWithValue("status0", statusArray[0]);
-
-                        if (statusArray.Length > 1)
-                        {
-                            for (int i = 1; i < statusArray.Length; i++)
+                            if (uuid != null && uuid != "")
                             {
-                                selectComm.CommandText += " OR ";
-                                selectComm.CommandText += "r.status=@status" + i;
-                                selectComm.Parameters.AddWithValue("status" + i, statusArray[i]);
+                                uuidsList.Add(new Guid(uuid));
                             }
                         }
-                        selectComm.CommandText += ")";
-                    }
-                }
+                        selectComm.CommandText += " AND r.uuid = ANY (:uuids)";
+                        selectComm.Parameters.AddWithValue("uuids", uuidsList);
 
-                using (NpgsqlDataReader reader = selectComm.ExecuteReader())
-                {
-                    RoadWorkNeedFeature needFeatureFromDb;
-                    while (reader.Read())
+                    }
+                    else if (roadWorkActivityUuid != "")
                     {
-                        needFeatureFromDb = new RoadWorkNeedFeature();
-                        needFeatureFromDb.properties.uuid =
-                                reader.IsDBNull(reader.GetOrdinal("uuid")) ?
-                                    "" : reader.GetGuid(reader.GetOrdinal("uuid")).ToString();
-                        needFeatureFromDb.properties.name =
-                                reader.IsDBNull(reader.GetOrdinal("name")) ?
-                                    "" : reader.GetString(reader.GetOrdinal("name"));
-                        User orderer = new User();
-                        orderer.uuid = reader.IsDBNull(2) ? "" : reader.GetGuid(2).ToString();
-                        orderer.firstName = reader.IsDBNull(3) ? "" : reader.GetString(3);
-                        orderer.lastName = reader.IsDBNull(4) ? "" : reader.GetString(4);
-                        OrganisationalUnit orgUnit = new OrganisationalUnit();
-                        orgUnit.name = reader.IsDBNull(5) ? "" : reader.GetString(5);
-                        orderer.organisationalUnit = orgUnit;
-                        needFeatureFromDb.properties.orderer = orderer;
-                        needFeatureFromDb.properties.finishEarlyTo = reader.IsDBNull(6) ? DateTime.MinValue : reader.GetDateTime(6);
-                        needFeatureFromDb.properties.finishOptimumTo = reader.IsDBNull(7) ? DateTime.MinValue : reader.GetDateTime(7);
-                        needFeatureFromDb.properties.finishLateTo = reader.IsDBNull(8) ? DateTime.MinValue : reader.GetDateTime(8);
-                        Priority priority = new Priority();
-                        priority.code = reader.IsDBNull(9) ? "" : reader.GetString(9);
-                        needFeatureFromDb.properties.priority = priority;
-                        Status statusObj = new Status();
-                        statusObj.code = reader.IsDBNull(10) ? "" : reader.GetString(10);
-                        statusObj.name = reader.IsDBNull(11) ? "" : reader.GetString(11);
-                        needFeatureFromDb.properties.status = statusObj;
-                        needFeatureFromDb.properties.description = reader.IsDBNull(12) ? "" : reader.GetString(12);
-
-                        needFeatureFromDb.properties.created = reader.IsDBNull(13) ? DateTime.MinValue : reader.GetDateTime(13);
-                        needFeatureFromDb.properties.lastModified = reader.IsDBNull(14) ? DateTime.MinValue : reader.GetDateTime(14);
-                        needFeatureFromDb.properties.roadWorkActivityUuid = reader.IsDBNull(15) ? "" : reader.GetGuid(15).ToString();
-
-                        string ordererMailAddress = reader.IsDBNull(16) ? "" : reader.GetString(16);
-                        string mailOfLoggedInUser = User.FindFirstValue(ClaimTypes.Email);
-
-                        needFeatureFromDb.properties.relevance = reader.IsDBNull(17) ? 0 : reader.GetInt32(17);
-                        needFeatureFromDb.properties.activityRelationType = reader.IsDBNull(18) ? "" : reader.GetString(18);
-                        needFeatureFromDb.properties.costs = reader.IsDBNull(19) ? 0 : reader.GetInt32(19);
-                        needFeatureFromDb.properties.noteOfAreaManager = reader.IsDBNull(20) ? "" : reader.GetString(20);
-                        needFeatureFromDb.properties.areaManagerNoteDate = reader.IsDBNull(21) ? DateTime.MinValue : reader.GetDateTime(21);
-
-                        User areaManagerOfNote = new User();
-                        areaManagerOfNote.firstName = reader.IsDBNull(22) ? "" : reader.GetString(22);
-                        areaManagerOfNote.lastName = reader.IsDBNull(23) ? "" : reader.GetString(23);
-                        needFeatureFromDb.properties.areaManagerOfNote = areaManagerOfNote;
-                        needFeatureFromDb.properties.isPrivate = reader.IsDBNull(24) ? true : reader.GetBoolean(24);
-                        needFeatureFromDb.properties.section = reader.IsDBNull(25) ? "" : reader.GetString(25);
-                        needFeatureFromDb.properties.comment = reader.IsDBNull(26) ? "" : reader.GetString(26);
-                        needFeatureFromDb.properties.url = reader.IsDBNull(27) ? "" : reader.GetString(27);
-                        needFeatureFromDb.properties.orderer.organisationalUnit.isCivilEngineering = reader.IsDBNull(28) ? false : reader.GetBoolean(28);
-
-                        orgUnit.abbreviation = reader.IsDBNull(29) ? "" : reader.GetString(29);
-
-                        needFeatureFromDb.properties.overarchingMeasure = reader.IsDBNull(30) ? false : reader.GetBoolean(30);
-                        needFeatureFromDb.properties.desiredYearFrom = reader.IsDBNull(31) ? null : reader.GetInt32(31);
-                        needFeatureFromDb.properties.desiredYearTo = reader.IsDBNull(32) ? null : reader.GetInt32(32);
-
-                        needFeatureFromDb.properties.orderer.mailAddress = reader.IsDBNull(33) ? "" : reader.GetString(33);
-
-                        Polygon ntsPoly = reader.IsDBNull(34) ? Polygon.Empty : reader.GetValue(34) as Polygon;
-                        needFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
-
-                        if (User.IsInRole("administrator"))
-                        {
-                            needFeatureFromDb.properties.isEditingAllowed = true;
-                        }
-                        else if (ordererMailAddress == mailOfLoggedInUser
-                                    && needFeatureFromDb.properties.isPrivate)
-                        {
-                            // editing for the orderer is only allowed as long as the need is not public (is private):
-                            needFeatureFromDb.properties.isEditingAllowed = true;
-                        }
-
-                        projectsFromDb.Add(needFeatureFromDb);
+                        selectComm.CommandText += @" AND ST_Intersects(act.geom, r.geom)";
+                        selectComm.Parameters.AddWithValue("act_uuid", new Guid(roadWorkActivityUuid));
                     }
-                }
-                pgConn.Close();
-            }
+                    else
+                    {
+                        if (year != 0)
+                        {
+                            selectComm.CommandText += " AND EXTRACT(YEAR FROM r.finish_optimum_to) = @year";
+                            selectComm.Parameters.AddWithValue("year", year);
+                        }
 
-            return projectsFromDb.ToArray();
+                        if (name != "")
+                        {
+                            selectComm.CommandText += " AND LOWER(r.name) LIKE @name";
+                            selectComm.Parameters.AddWithValue("name", "%" + name + "%");
+                        }
+
+                        if (relevance != null)
+                        {
+                            selectComm.CommandText += " AND r.relevance = @relevance";
+                            selectComm.Parameters.AddWithValue("relevance", relevance);
+                        }
+
+                        if (dateOfCreation != null)
+                        {
+                            selectComm.CommandText += " AND r.created = @created";
+                            selectComm.Parameters.AddWithValue("created", dateOfCreation);
+                        }
+
+                        if ((bool)onlyMyNeeds)
+                        {
+                            selectComm.CommandText += " AND r.orderer = @orderer_uuid";
+                        }
+
+                        if (statusArray[0] != "")
+                        {
+                            selectComm.CommandText += " AND (r.status=@status0";
+                            selectComm.Parameters.AddWithValue("status0", statusArray[0]);
+
+                            if (statusArray.Length > 1)
+                            {
+                                for (int i = 1; i < statusArray.Length; i++)
+                                {
+                                    selectComm.CommandText += " OR ";
+                                    selectComm.CommandText += "r.status=@status" + i;
+                                    selectComm.Parameters.AddWithValue("status" + i, statusArray[i]);
+                                }
+                            }
+                            selectComm.CommandText += ")";
+                        }
+                    }
+
+                    List<RoadWorkNeedFeature> projectsFromDbTemp = new List<RoadWorkNeedFeature>();
+
+                    using (NpgsqlDataReader reader = selectComm.ExecuteReader())
+                    {
+                        RoadWorkNeedFeature needFeatureFromDb;
+                        while (reader.Read())
+                        {
+                            needFeatureFromDb = new RoadWorkNeedFeature();
+                            needFeatureFromDb.properties.uuid =
+                                    reader.IsDBNull(reader.GetOrdinal("uuid")) ?
+                                        "" : reader.GetGuid(reader.GetOrdinal("uuid")).ToString();
+                            needFeatureFromDb.properties.name =
+                                    reader.IsDBNull(reader.GetOrdinal("name")) ?
+                                        "" : reader.GetString(reader.GetOrdinal("name"));
+                            User orderer = new User();
+                            orderer.uuid = reader.IsDBNull(2) ? "" : reader.GetGuid(2).ToString();
+                            orderer.firstName = reader.IsDBNull(3) ? "" : reader.GetString(3);
+                            orderer.lastName = reader.IsDBNull(4) ? "" : reader.GetString(4);
+                            OrganisationalUnit orgUnit = new OrganisationalUnit();
+                            orgUnit.name = reader.IsDBNull(5) ? "" : reader.GetString(5);
+                            orderer.organisationalUnit = orgUnit;
+                            needFeatureFromDb.properties.orderer = orderer;
+                            needFeatureFromDb.properties.finishEarlyTo = reader.IsDBNull(6) ? DateTime.MinValue : reader.GetDateTime(6);
+                            needFeatureFromDb.properties.finishOptimumTo = reader.IsDBNull(7) ? DateTime.MinValue : reader.GetDateTime(7);
+                            needFeatureFromDb.properties.finishLateTo = reader.IsDBNull(8) ? DateTime.MinValue : reader.GetDateTime(8);
+                            Priority priority = new Priority();
+                            priority.code = reader.IsDBNull(9) ? "" : reader.GetString(9);
+                            needFeatureFromDb.properties.priority = priority;
+                            Status statusObj = new Status();
+                            statusObj.code = reader.IsDBNull(10) ? "" : reader.GetString(10);
+                            statusObj.name = reader.IsDBNull(11) ? "" : reader.GetString(11);
+                            needFeatureFromDb.properties.status = statusObj;
+                            needFeatureFromDb.properties.description = reader.IsDBNull(12) ? "" : reader.GetString(12);
+
+                            needFeatureFromDb.properties.created = reader.IsDBNull(13) ? DateTime.MinValue : reader.GetDateTime(13);
+                            needFeatureFromDb.properties.lastModified = reader.IsDBNull(14) ? DateTime.MinValue : reader.GetDateTime(14);
+                            needFeatureFromDb.properties.roadWorkActivityUuid = reader.IsDBNull(15) ? "" : reader.GetGuid(15).ToString();
+
+                            string ordererMailAddress = reader.IsDBNull(16) ? "" : reader.GetString(16);
+                            string mailOfLoggedInUser = User.FindFirstValue(ClaimTypes.Email);
+
+                            needFeatureFromDb.properties.relevance = reader.IsDBNull(17) ? 0 : reader.GetInt32(17);
+                            needFeatureFromDb.properties.activityRelationType = reader.IsDBNull(18) ? "" : reader.GetString(18);
+                            needFeatureFromDb.properties.costs = reader.IsDBNull(19) ? 0 : reader.GetInt32(19);
+                            needFeatureFromDb.properties.noteOfAreaManager = reader.IsDBNull(20) ? "" : reader.GetString(20);
+                            needFeatureFromDb.properties.areaManagerNoteDate = reader.IsDBNull(21) ? DateTime.MinValue : reader.GetDateTime(21);
+
+                            User areaManagerOfNote = new User();
+                            areaManagerOfNote.firstName = reader.IsDBNull(22) ? "" : reader.GetString(22);
+                            areaManagerOfNote.lastName = reader.IsDBNull(23) ? "" : reader.GetString(23);
+                            needFeatureFromDb.properties.areaManagerOfNote = areaManagerOfNote;
+                            needFeatureFromDb.properties.isPrivate = reader.IsDBNull(24) ? true : reader.GetBoolean(24);
+                            needFeatureFromDb.properties.section = reader.IsDBNull(25) ? "" : reader.GetString(25);
+                            needFeatureFromDb.properties.comment = reader.IsDBNull(26) ? "" : reader.GetString(26);
+                            needFeatureFromDb.properties.url = reader.IsDBNull(27) ? "" : reader.GetString(27);
+                            needFeatureFromDb.properties.orderer.organisationalUnit.isCivilEngineering = reader.IsDBNull(28) ? false : reader.GetBoolean(28);
+
+                            orgUnit.abbreviation = reader.IsDBNull(29) ? "" : reader.GetString(29);
+
+                            needFeatureFromDb.properties.overarchingMeasure = reader.IsDBNull(30) ? false : reader.GetBoolean(30);
+                            needFeatureFromDb.properties.desiredYearFrom = reader.IsDBNull(31) ? null : reader.GetInt32(31);
+                            needFeatureFromDb.properties.desiredYearTo = reader.IsDBNull(32) ? null : reader.GetInt32(32);
+
+                            needFeatureFromDb.properties.orderer.mailAddress = reader.IsDBNull(33) ? "" : reader.GetString(33);
+
+                            Polygon ntsPoly = reader.IsDBNull(34) ? Polygon.Empty : reader.GetValue(34) as Polygon;
+                            needFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
+
+                            if (User.IsInRole("administrator"))
+                            {
+                                needFeatureFromDb.properties.isEditingAllowed = true;
+                            }
+                            else if (ordererMailAddress == mailOfLoggedInUser
+                                        && needFeatureFromDb.properties.isPrivate)
+                            {
+                                // editing for the orderer is only allowed as long as the need is not public (is private):
+                                needFeatureFromDb.properties.isEditingAllowed = true;
+                            }
+
+                            projectsFromDbTemp.Add(needFeatureFromDb);
+                        }
+                    }
+
+                    if (areaManagerUuid != "")
+                    {
+                        foreach (RoadWorkNeedFeature needFeatureFromDb in projectsFromDbTemp)
+                        {
+                            NpgsqlCommand selectManAreaComm = pgConn.CreateCommand();
+                            selectManAreaComm.CommandText = @"SELECT am.uuid
+                                            FROM ""wtb_ssp_managementareas"" m
+                                            LEFT JOIN ""wtb_ssp_users"" am ON m.manager = am.uuid
+                                            WHERE ST_Area(ST_Intersection(@geom, m.geom)) > 0
+                                            ORDER BY ST_Area(ST_Intersection(@geom, m.geom)) DESC
+                                            LIMIT 1";
+                            selectManAreaComm.Parameters.AddWithValue("geom", needFeatureFromDb.geometry.getNtsPolygon());
+
+                            using (NpgsqlDataReader selectManAreaReader = selectManAreaComm.ExecuteReader())
+                            {
+                                if (selectManAreaReader.Read())
+                                {
+                                    string areaManagerUuidFromDb = selectManAreaReader.IsDBNull(0) ? "" : selectManAreaReader.GetGuid(0).ToString();
+                                    if (areaManagerUuid == areaManagerUuidFromDb)
+                                        projectsFromDb.Add(needFeatureFromDb);
+                                }
+                            }
+                        }
+
+                    }
+                    else
+                    {
+                        projectsFromDb = projectsFromDbTemp;
+                    }
+                    pgConn.Close();
+                }
+
+                return projectsFromDb.ToArray();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                RoadWorkNeedFeature roadWorkNeedFeature = new RoadWorkNeedFeature();
+                roadWorkNeedFeature.errorMessage = "SSP-3";
+                projectsFromDb = new List<RoadWorkNeedFeature>();
+                projectsFromDb.Add(roadWorkNeedFeature);
+                return projectsFromDb;
+            }
 
         }
 

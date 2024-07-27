@@ -68,42 +68,45 @@ namespace roadwork_portal_service.Controllers
         // POST managementarea/
         [HttpPost]
         [Authorize]
-        public ActionResult<ManagementArea[]> GetIntersectingManagementAreas([FromBody] RoadworkPolygon polygon)
+        public ActionResult<ManagementArea> GetIntersectingManagementAreas([FromBody] RoadworkPolygon polygon)
         {
-            List<ManagementArea> managementAreas = new List<ManagementArea>();
+            ManagementArea result = new ManagementArea();
 
-            Polygon roadWorkPoly = polygon.getNtsPolygon();
-            Coordinate[] coordinates = roadWorkPoly.Coordinates;
-
-            if (coordinates.Length < 3)
+            try
             {
-                _logger.LogWarning("Roadwork polygon has less than 3 coordinates.");
-                ManagementArea managementArea = new ManagementArea();
-                return Ok(managementAreas);
-            }
 
-            ConfigurationData configData = AppConfigController.getConfigurationFromDb();
-            // only if project area is greater than min area size:
-            if (roadWorkPoly.Area <= configData.minAreaSize)
-            {
-                _logger.LogWarning("Roadwork area is less than or equal " + configData.minAreaSize + "qm.");
-                ManagementArea managementArea = new ManagementArea();
-                return Ok(managementAreas);
-            }
+                Polygon roadWorkPoly = polygon.getNtsPolygon();
+                Coordinate[] coordinates = roadWorkPoly.Coordinates;
 
-            // only if project area is smaller than max area size:
-            if (roadWorkPoly.Area > configData.maxAreaSize)
-            {
-                _logger.LogWarning("Roadwork area is greater than " + configData.maxAreaSize + "qm.");
-                ManagementArea managementArea = new ManagementArea();
-                return Ok(managementAreas);
-            }
+                if (coordinates.Length < 3)
+                {
+                    _logger.LogWarning("Roadwork polygon has less than 3 coordinates.");
+                    result.errorMessage = "SSP-3";
+                    return Ok(result);
+                }
 
-            using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
-            {
-                pgConn.Open();
-                NpgsqlCommand selectComm = pgConn.CreateCommand();
-                selectComm.CommandText = @"SELECT m.uuid, am.uuid, am.first_name, am.last_name,
+                ConfigurationData configData = AppConfigController.getConfigurationFromDb();
+                // only if project area is greater than min area size:
+                if (roadWorkPoly.Area <= configData.minAreaSize)
+                {
+                    _logger.LogWarning("Roadwork area is less than or equal " + configData.minAreaSize + "qm.");
+                    result.errorMessage = "SSP-3";
+                    return Ok(result);
+                }
+
+                // only if project area is smaller than max area size:
+                if (roadWorkPoly.Area > configData.maxAreaSize)
+                {
+                    _logger.LogWarning("Roadwork area is greater than " + configData.maxAreaSize + "qm.");
+                    result.errorMessage = "SSP-3";
+                    return Ok(result);
+                }
+
+                using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
+                {
+                    pgConn.Open();
+                    NpgsqlCommand selectComm = pgConn.CreateCommand();
+                    selectComm.CommandText = @"SELECT m.uuid, am.uuid, am.first_name, am.last_name,
                             sam.uuid, sam.first_name, sam.last_name
                             FROM ""wtb_ssp_managementareas"" m
                             LEFT JOIN ""wtb_ssp_users"" am ON m.manager = am.uuid
@@ -112,36 +115,40 @@ namespace roadwork_portal_service.Controllers
                                     ORDER BY ST_Area(ST_Intersection(@geom, m.geom)) DESC
                                     LIMIT 1";
 
-                selectComm.Parameters.AddWithValue("geom", roadWorkPoly);
+                    selectComm.Parameters.AddWithValue("geom", roadWorkPoly);
 
 
-                using (NpgsqlDataReader reader = selectComm.ExecuteReader())
-                {
-                    ManagementArea managementAreaFromDb;
-                    while (reader.Read())
+                    using (NpgsqlDataReader reader = selectComm.ExecuteReader())
                     {
-                        managementAreaFromDb = new ManagementArea();
-                        managementAreaFromDb.uuid = reader.IsDBNull(0) ? "" : reader.GetGuid(0).ToString();
+                        if (reader.Read())
+                        {
+                            result.uuid = reader.IsDBNull(0) ? "" : reader.GetGuid(0).ToString();
 
-                        User manager = new User();
-                        manager.uuid = reader.IsDBNull(1) ? "" : reader.GetGuid(1).ToString();
-                        manager.firstName = reader.IsDBNull(2) ? "" : reader.GetString(2);
-                        manager.lastName = reader.IsDBNull(3) ? "" : reader.GetString(3);
-                        managementAreaFromDb.manager = manager;
+                            User manager = new User();
+                            manager.uuid = reader.IsDBNull(1) ? "" : reader.GetGuid(1).ToString();
+                            manager.firstName = reader.IsDBNull(2) ? "" : reader.GetString(2);
+                            manager.lastName = reader.IsDBNull(3) ? "" : reader.GetString(3);
+                            result.manager = manager;
 
-                        User substituteManager = new User();
-                        substituteManager.uuid = reader.IsDBNull(4) ? "" : reader.GetGuid(4).ToString();
-                        substituteManager.firstName = reader.IsDBNull(5) ? "" : reader.GetString(5);
-                        substituteManager.lastName = reader.IsDBNull(6) ? "" : reader.GetString(6);
-                        managementAreaFromDb.substituteManager = substituteManager;
-
-                        managementAreas.Add(managementAreaFromDb);
+                            User substituteManager = new User();
+                            substituteManager.uuid = reader.IsDBNull(4) ? "" : reader.GetGuid(4).ToString();
+                            substituteManager.firstName = reader.IsDBNull(5) ? "" : reader.GetString(5);
+                            substituteManager.lastName = reader.IsDBNull(6) ? "" : reader.GetString(6);
+                            result.substituteManager = substituteManager;
+                        }
                     }
+                    pgConn.Close();
                 }
-                pgConn.Close();
+
+            }
+            catch (Exception ex)
+            {
+                this._logger.LogError(ex.Message);
+                result.errorMessage = "SSP-3";
             }
 
-            return Ok(managementAreas);
+            return Ok(result);
+
         }
 
         // PUT managementarea/
