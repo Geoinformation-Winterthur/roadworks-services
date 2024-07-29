@@ -68,7 +68,7 @@ namespace roadwork_portal_service.Controllers
                     {
                         ConsultationInput activityConsulationInput = new ConsultationInput();
                         activityConsulationInput.uuid = activityConsultationReader.IsDBNull(0) ? "" : activityConsultationReader.GetGuid(0).ToString();
-                        activityConsulationInput.lastEdit = activityConsultationReader.IsDBNull(1) ? DateTime.MinValue : activityConsultationReader.GetDateTime(1);
+                        if (!activityConsultationReader.IsDBNull(1)) activityConsulationInput.lastEdit = activityConsultationReader.GetDateTime(1);
                         activityConsulationInput.decline = activityConsultationReader.IsDBNull(2) ? false : activityConsultationReader.GetBoolean(2);
                         User consultationUser = new User();
                         consultationUser.mailAddress = activityConsultationReader.IsDBNull(3) ? "" : activityConsultationReader.GetString(3);
@@ -123,7 +123,7 @@ namespace roadwork_portal_service.Controllers
                     if ((roadWorkActivityStatus != "inconsult" && roadWorkActivityStatus != "reporting") ||
                                 roadWorkActivityStatus != consultationInput.feedbackPhase)
                     {
-                        _logger.LogWarning("User tried to add consultation feedback though "+
+                        _logger.LogWarning("User tried to add consultation feedback though " +
                                 "the consultation phase is closed");
                         consultationInput.errorMessage = "SSP-33";
                         return Ok(consultationInput);
@@ -145,11 +145,25 @@ namespace roadwork_portal_service.Controllers
                     if (consultationInput.decline)
                         consultationInput.ordererFeedback = "";
                     insertComm.Parameters.AddWithValue("orderer_feedback", consultationInput.ordererFeedback);
-                    insertComm.Parameters.AddWithValue("manager_feedback", consultationInput.managerFeedback != null ? consultationInput.managerFeedback : DBNull.Value);
+
+                    if (User.IsInRole("administrator") || User.IsInRole("territorymanager"))
+                    {
+                        if (consultationInput.managerFeedback == null)
+                            consultationInput.managerFeedback = "";
+                        consultationInput.managerFeedback = consultationInput.managerFeedback.Trim();
+                        insertComm.Parameters.AddWithValue("manager_feedback", consultationInput.managerFeedback);
+                    } else {
+                        insertComm.Parameters.AddWithValue("manager_feedback", "");
+                    }
+
                     insertComm.Parameters.AddWithValue("decline", consultationInput.decline);
                     insertComm.Parameters.AddWithValue("valuation", consultationInput.valuation);
                     insertComm.Parameters.AddWithValue("feedback_phase", consultationInput.feedbackPhase);
-                    insertComm.Parameters.AddWithValue("feedback_given", consultationInput.feedbackGiven);
+
+                    if(userFromDb.mailAddress == consultationInput.inputBy.mailAddress)
+                        insertComm.Parameters.AddWithValue("feedback_given", true);
+                    else
+                        insertComm.Parameters.AddWithValue("feedback_given", consultationInput.feedbackGiven);
 
                     insertComm.ExecuteNonQuery();
 
@@ -190,8 +204,10 @@ namespace roadwork_portal_service.Controllers
 
         // PUT consultation/?roadworkactivityuuid=...
         [HttpPut]
-        [Authorize(Roles = "orderer,administrator")]
-        public ActionResult<ConsultationInput> UpdateConsultation(string roadworkActivityUuid, [FromBody] ConsultationInput consultationInput)
+        [Authorize(Roles = "orderer,territorymanager,administrator")]
+        public ActionResult<ConsultationInput> UpdateConsultation(
+                        string roadworkActivityUuid,
+                        [FromBody] ConsultationInput consultationInput)
         {
 
             try
@@ -208,7 +224,7 @@ namespace roadwork_portal_service.Controllers
                 User userFromDb = LoginController.getAuthorizedUserFromDb(this.User, false);
 
                 if (userFromDb == null || userFromDb.uuid == null ||
-                        (!User.IsInRole("administrator") && userFromDb.mailAddress != consultationInput.inputBy.mailAddress))
+                        (User.IsInRole("orderer") && userFromDb.mailAddress != consultationInput.inputBy.mailAddress))
                 {
                     _logger.LogWarning("Unauthorized access.");
                     return Unauthorized();
@@ -226,8 +242,10 @@ namespace roadwork_portal_service.Controllers
                                     SET last_edit=@last_edit, orderer_feedback=@orderer_feedback,
                                     decline=@decline, valuation=@valuation,
                                     feedback_phase=@feedback_phase, feedback_given=@feedback_given";
-                    if (consultationInput.managerFeedback != null)
+
+                    if (User.IsInRole("administrator") || User.IsInRole("territorymanager"))
                         updateComm.CommandText += ", manager_feedback=@manager_feedback";
+
                     updateComm.CommandText += " WHERE uuid=@uuid";
 
                     updateComm.Parameters.AddWithValue("uuid", new Guid(consultationInput.uuid));
@@ -238,16 +256,21 @@ namespace roadwork_portal_service.Controllers
                         consultationInput.ordererFeedback = "";
                     updateComm.Parameters.AddWithValue("orderer_feedback", consultationInput.ordererFeedback);
 
-                    if (consultationInput.managerFeedback != null)
+                    if (User.IsInRole("administrator") || User.IsInRole("territorymanager"))
                     {
+                        if (consultationInput.managerFeedback == null)
+                            consultationInput.managerFeedback = "";
                         consultationInput.managerFeedback = consultationInput.managerFeedback.Trim();
                         updateComm.Parameters.AddWithValue("manager_feedback", consultationInput.managerFeedback);
                     }
-
                     updateComm.Parameters.AddWithValue("decline", consultationInput.decline);
                     updateComm.Parameters.AddWithValue("valuation", consultationInput.valuation);
                     updateComm.Parameters.AddWithValue("feedback_phase", consultationInput.feedbackPhase);
-                    updateComm.Parameters.AddWithValue("feedback_given", consultationInput.feedbackGiven);
+
+                    if(userFromDb.mailAddress == consultationInput.inputBy.mailAddress)
+                        updateComm.Parameters.AddWithValue("feedback_given", true);
+                    else
+                        updateComm.Parameters.AddWithValue("feedback_given", consultationInput.feedbackGiven);
 
                     updateComm.ExecuteNonQuery();
 

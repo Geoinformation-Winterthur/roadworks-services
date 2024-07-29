@@ -68,14 +68,22 @@ namespace roadwork_portal_service.Controllers
                     }
                 }
 
-                if ((uuid == null || uuid == "") && status != null)
+                if(status == null)
+                    status = "";
+                status = status.Trim();
+
+                if ((uuid == null || uuid == "") && status != "")
                 {
-                    status = status.Trim().ToLower();
-                    if (status != "")
-                    {
-                        selectComm.CommandText += " WHERE r.status=@status";
-                        selectComm.Parameters.AddWithValue("status", status);
+                    string[] statusArray = status.Split(",");
+
+                    int i = 0;
+                    while(i < statusArray.Length){
+                        statusArray[i] = statusArray[i].Trim().ToLower();
+                        i++;
                     }
+
+                    selectComm.CommandText += " WHERE r.status = ANY (:status)";
+                    selectComm.Parameters.AddWithValue("status", statusArray);
                 }
 
                 using (NpgsqlDataReader reader = await selectComm.ExecuteReaderAsync())

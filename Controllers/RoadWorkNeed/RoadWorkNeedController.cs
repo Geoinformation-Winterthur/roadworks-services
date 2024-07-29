@@ -563,6 +563,34 @@ namespace roadwork_portal_service.Controllers
 
                         if (roadWorkNeedFeature.properties.roadWorkActivityUuid != "")
                         {
+
+
+                            NpgsqlCommand selectCommand = pgConn.CreateCommand();
+                            selectCommand.CommandText = @"SELECT uuid_roadwork_activity
+                                FROM ""wtb_ssp_activities_to_needs""
+                                WHERE uuid_roadwork_need=@uuid
+                                AND activityrelationtype='assignedneed'";
+                            selectCommand.Parameters.AddWithValue("uuid", new Guid(roadWorkNeedFeature.properties.uuid));
+
+                            string affectedActivityUuid = "";
+
+                            using (NpgsqlDataReader reader = selectCommand.ExecuteReader())
+                            {
+                                if (reader.Read())
+                                {
+                                    affectedActivityUuid = reader.IsDBNull(0) ? "" : reader.GetGuid(0).ToString();
+                                }
+                            }
+
+                            int assignedNeedsCount = _countAssignedNeeds(affectedActivityUuid, pgConn);
+                            if (assignedNeedsCount == 1)
+                            {
+                                _logger.LogWarning("The roadwork need cannot be deleted since it is the last need of the roadwork activity " + affectedActivityUuid);
+                                roadWorkNeedFeature.errorMessage = "SSP-29";
+                                return Ok(roadWorkNeedFeature);
+                            }
+
+
                             NpgsqlCommand deleteComm = pgConn.CreateCommand();
                             deleteComm.CommandText = @"DELETE FROM ""wtb_ssp_activities_to_needs""
                                     WHERE uuid_roadwork_need=@uuid_roadwork_need
@@ -630,7 +658,7 @@ namespace roadwork_portal_service.Controllers
 
         // DELETE /roadworkneed?uuid=...&releaseonly=true
         [HttpDelete]
-        [Authorize(Roles = "orderer,administrator")]
+        [Authorize(Roles = "orderer,territorymanager,administrator")]
         public ActionResult<ErrorMessage> DeleteNeed(string uuid, bool releaseOnly = false)
         {
             ErrorMessage errorResult = new ErrorMessage();
@@ -661,7 +689,7 @@ namespace roadwork_portal_service.Controllers
                 {
                     pgConn.Open();
 
-                    if (!User.IsInRole("administrator"))
+                    if (!User.IsInRole("administrator") && !User.IsInRole("territorymanager"))
                     {
 
                         NpgsqlCommand selectOrdererOfNeedComm = pgConn.CreateCommand();
@@ -697,7 +725,8 @@ namespace roadwork_portal_service.Controllers
                     NpgsqlCommand selectCommand = pgConn.CreateCommand();
                     selectCommand.CommandText = @"SELECT uuid_roadwork_activity
                                 FROM ""wtb_ssp_activities_to_needs""
-                                WHERE uuid_roadwork_need=@uuid";
+                                WHERE uuid_roadwork_need=@uuid
+                                AND activityrelationtype='assignedneed'";
                     selectCommand.Parameters.AddWithValue("uuid", new Guid(uuid));
 
                     string affectedActivityUuid = "";
@@ -710,29 +739,12 @@ namespace roadwork_portal_service.Controllers
                         }
                     }
 
-                    if (affectedActivityUuid != String.Empty)
+                    int assignedNeedsCount = _countAssignedNeeds(affectedActivityUuid, pgConn);
+                    if (assignedNeedsCount <= 1)
                     {
-                        NpgsqlCommand selectCountAssignedNeedsComm = pgConn.CreateCommand();
-                        selectCountAssignedNeedsComm.CommandText = @"SELECT count(*) FROM ""wtb_ssp_activities_to_needs""
-                                                        WHERE uuid_roadwork_activity=@uuid_roadwork_activity
-                                                        AND activityrelationtype='assignedneed'";
-                        selectCountAssignedNeedsComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(affectedActivityUuid));
-
-                        int assignedNeedsCount = 0;
-                        using (NpgsqlDataReader reader = selectCountAssignedNeedsComm.ExecuteReader())
-                        {
-                            if (reader.Read())
-                            {
-                                assignedNeedsCount = reader.IsDBNull(0) ? 0 : reader.GetInt32(0);
-                            }
-                        }
-
-                        if (assignedNeedsCount <= 1)
-                        {
-                            _logger.LogWarning("The roadwork need cannot be deleted since it is the last need of the roadwork activity " + affectedActivityUuid);
-                            errorResult.errorMessage = "SSP-29";
-                            return Ok(errorResult);
-                        }
+                        _logger.LogWarning("The roadwork need cannot be deleted since it is the last need of the roadwork activity " + affectedActivityUuid);
+                        errorResult.errorMessage = "SSP-29";
+                        return Ok(errorResult);
                     }
 
                     NpgsqlCommand deleteRelationComm = pgConn.CreateCommand();
@@ -790,6 +802,29 @@ namespace roadwork_portal_service.Controllers
 
             return Ok();
 
+        }
+
+        private int _countAssignedNeeds(string affectedActivityUuid, NpgsqlConnection pgConn)
+        {
+            int result = 0;
+            if (affectedActivityUuid != String.Empty)
+            {
+                NpgsqlCommand selectCountAssignedNeedsComm = pgConn.CreateCommand();
+                selectCountAssignedNeedsComm.CommandText = @"SELECT count(*) FROM ""wtb_ssp_activities_to_needs""
+                                                        WHERE uuid_roadwork_activity=@uuid_roadwork_activity
+                                                        AND activityrelationtype='assignedneed'";
+                selectCountAssignedNeedsComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(affectedActivityUuid));
+
+                using (NpgsqlDataReader reader = selectCountAssignedNeedsComm.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        result = reader.IsDBNull(0) ? 0 : reader.GetInt32(0);
+                    }
+                }
+
+            }
+            return result;
         }
 
     }
