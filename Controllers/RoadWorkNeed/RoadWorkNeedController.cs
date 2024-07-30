@@ -78,7 +78,7 @@ namespace roadwork_portal_service.Controllers
                     NpgsqlCommand selectComm = pgConn.CreateCommand();
                     selectComm.CommandText = @"SELECT r.uuid, r.name, r.orderer,
                             u.first_name, u.last_name, o.name as orgname, r.finish_early_to,
-                            r.finish_optimum_to, r.finish_late_to, p.code, s.code, s.name as statusname,
+                            r.finish_optimum_to, r.finish_late_to, p.code, r.status as statusname,
                             r.description, 
                             r.created, r.last_modified, an.uuid_roadwork_activity, u.e_mail,
                             r.relevance, an.activityrelationtype, r.costs,
@@ -92,7 +92,6 @@ namespace roadwork_portal_service.Controllers
                         LEFT JOIN ""wtb_ssp_users"" u ON r.orderer = u.uuid
                         LEFT JOIN ""wtb_ssp_organisationalunits"" o ON u.org_unit = o.uuid
                         LEFT JOIN ""wtb_ssp_priorities"" p ON r.priority = p.code
-                        LEFT JOIN ""wtb_ssp_status"" s ON r.status = s.code
                         LEFT JOIN ""wtb_ssp_users"" n ON r.area_man_of_note = n.uuid";
 
                     if (roadWorkActivityUuid != "")
@@ -201,44 +200,41 @@ namespace roadwork_portal_service.Controllers
                             Priority priority = new Priority();
                             priority.code = reader.IsDBNull(9) ? "" : reader.GetString(9);
                             needFeatureFromDb.properties.priority = priority;
-                            Status statusObj = new Status();
-                            statusObj.code = reader.IsDBNull(10) ? "" : reader.GetString(10);
-                            statusObj.name = reader.IsDBNull(11) ? "" : reader.GetString(11);
-                            needFeatureFromDb.properties.status = statusObj;
-                            needFeatureFromDb.properties.description = reader.IsDBNull(12) ? "" : reader.GetString(12);
+                            needFeatureFromDb.properties.status = reader.IsDBNull(10) ? "" : reader.GetString(10);
+                            needFeatureFromDb.properties.description = reader.IsDBNull(11) ? "" : reader.GetString(11);
 
-                            needFeatureFromDb.properties.created = reader.IsDBNull(13) ? DateTime.MinValue : reader.GetDateTime(13);
-                            needFeatureFromDb.properties.lastModified = reader.IsDBNull(14) ? DateTime.MinValue : reader.GetDateTime(14);
-                            needFeatureFromDb.properties.roadWorkActivityUuid = reader.IsDBNull(15) ? "" : reader.GetGuid(15).ToString();
+                            needFeatureFromDb.properties.created = reader.IsDBNull(12) ? DateTime.MinValue : reader.GetDateTime(12);
+                            needFeatureFromDb.properties.lastModified = reader.IsDBNull(13) ? DateTime.MinValue : reader.GetDateTime(13);
+                            needFeatureFromDb.properties.roadWorkActivityUuid = reader.IsDBNull(14) ? "" : reader.GetGuid(14).ToString();
 
-                            string ordererMailAddress = reader.IsDBNull(16) ? "" : reader.GetString(16);
+                            string ordererMailAddress = reader.IsDBNull(15) ? "" : reader.GetString(15);
                             string mailOfLoggedInUser = User.FindFirstValue(ClaimTypes.Email);
 
-                            needFeatureFromDb.properties.relevance = reader.IsDBNull(17) ? 0 : reader.GetInt32(17);
-                            needFeatureFromDb.properties.activityRelationType = reader.IsDBNull(18) ? "" : reader.GetString(18);
-                            needFeatureFromDb.properties.costs = reader.IsDBNull(19) ? 0 : reader.GetInt32(19);
-                            needFeatureFromDb.properties.noteOfAreaManager = reader.IsDBNull(20) ? "" : reader.GetString(20);
-                            needFeatureFromDb.properties.areaManagerNoteDate = reader.IsDBNull(21) ? DateTime.MinValue : reader.GetDateTime(21);
+                            needFeatureFromDb.properties.relevance = reader.IsDBNull(16) ? 0 : reader.GetInt32(16);
+                            needFeatureFromDb.properties.activityRelationType = reader.IsDBNull(17) ? "" : reader.GetString(17);
+                            needFeatureFromDb.properties.costs = reader.IsDBNull(18) ? 0 : reader.GetInt32(18);
+                            needFeatureFromDb.properties.noteOfAreaManager = reader.IsDBNull(19) ? "" : reader.GetString(19);
+                            needFeatureFromDb.properties.areaManagerNoteDate = reader.IsDBNull(20) ? DateTime.MinValue : reader.GetDateTime(20);
 
                             User areaManagerOfNote = new User();
-                            areaManagerOfNote.firstName = reader.IsDBNull(22) ? "" : reader.GetString(22);
-                            areaManagerOfNote.lastName = reader.IsDBNull(23) ? "" : reader.GetString(23);
+                            areaManagerOfNote.firstName = reader.IsDBNull(21) ? "" : reader.GetString(21);
+                            areaManagerOfNote.lastName = reader.IsDBNull(22) ? "" : reader.GetString(22);
                             needFeatureFromDb.properties.areaManagerOfNote = areaManagerOfNote;
-                            needFeatureFromDb.properties.isPrivate = reader.IsDBNull(24) ? true : reader.GetBoolean(24);
-                            needFeatureFromDb.properties.section = reader.IsDBNull(25) ? "" : reader.GetString(25);
-                            needFeatureFromDb.properties.comment = reader.IsDBNull(26) ? "" : reader.GetString(26);
-                            needFeatureFromDb.properties.url = reader.IsDBNull(27) ? "" : reader.GetString(27);
-                            needFeatureFromDb.properties.orderer.organisationalUnit.isCivilEngineering = reader.IsDBNull(28) ? false : reader.GetBoolean(28);
+                            needFeatureFromDb.properties.isPrivate = reader.IsDBNull(23) ? true : reader.GetBoolean(23);
+                            needFeatureFromDb.properties.section = reader.IsDBNull(24) ? "" : reader.GetString(24);
+                            needFeatureFromDb.properties.comment = reader.IsDBNull(25) ? "" : reader.GetString(25);
+                            needFeatureFromDb.properties.url = reader.IsDBNull(26) ? "" : reader.GetString(26);
+                            needFeatureFromDb.properties.orderer.organisationalUnit.isCivilEngineering = reader.IsDBNull(27) ? false : reader.GetBoolean(27);
 
-                            orgUnit.abbreviation = reader.IsDBNull(29) ? "" : reader.GetString(29);
+                            orgUnit.abbreviation = reader.IsDBNull(28) ? "" : reader.GetString(28);
 
-                            needFeatureFromDb.properties.overarchingMeasure = reader.IsDBNull(30) ? false : reader.GetBoolean(30);
-                            needFeatureFromDb.properties.desiredYearFrom = reader.IsDBNull(31) ? null : reader.GetInt32(31);
-                            needFeatureFromDb.properties.desiredYearTo = reader.IsDBNull(32) ? null : reader.GetInt32(32);
+                            needFeatureFromDb.properties.overarchingMeasure = reader.IsDBNull(29) ? false : reader.GetBoolean(29);
+                            needFeatureFromDb.properties.desiredYearFrom = reader.IsDBNull(30) ? null : reader.GetInt32(30);
+                            needFeatureFromDb.properties.desiredYearTo = reader.IsDBNull(31) ? null : reader.GetInt32(31);
 
-                            needFeatureFromDb.properties.orderer.mailAddress = reader.IsDBNull(33) ? "" : reader.GetString(33);
+                            needFeatureFromDb.properties.orderer.mailAddress = reader.IsDBNull(32) ? "" : reader.GetString(32);
 
-                            Polygon ntsPoly = reader.IsDBNull(34) ? Polygon.Empty : reader.GetValue(34) as Polygon;
+                            Polygon ntsPoly = reader.IsDBNull(33) ? Polygon.Empty : reader.GetValue(33) as Polygon;
                             needFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
 
                             if (User.IsInRole("administrator"))

@@ -4,7 +4,7 @@
 // </copyright>
 namespace roadwork_portal_service.Model;
 
-public class CostType
+public class EnumType
 {
     public string code { get; set; } = "";
     public string name { get; set; } = "";

@@ -41,13 +41,12 @@ namespace roadwork_portal_service.Controllers
                     selectComm.CommandText = @"SELECT r.uuid, r.name,
                             o.first_name, o.last_name, r.created, r.last_modified,
                             r.finish_early_to, r.finish_optimum_to, r.finish_late_to,
-                            prio.name, status.name, r.costs, r.private, r.description,
+                            prio.name, r.status, r.costs, r.private, r.description,
                             r.note_of_area_man, r.area_man_note_date,
                             areaman.first_name, areaman.last_name, r.relevance
                         FROM ""wtb_ssp_roadworkneeds"" r
                         LEFT JOIN ""wtb_ssp_users"" o ON r.orderer = o.uuid
                         LEFT JOIN ""wtb_ssp_priorities"" prio ON r.priority = prio.code
-                        LEFT JOIN ""wtb_ssp_status"" status ON r.status = status.code
                         LEFT JOIN ""wtb_ssp_users"" areaman ON r.area_man_of_note = areaman.uuid";
 
 
@@ -85,15 +84,14 @@ namespace roadwork_portal_service.Controllers
                     selectComm.CommandText = @"SELECT r.uuid, r.name,
                             p.first_name, p.last_name, t.first_name, t.last_name,
                             r.description, r.created, r.last_modified,
-                            r.date_from, r.date_to, r.costs, r.private, c.name, status.name,
+                            r.date_from, r.date_to, r.costs, r.private, c.name, r.status,
                             r.in_internet, r.billing_address1, r.billing_address2,
                             r.pdb_fid, r.strabako_no, r.investment_no, r.date_sks,
                             r.date_kap, r.date_oks, r.date_gl_tba
                         FROM ""wtb_ssp_roadworkactivities"" r
                         LEFT JOIN ""wtb_ssp_users"" p ON r.projectmanager = p.uuid
                         LEFT JOIN ""wtb_ssp_users"" t ON r.traffic_agent = t.uuid
-                        LEFT JOIN ""wtb_ssp_costtypes"" c ON r.costs_type = c.code
-                        LEFT JOIN ""wtb_ssp_status"" status ON r.status = status.code";
+                        LEFT JOIN ""wtb_ssp_costtypes"" c ON r.costs_type = c.code";
 
 
                     using (NpgsqlDataReader reader = await selectComm.ExecuteReaderAsync())

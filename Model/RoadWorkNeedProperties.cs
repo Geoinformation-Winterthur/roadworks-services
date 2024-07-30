@@ -15,7 +15,7 @@ public class RoadWorkNeedProperties
     public DateTime finishOptimumTo { get; set; } = DateTime.MinValue;
     public DateTime finishLateTo { get; set; } = DateTime.MinValue;
     public Priority priority { get; set; } = new Priority();
-    public Status status { get; set; } = new Status();
+    public string status { get; set; } = "";
     public decimal costs { get; set; } = 0m;
     public int relevance { get; set; } = 0;
     public string activityRelationType { get; set; } = "";    

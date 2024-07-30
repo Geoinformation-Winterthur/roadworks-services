@@ -158,7 +158,7 @@ public class RoadWorkNeedDAO
         insertComm.Parameters.AddWithValue("finish_optimum_to", roadWorkNeedFeature.properties.finishOptimumTo);
         insertComm.Parameters.AddWithValue("finish_late_to", roadWorkNeedFeature.properties.finishLateTo);
         insertComm.Parameters.AddWithValue("priority", roadWorkNeedFeature.properties.priority.code);
-        insertComm.Parameters.AddWithValue("status", roadWorkNeedFeature.properties.status.code);
+        insertComm.Parameters.AddWithValue("status", roadWorkNeedFeature.properties.status);
         insertComm.Parameters.AddWithValue("description", roadWorkNeedFeature.properties.description);
         insertComm.Parameters.AddWithValue("relevance", roadWorkNeedFeature.properties.relevance);
         insertComm.Parameters.AddWithValue("costs", roadWorkNeedFeature.properties.costs != 0 ? roadWorkNeedFeature.properties.costs : DBNull.Value);

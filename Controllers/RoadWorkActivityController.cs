@@ -38,7 +38,7 @@ namespace roadwork_portal_service.Controllers
                 selectComm.CommandText = @"SELECT r.uuid, r.name, 
                             r.projectmanager, pm.first_name, pm.last_name, r.traffic_agent,
                             ta.first_name, ta.last_name, description, created, last_modified, r.date_from, r.date_to,
-                            r.costs, c.code, c.name, s.code, s.name, r.in_internet,
+                            r.costs, r.costs_type, r.status, r.in_internet,
                             r.billing_address1, r.billing_address2, r.investment_no, r.pdb_fid,
                             r.strabako_no, r.date_sks, r.date_kap, r.date_oks, r.date_gl_tba,
                             r.comment, r.section, r.type, r.projecttype, r.overarching_measure,
@@ -54,9 +54,7 @@ namespace roadwork_portal_service.Controllers
                             r.date_of_acceptance, r.geom
                         FROM ""wtb_ssp_roadworkactivities"" r
                         LEFT JOIN ""wtb_ssp_users"" pm ON r.projectmanager = pm.uuid
-                        LEFT JOIN ""wtb_ssp_users"" ta ON r.traffic_agent = ta.uuid
-                        LEFT JOIN ""wtb_ssp_status"" s ON r.status = s.code
-                        LEFT JOIN ""wtb_ssp_costtypes"" c ON r.costs_type = c.code";
+                        LEFT JOIN ""wtb_ssp_users"" ta ON r.traffic_agent = ta.uuid";
 
                 if (uuid != null)
                 {
@@ -115,75 +113,69 @@ namespace roadwork_portal_service.Controllers
                         projectFeatureFromDb.properties.finishLateTo = reader.IsDBNull(12) ? DateTime.MinValue : reader.GetDateTime(12);
                         projectFeatureFromDb.properties.costs = reader.IsDBNull(13) ? 0m : reader.GetDecimal(13);
 
-                        CostType ct = new CostType();
-                        ct.code = reader.IsDBNull(14) ? "" : reader.GetString(14);
-                        ct.name = reader.IsDBNull(15) ? "" : reader.GetString(15);
-                        projectFeatureFromDb.properties.costsType = ct;
+                        projectFeatureFromDb.properties.costsType = reader.IsDBNull(14) ? "" : reader.GetString(14);;
 
                         if (User.IsInRole("administrator") || User.IsInRole("territorymanager"))
                         {
                             projectFeatureFromDb.properties.isEditingAllowed = true;
                         }
 
-                        Status statusFromDb = new Status();
-                        statusFromDb.code = reader.IsDBNull(16) ? "" : reader.GetString(16);
-                        statusFromDb.name = reader.IsDBNull(17) ? "" : reader.GetString(17);
-                        projectFeatureFromDb.properties.status = statusFromDb;
+                        projectFeatureFromDb.properties.status = reader.IsDBNull(15) ? "" : reader.GetString(15);
 
-                        projectFeatureFromDb.properties.isInInternet = reader.IsDBNull(18) ? false : reader.GetBoolean(18);
-                        projectFeatureFromDb.properties.billingAddress1 = reader.IsDBNull(19) ? "" : reader.GetString(19);
-                        projectFeatureFromDb.properties.billingAddress2 = reader.IsDBNull(20) ? "" : reader.GetString(20);
-                        projectFeatureFromDb.properties.investmentNo = reader.IsDBNull(21) ? 0 : reader.GetInt32(21);
-                        projectFeatureFromDb.properties.pdbFid = reader.IsDBNull(22) ? 0 : reader.GetInt32(22);
-                        projectFeatureFromDb.properties.strabakoNo = reader.IsDBNull(23) ? "" : reader.GetString(23);
+                        projectFeatureFromDb.properties.isInInternet = reader.IsDBNull(16) ? false : reader.GetBoolean(16);
+                        projectFeatureFromDb.properties.billingAddress1 = reader.IsDBNull(17) ? "" : reader.GetString(17);
+                        projectFeatureFromDb.properties.billingAddress2 = reader.IsDBNull(18) ? "" : reader.GetString(18);
+                        projectFeatureFromDb.properties.investmentNo = reader.IsDBNull(19) ? 0 : reader.GetInt32(19);
+                        projectFeatureFromDb.properties.pdbFid = reader.IsDBNull(20) ? 0 : reader.GetInt32(20);
+                        projectFeatureFromDb.properties.strabakoNo = reader.IsDBNull(21) ? "" : reader.GetString(21);
 
-                        projectFeatureFromDb.properties.dateSks = reader.IsDBNull(24) ? "" : reader.GetString(24);
-                        projectFeatureFromDb.properties.dateKap = reader.IsDBNull(25) ? "" : reader.GetString(25);
-                        projectFeatureFromDb.properties.dateOks = reader.IsDBNull(26) ? "" : reader.GetString(26);
+                        projectFeatureFromDb.properties.dateSks = reader.IsDBNull(22) ? "" : reader.GetString(22);
+                        projectFeatureFromDb.properties.dateKap = reader.IsDBNull(23) ? "" : reader.GetString(23);
+                        projectFeatureFromDb.properties.dateOks = reader.IsDBNull(24) ? "" : reader.GetString(24);
 
-                        projectFeatureFromDb.properties.dateGlTba = reader.IsDBNull(27) ? DateTime.MinValue : reader.GetDateTime(27);
+                        projectFeatureFromDb.properties.dateGlTba = reader.IsDBNull(25) ? DateTime.MinValue : reader.GetDateTime(25);
 
-                        projectFeatureFromDb.properties.comment = reader.IsDBNull(28) ? "" : reader.GetString(28);
-                        projectFeatureFromDb.properties.section = reader.IsDBNull(29) ? "" : reader.GetString(29);
-                        projectFeatureFromDb.properties.type = reader.IsDBNull(30) ? "" : reader.GetString(30);
-                        projectFeatureFromDb.properties.projectType = reader.IsDBNull(31) ? "" : reader.GetString(31);
-                        projectFeatureFromDb.properties.overarchingMeasure = reader.IsDBNull(32) ? false : reader.GetBoolean(32);
-                        projectFeatureFromDb.properties.desiredYearFrom = reader.IsDBNull(33) ? -1 : reader.GetInt32(33);
-                        projectFeatureFromDb.properties.desiredYearTo = reader.IsDBNull(34) ? -1 : reader.GetInt32(34);
-                        projectFeatureFromDb.properties.prestudy = reader.IsDBNull(35) ? false : reader.GetBoolean(35);
-                        if (!reader.IsDBNull(36)) projectFeatureFromDb.properties.startOfConstruction = reader.GetDateTime(36);
-                        if (!reader.IsDBNull(37)) projectFeatureFromDb.properties.endOfConstruction = reader.GetDateTime(37);
-                        projectFeatureFromDb.properties.consultDue = reader.IsDBNull(38) ? DateTime.MinValue : reader.GetDateTime(38);
-                        projectFeatureFromDb.properties.projectNo = reader.IsDBNull(39) ? "" : reader.GetString(39);
-                        projectFeatureFromDb.properties.isPrivate = reader.IsDBNull(40) ? false : reader.GetBoolean(40);
-                        if (!reader.IsDBNull(41)) projectFeatureFromDb.properties.dateAccept = reader.GetDateTime(41);
-                        if (!reader.IsDBNull(42)) projectFeatureFromDb.properties.dateGuarantee = reader.GetDateTime(42);
-                        if (!reader.IsDBNull(43)) projectFeatureFromDb.properties.isStudy = reader.GetBoolean(43);
-                        if (!reader.IsDBNull(44)) projectFeatureFromDb.properties.dateStudyStart = reader.GetDateTime(44);
-                        if (!reader.IsDBNull(45)) projectFeatureFromDb.properties.dateStudyEnd = reader.GetDateTime(45);
-                        if (!reader.IsDBNull(46)) projectFeatureFromDb.properties.isDesire = reader.GetBoolean(46);
-                        if (!reader.IsDBNull(47)) projectFeatureFromDb.properties.dateDesireStart = reader.GetDateTime(47);
-                        if (!reader.IsDBNull(48)) projectFeatureFromDb.properties.dateDesireEnd = reader.GetDateTime(48);
-                        if (!reader.IsDBNull(49)) projectFeatureFromDb.properties.isParticip = reader.GetBoolean(49);
-                        if (!reader.IsDBNull(50)) projectFeatureFromDb.properties.dateParticipStart = reader.GetDateTime(50);
-                        if (!reader.IsDBNull(51)) projectFeatureFromDb.properties.dateParticipEnd = reader.GetDateTime(51);
-                        if (!reader.IsDBNull(52)) projectFeatureFromDb.properties.isPlanCirc = reader.GetBoolean(52);
-                        if (!reader.IsDBNull(53)) projectFeatureFromDb.properties.datePlanCircStart = reader.GetDateTime(53);
-                        if (!reader.IsDBNull(54)) projectFeatureFromDb.properties.datePlanCircEnd = reader.GetDateTime(54);
-                        if (!reader.IsDBNull(55)) projectFeatureFromDb.properties.dateConsultStart = reader.GetDateTime(55);
-                        if (!reader.IsDBNull(56)) projectFeatureFromDb.properties.dateConsultEnd = reader.GetDateTime(56);
-                        if (!reader.IsDBNull(57)) projectFeatureFromDb.properties.dateConsultClose = reader.GetDateTime(57);
-                        if (!reader.IsDBNull(58)) projectFeatureFromDb.properties.dateReportStart = reader.GetDateTime(58);
-                        if (!reader.IsDBNull(59)) projectFeatureFromDb.properties.dateReportEnd = reader.GetDateTime(59);
-                        if (!reader.IsDBNull(60)) projectFeatureFromDb.properties.dateReportClose = reader.GetDateTime(60);
-                        if (!reader.IsDBNull(61)) projectFeatureFromDb.properties.dateInfoStart = reader.GetDateTime(61);
-                        if (!reader.IsDBNull(62)) projectFeatureFromDb.properties.dateInfoEnd = reader.GetDateTime(62);
-                        if (!reader.IsDBNull(63)) projectFeatureFromDb.properties.dateInfoClose = reader.GetDateTime(63);
-                        if (!reader.IsDBNull(64)) projectFeatureFromDb.properties.isAggloprog = reader.GetBoolean(64);
-                        projectFeatureFromDb.properties.finishOptimumTo = reader.IsDBNull(65) ? DateTime.MinValue : reader.GetDateTime(65);
-                        if (!reader.IsDBNull(66)) projectFeatureFromDb.properties.dateOfAcceptance = reader.GetDateTime(66);
+                        projectFeatureFromDb.properties.comment = reader.IsDBNull(26) ? "" : reader.GetString(26);
+                        projectFeatureFromDb.properties.section = reader.IsDBNull(27) ? "" : reader.GetString(27);
+                        projectFeatureFromDb.properties.type = reader.IsDBNull(28) ? "" : reader.GetString(28);
+                        projectFeatureFromDb.properties.projectType = reader.IsDBNull(29) ? "" : reader.GetString(29);
+                        projectFeatureFromDb.properties.overarchingMeasure = reader.IsDBNull(30) ? false : reader.GetBoolean(30);
+                        projectFeatureFromDb.properties.desiredYearFrom = reader.IsDBNull(31) ? -1 : reader.GetInt32(31);
+                        projectFeatureFromDb.properties.desiredYearTo = reader.IsDBNull(32) ? -1 : reader.GetInt32(32);
+                        projectFeatureFromDb.properties.prestudy = reader.IsDBNull(33) ? false : reader.GetBoolean(33);
+                        if (!reader.IsDBNull(34)) projectFeatureFromDb.properties.startOfConstruction = reader.GetDateTime(34);
+                        if (!reader.IsDBNull(35)) projectFeatureFromDb.properties.endOfConstruction = reader.GetDateTime(35);
+                        projectFeatureFromDb.properties.consultDue = reader.IsDBNull(36) ? DateTime.MinValue : reader.GetDateTime(36);
+                        projectFeatureFromDb.properties.projectNo = reader.IsDBNull(37) ? "" : reader.GetString(37);
+                        projectFeatureFromDb.properties.isPrivate = reader.IsDBNull(38) ? false : reader.GetBoolean(38);
+                        if (!reader.IsDBNull(39)) projectFeatureFromDb.properties.dateAccept = reader.GetDateTime(39);
+                        if (!reader.IsDBNull(40)) projectFeatureFromDb.properties.dateGuarantee = reader.GetDateTime(40);
+                        if (!reader.IsDBNull(41)) projectFeatureFromDb.properties.isStudy = reader.GetBoolean(41);
+                        if (!reader.IsDBNull(42)) projectFeatureFromDb.properties.dateStudyStart = reader.GetDateTime(42);
+                        if (!reader.IsDBNull(43)) projectFeatureFromDb.properties.dateStudyEnd = reader.GetDateTime(43);
+                        if (!reader.IsDBNull(44)) projectFeatureFromDb.properties.isDesire = reader.GetBoolean(44);
+                        if (!reader.IsDBNull(45)) projectFeatureFromDb.properties.dateDesireStart = reader.GetDateTime(45);
+                        if (!reader.IsDBNull(46)) projectFeatureFromDb.properties.dateDesireEnd = reader.GetDateTime(46);
+                        if (!reader.IsDBNull(47)) projectFeatureFromDb.properties.isParticip = reader.GetBoolean(47);
+                        if (!reader.IsDBNull(48)) projectFeatureFromDb.properties.dateParticipStart = reader.GetDateTime(48);
+                        if (!reader.IsDBNull(49)) projectFeatureFromDb.properties.dateParticipEnd = reader.GetDateTime(49);
+                        if (!reader.IsDBNull(50)) projectFeatureFromDb.properties.isPlanCirc = reader.GetBoolean(50);
+                        if (!reader.IsDBNull(51)) projectFeatureFromDb.properties.datePlanCircStart = reader.GetDateTime(51);
+                        if (!reader.IsDBNull(52)) projectFeatureFromDb.properties.datePlanCircEnd = reader.GetDateTime(52);
+                        if (!reader.IsDBNull(53)) projectFeatureFromDb.properties.dateConsultStart = reader.GetDateTime(53);
+                        if (!reader.IsDBNull(54)) projectFeatureFromDb.properties.dateConsultEnd = reader.GetDateTime(54);
+                        if (!reader.IsDBNull(55)) projectFeatureFromDb.properties.dateConsultClose = reader.GetDateTime(55);
+                        if (!reader.IsDBNull(56)) projectFeatureFromDb.properties.dateReportStart = reader.GetDateTime(56);
+                        if (!reader.IsDBNull(57)) projectFeatureFromDb.properties.dateReportEnd = reader.GetDateTime(57);
+                        if (!reader.IsDBNull(58)) projectFeatureFromDb.properties.dateReportClose = reader.GetDateTime(58);
+                        if (!reader.IsDBNull(59)) projectFeatureFromDb.properties.dateInfoStart = reader.GetDateTime(59);
+                        if (!reader.IsDBNull(60)) projectFeatureFromDb.properties.dateInfoEnd = reader.GetDateTime(60);
+                        if (!reader.IsDBNull(61)) projectFeatureFromDb.properties.dateInfoClose = reader.GetDateTime(61);
+                        if (!reader.IsDBNull(62)) projectFeatureFromDb.properties.isAggloprog = reader.GetBoolean(62);
+                        projectFeatureFromDb.properties.finishOptimumTo = reader.IsDBNull(63) ? DateTime.MinValue : reader.GetDateTime(63);
+                        if (!reader.IsDBNull(64)) projectFeatureFromDb.properties.dateOfAcceptance = reader.GetDateTime(64);
 
-                        Polygon ntsPoly = reader.IsDBNull(67) ? Polygon.Empty : reader.GetValue(67) as Polygon;
+                        Polygon ntsPoly = reader.IsDBNull(65) ? Polygon.Empty : reader.GetValue(65) as Polygon;
                         projectFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
 
                         projectsFromDb.Add(projectFeatureFromDb);
@@ -279,9 +271,9 @@ namespace roadwork_portal_service.Controllers
         [HttpGet]
         [Route("/Roadworkactivity/Costtypes/")]
         [Authorize]
-        public IEnumerable<CostType> GetCostTypes()
+        public IEnumerable<EnumType> GetCostTypes()
         {
-            List<CostType> result = new List<CostType>();
+            List<EnumType> result = new List<EnumType>();
             // get data of current user from database:
             using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
             {
@@ -291,10 +283,10 @@ namespace roadwork_portal_service.Controllers
 
                 using (NpgsqlDataReader reader = selectComm.ExecuteReader())
                 {
-                    CostType costType;
+                    EnumType costType;
                     while (reader.Read())
                     {
-                        costType = new CostType();
+                        costType = new EnumType();
                         costType.code = reader.IsDBNull(0) ? "" : reader.GetString(0);
                         costType.name = reader.IsDBNull(1) ? "" : reader.GetString(1);
                         result.Add(costType);
@@ -305,6 +297,35 @@ namespace roadwork_portal_service.Controllers
             return result.ToArray();
         }
 
+        // GET roadworkactivity/projecttypes/
+        [HttpGet]
+        [Route("/Roadworkactivity/Projecttypes/")]
+        [Authorize]
+        public IEnumerable<EnumType> GetProjectTypes()
+        {
+            List<EnumType> result = new List<EnumType>();
+            // get data of current user from database:
+            using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
+            {
+                pgConn.Open();
+                NpgsqlCommand selectComm = pgConn.CreateCommand();
+                selectComm.CommandText = "SELECT code, name FROM \"wtb_ssp_projecttypes\"";
+
+                using (NpgsqlDataReader reader = selectComm.ExecuteReader())
+                {
+                    EnumType projectType;
+                    while (reader.Read())
+                    {
+                        projectType = new EnumType();
+                        projectType.code = reader.IsDBNull(0) ? "" : reader.GetString(0);
+                        projectType.name = reader.IsDBNull(1) ? "" : reader.GetString(1);
+                        result.Add(projectType);
+                    }
+                }
+                pgConn.Close();
+            }
+            return result.ToArray();
+        }
 
         // POST roadworkactivity/
         [HttpPost]
@@ -424,7 +445,7 @@ namespace roadwork_portal_service.Controllers
                     insertComm.Parameters.AddWithValue("date_optimum", roadWorkActivityFeature.properties.finishOptimumTo);
                     insertComm.Parameters.AddWithValue("date_to", roadWorkActivityFeature.properties.finishLateTo);
                     insertComm.Parameters.AddWithValue("costs", roadWorkActivityFeature.properties.costs <= 0 ? DBNull.Value : roadWorkActivityFeature.properties.costs);
-                    insertComm.Parameters.AddWithValue("costs_type", roadWorkActivityFeature.properties.costsType.code);
+                    insertComm.Parameters.AddWithValue("costs_type", roadWorkActivityFeature.properties.costsType);
                     insertComm.Parameters.AddWithValue("status", "review");
                     insertComm.Parameters.AddWithValue("in_internet", roadWorkActivityFeature.properties.isInInternet);
                     insertComm.Parameters.AddWithValue("billing_address1", roadWorkActivityFeature.properties.billingAddress1);
@@ -699,7 +720,7 @@ namespace roadwork_portal_service.Controllers
                     bool hasStatusChanged = false;
                     if (statusOfActivityInDb != null && statusOfActivityInDb.Length != 0)
                     {
-                        hasStatusChanged = statusOfActivityInDb != roadWorkActivityFeature.properties.status.code;
+                        hasStatusChanged = statusOfActivityInDb != roadWorkActivityFeature.properties.status;
                     }
 
                     if (hasStatusChanged && (bool)roadWorkActivityFeature.properties.isPrivate)
@@ -712,7 +733,7 @@ namespace roadwork_portal_service.Controllers
                     }
 
                     if (hasStatusChanged &&
-                        !_isStatusChangeAllowed(statusOfActivityInDb, roadWorkActivityFeature.properties.status.code))
+                        !_isStatusChangeAllowed(statusOfActivityInDb, roadWorkActivityFeature.properties.status))
                     {
                         _logger.LogWarning("User tried to change the status of a roadwork activity" +
                                     " in a way that is not allowed");
@@ -755,22 +776,22 @@ namespace roadwork_portal_service.Controllers
 
                     if (hasStatusChanged)
                     {
-                        if (roadWorkActivityFeature.properties.status.code == "inconsult")
+                        if (roadWorkActivityFeature.properties.status == "inconsult")
                             updateComm.CommandText += "date_start_inconsult=@date_start_inconsult, ";
-                        else if (roadWorkActivityFeature.properties.status.code == "verified")
+                        else if (roadWorkActivityFeature.properties.status == "verified")
                             updateComm.CommandText += "date_start_verified=@date_start_verified, ";
-                        else if (roadWorkActivityFeature.properties.status.code == "reporting")
+                        else if (roadWorkActivityFeature.properties.status == "reporting")
                             updateComm.CommandText += "date_start_reporting=@date_start_reporting, ";
-                        else if (roadWorkActivityFeature.properties.status.code == "suspended")
+                        else if (roadWorkActivityFeature.properties.status == "suspended")
                             updateComm.CommandText += "date_start_suspended=@date_start_suspended, ";
-                        else if (roadWorkActivityFeature.properties.status.code == "coordinated")
+                        else if (roadWorkActivityFeature.properties.status == "coordinated")
                             updateComm.CommandText += "date_start_coordinated=@date_start_coordinated, ";
                     }
 
                     // if we are going one step back (from status "verified" to status "inconsult")
                     // than delete timestamp:
                     if (statusOfActivityInDb == "verified" &&
-                            roadWorkActivityFeature.properties.status.code == "inconsult")
+                            roadWorkActivityFeature.properties.status == "inconsult")
                     {
                         updateComm.CommandText += "date_start_verified=NULL, ";
                     }
@@ -778,7 +799,7 @@ namespace roadwork_portal_service.Controllers
                     // if we are going one step back (from status "coordinated" to status "reporting")
                     // than delete timestamp:
                     if (statusOfActivityInDb == "coordinated" &&
-                            roadWorkActivityFeature.properties.status.code == "reporting")
+                            roadWorkActivityFeature.properties.status == "reporting")
                     {
                         updateComm.CommandText += "date_start_coordinated=NULL, ";
                     }
@@ -811,8 +832,8 @@ namespace roadwork_portal_service.Controllers
                     updateComm.Parameters.AddWithValue("date_optimum", roadWorkActivityFeature.properties.finishOptimumTo);
                     updateComm.Parameters.AddWithValue("date_to", roadWorkActivityFeature.properties.finishLateTo);
                     updateComm.Parameters.AddWithValue("costs", roadWorkActivityFeature.properties.costs);
-                    updateComm.Parameters.AddWithValue("costs_type", roadWorkActivityFeature.properties.costsType.code);
-                    updateComm.Parameters.AddWithValue("status", roadWorkActivityFeature.properties.status.code);
+                    updateComm.Parameters.AddWithValue("costs_type", roadWorkActivityFeature.properties.costsType);
+                    updateComm.Parameters.AddWithValue("status", roadWorkActivityFeature.properties.status);
                     updateComm.Parameters.AddWithValue("in_internet", roadWorkActivityFeature.properties.isInInternet);
                     updateComm.Parameters.AddWithValue("billing_address1", roadWorkActivityFeature.properties.billingAddress1);
                     updateComm.Parameters.AddWithValue("billing_address2", roadWorkActivityFeature.properties.billingAddress2);
@@ -865,15 +886,15 @@ namespace roadwork_portal_service.Controllers
 
                     if (hasStatusChanged)
                     {
-                        if (roadWorkActivityFeature.properties.status.code == "inconsult")
+                        if (roadWorkActivityFeature.properties.status == "inconsult")
                             updateComm.Parameters.AddWithValue("date_start_inconsult", DateTime.Now);
-                        else if (roadWorkActivityFeature.properties.status.code == "verified")
+                        else if (roadWorkActivityFeature.properties.status == "verified")
                             updateComm.Parameters.AddWithValue("date_start_verified", DateTime.Now);
-                        else if (roadWorkActivityFeature.properties.status.code == "reporting")
+                        else if (roadWorkActivityFeature.properties.status == "reporting")
                             updateComm.Parameters.AddWithValue("date_start_reporting", DateTime.Now);
-                        else if (roadWorkActivityFeature.properties.status.code == "suspended")
+                        else if (roadWorkActivityFeature.properties.status == "suspended")
                             updateComm.Parameters.AddWithValue("date_start_suspended", DateTime.Now);
-                        else if (roadWorkActivityFeature.properties.status.code == "coordinated")
+                        else if (roadWorkActivityFeature.properties.status == "coordinated")
                             updateComm.Parameters.AddWithValue("date_start_coordinated", DateTime.Now);
                     }
 
@@ -910,15 +931,15 @@ namespace roadwork_portal_service.Controllers
                         insertHistoryComm.Parameters.AddWithValue("changedate", DateTime.Now);
                         insertHistoryComm.Parameters.AddWithValue("who", userFromDb.firstName + " " + userFromDb.lastName);
                         string whatText = "Status des Bauvorhabens wurde geändert zu: ";
-                        if (roadWorkActivityFeature.properties.status.code == "review")
+                        if (roadWorkActivityFeature.properties.status == "review")
                             whatText += "in Prüfung";
-                        else if (roadWorkActivityFeature.properties.status.code == "inconsult")
+                        else if (roadWorkActivityFeature.properties.status == "inconsult")
                             whatText += "in Bedarfsklärung";
-                        else if (roadWorkActivityFeature.properties.status.code == "verified")
+                        else if (roadWorkActivityFeature.properties.status == "verified")
                             whatText += "verifiziert";
-                        else if (roadWorkActivityFeature.properties.status.code == "reporting")
+                        else if (roadWorkActivityFeature.properties.status == "reporting")
                             whatText += "in Stellungnahme";
-                        else if (roadWorkActivityFeature.properties.status.code == "coordinated")
+                        else if (roadWorkActivityFeature.properties.status == "coordinated")
                             whatText += "koordiniert";
                         insertHistoryComm.Parameters.AddWithValue("what", whatText);
                         insertHistoryComm.ExecuteNonQuery();
@@ -926,12 +947,12 @@ namespace roadwork_portal_service.Controllers
                         NpgsqlCommand updateActivityStatusComm = pgConn.CreateCommand();
                         updateActivityStatusComm.CommandText = @"UPDATE wtb_ssp_roadworkactivities
                                                     SET status=@status WHERE uuid=@uuid";
-                        updateActivityStatusComm.Parameters.AddWithValue("status", roadWorkActivityFeature.properties.status.code);
+                        updateActivityStatusComm.Parameters.AddWithValue("status", roadWorkActivityFeature.properties.status);
                         updateActivityStatusComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
                         updateActivityStatusComm.ExecuteNonQuery();
 
-                        if (roadWorkActivityFeature.properties.status.code == "inconsult" ||
-                            roadWorkActivityFeature.properties.status.code == "reporting")
+                        if (roadWorkActivityFeature.properties.status == "inconsult" ||
+                            roadWorkActivityFeature.properties.status == "reporting")
                         {
                             foreach (User involvedUser in roadWorkActivityFeature.properties.involvedUsers)
                             {
@@ -944,13 +965,13 @@ namespace roadwork_portal_service.Controllers
                                 insertEmptyCommentsComm.Parameters.AddWithValue("uuid", Guid.NewGuid());
                                 insertEmptyCommentsComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkActivityFeature.properties.uuid));
                                 insertEmptyCommentsComm.Parameters.AddWithValue("input_by", new Guid(involvedUser.uuid));
-                                insertEmptyCommentsComm.Parameters.AddWithValue("feedback_phase", roadWorkActivityFeature.properties.status.code);
+                                insertEmptyCommentsComm.Parameters.AddWithValue("feedback_phase", roadWorkActivityFeature.properties.status);
                                 insertEmptyCommentsComm.Parameters.AddWithValue("feedback_given", false);
                                 insertEmptyCommentsComm.ExecuteNonQuery();
                             }
                         }
 
-                        if (roadWorkActivityFeature.properties.status.code == "verified")
+                        if (roadWorkActivityFeature.properties.status == "verified")
                         {
                             NpgsqlCommand updateNeedsStatusComm = pgConn.CreateCommand();
                             updateNeedsStatusComm.CommandText = @"UPDATE ""wtb_ssp_roadworkneeds""
@@ -975,7 +996,7 @@ namespace roadwork_portal_service.Controllers
                                                         LEFT JOIN ""wtb_ssp_activities_to_needs"" an ON an.uuid_roadwork_need = n.uuid
                                                         WHERE an.activityrelationtype='assignedneed'
                                                             AND an.uuid_roadwork_activity=@uuid_roadwork_activity)";
-                            updateNeedsStatusComm.Parameters.AddWithValue("status", roadWorkActivityFeature.properties.status.code);
+                            updateNeedsStatusComm.Parameters.AddWithValue("status", roadWorkActivityFeature.properties.status);
                             updateNeedsStatusComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkActivityFeature.properties.uuid));
                             updateNeedsStatusComm.ExecuteNonQuery();
                         }

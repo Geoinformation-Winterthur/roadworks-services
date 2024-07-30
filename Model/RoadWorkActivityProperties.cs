@@ -15,7 +15,7 @@ public class RoadWorkActivityProperties
     public string? comment { get; set; } = "";
     public string? section { get; set; } = "";
     public string? type { get; set; } = "";
-    public string? projectType { get; set; } = "";
+    public string projectType { get; set; } = "";
     public bool? overarchingMeasure { get; set; } = false;
     public int? desiredYearFrom { get; set; } = -1;
     public int? desiredYearTo { get; set; } = -1;
@@ -30,10 +30,10 @@ public class RoadWorkActivityProperties
     public DateTime? dateOfAcceptance { get; set; }
     public DateTime? consultDue { get; set; } = DateTime.MinValue;
     public decimal? costs { get; set; } = 0m;
-    public CostType? costsType { get; set; } = new CostType();
+    public string costsType { get; set; } = "";
 
     public string[]? roadWorkNeedsUuids { get; set; } = new string[0];
-    public Status? status { get; set; } = new Status();
+    public string? status { get; set; }
     public bool? isEditingAllowed { get; set; } = false;
     public bool? isInInternet {get; set; } = false;
     public string? billingAddress1 { get; set; } = "";
