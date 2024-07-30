@@ -68,7 +68,7 @@ namespace roadwork_portal_service.Controllers
                     }
                 }
 
-                if(status == null)
+                if (status == null)
                     status = "";
                 status = status.Trim();
 
@@ -77,7 +77,8 @@ namespace roadwork_portal_service.Controllers
                     string[] statusArray = status.Split(",");
 
                     int i = 0;
-                    while(i < statusArray.Length){
+                    while (i < statusArray.Length)
+                    {
                         statusArray[i] = statusArray[i].Trim().ToLower();
                         i++;
                     }
@@ -710,6 +711,16 @@ namespace roadwork_portal_service.Controllers
                         return Ok(roadWorkActivityFeature);
                     }
 
+                    if (hasStatusChanged &&
+                        !_isStatusChangeAllowed(statusOfActivityInDb, roadWorkActivityFeature.properties.status.code))
+                    {
+                        _logger.LogWarning("User tried to change the status of a roadwork activity" +
+                                    " in a way that is not allowed");
+                        roadWorkActivityFeature = new RoadWorkActivityFeature();
+                        roadWorkActivityFeature.errorMessage = "SSP-34";
+                        return Ok(roadWorkActivityFeature);
+                    }
+
                     NpgsqlCommand updateComm = pgConn.CreateCommand();
                     updateComm.CommandText = @"UPDATE ""wtb_ssp_roadworkactivities""
                                     SET name=@name, projectmanager=@projectmanager,
@@ -754,6 +765,22 @@ namespace roadwork_portal_service.Controllers
                             updateComm.CommandText += "date_start_suspended=@date_start_suspended, ";
                         else if (roadWorkActivityFeature.properties.status.code == "coordinated")
                             updateComm.CommandText += "date_start_coordinated=@date_start_coordinated, ";
+                    }
+
+                    // if we are going one step back (from status "verified" to status "inconsult")
+                    // than delete timestamp:
+                    if (statusOfActivityInDb == "verified" &&
+                            roadWorkActivityFeature.properties.status.code == "inconsult")
+                    {
+                        updateComm.CommandText += "date_start_verified=NULL, ";
+                    }
+
+                    // if we are going one step back (from status "coordinated" to status "reporting")
+                    // than delete timestamp:
+                    if (statusOfActivityInDb == "coordinated" &&
+                            roadWorkActivityFeature.properties.status.code == "reporting")
+                    {
+                        updateComm.CommandText += "date_start_coordinated=NULL, ";
                     }
 
                     updateComm.CommandText += "geom=@geom WHERE uuid=@uuid";
@@ -1243,6 +1270,43 @@ namespace roadwork_portal_service.Controllers
                     result = reader.IsDBNull(0) ? 0 : reader.GetInt32(0);
 
             return result;
+        }
+
+        private bool _isStatusChangeAllowed(string oldStatus, string newStatus)
+        {
+            if (oldStatus == "review")
+            {
+                if (newStatus == "review")
+                    return false;
+            }
+            else if (oldStatus == "inconsult")
+            {
+                if (newStatus == "inconsult" ||
+                    newStatus == "review")
+                    return false;
+            }
+            else if (oldStatus == "verified")
+            {
+                if (newStatus == "review")
+                    return false;
+            }
+            else if (oldStatus == "reporting")
+            {
+                if (newStatus != "coordinated" &&
+                    newStatus != "suspended")
+                    return false;
+            }
+            else if (oldStatus == "coordinated")
+            {
+                if (newStatus != "reporting" &&
+                    newStatus != "suspended")
+                    return false;
+            }
+            else if (oldStatus == "suspended")
+            {
+                return false;
+            }
+            return true;
         }
 
     }
