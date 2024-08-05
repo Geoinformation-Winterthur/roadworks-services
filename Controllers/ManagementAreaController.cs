@@ -194,7 +194,7 @@ namespace roadwork_portal_service.Controllers
                     {
 
                         NpgsqlCommand selectAreaManagerRole = pgConn.CreateCommand();
-                        selectAreaManagerRole.CommandText = @"SELECT role,
+                        selectAreaManagerRole.CommandText = @"SELECT role_territorymanager,
                                         first_name, last_name
                                     FROM ""wtb_ssp_users""
                                     WHERE uuid=@uuid";
@@ -204,7 +204,8 @@ namespace roadwork_portal_service.Controllers
                         {
                             if (reader.Read())
                             {
-                                managementArea.manager.setRole(reader.IsDBNull(0) ? "" : reader.GetString(0));
+                                if(!reader.IsDBNull(0)) managementArea.manager
+                                        .grantedRoles.territorymanager =  reader.GetBoolean(0);
                                 managementArea.manager.firstName
                                             = reader.IsDBNull(1) ? "" : reader.GetString(1);
                                 managementArea.manager.lastName
@@ -212,7 +213,7 @@ namespace roadwork_portal_service.Controllers
                             }
                         }
 
-                        if (managementArea.manager.hasRole("territorymanager"))
+                        if (!managementArea.manager.grantedRoles.territorymanager)
                         {
                             _logger.LogWarning("Administrator tried to set the user with UUID "
                                 + managerUuid + " as a manager of an area, though the user " +
@@ -246,7 +247,7 @@ namespace roadwork_portal_service.Controllers
                     {
 
                         NpgsqlCommand selectAreaManagerRole = pgConn.CreateCommand();
-                        selectAreaManagerRole.CommandText = @"SELECT role,
+                        selectAreaManagerRole.CommandText = @"SELECT role_territorymanager,
                                         first_name, last_name
                                     FROM ""wtb_ssp_users""
                                     WHERE uuid=@uuid";
@@ -256,7 +257,7 @@ namespace roadwork_portal_service.Controllers
                         {
                             if (reader.Read())
                             {
-                                managementArea.substituteManager.setRole(reader.IsDBNull(0) ? "" : reader.GetString(0));
+                                if(!reader.IsDBNull(0)) managementArea.substituteManager.grantedRoles.territorymanager = reader.GetBoolean(0);
                                 managementArea.substituteManager.firstName
                                             = reader.IsDBNull(1) ? "" : reader.GetString(1);
                                 managementArea.substituteManager.lastName
@@ -264,7 +265,7 @@ namespace roadwork_portal_service.Controllers
                             }
                         }
 
-                        if (managementArea.substituteManager.hasRole("territorymanager"))
+                        if (!managementArea.substituteManager.grantedRoles.territorymanager)
                         {
                             _logger.LogWarning("Administrator tried to set the user with UUID "
                                 + managerUuid + " as a manager of an area, though the user " +
