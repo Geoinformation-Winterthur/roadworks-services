@@ -451,7 +451,6 @@ namespace roadwork_portal_service.Controllers
                     insertComm.Parameters.AddWithValue("billing_address1", roadWorkActivityFeature.properties.billingAddress1);
                     insertComm.Parameters.AddWithValue("billing_address2", roadWorkActivityFeature.properties.billingAddress2);
                     insertComm.Parameters.AddWithValue("investment_no", roadWorkActivityFeature.properties.investmentNo == 0 ? DBNull.Value : roadWorkActivityFeature.properties.investmentNo);
-                    insertComm.Parameters.AddWithValue("date_sks", roadWorkActivityFeature.properties.dateSks);
                     insertComm.Parameters.AddWithValue("date_kap", roadWorkActivityFeature.properties.dateKap);
                     insertComm.Parameters.AddWithValue("date_oks", roadWorkActivityFeature.properties.dateOks);
                     insertComm.Parameters.AddWithValue("date_gl_tba", roadWorkActivityFeature.properties.dateGlTba);
@@ -488,6 +487,7 @@ namespace roadwork_portal_service.Controllers
                         nextSks = (DateTime)configurationData.dateSks4;
 
                     insertComm.Parameters.AddWithValue("consult_due", nextSks);
+                    insertComm.Parameters.AddWithValue("date_sks", nextSks);
 
                     insertComm.ExecuteNonQuery();
 
