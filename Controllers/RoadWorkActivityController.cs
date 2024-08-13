@@ -129,11 +129,11 @@ namespace roadwork_portal_service.Controllers
                         projectFeatureFromDb.properties.pdbFid = reader.IsDBNull(20) ? 0 : reader.GetInt32(20);
                         projectFeatureFromDb.properties.strabakoNo = reader.IsDBNull(21) ? "" : reader.GetString(21);
 
-                        projectFeatureFromDb.properties.dateSks = reader.IsDBNull(22) ? "" : reader.GetString(22);
-                        projectFeatureFromDb.properties.dateKap = reader.IsDBNull(23) ? "" : reader.GetString(23);
-                        projectFeatureFromDb.properties.dateOks = reader.IsDBNull(24) ? "" : reader.GetString(24);
+                        projectFeatureFromDb.properties.dateSksReal = reader.IsDBNull(22) ? "" : reader.GetString(22);
+                        projectFeatureFromDb.properties.dateKapReal = reader.IsDBNull(23) ? "" : reader.GetString(23);
+                        projectFeatureFromDb.properties.dateOksReal = reader.IsDBNull(24) ? "" : reader.GetString(24);
 
-                        projectFeatureFromDb.properties.dateGlTba = reader.IsDBNull(25) ? DateTime.MinValue : reader.GetDateTime(25);
+                        projectFeatureFromDb.properties.dateGlTbaReal = reader.IsDBNull(25) ? DateTime.MinValue : reader.GetDateTime(25);
 
                         projectFeatureFromDb.properties.comment = reader.IsDBNull(26) ? "" : reader.GetString(26);
                         projectFeatureFromDb.properties.section = reader.IsDBNull(27) ? "" : reader.GetString(27);
@@ -838,10 +838,10 @@ namespace roadwork_portal_service.Controllers
                     updateComm.Parameters.AddWithValue("billing_address1", roadWorkActivityFeature.properties.billingAddress1);
                     updateComm.Parameters.AddWithValue("billing_address2", roadWorkActivityFeature.properties.billingAddress2);
                     updateComm.Parameters.AddWithValue("investment_no", roadWorkActivityFeature.properties.investmentNo);
-                    updateComm.Parameters.AddWithValue("date_sks", roadWorkActivityFeature.properties.dateSks);
-                    updateComm.Parameters.AddWithValue("date_kap", roadWorkActivityFeature.properties.dateKap);
-                    updateComm.Parameters.AddWithValue("date_oks", roadWorkActivityFeature.properties.dateOks);
-                    updateComm.Parameters.AddWithValue("date_gl_tba", roadWorkActivityFeature.properties.dateGlTba != null ? roadWorkActivityFeature.properties.dateGlTba : DBNull.Value);
+                    updateComm.Parameters.AddWithValue("date_sks", roadWorkActivityFeature.properties.dateSksReal);
+                    updateComm.Parameters.AddWithValue("date_kap", roadWorkActivityFeature.properties.dateKapReal);
+                    updateComm.Parameters.AddWithValue("date_oks", roadWorkActivityFeature.properties.dateOksReal);
+                    updateComm.Parameters.AddWithValue("date_gl_tba", roadWorkActivityFeature.properties.dateGlTbaReal != null ? roadWorkActivityFeature.properties.dateGlTbaReal : DBNull.Value);
                     updateComm.Parameters.AddWithValue("comment", roadWorkActivityFeature.properties.comment);
                     updateComm.Parameters.AddWithValue("section", roadWorkActivityFeature.properties.section);
                     updateComm.Parameters.AddWithValue("type", roadWorkActivityFeature.properties.type);
