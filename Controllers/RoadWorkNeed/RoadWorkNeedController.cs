@@ -736,7 +736,7 @@ namespace roadwork_portal_service.Controllers
                     }
 
                     int assignedNeedsCount = _countAssignedNeeds(affectedActivityUuid, pgConn);
-                    if (assignedNeedsCount <= 1)
+                    if (assignedNeedsCount == 1)
                     {
                         _logger.LogWarning("The roadwork need cannot be deleted since it is the last need of the roadwork activity " + affectedActivityUuid);
                         errorResult.errorMessage = "SSP-29";
