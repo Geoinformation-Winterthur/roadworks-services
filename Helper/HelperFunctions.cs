@@ -29,13 +29,13 @@ namespace roadwork_portal_service.Helper
             int bufferSize = 0;
             List<(string, Point)> fromToNamesList;
             (string, Point)[] greatestDistanceTuple;
-            Polygon bufferedPoly = area;
+            Polygon bufferedPoly = area.Copy() as Polygon;
 
             do
             {
                 if (bufferSize > 0)
                 {
-                    area = area.Buffer(bufferSize) as Polygon;
+                    bufferedPoly = bufferedPoly.Buffer(bufferSize) as Polygon;
                 }
 
                 fromToNamesList = _getFromToListFromDb(bufferedPoly, pgConn);
