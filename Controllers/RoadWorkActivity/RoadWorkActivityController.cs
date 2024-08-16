@@ -51,7 +51,7 @@ namespace roadwork_portal_service.Controllers
                             r.date_consult_end, r.date_consult_close, r.date_report_start,
                             r.date_report_end, r.date_report_close, r.date_info_start,
                             r.date_info_end, r.date_info_close, r.is_aggloprog, r.date_optimum,
-                            r.date_of_acceptance, r.geom
+                            r.date_of_acceptance, r.url, r.pdf_document IS NOT NULL has_pdf, r.geom
                         FROM ""wtb_ssp_roadworkactivities"" r
                         LEFT JOIN ""wtb_ssp_users"" pm ON r.projectmanager = pm.uuid
                         LEFT JOIN ""wtb_ssp_users"" ta ON r.traffic_agent = ta.uuid";
@@ -174,8 +174,10 @@ namespace roadwork_portal_service.Controllers
                         if (!reader.IsDBNull(62)) projectFeatureFromDb.properties.isAggloprog = reader.GetBoolean(62);
                         projectFeatureFromDb.properties.finishOptimumTo = reader.IsDBNull(63) ? DateTime.MinValue : reader.GetDateTime(63);
                         if (!reader.IsDBNull(64)) projectFeatureFromDb.properties.dateOfAcceptance = reader.GetDateTime(64);
+                        if (!reader.IsDBNull(65)) projectFeatureFromDb.properties.url = reader.GetString(65);
+                        if (!reader.IsDBNull(66)) projectFeatureFromDb.properties.hasPdfDocument = reader.GetBoolean(66);
 
-                        Polygon ntsPoly = reader.IsDBNull(65) ? Polygon.Empty : reader.GetValue(65) as Polygon;
+                        Polygon ntsPoly = reader.IsDBNull(67) ? Polygon.Empty : reader.GetValue(67) as Polygon;
                         projectFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
 
                         projectsFromDb.Add(projectFeatureFromDb);
@@ -411,7 +413,7 @@ namespace roadwork_portal_service.Controllers
                                     billing_address2, investment_no, date_sks, date_kap,
                                     date_oks, date_gl_tba, private, date_consult_start,
                                     date_consult_end, date_report_start, date_report_end,
-                                    date_info_start, date_info_end, geom)
+                                    date_info_start, date_info_end, url, geom)
                                     VALUES (@uuid, @name, @projectmanager, @traffic_agent,
                                     @description, @project_no, @comment, @section, @type, @projecttype,
                                     @overarching_measure, @desired_year_from, @desired_year_to, @prestudy, 
@@ -421,7 +423,7 @@ namespace roadwork_portal_service.Controllers
                                     @billing_address2, @investment_no, @date_sks, @date_kap, @date_oks,
                                     @date_gl_tba, @private, @date_consult_start, @date_consult_end,
                                     @date_report_start, @date_report_end, @date_info_start, @date_info_end,
-                                    @geom)";
+                                    @url, @geom)";
                     insertComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
                     if (roadWorkActivityFeature.properties.projectManager.uuid != "")
                     {
@@ -474,6 +476,7 @@ namespace roadwork_portal_service.Controllers
                     insertComm.Parameters.AddWithValue("date_report_end", DateTime.Now.AddDays(56));
                     insertComm.Parameters.AddWithValue("date_info_start", DateTime.Now.AddDays(62));
                     insertComm.Parameters.AddWithValue("date_info_end", DateTime.Now.AddDays(66));
+                    insertComm.Parameters.AddWithValue("url", roadWorkActivityFeature.properties.url != null ? roadWorkActivityFeature.properties.url : DBNull.Value);
                     insertComm.Parameters.AddWithValue("geom", roadWorkActivityPoly);
 
                     DateTime nextSks = DateTime.Now.AddDays(66);
@@ -755,7 +758,7 @@ namespace roadwork_portal_service.Controllers
                                     date_from=@date_from, date_optimum=@date_optimum, date_to=@date_to,
                                     costs=@costs, costs_type=@costs_type, status=@status,
                                     billing_address1=@billing_address1,
-                                    billing_address2=@billing_address2,
+                                    billing_address2=@billing_address2, url=@url,
                                     in_internet=@in_internet, investment_no=@investment_no,
                                     date_sks=@date_sks, date_kap=@date_kap, date_oks=@date_oks,
                                     date_gl_tba=@date_gl_tba, private=@private,
@@ -837,6 +840,7 @@ namespace roadwork_portal_service.Controllers
                     updateComm.Parameters.AddWithValue("in_internet", roadWorkActivityFeature.properties.isInInternet);
                     updateComm.Parameters.AddWithValue("billing_address1", roadWorkActivityFeature.properties.billingAddress1);
                     updateComm.Parameters.AddWithValue("billing_address2", roadWorkActivityFeature.properties.billingAddress2);
+                    updateComm.Parameters.AddWithValue("url", roadWorkActivityFeature.properties.url != null ? roadWorkActivityFeature.properties.url : DBNull.Value);
                     updateComm.Parameters.AddWithValue("investment_no", roadWorkActivityFeature.properties.investmentNo);
                     updateComm.Parameters.AddWithValue("date_sks", roadWorkActivityFeature.properties.dateSksReal);
                     updateComm.Parameters.AddWithValue("date_kap", roadWorkActivityFeature.properties.dateKapReal);

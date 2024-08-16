@@ -82,4 +82,6 @@ public class RoadWorkActivityProperties
     public DateTime? dateStartReporting { get; set; }
     public DateTime? dateStartSuspended { get; set; }
     public DateTime? dateStartCoordinated { get; set; }
+    public string? url { get; set; }
+    public bool hasPdfDocument { get; set; } = false;
 }

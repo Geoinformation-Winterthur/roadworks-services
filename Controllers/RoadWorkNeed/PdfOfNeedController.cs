@@ -7,11 +7,11 @@ namespace roadwork_portal_service.Controllers
 {
     [ApiController]
     [Route("RoadWorkNeed/{uuid}/Pdf/")]
-    public class PdfController : ControllerBase
+    public class PdfOfNeedController : ControllerBase
     {
-        private readonly ILogger<PdfController> _logger;
+        private readonly ILogger<PdfOfNeedController> _logger;
 
-        public PdfController(ILogger<PdfController> logger)
+        public PdfOfNeedController(ILogger<PdfOfNeedController> logger)
         {
             _logger = logger;
         }
@@ -53,7 +53,7 @@ namespace roadwork_portal_service.Controllers
         // POST roadworkneed/1321231/pdf/
         [HttpPost]
         [Authorize(Roles = "orderer,trefficmanager,territorymanager,administrator")]
-        public IActionResult PostPdf(string uuid, IFormFile pdfFile)
+        public IActionResult AddPdf(string uuid, IFormFile pdfFile)
         {
             uuid = uuid.Trim().ToLower();
 
@@ -92,6 +92,44 @@ namespace roadwork_portal_service.Controllers
             }
 
             _logger.LogError("Could not update PDF for roadworkneed");
+            return BadRequest();
+
+        }
+
+        // DELETE roadworkneed/1321231/pdf/
+        [HttpDelete]
+        [Authorize(Roles = "orderer,trefficmanager,territorymanager,administrator")]
+        public IActionResult DeletePdf(string uuid)
+        {
+            uuid = uuid.Trim().ToLower();
+
+            if (uuid != null && uuid != String.Empty)
+            {
+
+                using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
+                {
+                    pgConn.Open();
+
+                    using (NpgsqlTransaction trans = pgConn.BeginTransaction())
+                    {
+                        NpgsqlCommand updatePdfCommand = pgConn.CreateCommand();
+                        updatePdfCommand.CommandText = "UPDATE \"wtb_ssp_roadworkneeds\"" +
+                                    " SET pdf_document=@pdf_document" +
+                                    " WHERE uuid=@uuid";
+                        updatePdfCommand.Parameters.AddWithValue("pdf_document", DBNull.Value);
+                        updatePdfCommand.Parameters.AddWithValue("uuid", new Guid(uuid));
+
+                        updatePdfCommand.ExecuteNonQuery();
+                        trans.Commit();
+                    }
+
+                }
+
+                return Ok();
+
+            }
+
+            _logger.LogError("Could not delete PDF for a roadwork need");
             return BadRequest();
 
         }

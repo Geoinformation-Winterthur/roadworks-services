@@ -32,5 +32,7 @@ public class RoadWorkNeedProperties
     public bool overarchingMeasure { get; set; } = false;
     public int? desiredYearFrom { get; set; }
     public int? desiredYearTo { get; set; }
+    public bool hasPdfDocument { get; set; } = false;
+
 }
 
