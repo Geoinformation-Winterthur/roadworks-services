@@ -51,7 +51,8 @@ namespace roadwork_portal_service.Controllers
                             r.date_consult_end, r.date_consult_close, r.date_report_start,
                             r.date_report_end, r.date_report_close, r.date_info_start,
                             r.date_info_end, r.date_info_close, r.is_aggloprog, r.date_optimum,
-                            r.date_of_acceptance, r.url, r.pdf_document IS NOT NULL has_pdf, r.geom
+                            r.date_of_acceptance, r.url, r.pdf_document IS NOT NULL has_pdf,
+                            r.project_study_approved, r.study_approved, r.geom
                         FROM ""wtb_ssp_roadworkactivities"" r
                         LEFT JOIN ""wtb_ssp_users"" pm ON r.projectmanager = pm.uuid
                         LEFT JOIN ""wtb_ssp_users"" ta ON r.traffic_agent = ta.uuid";
@@ -113,7 +114,7 @@ namespace roadwork_portal_service.Controllers
                         projectFeatureFromDb.properties.finishLateTo = reader.IsDBNull(12) ? DateTime.MinValue : reader.GetDateTime(12);
                         projectFeatureFromDb.properties.costs = reader.IsDBNull(13) ? 0m : reader.GetDecimal(13);
 
-                        projectFeatureFromDb.properties.costsType = reader.IsDBNull(14) ? "" : reader.GetString(14);;
+                        projectFeatureFromDb.properties.costsType = reader.IsDBNull(14) ? "" : reader.GetString(14); ;
 
                         if (User.IsInRole("administrator") || User.IsInRole("territorymanager"))
                         {
@@ -176,8 +177,10 @@ namespace roadwork_portal_service.Controllers
                         if (!reader.IsDBNull(64)) projectFeatureFromDb.properties.dateOfAcceptance = reader.GetDateTime(64);
                         if (!reader.IsDBNull(65)) projectFeatureFromDb.properties.url = reader.GetString(65);
                         if (!reader.IsDBNull(66)) projectFeatureFromDb.properties.hasPdfDocument = reader.GetBoolean(66);
+                        if (!reader.IsDBNull(67)) projectFeatureFromDb.properties.projectStudyApproved = reader.GetDateTime(67);
+                        if (!reader.IsDBNull(68)) projectFeatureFromDb.properties.studyApproved = reader.GetDateTime(68);
 
-                        Polygon ntsPoly = reader.IsDBNull(67) ? Polygon.Empty : reader.GetValue(67) as Polygon;
+                        Polygon ntsPoly = reader.IsDBNull(69) ? Polygon.Empty : reader.GetValue(69) as Polygon;
                         projectFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
 
                         projectsFromDb.Add(projectFeatureFromDb);
@@ -653,6 +656,17 @@ namespace roadwork_portal_service.Controllers
                     return Ok(roadWorkActivityFeature);
                 }
 
+                if ((bool)roadWorkActivityFeature.properties.isStudy &&
+                        (roadWorkActivityFeature.properties.dateStudyStart == null ||
+                        roadWorkActivityFeature.properties.dateStudyEnd == null))
+                {
+                    _logger.LogWarning("Received planned study without start or end date");
+                    roadWorkActivityFeature = new RoadWorkActivityFeature();
+                    roadWorkActivityFeature.errorMessage = "SSP-35";
+                    return Ok(roadWorkActivityFeature);
+                }
+
+
                 User userFromDb = LoginController.getAuthorizedUserFromDb(this.User, false);
 
                 using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
@@ -707,16 +721,21 @@ namespace roadwork_portal_service.Controllers
                     }
 
                     NpgsqlCommand selectStatusComm = pgConn.CreateCommand();
-                    selectStatusComm.CommandText = @"SELECT status FROM ""wtb_ssp_roadworkactivities""
+                    selectStatusComm.CommandText = @"SELECT status, project_study_approved,
+                                                        study_approved FROM ""wtb_ssp_roadworkactivities""
                                                         WHERE uuid=@uuid";
                     selectStatusComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
 
                     string statusOfActivityInDb = "";
+                    DateTime? projectStudyApprovedInDb = null;
+                    DateTime? studyApprovedInDb = null;
                     using (NpgsqlDataReader reader = selectStatusComm.ExecuteReader())
                     {
                         if (reader.Read())
                         {
                             statusOfActivityInDb = reader.IsDBNull(0) ? "" : reader.GetString(0);
+                            projectStudyApprovedInDb = reader.IsDBNull(1) ? null : reader.GetDateTime(1);
+                            studyApprovedInDb = reader.IsDBNull(2) ? null : reader.GetDateTime(2);
                         }
                     }
 
@@ -724,6 +743,34 @@ namespace roadwork_portal_service.Controllers
                     if (statusOfActivityInDb != null && statusOfActivityInDb.Length != 0)
                     {
                         hasStatusChanged = statusOfActivityInDb != roadWorkActivityFeature.properties.status;
+                    }
+
+                    if (projectStudyApprovedInDb == null
+                                && roadWorkActivityFeature.properties.projectStudyApproved != null)
+                    {
+                        if (hasStatusChanged)
+                        {
+                            roadWorkActivityFeature.properties.projectStudyApproved = null;
+                        }
+                        else
+                        {
+                            roadWorkActivityFeature.properties.status = "prestudy";
+                            hasStatusChanged = true;
+                        }
+                    }
+
+                    if (studyApprovedInDb == null
+                                && roadWorkActivityFeature.properties.studyApproved != null)
+                    {
+                        if (hasStatusChanged)
+                        {
+                            roadWorkActivityFeature.properties.studyApproved = null;
+                        }
+                        else
+                        {
+                            roadWorkActivityFeature.properties.status = "coordinated";
+                            hasStatusChanged = true;
+                        }
                     }
 
                     if (hasStatusChanged && (bool)roadWorkActivityFeature.properties.isPrivate)
@@ -775,7 +822,8 @@ namespace roadwork_portal_service.Controllers
                                     date_report_start=@date_report_start,
                                     date_report_end=@date_report_end, date_report_close=@date_report_close,
                                     date_info_start=@date_info_start, date_info_end=@date_info_end,
-                                    date_info_close=@date_info_close, is_aggloprog=@is_aggloprog, ";
+                                    date_info_close=@date_info_close, is_aggloprog=@is_aggloprog,
+                                    project_study_approved=@project_study_approved, study_approved=@study_approved,";
 
                     if (hasStatusChanged)
                     {
@@ -866,6 +914,8 @@ namespace roadwork_portal_service.Controllers
                     updateComm.Parameters.AddWithValue("is_study", roadWorkActivityFeature.properties.isStudy);
                     updateComm.Parameters.AddWithValue("date_study_start", roadWorkActivityFeature.properties.dateStudyStart != null ? roadWorkActivityFeature.properties.dateStudyStart : DBNull.Value);
                     updateComm.Parameters.AddWithValue("date_study_end", roadWorkActivityFeature.properties.dateStudyEnd != null ? roadWorkActivityFeature.properties.dateStudyEnd : DBNull.Value);
+                    updateComm.Parameters.AddWithValue("project_study_approved", roadWorkActivityFeature.properties.projectStudyApproved != null ? roadWorkActivityFeature.properties.projectStudyApproved : DBNull.Value);
+                    updateComm.Parameters.AddWithValue("study_approved", roadWorkActivityFeature.properties.studyApproved != null ? roadWorkActivityFeature.properties.studyApproved : DBNull.Value);
                     updateComm.Parameters.AddWithValue("is_desire", roadWorkActivityFeature.properties.isDesire);
                     updateComm.Parameters.AddWithValue("date_desire_start", roadWorkActivityFeature.properties.dateDesireStart != null ? roadWorkActivityFeature.properties.dateDesireStart : DBNull.Value);
                     updateComm.Parameters.AddWithValue("date_desire_end", roadWorkActivityFeature.properties.dateDesireEnd != null ? roadWorkActivityFeature.properties.dateDesireEnd : DBNull.Value);

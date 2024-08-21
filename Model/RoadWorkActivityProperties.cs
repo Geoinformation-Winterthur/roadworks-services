@@ -58,6 +58,8 @@ public class RoadWorkActivityProperties
     public bool? isStudy { get; set; } = false;
     public DateTime? dateStudyStart { get; set; }
     public DateTime? dateStudyEnd { get; set; }
+    public DateTime? projectStudyApproved { get; set; }
+    public DateTime? studyApproved { get; set; }
     public bool? isDesire { get; set; } = false;
     public DateTime? dateDesireStart { get; set; }
     public DateTime? dateDesireEnd { get; set; }
