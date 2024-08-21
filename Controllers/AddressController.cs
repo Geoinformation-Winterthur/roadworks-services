@@ -41,7 +41,7 @@ public class AddressController : ControllerBase
     {
         try
         {
-            search = search != null ? search.Trim() : "";
+            search = search != null ? search.Trim().ToLower() : "";
 
             List<Address> addressesFromDb = new List<Address>();
             if (search != "")
