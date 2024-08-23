@@ -45,7 +45,7 @@ namespace roadwork_portal_service.Helper
                 if (greatestDistanceTuple[0].Item1 != null && greatestDistanceTuple[1].Item1 != null)
                 {
                     result = greatestDistanceTuple[0].Item1;
-                    if(greatestDistanceTuple[0].Item1 != greatestDistanceTuple[0].Item1)
+                    if(greatestDistanceTuple[0].Item1 != greatestDistanceTuple[1].Item1)
                         result  += " bis " + greatestDistanceTuple[1].Item1;
                 }
                 bufferSize += 10;
