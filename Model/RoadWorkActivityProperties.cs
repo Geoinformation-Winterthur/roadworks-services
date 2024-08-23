@@ -41,13 +41,13 @@ public class RoadWorkActivityProperties
     public int? investmentNo { get; set; } = 0;
     public int? pdbFid { get; set; } = 0;
     public string? strabakoNo { get; set; } = "";
-    public string? dateSks { get; set; } = "";
-    public string? dateSksReal { get; set; } = "";
-    public string? dateKap { get; set; } = "";
-    public string? dateKapReal { get; set; } = "";
-    public string? dateOks { get; set; } = "";
-    public string? dateOksReal { get; set; } = "";
-    public DateTime? dateGlTba { get; set; } = DateTime.MinValue;
+    public DateTime? dateSks { get; set; }
+    public DateTime? dateSksReal { get; set; }
+    public DateTime? dateKap { get; set; }
+    public DateTime? dateKapReal { get; set; }
+    public DateTime? dateOks { get; set; }
+    public DateTime? dateOksReal { get; set; }
+    public DateTime? dateGlTba { get; set; }
     public DateTime? dateGlTbaReal { get; set; }
     public ActivityHistoryItem[]? activityHistory { get; set; } = new ActivityHistoryItem[0];
     public bool? isPrivate { get; set; } = false;

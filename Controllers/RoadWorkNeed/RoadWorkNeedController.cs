@@ -319,7 +319,7 @@ namespace roadwork_portal_service.Controllers
                     }
                 }
 
-                ConfigurationData configData = AppConfigController.getConfigurationFromDb();
+                ConfigurationData configData = AppConfigController.getConfigurationFromDb(false);
 
                 RoadWorkNeedDAO roadWorkNeedDAO = new RoadWorkNeedDAO(isDryRun);
                 roadWorkNeedFeature = roadWorkNeedDAO.Insert(roadWorkNeedFeature, configData);
@@ -415,7 +415,7 @@ namespace roadwork_portal_service.Controllers
 
                 Polygon roadWorkNeedPoly = roadWorkNeedFeature.geometry.getNtsPolygon();
 
-                ConfigurationData configData = AppConfigController.getConfigurationFromDb();
+                ConfigurationData configData = AppConfigController.getConfigurationFromDb(false);
                 // only if project area is greater than min area size:
                 if (roadWorkNeedPoly.Area <= configData.minAreaSize)
                 {

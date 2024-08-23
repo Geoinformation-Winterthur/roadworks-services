@@ -85,7 +85,7 @@ namespace roadwork_portal_service.Controllers
                     return Ok(result);
                 }
 
-                ConfigurationData configData = AppConfigController.getConfigurationFromDb();
+                ConfigurationData configData = AppConfigController.getConfigurationFromDb(false);
                 // only if project area is greater than min area size:
                 if (roadWorkPoly.Area <= configData.minAreaSize)
                 {
