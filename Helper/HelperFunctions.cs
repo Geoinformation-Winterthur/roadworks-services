@@ -57,6 +57,27 @@ namespace roadwork_portal_service.Helper
             return result;
         }
 
+        public static string translateStatusCodes(string code)
+        {
+            if(code == "requirement")
+                return "Bedarf";
+            else if(code == "review")
+                return "Prüfung";
+            else if(code == "verified")
+                return "verifiziert";
+            else if(code == "inconsult")
+                return "Bedarfsklärung";
+            else if(code == "reporting")
+                return "Stellungnahme";
+            else if(code == "coordinated")
+                return "koordiniert";
+            else if(code == "prestudy")
+                return "Vorstudie";
+            else if(code == "suspended")
+                return "sistiert";
+            else return "";
+        }
+
         private static List<(string, Point)> _getFromToListFromDb(
                 Polygon roadWorkNeedPoly, NpgsqlConnection pgConn)
         {
