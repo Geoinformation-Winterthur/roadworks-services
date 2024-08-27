@@ -420,7 +420,7 @@ namespace roadwork_portal_service.Controllers
                                     billing_address2, investment_no, date_sks,
                                     date_kap, private, date_consult_start,
                                     date_consult_end, date_report_start, date_report_end,
-                                    date_info_start, date_info_end, url, geom)
+                                    url, geom)
                                     VALUES (@uuid, @name, @projectmanager, @traffic_agent,
                                     @description, @project_no, @comment, @section, @type, @projecttype,
                                     @overarching_measure, @desired_year_from, @desired_year_to, @prestudy, 
@@ -429,8 +429,7 @@ namespace roadwork_portal_service.Controllers
                                     @date_to, @costs, @costs_type, @status, @in_internet, @billing_address1,
                                     @billing_address2, @investment_no, @date_sks, @date_kap,
                                     @private, @date_consult_start, @date_consult_end,
-                                    @date_report_start, @date_report_end, @date_info_start, @date_info_end,
-                                    @url, @geom)";
+                                    @date_report_start, @date_report_end, @url, @geom)";
                     insertComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
                     if (roadWorkActivityFeature.properties.projectManager.uuid != "")
                     {
@@ -478,8 +477,6 @@ namespace roadwork_portal_service.Controllers
                     insertComm.Parameters.AddWithValue("date_consult_end", DateTime.Now.AddDays(28));
                     insertComm.Parameters.AddWithValue("date_report_start", DateTime.Now.AddDays(35));
                     insertComm.Parameters.AddWithValue("date_report_end", DateTime.Now.AddDays(56));
-                    insertComm.Parameters.AddWithValue("date_info_start", DateTime.Now.AddDays(62));
-                    insertComm.Parameters.AddWithValue("date_info_end", DateTime.Now.AddDays(66));
                     insertComm.Parameters.AddWithValue("url", roadWorkActivityFeature.properties.url != null ? roadWorkActivityFeature.properties.url : DBNull.Value);
                     insertComm.Parameters.AddWithValue("geom", roadWorkActivityPoly);
 
