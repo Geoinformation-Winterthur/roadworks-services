@@ -480,28 +480,30 @@ namespace roadwork_portal_service.Controllers
                     insertComm.Parameters.AddWithValue("url", roadWorkActivityFeature.properties.url != null ? roadWorkActivityFeature.properties.url : DBNull.Value);
                     insertComm.Parameters.AddWithValue("geom", roadWorkActivityPoly);
 
-                    DateTime nextKap = DateTime.Now;
+                    DateTime? nextKap = null;
+                    DateTime nextKapTemp = DateTime.Now;
                     foreach (DateTime plannedDateKap in configurationData.plannedDatesKap)
                     {
-                        if (plannedDateKap > nextKap)
+                        if (plannedDateKap > nextKapTemp)
                         {
                             nextKap = plannedDateKap;
                             break;
                         }
                     }
-                    insertComm.Parameters.AddWithValue("date_kap", nextKap);
+                    insertComm.Parameters.AddWithValue("date_kap", nextKap == null ? DBNull.Value : nextKap);
 
-                    DateTime nextSks = DateTime.Now.AddDays(66);
+                    DateTime? nextSks = null;
+                    DateTime nextSksTemp = DateTime.Now.AddDays(66);
                     foreach (DateTime plannedDateSks in configurationData.plannedDatesSks)
                     {
-                        if (plannedDateSks > nextSks)
+                        if (plannedDateSks > nextSksTemp)
                         {
-                            nextKap = plannedDateSks;
+                            nextSks = plannedDateSks;
                             break;
                         }
                     }
-                    insertComm.Parameters.AddWithValue("consult_due", nextSks);
-                    insertComm.Parameters.AddWithValue("date_sks", nextSks);
+                    insertComm.Parameters.AddWithValue("consult_due", nextSks == null ? DBNull.Value : nextSks);
+                    insertComm.Parameters.AddWithValue("date_sks", nextSks == null ? DBNull.Value : nextSks);
 
                     insertComm.ExecuteNonQuery();
 
