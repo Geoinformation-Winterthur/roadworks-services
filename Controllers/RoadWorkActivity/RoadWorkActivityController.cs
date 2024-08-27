@@ -607,10 +607,20 @@ namespace roadwork_portal_service.Controllers
                 }
 
                 if (roadWorkActivityFeature.geometry == null ||
-                        roadWorkActivityFeature.geometry.coordinates == null ||
-                        roadWorkActivityFeature.geometry.coordinates.Length < 3)
+                        roadWorkActivityFeature.geometry.coordinates == null)
                 {
-                    _logger.LogWarning("Roadworkactivity has a geometry error.");
+                    _logger.LogWarning("Roadwork activity " + roadWorkActivityFeature.properties.uuid +
+                            " has no geometry.");
+                    roadWorkActivityFeature = new RoadWorkActivityFeature();
+                    roadWorkActivityFeature.errorMessage = "SSP-3";
+                    return Ok(roadWorkActivityFeature);
+                }
+
+
+                if (roadWorkActivityFeature.geometry.coordinates.Length < 3)
+                {
+                    _logger.LogWarning("Roadwork activity " + roadWorkActivityFeature.properties.uuid +
+                            " has less than three coordinates.");
                     roadWorkActivityFeature = new RoadWorkActivityFeature();
                     roadWorkActivityFeature.errorMessage = "SSP-3";
                     return Ok(roadWorkActivityFeature);
@@ -620,8 +630,6 @@ namespace roadwork_portal_service.Controllers
 
                 if (!roadWorkActivityPoly.IsSimple)
                 {
-                    _logger.LogWarning("Geometry of roadworkactivity " + roadWorkActivityFeature.properties.uuid +
-                            " does not fulfill the criteria of geometrical simplicity.");
                     roadWorkActivityFeature = new RoadWorkActivityFeature();
                     roadWorkActivityFeature.errorMessage = "SSP-10";
                     return Ok(roadWorkActivityFeature);
@@ -629,8 +637,6 @@ namespace roadwork_portal_service.Controllers
 
                 if (!roadWorkActivityPoly.IsValid)
                 {
-                    _logger.LogWarning("Geometry of roadworkactivity " + roadWorkActivityFeature.properties.uuid +
-                            " does not fulfill the criteria of geometrical validity.");
                     roadWorkActivityFeature = new RoadWorkActivityFeature();
                     roadWorkActivityFeature.errorMessage = "SSP-11";
                     return Ok(roadWorkActivityFeature);
@@ -640,7 +646,6 @@ namespace roadwork_portal_service.Controllers
                 // only if project area is greater than min area size:
                 if (roadWorkActivityPoly.Area <= configData.minAreaSize)
                 {
-                    _logger.LogWarning("Roadworkneed area is less than or equal " + configData.minAreaSize + "qm.");
                     roadWorkActivityFeature = new RoadWorkActivityFeature();
                     roadWorkActivityFeature.errorMessage = "SSP-8";
                     return Ok(roadWorkActivityFeature);
@@ -649,7 +654,6 @@ namespace roadwork_portal_service.Controllers
                 // only if project area is smaller than max area size:
                 if (roadWorkActivityPoly.Area > configData.maxAreaSize)
                 {
-                    _logger.LogWarning("Roadworkneed area is greater than " + configData.maxAreaSize + "qm.");
                     roadWorkActivityFeature = new RoadWorkActivityFeature();
                     roadWorkActivityFeature.errorMessage = "SSP-16";
                     return Ok(roadWorkActivityFeature);
@@ -657,7 +661,6 @@ namespace roadwork_portal_service.Controllers
 
                 if (roadWorkActivityFeature.properties.finishEarlyTo > roadWorkActivityFeature.properties.finishLateTo)
                 {
-                    _logger.LogWarning("The finish from date of a roadworkactivity cannot be higher than its finish to date.");
                     roadWorkActivityFeature = new RoadWorkActivityFeature();
                     roadWorkActivityFeature.errorMessage = "SSP-19";
                     return Ok(roadWorkActivityFeature);
@@ -667,12 +670,18 @@ namespace roadwork_portal_service.Controllers
                         (roadWorkActivityFeature.properties.dateStudyStart == null ||
                         roadWorkActivityFeature.properties.dateStudyEnd == null))
                 {
-                    _logger.LogWarning("Received planned study without start or end date");
                     roadWorkActivityFeature = new RoadWorkActivityFeature();
                     roadWorkActivityFeature.errorMessage = "SSP-35";
                     return Ok(roadWorkActivityFeature);
                 }
 
+                if (roadWorkActivityFeature.properties.dateStudyStart >
+                        roadWorkActivityFeature.properties.dateStudyEnd)
+                {
+                    roadWorkActivityFeature = new RoadWorkActivityFeature();
+                    roadWorkActivityFeature.errorMessage = "SSP-36";
+                    return Ok(roadWorkActivityFeature);
+                }
 
                 User userFromDb = LoginController.getAuthorizedUserFromDb(this.User, false);
 
