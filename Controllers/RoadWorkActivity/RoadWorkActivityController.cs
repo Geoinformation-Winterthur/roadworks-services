@@ -481,8 +481,10 @@ namespace roadwork_portal_service.Controllers
                     insertComm.Parameters.AddWithValue("geom", roadWorkActivityPoly);
 
                     DateTime nextKap = DateTime.Now;
-                    foreach(DateTime plannedDateKap in configurationData.plannedDatesKap){
-                        if(plannedDateKap > nextKap){
+                    foreach (DateTime plannedDateKap in configurationData.plannedDatesKap)
+                    {
+                        if (plannedDateKap > nextKap)
+                        {
                             nextKap = plannedDateKap;
                             break;
                         }
@@ -490,8 +492,10 @@ namespace roadwork_portal_service.Controllers
                     insertComm.Parameters.AddWithValue("date_kap", nextKap);
 
                     DateTime nextSks = DateTime.Now.AddDays(66);
-                    foreach(DateTime plannedDateSks in configurationData.plannedDatesSks){
-                        if(plannedDateSks > nextSks){
+                    foreach (DateTime plannedDateSks in configurationData.plannedDatesSks)
+                    {
+                        if (plannedDateSks > nextSks)
+                        {
                             nextKap = plannedDateSks;
                             break;
                         }
@@ -805,6 +809,136 @@ namespace roadwork_portal_service.Controllers
                         return Ok(roadWorkActivityFeature);
                     }
 
+                    NpgsqlCommand selectMainAttributeValues = pgConn.CreateCommand();
+                    selectMainAttributeValues.CommandText = @"SELECT projectmanager,
+                                    projecttype, name, section
+                                    FROM ""wtb_ssp_roadworkactivities""
+                                    WHERE uuid=@uuid";
+                    selectMainAttributeValues.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
+
+                    string projectManagerInDb = "";
+                    string projectTypeInDb = "";
+                    string nameInDb = "";
+                    string sectionInDb = "";
+                    using (NpgsqlDataReader reader = selectMainAttributeValues.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            if (!reader.IsDBNull(0)) projectManagerInDb = reader.GetGuid(0).ToString();
+                            if (!reader.IsDBNull(1)) projectTypeInDb = reader.GetString(1);
+                            if (!reader.IsDBNull(2)) nameInDb = reader.GetString(2);
+                            if (!reader.IsDBNull(3)) sectionInDb = reader.GetString(3);
+                        }
+                    }
+
+                    if (roadWorkActivityFeature.properties.projectManager.uuid != projectManagerInDb)
+                    {
+                        NpgsqlCommand insertHistoryComm = pgConn.CreateCommand();
+                        insertHistoryComm.CommandText = @"INSERT INTO ""wtb_ssp_activities_history""
+                                    (uuid, uuid_roadwork_activity, changedate, who, what)
+                                    VALUES
+                                    (@uuid, @uuid_roadwork_activity, @changedate, @who, @what)";
+
+                        insertHistoryComm.Parameters.AddWithValue("uuid", Guid.NewGuid());
+                        insertHistoryComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkActivityFeature.properties.uuid));
+                        insertHistoryComm.Parameters.AddWithValue("changedate", DateTime.Now);
+                        insertHistoryComm.Parameters.AddWithValue("who", userFromDb.firstName + " " + userFromDb.lastName);
+                        string whatText = "Die Projektleitung des Bauvorhabens wurde geändert.";
+                        insertHistoryComm.Parameters.AddWithValue("what", whatText);
+                        insertHistoryComm.ExecuteNonQuery();
+                    }
+
+                    if (roadWorkActivityFeature.properties.projectType != projectTypeInDb)
+                    {
+                        NpgsqlCommand insertHistoryComm = pgConn.CreateCommand();
+                        insertHistoryComm.CommandText = @"INSERT INTO ""wtb_ssp_activities_history""
+                                    (uuid, uuid_roadwork_activity, changedate, who, what)
+                                    VALUES
+                                    (@uuid, @uuid_roadwork_activity, @changedate, @who, @what)";
+
+                        insertHistoryComm.Parameters.AddWithValue("uuid", Guid.NewGuid());
+                        insertHistoryComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkActivityFeature.properties.uuid));
+                        insertHistoryComm.Parameters.AddWithValue("changedate", DateTime.Now);
+                        insertHistoryComm.Parameters.AddWithValue("who", userFromDb.firstName + " " + userFromDb.lastName);
+                        string whatText = "Der Projekttyp des Bauvorhabens wurde geändert.";
+                        insertHistoryComm.Parameters.AddWithValue("what", whatText);
+                        insertHistoryComm.ExecuteNonQuery();
+                    }
+
+                    if (roadWorkActivityFeature.properties.name != nameInDb)
+                    {
+                        NpgsqlCommand insertHistoryComm = pgConn.CreateCommand();
+                        insertHistoryComm.CommandText = @"INSERT INTO ""wtb_ssp_activities_history""
+                                    (uuid, uuid_roadwork_activity, changedate, who, what)
+                                    VALUES
+                                    (@uuid, @uuid_roadwork_activity, @changedate, @who, @what)";
+
+                        insertHistoryComm.Parameters.AddWithValue("uuid", Guid.NewGuid());
+                        insertHistoryComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkActivityFeature.properties.uuid));
+                        insertHistoryComm.Parameters.AddWithValue("changedate", DateTime.Now);
+                        insertHistoryComm.Parameters.AddWithValue("who", userFromDb.firstName + " " + userFromDb.lastName);
+                        string whatText = "Titel/Strasse des Bauvorhabens wurde geändert.";
+                        insertHistoryComm.Parameters.AddWithValue("what", whatText);
+                        insertHistoryComm.ExecuteNonQuery();
+                    }
+
+                    if (roadWorkActivityFeature.properties.section != sectionInDb)
+                    {
+                        NpgsqlCommand insertHistoryComm = pgConn.CreateCommand();
+                        insertHistoryComm.CommandText = @"INSERT INTO ""wtb_ssp_activities_history""
+                                    (uuid, uuid_roadwork_activity, changedate, who, what)
+                                    VALUES
+                                    (@uuid, @uuid_roadwork_activity, @changedate, @who, @what)";
+
+                        insertHistoryComm.Parameters.AddWithValue("uuid", Guid.NewGuid());
+                        insertHistoryComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkActivityFeature.properties.uuid));
+                        insertHistoryComm.Parameters.AddWithValue("changedate", DateTime.Now);
+                        insertHistoryComm.Parameters.AddWithValue("who", userFromDb.firstName + " " + userFromDb.lastName);
+                        string whatText = "Abschnitt des Bauvorhabens wurde geändert.";
+                        insertHistoryComm.Parameters.AddWithValue("what", whatText);
+                        insertHistoryComm.ExecuteNonQuery();
+                    }
+
+                    NpgsqlCommand selectInvolvedUsers = pgConn.CreateCommand();
+                    selectInvolvedUsers.CommandText = @"SELECT participant
+                                    FROM ""wtb_ssp_act_partic""
+                                    WHERE road_act=@road_act_uuid";
+                    selectInvolvedUsers.Parameters.AddWithValue("road_act_uuid", new Guid(roadWorkActivityFeature.properties.uuid));
+
+                    List<string> involvedUsersUuidsFromDb = new List<string>();
+                    using (NpgsqlDataReader reader = selectInvolvedUsers.ExecuteReader())
+                        while (reader.Read())
+                            if (!reader.IsDBNull(0)) involvedUsersUuidsFromDb.Add(reader.GetGuid(0).ToString());
+
+                    bool involvedUsersHaveChanged = false;
+                    if(involvedUsersUuidsFromDb.Count != roadWorkActivityFeature.properties.involvedUsers.Length)
+                        involvedUsersHaveChanged = true;
+                    else {
+                        foreach(User involvedUser in roadWorkActivityFeature.properties.involvedUsers){
+                            if(!involvedUsersUuidsFromDb.Contains(involvedUser.uuid)){
+                                involvedUsersHaveChanged = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (involvedUsersHaveChanged)
+                    {
+                        NpgsqlCommand insertHistoryComm = pgConn.CreateCommand();
+                        insertHistoryComm.CommandText = @"INSERT INTO ""wtb_ssp_activities_history""
+                                    (uuid, uuid_roadwork_activity, changedate, who, what)
+                                    VALUES
+                                    (@uuid, @uuid_roadwork_activity, @changedate, @who, @what)";
+
+                        insertHistoryComm.Parameters.AddWithValue("uuid", Guid.NewGuid());
+                        insertHistoryComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkActivityFeature.properties.uuid));
+                        insertHistoryComm.Parameters.AddWithValue("changedate", DateTime.Now);
+                        insertHistoryComm.Parameters.AddWithValue("who", userFromDb.firstName + " " + userFromDb.lastName);
+                        string whatText = "Die Beteiligten des Bauvorhabens wurden geändert.";
+                        insertHistoryComm.Parameters.AddWithValue("what", whatText);
+                        insertHistoryComm.ExecuteNonQuery();
+                    }
+
                     NpgsqlCommand updateComm = pgConn.CreateCommand();
                     updateComm.CommandText = @"UPDATE ""wtb_ssp_roadworkactivities""
                                     SET name=@name, projectmanager=@projectmanager,
@@ -1078,7 +1212,7 @@ namespace roadwork_portal_service.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex.Message);
+                _logger.LogError(GetType().Name + ": " + ex.Message);
                 roadWorkActivityFeature = new RoadWorkActivityFeature();
                 roadWorkActivityFeature.errorMessage = "SSP-3";
                 return Ok(roadWorkActivityFeature);
