@@ -79,14 +79,14 @@ namespace roadwork_portal_service.Helper
         }
 
         private static List<(string, Point)> _getFromToListFromDb(
-                Polygon roadWorkNeedPoly, NpgsqlConnection pgConn)
+                Polygon roadWorkPoly, NpgsqlConnection pgConn)
         {
             List<(string, Point)> fromToNamesList = new List<(string, Point)>();
             NpgsqlCommand selectFromToNames = pgConn.CreateCommand();
             selectFromToNames.CommandText = @"SELECT address, geom
                                     FROM ""addresses""
                                     WHERE ST_Intersects(@geom, geom)";
-            selectFromToNames.Parameters.AddWithValue("geom", roadWorkNeedPoly);
+            selectFromToNames.Parameters.AddWithValue("geom", roadWorkPoly);
 
             using (NpgsqlDataReader reader = selectFromToNames.ExecuteReader())
             {
