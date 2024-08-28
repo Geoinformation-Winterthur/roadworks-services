@@ -773,6 +773,12 @@ namespace roadwork_portal_service.Controllers
                         }
                         else
                         {
+                            if (roadWorkActivityFeature.properties.status != "coordinated")
+                            {
+                                roadWorkActivityFeature = new RoadWorkActivityFeature();
+                                roadWorkActivityFeature.errorMessage = "SSP-37";
+                                return Ok(roadWorkActivityFeature);
+                            }
                             roadWorkActivityFeature.properties.status = "prestudy";
                             hasStatusChanged = true;
                         }
@@ -913,11 +919,14 @@ namespace roadwork_portal_service.Controllers
                             if (!reader.IsDBNull(0)) involvedUsersUuidsFromDb.Add(reader.GetGuid(0).ToString());
 
                     bool involvedUsersHaveChanged = false;
-                    if(involvedUsersUuidsFromDb.Count != roadWorkActivityFeature.properties.involvedUsers.Length)
+                    if (involvedUsersUuidsFromDb.Count != roadWorkActivityFeature.properties.involvedUsers.Length)
                         involvedUsersHaveChanged = true;
-                    else {
-                        foreach(User involvedUser in roadWorkActivityFeature.properties.involvedUsers){
-                            if(!involvedUsersUuidsFromDb.Contains(involvedUser.uuid)){
+                    else
+                    {
+                        foreach (User involvedUser in roadWorkActivityFeature.properties.involvedUsers)
+                        {
+                            if (!involvedUsersUuidsFromDb.Contains(involvedUser.uuid))
+                            {
                                 involvedUsersHaveChanged = true;
                                 break;
                             }
@@ -1524,8 +1533,13 @@ namespace roadwork_portal_service.Controllers
             else if (oldStatus == "coordinated")
             {
                 if (newStatus != "reporting" &&
-                    newStatus != "suspended")
+                    newStatus != "suspended" &&
+                    newStatus != "prestudy")
                     return false;
+            }
+            else if (oldStatus == "prestudy")
+            {
+                return false;
             }
             else if (oldStatus == "suspended")
             {
