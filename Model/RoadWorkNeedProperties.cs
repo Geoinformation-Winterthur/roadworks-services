@@ -33,6 +33,8 @@ public class RoadWorkNeedProperties
     public int? desiredYearFrom { get; set; }
     public int? desiredYearTo { get; set; }
     public bool hasPdfDocument { get; set; } = false;
+    public bool hasSpongeCityMeasures { get; set; } = false;
+    public string?[] spongeCityMeasures { get; set; }
 
 }
 

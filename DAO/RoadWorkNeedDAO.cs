@@ -4,6 +4,7 @@
 // </copyright>
 
 using Microsoft.AspNetCore.Mvc.Routing;
+using Microsoft.Extensions.ObjectPool;
 using NetTopologySuite.Geometries;
 using Npgsql;
 using roadwork_portal_service.Configuration;
@@ -76,6 +77,33 @@ public class RoadWorkNeedDAO
             return roadWorkNeedFeature;
         }
 
+        if (roadWorkNeedFeature.properties.hasSpongeCityMeasures)
+        {
+            if (roadWorkNeedFeature.properties.spongeCityMeasures == null ||
+                roadWorkNeedFeature.properties.spongeCityMeasures.Length == 0)
+            {
+                roadWorkNeedFeature.errorMessage = "SSP-38";
+                return roadWorkNeedFeature;
+            }
+
+            bool hasNonEmptyEntries = false;
+            for (int i = 0; i < roadWorkNeedFeature.properties.spongeCityMeasures.Length; i++)
+            {
+                if (roadWorkNeedFeature.properties.spongeCityMeasures[i] != null)
+                    roadWorkNeedFeature.properties.spongeCityMeasures[i] =
+                        roadWorkNeedFeature.properties.spongeCityMeasures[i].Trim();
+
+                if (roadWorkNeedFeature.properties.spongeCityMeasures[i] != String.Empty)
+                    hasNonEmptyEntries = true;
+            }
+
+            if (!hasNonEmptyEntries)
+            {
+                roadWorkNeedFeature.errorMessage = "SSP-38";
+                return roadWorkNeedFeature;
+            }
+        }
+
         Polygon roadWorkNeedPoly = roadWorkNeedFeature.geometry.getNtsPolygon();
         Coordinate[] coordinates = roadWorkNeedPoly.Coordinates;
 
@@ -134,12 +162,25 @@ public class RoadWorkNeedDAO
                                     (uuid, name, orderer, created, last_modified, finish_early_to,
                                     finish_optimum_to, finish_late_to, priority, status, description, relevance,
                                     costs, private, section, comment, url, overarching_measure,
-                                    desired_year_from, desired_year_to, geom)
+                                    desired_year_from, desired_year_to, has_sponge_city_meas,
+                                    is_sponge_1_1, is_sponge_1_2, is_sponge_1_3, is_sponge_1_4,
+                                    is_sponge_1_5, is_sponge_1_6, is_sponge_1_7, is_sponge_1_8,
+                                    is_sponge_2_1, is_sponge_2_2, is_sponge_2_3, is_sponge_2_4,
+                                    is_sponge_2_5, is_sponge_2_6, is_sponge_2_7, is_sponge_3_1,
+                                    is_sponge_3_2, is_sponge_3_3, is_sponge_4_1, is_sponge_4_2,
+                                    is_sponge_5_1, geom)
                                     VALUES (@uuid, @name, @orderer, @created, @last_modified,
                                     @finish_early_to, @finish_optimum_to,
                                     @finish_late_to, @priority, @status, @description, @relevance,
                                     @costs, @private, @section, @comment, @url,
-                                    @overarching_measure, @desired_year_from, @desired_year_to, @geom)";
+                                    @overarching_measure, @desired_year_from, @desired_year_to, 
+                                    @has_sponge_city_meas, @is_sponge_1_1, @is_sponge_1_2,
+                                    @is_sponge_1_3, @is_sponge_1_4, @is_sponge_1_5,
+                                    @is_sponge_1_6, @is_sponge_1_7, @is_sponge_1_8,
+                                    @is_sponge_2_1, @is_sponge_2_2, @is_sponge_2_3, @is_sponge_2_4,
+                                    @is_sponge_2_5, @is_sponge_2_6, @is_sponge_2_7, @is_sponge_3_1,
+                                    @is_sponge_3_2, @is_sponge_3_3, @is_sponge_4_1, @is_sponge_4_2,
+                                    @is_sponge_5_1, @geom)";
         insertComm.Parameters.AddWithValue("uuid", new Guid(roadWorkNeedFeature.properties.uuid));
         insertComm.Parameters.AddWithValue("name", roadWorkNeedFeature.properties.name);
         if (roadWorkNeedFeature.properties.orderer.uuid != "")
@@ -175,6 +216,30 @@ public class RoadWorkNeedDAO
             insertComm.Parameters.AddWithValue("desired_year_to", roadWorkNeedFeature.properties.desiredYearTo);
         else
             insertComm.Parameters.AddWithValue("desired_year_to", DBNull.Value);
+        insertComm.Parameters.AddWithValue("has_sponge_city_meas", roadWorkNeedFeature.properties.hasSpongeCityMeasures);
+
+        insertComm.Parameters.AddWithValue("is_sponge_1_1", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("1.1"));
+        insertComm.Parameters.AddWithValue("is_sponge_1_2", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("1.2"));
+        insertComm.Parameters.AddWithValue("is_sponge_1_3", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("1.3"));
+        insertComm.Parameters.AddWithValue("is_sponge_1_4", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("1.4"));
+        insertComm.Parameters.AddWithValue("is_sponge_1_5", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("1.5"));
+        insertComm.Parameters.AddWithValue("is_sponge_1_6", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("1.6"));
+        insertComm.Parameters.AddWithValue("is_sponge_1_7", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("1.7"));
+        insertComm.Parameters.AddWithValue("is_sponge_1_8", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("1.8"));
+        insertComm.Parameters.AddWithValue("is_sponge_2_1", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("2.1"));
+        insertComm.Parameters.AddWithValue("is_sponge_2_2", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("2.2"));
+        insertComm.Parameters.AddWithValue("is_sponge_2_3", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("2.3"));
+        insertComm.Parameters.AddWithValue("is_sponge_2_4", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("2.4"));
+        insertComm.Parameters.AddWithValue("is_sponge_2_5", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("2.5"));
+        insertComm.Parameters.AddWithValue("is_sponge_2_6", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("2.6"));
+        insertComm.Parameters.AddWithValue("is_sponge_2_7", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("2.7"));
+        insertComm.Parameters.AddWithValue("is_sponge_3_1", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("3.1"));
+        insertComm.Parameters.AddWithValue("is_sponge_3_2", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("3.2"));
+        insertComm.Parameters.AddWithValue("is_sponge_3_3", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("3.3"));
+        insertComm.Parameters.AddWithValue("is_sponge_4_1", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("4.1"));
+        insertComm.Parameters.AddWithValue("is_sponge_4_2", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("4.2"));
+        insertComm.Parameters.AddWithValue("is_sponge_5_1", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("5.1"));
+
         insertComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
 
         return insertComm;

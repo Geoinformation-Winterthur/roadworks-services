@@ -86,7 +86,13 @@ namespace roadwork_portal_service.Controllers
                             n.first_name as area_manager_first_name, n.last_name as area_manager_last_name,
                             r.private, r.section, r.comment, r.url, o.is_civil_eng, o.abbreviation,
                             r.overarching_measure, r.desired_year_from, r.desired_year_to,
-                            u.e_mail, r.pdf_document IS NOT NULL has_pdf, r.geom
+                            u.e_mail, r.pdf_document IS NOT NULL has_pdf,
+                            r.has_sponge_city_meas, r.is_sponge_1_1, r.is_sponge_1_2,
+                            r.is_sponge_1_3, r.is_sponge_1_4, r.is_sponge_1_5, r.is_sponge_1_6,
+                            r.is_sponge_1_7, r.is_sponge_1_8, r.is_sponge_2_1, r.is_sponge_2_2,
+                            r.is_sponge_2_3, r.is_sponge_2_4, r.is_sponge_2_5, r.is_sponge_2_6,
+                            r.is_sponge_2_7, r.is_sponge_3_1, r.is_sponge_3_2, r.is_sponge_3_3,
+                            r.is_sponge_4_1, r.is_sponge_4_2, r.is_sponge_5_1, r.geom
                         FROM ""wtb_ssp_roadworkneeds"" r
                         LEFT JOIN ""wtb_ssp_activities_to_needs"" an ON an.uuid_roadwork_need = r.uuid
                         LEFT JOIN ""wtb_ssp_users"" u ON r.orderer = u.uuid
@@ -234,8 +240,34 @@ namespace roadwork_portal_service.Controllers
 
                             needFeatureFromDb.properties.orderer.mailAddress = reader.IsDBNull(32) ? "" : reader.GetString(32);
                             needFeatureFromDb.properties.hasPdfDocument = reader.IsDBNull(33) ? false : reader.GetBoolean(33);
+                            needFeatureFromDb.properties.hasSpongeCityMeasures = reader.IsDBNull(34) ? false : reader.GetBoolean(34);
 
-                            Polygon ntsPoly = reader.IsDBNull(34) ? Polygon.Empty : reader.GetValue(34) as Polygon;
+                            List<string> spongeCityMeasures = new List<string>();
+                            if(!reader.IsDBNull(35) && reader.GetBoolean(35)) spongeCityMeasures.Add("1.1");
+                            if(!reader.IsDBNull(36) && reader.GetBoolean(36)) spongeCityMeasures.Add("1.2");
+                            if(!reader.IsDBNull(37) && reader.GetBoolean(37)) spongeCityMeasures.Add("1.3");
+                            if(!reader.IsDBNull(38) && reader.GetBoolean(38)) spongeCityMeasures.Add("1.4");
+                            if(!reader.IsDBNull(39) && reader.GetBoolean(39)) spongeCityMeasures.Add("1.5");
+                            if(!reader.IsDBNull(40) && reader.GetBoolean(40)) spongeCityMeasures.Add("1.6");
+                            if(!reader.IsDBNull(41) && reader.GetBoolean(41)) spongeCityMeasures.Add("1.7");
+                            if(!reader.IsDBNull(42) && reader.GetBoolean(42)) spongeCityMeasures.Add("1.8");
+                            if(!reader.IsDBNull(43) && reader.GetBoolean(43)) spongeCityMeasures.Add("2.1");
+                            if(!reader.IsDBNull(44) && reader.GetBoolean(44)) spongeCityMeasures.Add("2.2");
+                            if(!reader.IsDBNull(45) && reader.GetBoolean(45)) spongeCityMeasures.Add("2.3");
+                            if(!reader.IsDBNull(46) && reader.GetBoolean(46)) spongeCityMeasures.Add("2.4");
+                            if(!reader.IsDBNull(47) && reader.GetBoolean(47)) spongeCityMeasures.Add("2.5");
+                            if(!reader.IsDBNull(48) && reader.GetBoolean(48)) spongeCityMeasures.Add("2.6");
+                            if(!reader.IsDBNull(49) && reader.GetBoolean(49)) spongeCityMeasures.Add("2.7");
+                            if(!reader.IsDBNull(50) && reader.GetBoolean(50)) spongeCityMeasures.Add("3.1");
+                            if(!reader.IsDBNull(51) && reader.GetBoolean(51)) spongeCityMeasures.Add("3.2");
+                            if(!reader.IsDBNull(52) && reader.GetBoolean(52)) spongeCityMeasures.Add("3.3");
+                            if(!reader.IsDBNull(53) && reader.GetBoolean(53)) spongeCityMeasures.Add("4.1");
+                            if(!reader.IsDBNull(54) && reader.GetBoolean(54)) spongeCityMeasures.Add("4.2");
+                            if(!reader.IsDBNull(55) && reader.GetBoolean(55)) spongeCityMeasures.Add("5.1");
+
+                            needFeatureFromDb.properties.spongeCityMeasures = spongeCityMeasures.ToArray();
+
+                            Polygon ntsPoly = reader.IsDBNull(56) ? Polygon.Empty : reader.GetValue(56) as Polygon;
                             needFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
 
                             if (User.IsInRole("administrator"))
@@ -341,6 +373,8 @@ namespace roadwork_portal_service.Controllers
                     _logger.LogWarning("The given desired year value of a newly created roadwork need is invalid.");
                 else if (roadWorkNeedFeature.errorMessage == "SSP-30")
                     _logger.LogWarning("The given relevance value of a newly created roadwork need is invalid.");
+                else if (roadWorkNeedFeature.errorMessage == "SSP-38")
+                    _logger.LogWarning("If sponge city measure is activated then at least one sponge city measure must be provided.");
 
                 return Ok(roadWorkNeedFeature);
             }
@@ -401,6 +435,33 @@ namespace roadwork_portal_service.Controllers
                     _logger.LogWarning("URI of given roadwork need is not valid.");
                     roadWorkNeedFeature.errorMessage = "SSP-26";
                     return Ok(roadWorkNeedFeature);
+                }
+
+                if (roadWorkNeedFeature.properties.hasSpongeCityMeasures)
+                {
+                    if (roadWorkNeedFeature.properties.spongeCityMeasures == null ||
+                        roadWorkNeedFeature.properties.spongeCityMeasures.Length == 0)
+                    {
+                        roadWorkNeedFeature.errorMessage = "SSP-38";
+                        return roadWorkNeedFeature;
+                    }
+
+                    bool hasNonEmptyEntries = false;
+                    for (int i = 0; i < roadWorkNeedFeature.properties.spongeCityMeasures.Length; i++)
+                    {
+                        if (roadWorkNeedFeature.properties.spongeCityMeasures[i] != null)
+                            roadWorkNeedFeature.properties.spongeCityMeasures[i] =
+                                roadWorkNeedFeature.properties.spongeCityMeasures[i].Trim();
+
+                        if (roadWorkNeedFeature.properties.spongeCityMeasures[i] != String.Empty)
+                            hasNonEmptyEntries = true;
+                    }
+
+                    if (!hasNonEmptyEntries)
+                    {
+                        roadWorkNeedFeature.errorMessage = "SSP-38";
+                        return roadWorkNeedFeature;
+                    }
                 }
 
                 if (roadWorkNeedFeature.geometry == null ||
@@ -502,7 +563,18 @@ namespace roadwork_portal_service.Controllers
                                     costs=@costs, section=@section, comment=@comment, 
                                     url=@url, private=@private, overarching_measure=@overarching_measure,
                                     desired_year_from=@desired_year_from,
-                                    desired_year_to=@desired_year_to, geom=@geom";
+                                    desired_year_to=@desired_year_to, has_sponge_city_meas=@has_sponge_city_meas,
+                                    is_sponge_1_1=@is_sponge_1_1, is_sponge_1_2=@is_sponge_1_2,
+                                    is_sponge_1_3=@is_sponge_1_3, is_sponge_1_4=@is_sponge_1_4,
+                                    is_sponge_1_5=@is_sponge_1_5, is_sponge_1_6=@is_sponge_1_6,
+                                    is_sponge_1_7=@is_sponge_1_7, is_sponge_1_8=@is_sponge_1_8,
+                                    is_sponge_2_1=@is_sponge_2_1, is_sponge_2_2=@is_sponge_2_2,
+                                    is_sponge_2_3=@is_sponge_2_3, is_sponge_2_4=@is_sponge_2_4,
+                                    is_sponge_2_5=@is_sponge_2_5, is_sponge_2_6=@is_sponge_2_6,
+                                    is_sponge_2_7=@is_sponge_2_7, is_sponge_3_1=@is_sponge_3_1,
+                                    is_sponge_3_2=@is_sponge_3_2, is_sponge_3_3=@is_sponge_3_3,
+                                    is_sponge_4_1=@is_sponge_4_1, is_sponge_4_2=@is_sponge_4_2,
+                                    is_sponge_5_1=@is_sponge_5_1, geom=@geom";
 
                         updateComm.Parameters.AddWithValue("name", roadWorkNeedFeature.properties.name);
                         if (roadWorkNeedFeature.properties.orderer.uuid != "")
@@ -535,6 +607,31 @@ namespace roadwork_portal_service.Controllers
                             updateComm.Parameters.AddWithValue("desired_year_to", roadWorkNeedFeature.properties.desiredYearTo);
                         else
                             updateComm.Parameters.AddWithValue("desired_year_to", DBNull.Value);
+
+                        updateComm.Parameters.AddWithValue("has_sponge_city_meas", roadWorkNeedFeature.properties.hasSpongeCityMeasures);
+
+                        updateComm.Parameters.AddWithValue("is_sponge_1_1", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("1.1"));
+                        updateComm.Parameters.AddWithValue("is_sponge_1_2", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("1.2"));
+                        updateComm.Parameters.AddWithValue("is_sponge_1_3", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("1.3"));
+                        updateComm.Parameters.AddWithValue("is_sponge_1_4", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("1.4"));
+                        updateComm.Parameters.AddWithValue("is_sponge_1_5", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("1.5"));
+                        updateComm.Parameters.AddWithValue("is_sponge_1_6", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("1.6"));
+                        updateComm.Parameters.AddWithValue("is_sponge_1_7", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("1.7"));
+                        updateComm.Parameters.AddWithValue("is_sponge_1_8", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("1.8"));
+                        updateComm.Parameters.AddWithValue("is_sponge_2_1", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("2.1"));
+                        updateComm.Parameters.AddWithValue("is_sponge_2_2", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("2.2"));
+                        updateComm.Parameters.AddWithValue("is_sponge_2_3", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("2.3"));
+                        updateComm.Parameters.AddWithValue("is_sponge_2_4", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("2.4"));
+                        updateComm.Parameters.AddWithValue("is_sponge_2_5", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("2.5"));
+                        updateComm.Parameters.AddWithValue("is_sponge_2_6", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("2.6"));
+                        updateComm.Parameters.AddWithValue("is_sponge_2_7", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("2.7"));
+                        updateComm.Parameters.AddWithValue("is_sponge_3_1", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("3.1"));
+                        updateComm.Parameters.AddWithValue("is_sponge_3_2", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("3.2"));
+                        updateComm.Parameters.AddWithValue("is_sponge_3_3", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("3.3"));
+                        updateComm.Parameters.AddWithValue("is_sponge_4_1", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("4.1"));
+                        updateComm.Parameters.AddWithValue("is_sponge_4_2", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("4.2"));
+                        updateComm.Parameters.AddWithValue("is_sponge_5_1", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("5.1"));
+
                         updateComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
 
                         string activityRelationType = "";
