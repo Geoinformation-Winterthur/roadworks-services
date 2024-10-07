@@ -218,7 +218,7 @@ namespace roadwork_portal_service.Controllers
 
                             needFeatureFromDb.properties.relevance = reader.IsDBNull(16) ? 0 : reader.GetInt32(16);
                             needFeatureFromDb.properties.activityRelationType = reader.IsDBNull(17) ? "" : reader.GetString(17);
-                            needFeatureFromDb.properties.costs = reader.IsDBNull(18) ? 0 : reader.GetInt32(18);
+                            if(!reader.IsDBNull(18)) needFeatureFromDb.properties.costs = reader.GetInt32(18);
                             needFeatureFromDb.properties.noteOfAreaManager = reader.IsDBNull(19) ? "" : reader.GetString(19);
                             needFeatureFromDb.properties.areaManagerNoteDate = reader.IsDBNull(20) ? DateTime.MinValue : reader.GetDateTime(20);
 
@@ -593,7 +593,7 @@ namespace roadwork_portal_service.Controllers
                         updateComm.Parameters.AddWithValue("priority", roadWorkNeedFeature.properties.priority.code);
                         updateComm.Parameters.AddWithValue("description", roadWorkNeedFeature.properties.description);
                         updateComm.Parameters.AddWithValue("relevance", roadWorkNeedFeature.properties.relevance);
-                        updateComm.Parameters.AddWithValue("costs", roadWorkNeedFeature.properties.costs != 0 ? roadWorkNeedFeature.properties.costs : DBNull.Value);
+                        updateComm.Parameters.AddWithValue("costs", roadWorkNeedFeature.properties.costs != null ? roadWorkNeedFeature.properties.costs : DBNull.Value);
                         updateComm.Parameters.AddWithValue("section", roadWorkNeedFeature.properties.section);
                         updateComm.Parameters.AddWithValue("comment", roadWorkNeedFeature.properties.comment);
                         updateComm.Parameters.AddWithValue("url", roadWorkNeedFeature.properties.url);

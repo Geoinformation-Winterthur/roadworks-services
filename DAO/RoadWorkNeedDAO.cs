@@ -202,7 +202,7 @@ public class RoadWorkNeedDAO
         insertComm.Parameters.AddWithValue("status", roadWorkNeedFeature.properties.status);
         insertComm.Parameters.AddWithValue("description", roadWorkNeedFeature.properties.description);
         insertComm.Parameters.AddWithValue("relevance", roadWorkNeedFeature.properties.relevance);
-        insertComm.Parameters.AddWithValue("costs", roadWorkNeedFeature.properties.costs != 0 ? roadWorkNeedFeature.properties.costs : DBNull.Value);
+        insertComm.Parameters.AddWithValue("costs", roadWorkNeedFeature.properties.costs != null ? roadWorkNeedFeature.properties.costs : DBNull.Value);
         insertComm.Parameters.AddWithValue("private", roadWorkNeedFeature.properties.isPrivate);
         insertComm.Parameters.AddWithValue("section", roadWorkNeedFeature.properties.section);
         insertComm.Parameters.AddWithValue("comment", roadWorkNeedFeature.properties.comment);
