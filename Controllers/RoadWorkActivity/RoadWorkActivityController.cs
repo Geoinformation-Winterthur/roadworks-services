@@ -1296,10 +1296,10 @@ namespace roadwork_portal_service.Controllers
         }
 
 
-        // DELETE /roadworkactivity?uuid=...
+        // DELETE /roadworkactivity?uuid=...&deletereason=...
         [HttpDelete]
         [Authorize(Roles = "administrator")]
-        public ActionResult<ErrorMessage> DeleteActivity(string uuid)
+        public ActionResult<ErrorMessage> DeleteActivity(string uuid, string? deleteReason)
         {
             ErrorMessage errorResult = new ErrorMessage();
 
@@ -1307,6 +1307,9 @@ namespace roadwork_portal_service.Controllers
             {
                 if (uuid == null)
                     uuid = "";
+
+                if(deleteReason == null)
+                    deleteReason = "";
 
                 uuid = uuid.ToLower().Trim();
 
@@ -1318,6 +1321,14 @@ namespace roadwork_portal_service.Controllers
                     return Ok(errorResult);
                 }
 
+                if (deleteReason.Length < 1)
+                {
+                    _logger.LogWarning("No reasion for deletion provided by user in delete roadwork activity process. " +
+                                "Thus process is canceled, no roadwork activity is deleted.");
+                    errorResult.errorMessage = "SSP-39";
+                    return Ok(errorResult);
+                }
+
                 int countAffectedRows = 0;
                 using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
                 {
@@ -1326,13 +1337,14 @@ namespace roadwork_portal_service.Controllers
                     {
                         NpgsqlCommand updateComm = pgConn.CreateCommand();
                         updateComm.CommandText = @"UPDATE ""wtb_ssp_roadworkneeds""
-                                SET status='requirement'
+                                SET status='suspended', delete_reason=@delete_reason
                                 WHERE uuid IN
                                 (SELECT n.uuid
                                     FROM ""wtb_ssp_roadworkneeds"" n
                                     LEFT JOIN ""wtb_ssp_activities_to_needs"" an ON an.uuid_roadwork_need = n.uuid
                                     WHERE an.uuid_roadwork_activity=@uuid_roadwork_activity)";
                         updateComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(uuid));
+                        updateComm.Parameters.AddWithValue("delete_reason", deleteReason);
                         updateComm.ExecuteNonQuery();
 
                         NpgsqlCommand deleteActivityComm = pgConn.CreateCommand();
