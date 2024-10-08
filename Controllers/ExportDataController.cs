@@ -33,19 +33,19 @@ namespace roadwork_portal_service.Controllers
                         "Leiter Baustellenverkehr Vorname;Leiter Baustellenverkehr Nachname;Auslösegrund;" +
                         "Erstellungsdatum;Datum letzte Bearbeitung;Datum von;Datum bis;Kosten;Ist privat;Kostenart;" +
                         "Status;Im Internet publiziert;Rechnungsadresse 1;Rechnungsadresse 2;PDB-FID;" +
-                        "Strabako-Nr.;Investitionsnummer;Datum SKS;Datum KAP;Datum OKS;Datum GL-TBA;"+
-                        "Projektnummer;Kommentar;Abschnitt;URL;Projekttyp;Übergeordnete Massnahme;Wunschjahr von;"+
-                        "Wunschjahr bis;Vorstudie;date_optimum;Baubeginn;Bauende;"+
-                        "Abnahmedatum;consult_due;SKS, genehmigt;KAP, genehmigt;OKS, genehmigt;"+
-                        "GL TBA, genehmigt;date_planned;date_accept;Garantie;is_study;Plantermin: Vorstudie Start;"+
-                        "Plantermin: Vorstudie Ende;Projektauftrag Vorstudie genehmigt;"+
-                        "Vorstudie genehmigt;Begehrensäusserung § 45;Begehrensäusserung Start;"+
-                        "Begehrensäusserung Ende;Mitwirkungsverfahren § 13;Mitwirkungsverfahren Start;"+
-                        "Mitwirkungsverfahren Ende;Planauflage § 16;"+
-                        "Planauflage Start;Planauflage Ende;Bedarfsklärung Start;Bedarfsklärung Ende;"+
-                        "Bedarfsklärung Abschluss;Stellungnahme Start;Stellungnahme Ende;"+
-                        "Stellungnahme Abschluss;Infoversand Start;"+
-                        "Infoversand Ende;Infoversand Abschluss;Aggloprogramm;date_start_inconsult;verifiziert;"+
+                        "Strabako-Nr.;Investitionsnummer;Datum SKS;Datum KAP;Datum OKS;Datum GL-TBA;" +
+                        "Projektnummer;Kommentar;Abschnitt;URL;Projekttyp;Übergeordnete Massnahme;Wunschjahr von;" +
+                        "Wunschjahr bis;Vorstudie;date_optimum;Baubeginn;Bauende;" +
+                        "Abnahmedatum;consult_due;SKS, genehmigt;KAP, genehmigt;OKS, genehmigt;" +
+                        "GL TBA, genehmigt;date_planned;date_accept;Garantie;is_study;Plantermin: Vorstudie Start;" +
+                        "Plantermin: Vorstudie Ende;Projektauftrag Vorstudie genehmigt;" +
+                        "Vorstudie genehmigt;Begehrensäusserung § 45;Begehrensäusserung Start;" +
+                        "Begehrensäusserung Ende;Mitwirkungsverfahren § 13;Mitwirkungsverfahren Start;" +
+                        "Mitwirkungsverfahren Ende;Planauflage § 16;" +
+                        "Planauflage Start;Planauflage Ende;Bedarfsklärung Start;Bedarfsklärung Ende;" +
+                        "Bedarfsklärung Abschluss;Stellungnahme Start;Stellungnahme Ende;" +
+                        "Stellungnahme Abschluss;Infoversand Start;" +
+                        "Infoversand Ende;Infoversand Abschluss;Aggloprogramm;date_start_inconsult;verifiziert;" +
                         "date_start_reporting;sistiert;koordiniert\r\n";
 
 
@@ -70,13 +70,13 @@ namespace roadwork_portal_service.Controllers
                         string status = "";
                         while (await reader.ReadAsync())
                         {
-                            status = reader.IsDBNull(10) ? "" : reader.GetString(10);
+                            status = reader.IsDBNull(10) ? "" : _sanitizeForCsv(reader.GetString(10));
                             if (status == "requirement")
                             {
                                 resultCsv += reader.IsDBNull(0) ? ";" : reader.GetGuid(0).ToString() + ";";
-                                resultCsv += reader.IsDBNull(1) ? ";" : reader.GetString(1) + ";";
+                                resultCsv += reader.IsDBNull(1) ? ";" : _sanitizeForCsv(reader.GetString(1)) + ";";
                                 resultCsv += ";;;;";
-                                resultCsv += reader.IsDBNull(13) ? ";" : reader.GetString(13) + ";";
+                                resultCsv += reader.IsDBNull(13) ? ";" : _sanitizeForCsv(reader.GetString(13)) + ";";
                                 resultCsv += reader.IsDBNull(5) ? ";" : reader.GetDateTime(5).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
                                 resultCsv += reader.IsDBNull(6) ? ";" : reader.GetDateTime(6).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
                                 resultCsv += reader.IsDBNull(7) ? ";" : reader.GetDateTime(7).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
@@ -133,35 +133,35 @@ namespace roadwork_portal_service.Controllers
                         while (await reader.ReadAsync())
                         {
                             resultCsv += reader.IsDBNull(0) ? ";" : reader.GetGuid(0).ToString() + ";";
-                            resultCsv += reader.IsDBNull(1) ? ";" : reader.GetString(1) + ";";
-                            resultCsv += reader.IsDBNull(2) ? ";" : reader.GetString(2) + ";";
-                            resultCsv += reader.IsDBNull(3) ? ";" : reader.GetString(3) + ";";
-                            resultCsv += reader.IsDBNull(4) ? ";" : reader.GetString(4) + ";";
-                            resultCsv += reader.IsDBNull(5) ? ";" : reader.GetString(5) + ";";
-                            resultCsv += reader.IsDBNull(6) ? ";" : reader.GetString(6) + ";";
+                            resultCsv += reader.IsDBNull(1) ? ";" : _sanitizeForCsv(reader.GetString(1)) + ";";
+                            resultCsv += reader.IsDBNull(2) ? ";" : _sanitizeForCsv(reader.GetString(2)) + ";";
+                            resultCsv += reader.IsDBNull(3) ? ";" : _sanitizeForCsv(reader.GetString(3)) + ";";
+                            resultCsv += reader.IsDBNull(4) ? ";" : _sanitizeForCsv(reader.GetString(4)) + ";";
+                            resultCsv += reader.IsDBNull(5) ? ";" : _sanitizeForCsv(reader.GetString(5)) + ";";
+                            resultCsv += reader.IsDBNull(6) ? ";" : _sanitizeForCsv(reader.GetString(6)) + ";";
                             resultCsv += reader.IsDBNull(7) ? ";" : reader.GetDateTime(7).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
                             resultCsv += reader.IsDBNull(8) ? ";" : reader.GetDateTime(8).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
                             resultCsv += reader.IsDBNull(9) ? ";" : reader.GetDateTime(9).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
                             resultCsv += reader.IsDBNull(10) ? ";" : reader.GetDateTime(10).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
                             resultCsv += reader.IsDBNull(11) ? ";" : reader.GetInt32(11) + ";";
                             resultCsv += reader.IsDBNull(12) ? ";" : reader.GetBoolean(12) + ";";
-                            resultCsv += reader.IsDBNull(13) ? ";" : reader.GetString(13) + ";";
-                            resultCsv += reader.IsDBNull(14) ? ";" : reader.GetString(14) + ";";
+                            resultCsv += reader.IsDBNull(13) ? ";" : _sanitizeForCsv(reader.GetString(13)) + ";";
+                            resultCsv += reader.IsDBNull(14) ? ";" : _sanitizeForCsv(reader.GetString(14)) + ";";
                             resultCsv += reader.IsDBNull(15) ? ";" : reader.GetBoolean(15) + ";";
-                            resultCsv += reader.IsDBNull(16) ? ";" : reader.GetString(16) + ";";
-                            resultCsv += reader.IsDBNull(17) ? ";" : reader.GetString(17) + ";";
+                            resultCsv += reader.IsDBNull(16) ? ";" : _sanitizeForCsv(reader.GetString(16)) + ";";
+                            resultCsv += reader.IsDBNull(17) ? ";" : _sanitizeForCsv(reader.GetString(17)) + ";";
                             resultCsv += reader.IsDBNull(18) ? ";" : reader.GetInt32(18) + ";";
-                            resultCsv += reader.IsDBNull(19) ? ";" : reader.GetString(19) + ";";
+                            resultCsv += reader.IsDBNull(19) ? ";" : _sanitizeForCsv(reader.GetString(19)) + ";";
                             resultCsv += reader.IsDBNull(20) ? ";" : reader.GetInt32(20) + ";";
                             resultCsv += reader.IsDBNull(21) ? ";" : reader.GetDateTime(21).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
                             resultCsv += reader.IsDBNull(22) ? ";" : reader.GetDateTime(22).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(23) ? ";" : reader.GetString(23) + ";";
+                            resultCsv += reader.IsDBNull(23) ? ";" : _sanitizeForCsv(reader.GetString(23)) + ";";
                             resultCsv += reader.IsDBNull(24) ? ";" : reader.GetDateTime(24).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(25) ? ";" : reader.GetString(25) + ";";
-                            resultCsv += reader.IsDBNull(26) ? ";" : reader.GetString(26) + ";";
-                            resultCsv += reader.IsDBNull(27) ? ";" : reader.GetString(27) + ";";
-                            resultCsv += reader.IsDBNull(28) ? ";" : reader.GetString(28) + ";";
-                            resultCsv += reader.IsDBNull(29) ? ";" : reader.GetString(29) + ";";
+                            resultCsv += reader.IsDBNull(25) ? ";" : _sanitizeForCsv(reader.GetString(25)) + ";";
+                            resultCsv += reader.IsDBNull(26) ? ";" : _sanitizeForCsv(reader.GetString(26)) + ";";
+                            resultCsv += reader.IsDBNull(27) ? ";" : _sanitizeForCsv(reader.GetString(27)) + ";";
+                            resultCsv += reader.IsDBNull(28) ? ";" : _sanitizeForCsv(reader.GetString(28)) + ";";
+                            resultCsv += reader.IsDBNull(29) ? ";" : _sanitizeForCsv(reader.GetString(29)) + ";";
                             resultCsv += reader.IsDBNull(30) ? ";" : reader.GetBoolean(30) + ";";
                             resultCsv += reader.IsDBNull(31) ? ";" : reader.GetInt32(31) + ";";
                             resultCsv += reader.IsDBNull(32) ? ";" : reader.GetInt32(32) + ";";
@@ -220,6 +220,11 @@ namespace roadwork_portal_service.Controllers
                 return "Ein Fehler ist aufgetreten. Bitte kontaktieren Sie den Administrator.";
             }
 
+        }
+
+        private static string? _sanitizeForCsv(string toClean)
+        {
+            return toClean == null ? null : toClean.Replace(";", ",");
         }
 
     }
