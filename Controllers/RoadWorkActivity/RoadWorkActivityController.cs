@@ -1298,7 +1298,7 @@ namespace roadwork_portal_service.Controllers
 
         // DELETE /roadworkactivity?uuid=...&deletereason=...
         [HttpDelete]
-        [Authorize(Roles = "administrator")]
+        [Authorize(Roles = "territorymanager,administrator")]
         public ActionResult<ErrorMessage> DeleteActivity(string uuid, string? deleteReason)
         {
             ErrorMessage errorResult = new ErrorMessage();
@@ -1308,7 +1308,7 @@ namespace roadwork_portal_service.Controllers
                 if (uuid == null)
                     uuid = "";
 
-                if(deleteReason == null)
+                if (deleteReason == null)
                     deleteReason = "";
 
                 uuid = uuid.ToLower().Trim();
@@ -1321,23 +1321,43 @@ namespace roadwork_portal_service.Controllers
                     return Ok(errorResult);
                 }
 
-                if (deleteReason.Length < 1)
-                {
-                    _logger.LogWarning("No reasion for deletion provided by user in delete roadwork activity process. " +
-                                "Thus process is canceled, no roadwork activity is deleted.");
-                    errorResult.errorMessage = "SSP-39";
-                    return Ok(errorResult);
-                }
-
                 int countAffectedRows = 0;
                 using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
                 {
                     pgConn.Open();
+
+
+                    NpgsqlCommand selectPrivateStatusComm = pgConn.CreateCommand();
+                    selectPrivateStatusComm.CommandText = @"SELECT private
+                                    FROM ""wtb_ssp_roadworkactivities""
+                                    WHERE uuid=@uuid";
+                    selectPrivateStatusComm.Parameters.AddWithValue("uuid", new Guid(uuid));
+
+                    bool isPrivate = false;
+
+                    using (NpgsqlDataReader reader = selectPrivateStatusComm.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            isPrivate = reader.IsDBNull(0) ? false : reader.GetBoolean(0);
+                        }
+                    }
+
+                    if (!isPrivate && deleteReason.Length < 1)
+                    {
+                        _logger.LogWarning("No reason for deletion provided by user in delete roadwork activity process. " +
+                                    "Thus process is canceled, no roadwork activity is deleted.");
+                        errorResult.errorMessage = "SSP-39";
+                        return Ok(errorResult);
+                    }
+
                     using (NpgsqlTransaction deleteTransAction = pgConn.BeginTransaction())
                     {
+                        string revertNeedStatus = isPrivate ? "requirement" : "suspended";
+
                         NpgsqlCommand updateComm = pgConn.CreateCommand();
-                        updateComm.CommandText = @"UPDATE ""wtb_ssp_roadworkneeds""
-                                SET status='suspended', delete_reason=@delete_reason
+                        updateComm.CommandText = @$"UPDATE ""wtb_ssp_roadworkneeds""
+                                SET status='{revertNeedStatus}', delete_reason=@delete_reason
                                 WHERE uuid IN
                                 (SELECT n.uuid
                                     FROM ""wtb_ssp_roadworkneeds"" n
