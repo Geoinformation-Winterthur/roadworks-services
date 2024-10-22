@@ -92,7 +92,8 @@ namespace roadwork_portal_service.Controllers
                             r.is_sponge_1_7, r.is_sponge_1_8, r.is_sponge_2_1, r.is_sponge_2_2,
                             r.is_sponge_2_3, r.is_sponge_2_4, r.is_sponge_2_5, r.is_sponge_2_6,
                             r.is_sponge_2_7, r.is_sponge_3_1, r.is_sponge_3_2, r.is_sponge_3_3,
-                            r.is_sponge_4_1, r.is_sponge_4_2, r.is_sponge_5_1, r.geom
+                            r.is_sponge_4_1, r.is_sponge_4_2, r.is_sponge_5_1, work_title,
+                            project_type, costs_comment, r.geom
                         FROM ""wtb_ssp_roadworkneeds"" r
                         LEFT JOIN ""wtb_ssp_activities_to_needs"" an ON an.uuid_roadwork_need = r.uuid
                         LEFT JOIN ""wtb_ssp_users"" u ON r.orderer = u.uuid
@@ -216,7 +217,6 @@ namespace roadwork_portal_service.Controllers
                             string ordererMailAddress = reader.IsDBNull(15) ? "" : reader.GetString(15);
                             string mailOfLoggedInUser = User.FindFirstValue(ClaimTypes.Email);
 
-                            needFeatureFromDb.properties.relevance = reader.IsDBNull(16) ? 0 : reader.GetInt32(16);
                             needFeatureFromDb.properties.activityRelationType = reader.IsDBNull(17) ? "" : reader.GetString(17);
                             if(!reader.IsDBNull(18)) needFeatureFromDb.properties.costs = reader.GetInt32(18);
                             needFeatureFromDb.properties.noteOfAreaManager = reader.IsDBNull(19) ? "" : reader.GetString(19);
@@ -267,7 +267,11 @@ namespace roadwork_portal_service.Controllers
 
                             needFeatureFromDb.properties.spongeCityMeasures = spongeCityMeasures.ToArray();
 
-                            Polygon ntsPoly = reader.IsDBNull(56) ? Polygon.Empty : reader.GetValue(56) as Polygon;
+                            if(!reader.IsDBNull(56)) needFeatureFromDb.properties.workTitle = reader.GetString(56);
+                            if(!reader.IsDBNull(57)) needFeatureFromDb.properties.projectType = reader.GetString(57);
+                            if(!reader.IsDBNull(58)) needFeatureFromDb.properties.costsComment = reader.GetString(58);
+
+                            Polygon ntsPoly = reader.IsDBNull(59) ? Polygon.Empty : reader.GetValue(59) as Polygon;
                             needFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
 
                             if (User.IsInRole("administrator"))
@@ -371,8 +375,6 @@ namespace roadwork_portal_service.Controllers
                     _logger.LogWarning("URI of given roadwork need is not valid.");
                 else if (roadWorkNeedFeature.errorMessage == "SSP-27")
                     _logger.LogWarning("The given desired year value of a newly created roadwork need is invalid.");
-                else if (roadWorkNeedFeature.errorMessage == "SSP-30")
-                    _logger.LogWarning("The given relevance value of a newly created roadwork need is invalid.");
                 else if (roadWorkNeedFeature.errorMessage == "SSP-38")
                     _logger.LogWarning("If sponge city measure is activated then at least one sponge city measure must be provided.");
 
@@ -559,7 +561,7 @@ namespace roadwork_portal_service.Controllers
                                     SET name=@name, orderer=@orderer, last_modified=@last_modified,
                                     finish_early_to=@finish_early_to, finish_optimum_to=@finish_optimum_to,
                                     finish_late_to=@finish_late_to, priority=@priority,
-                                    description=@description, relevance=@relevance, 
+                                    description=@description, 
                                     costs=@costs, section=@section, comment=@comment, 
                                     url=@url, private=@private, overarching_measure=@overarching_measure,
                                     desired_year_from=@desired_year_from,
@@ -574,7 +576,8 @@ namespace roadwork_portal_service.Controllers
                                     is_sponge_2_7=@is_sponge_2_7, is_sponge_3_1=@is_sponge_3_1,
                                     is_sponge_3_2=@is_sponge_3_2, is_sponge_3_3=@is_sponge_3_3,
                                     is_sponge_4_1=@is_sponge_4_1, is_sponge_4_2=@is_sponge_4_2,
-                                    is_sponge_5_1=@is_sponge_5_1, geom=@geom";
+                                    is_sponge_5_1=@is_sponge_5_1, work_title=@work_title,
+                                    project_type=@project_type, costs_comment=@costs_comment, geom=@geom";
 
                         updateComm.Parameters.AddWithValue("name", roadWorkNeedFeature.properties.name);
                         if (roadWorkNeedFeature.properties.orderer.uuid != "")
@@ -592,7 +595,6 @@ namespace roadwork_portal_service.Controllers
                         updateComm.Parameters.AddWithValue("finish_late_to", roadWorkNeedFeature.properties.finishLateTo);
                         updateComm.Parameters.AddWithValue("priority", roadWorkNeedFeature.properties.priority.code);
                         updateComm.Parameters.AddWithValue("description", roadWorkNeedFeature.properties.description);
-                        updateComm.Parameters.AddWithValue("relevance", roadWorkNeedFeature.properties.relevance);
                         updateComm.Parameters.AddWithValue("costs", roadWorkNeedFeature.properties.costs != null ? roadWorkNeedFeature.properties.costs : DBNull.Value);
                         updateComm.Parameters.AddWithValue("section", roadWorkNeedFeature.properties.section);
                         updateComm.Parameters.AddWithValue("comment", roadWorkNeedFeature.properties.comment);
@@ -631,6 +633,10 @@ namespace roadwork_portal_service.Controllers
                         updateComm.Parameters.AddWithValue("is_sponge_4_1", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("4.1"));
                         updateComm.Parameters.AddWithValue("is_sponge_4_2", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("4.2"));
                         updateComm.Parameters.AddWithValue("is_sponge_5_1", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("5.1"));
+
+                        updateComm.Parameters.AddWithValue("work_title", roadWorkNeedFeature.properties.workTitle != null ? roadWorkNeedFeature.properties.workTitle : DBNull.Value);
+                        updateComm.Parameters.AddWithValue("project_type", roadWorkNeedFeature.properties.projectType != null ? roadWorkNeedFeature.properties.projectType : DBNull.Value);
+                        updateComm.Parameters.AddWithValue("costs_comment", roadWorkNeedFeature.properties.costsComment != null ? roadWorkNeedFeature.properties.costsComment : DBNull.Value);
 
                         updateComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
 

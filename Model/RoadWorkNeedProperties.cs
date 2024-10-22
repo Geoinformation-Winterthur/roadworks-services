@@ -17,7 +17,6 @@ public class RoadWorkNeedProperties
     public Priority priority { get; set; } = new Priority();
     public string status { get; set; } = "";
     public decimal? costs { get; set; }
-    public int relevance { get; set; } = 0;
     public string activityRelationType { get; set; } = "";    
     public string description { get; set; } = "";
     public string roadWorkActivityUuid { get; set; } = "";
@@ -35,6 +34,8 @@ public class RoadWorkNeedProperties
     public bool hasPdfDocument { get; set; } = false;
     public bool hasSpongeCityMeasures { get; set; } = false;
     public string?[] spongeCityMeasures { get; set; }
-
+    public string? workTitle { get; set; }
+    public string? projectType { get; set; }
+    public string? costsComment { get; set; }
 }
 

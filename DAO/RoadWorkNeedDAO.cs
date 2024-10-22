@@ -70,13 +70,6 @@ public class RoadWorkNeedDAO
             return roadWorkNeedFeature;
         }
 
-        if (roadWorkNeedFeature.properties.relevance < 1 ||
-                roadWorkNeedFeature.properties.relevance > 4)
-        {
-            roadWorkNeedFeature.errorMessage = "SSP-30";
-            return roadWorkNeedFeature;
-        }
-
         if (roadWorkNeedFeature.properties.hasSpongeCityMeasures)
         {
             if (roadWorkNeedFeature.properties.spongeCityMeasures == null ||
@@ -160,7 +153,7 @@ public class RoadWorkNeedDAO
         NpgsqlCommand insertComm = pgConn.CreateCommand();
         insertComm.CommandText = @"INSERT INTO ""wtb_ssp_roadworkneeds""
                                     (uuid, name, orderer, created, last_modified, finish_early_to,
-                                    finish_optimum_to, finish_late_to, priority, status, description, relevance,
+                                    finish_optimum_to, finish_late_to, priority, status, description,
                                     costs, private, section, comment, url, overarching_measure,
                                     desired_year_from, desired_year_to, has_sponge_city_meas,
                                     is_sponge_1_1, is_sponge_1_2, is_sponge_1_3, is_sponge_1_4,
@@ -168,10 +161,10 @@ public class RoadWorkNeedDAO
                                     is_sponge_2_1, is_sponge_2_2, is_sponge_2_3, is_sponge_2_4,
                                     is_sponge_2_5, is_sponge_2_6, is_sponge_2_7, is_sponge_3_1,
                                     is_sponge_3_2, is_sponge_3_3, is_sponge_4_1, is_sponge_4_2,
-                                    is_sponge_5_1, geom)
+                                    is_sponge_5_1, work_title, project_type, costs_comment, geom)
                                     VALUES (@uuid, @name, @orderer, @created, @last_modified,
                                     @finish_early_to, @finish_optimum_to,
-                                    @finish_late_to, @priority, @status, @description, @relevance,
+                                    @finish_late_to, @priority, @status, @description,
                                     @costs, @private, @section, @comment, @url,
                                     @overarching_measure, @desired_year_from, @desired_year_to, 
                                     @has_sponge_city_meas, @is_sponge_1_1, @is_sponge_1_2,
@@ -180,7 +173,7 @@ public class RoadWorkNeedDAO
                                     @is_sponge_2_1, @is_sponge_2_2, @is_sponge_2_3, @is_sponge_2_4,
                                     @is_sponge_2_5, @is_sponge_2_6, @is_sponge_2_7, @is_sponge_3_1,
                                     @is_sponge_3_2, @is_sponge_3_3, @is_sponge_4_1, @is_sponge_4_2,
-                                    @is_sponge_5_1, @geom)";
+                                    @is_sponge_5_1, @work_title, @project_type, @costs_comment, @geom)";
         insertComm.Parameters.AddWithValue("uuid", new Guid(roadWorkNeedFeature.properties.uuid));
         insertComm.Parameters.AddWithValue("name", roadWorkNeedFeature.properties.name);
         if (roadWorkNeedFeature.properties.orderer.uuid != "")
@@ -201,7 +194,6 @@ public class RoadWorkNeedDAO
         insertComm.Parameters.AddWithValue("priority", roadWorkNeedFeature.properties.priority.code);
         insertComm.Parameters.AddWithValue("status", roadWorkNeedFeature.properties.status);
         insertComm.Parameters.AddWithValue("description", roadWorkNeedFeature.properties.description);
-        insertComm.Parameters.AddWithValue("relevance", roadWorkNeedFeature.properties.relevance);
         insertComm.Parameters.AddWithValue("costs", roadWorkNeedFeature.properties.costs != null ? roadWorkNeedFeature.properties.costs : DBNull.Value);
         insertComm.Parameters.AddWithValue("private", roadWorkNeedFeature.properties.isPrivate);
         insertComm.Parameters.AddWithValue("section", roadWorkNeedFeature.properties.section);
@@ -239,6 +231,10 @@ public class RoadWorkNeedDAO
         insertComm.Parameters.AddWithValue("is_sponge_4_1", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("4.1"));
         insertComm.Parameters.AddWithValue("is_sponge_4_2", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("4.2"));
         insertComm.Parameters.AddWithValue("is_sponge_5_1", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("5.1"));
+
+        insertComm.Parameters.AddWithValue("work_title", roadWorkNeedFeature.properties.workTitle != null ? roadWorkNeedFeature.properties.workTitle : DBNull.Value);
+        insertComm.Parameters.AddWithValue("project_type", roadWorkNeedFeature.properties.projectType != null ? roadWorkNeedFeature.properties.projectType : DBNull.Value);
+        insertComm.Parameters.AddWithValue("costs_comment", roadWorkNeedFeature.properties.costsComment != null ? roadWorkNeedFeature.properties.costsComment : DBNull.Value);
 
         insertComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
 
