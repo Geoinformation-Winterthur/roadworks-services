@@ -214,7 +214,8 @@ namespace roadwork_portal_service.Controllers
                     {
                         NpgsqlCommand selectHistoryComm = pgConn.CreateCommand();
                         selectHistoryComm.CommandText = @"SELECT uuid, changedate, who, what, usercomment
-                            FROM ""wtb_ssp_activities_history"" WHERE uuid_roadwork_activity = :uuid_roadwork_activity";
+                            FROM ""wtb_ssp_activities_history"" WHERE uuid_roadwork_activity = :uuid_roadwork_activity
+                            ORDER BY changedate DESC";
                         selectHistoryComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(activityFromDb.properties.uuid));
 
                         using (NpgsqlDataReader activityHistoryReader = await selectHistoryComm.ExecuteReaderAsync())
@@ -523,7 +524,10 @@ namespace roadwork_portal_service.Controllers
                     activityHistoryItem.uuid = Guid.NewGuid().ToString();
                     activityHistoryItem.changeDate = DateTime.Now;
                     activityHistoryItem.who = userFromDb.firstName + " " + userFromDb.lastName;
-                    activityHistoryItem.what = "Massnahme erstellt";
+                    if (roadWorkActivityFeature.properties.isPrivate != null &&
+                                (bool)roadWorkActivityFeature.properties.isPrivate)
+                        activityHistoryItem.what = "Bauvorhaben als Entwurf erstellt";
+                    else activityHistoryItem.what = "Bauvorhaben erstellt und publiziert";
                     activityHistoryItem.userComment = "";
 
                     roadWorkActivityFeature.properties.activityHistory = new ActivityHistoryItem[1];
@@ -572,8 +576,8 @@ namespace roadwork_portal_service.Controllers
                         insertHistoryComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkActivityFeature.properties.uuid));
                         insertHistoryComm.Parameters.AddWithValue("changedate", DateTime.Now);
                         insertHistoryComm.Parameters.AddWithValue("who", userFromDb.firstName + " " + userFromDb.lastName);
-                        string whatText = "Das Baubedürfnis '" + roadWorkActivityFeature.properties.roadWorkNeedsUuids[0] +
-                                            "' wurde neu zugewiesen. Die neue Zuweisung ist: Zugewiesenes Bedürfnis";
+                        string whatText = "Der Bedarf '" + roadWorkActivityFeature.properties.roadWorkNeedsUuids[0] +
+                                            "' wurde neu verknüpft. Die neue Verknüpfung ist: Zugewiesener Bedarf";
                         insertHistoryComm.Parameters.AddWithValue("what", whatText);
 
                         insertHistoryComm.ExecuteNonQuery();
@@ -741,13 +745,14 @@ namespace roadwork_portal_service.Controllers
 
                     NpgsqlCommand selectStatusComm = pgConn.CreateCommand();
                     selectStatusComm.CommandText = @"SELECT status, project_study_approved,
-                                                        study_approved FROM ""wtb_ssp_roadworkactivities""
+                                                        study_approved, private FROM ""wtb_ssp_roadworkactivities""
                                                         WHERE uuid=@uuid";
                     selectStatusComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
 
                     string statusOfActivityInDb = "";
                     DateTime? projectStudyApprovedInDb = null;
                     DateTime? studyApprovedInDb = null;
+                    bool isPrivateInDb = false;
                     using (NpgsqlDataReader reader = selectStatusComm.ExecuteReader())
                     {
                         if (reader.Read())
@@ -755,7 +760,38 @@ namespace roadwork_portal_service.Controllers
                             statusOfActivityInDb = reader.IsDBNull(0) ? "" : reader.GetString(0);
                             projectStudyApprovedInDb = reader.IsDBNull(1) ? null : reader.GetDateTime(1);
                             studyApprovedInDb = reader.IsDBNull(2) ? null : reader.GetDateTime(2);
+                            isPrivateInDb = reader.IsDBNull(3) ? false : reader.GetBoolean(3);
                         }
+                    }
+
+                    bool firstTimePublished = false;
+                    if (isPrivateInDb)
+                        if (roadWorkActivityFeature.properties.isPrivate == null ||
+                            !(bool)roadWorkActivityFeature.properties.isPrivate)
+                            firstTimePublished = true;
+
+                    if (firstTimePublished)
+                    {
+                        ActivityHistoryItem activityHistoryItem = new ActivityHistoryItem();
+                        activityHistoryItem.uuid = Guid.NewGuid().ToString();
+                        activityHistoryItem.changeDate = DateTime.Now;
+                        activityHistoryItem.who = userFromDb.firstName + " " + userFromDb.lastName;
+                        activityHistoryItem.what = "Bauvorhaben publiziert";
+                        activityHistoryItem.userComment = "";
+
+                        NpgsqlCommand insertHistoryComm = pgConn.CreateCommand();
+                        insertHistoryComm.CommandText = @"INSERT INTO ""wtb_ssp_activities_history""
+                            (uuid, uuid_roadwork_activity, changedate, who, what)
+                            VALUES
+                            (@uuid, @uuid_roadwork_activity, @changedate, @who, @what)";
+
+                        insertHistoryComm.Parameters.AddWithValue("uuid", new Guid(activityHistoryItem.uuid));
+                        insertHistoryComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkActivityFeature.properties.uuid));
+                        insertHistoryComm.Parameters.AddWithValue("changedate", activityHistoryItem.changeDate);
+                        insertHistoryComm.Parameters.AddWithValue("who", activityHistoryItem.who);
+                        insertHistoryComm.Parameters.AddWithValue("what", activityHistoryItem.what);
+
+                        insertHistoryComm.ExecuteNonQuery();
                     }
 
                     bool hasStatusChanged = false;
