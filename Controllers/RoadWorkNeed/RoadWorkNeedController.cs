@@ -218,7 +218,7 @@ namespace roadwork_portal_service.Controllers
                             string mailOfLoggedInUser = User.FindFirstValue(ClaimTypes.Email);
 
                             needFeatureFromDb.properties.activityRelationType = reader.IsDBNull(17) ? "" : reader.GetString(17);
-                            if(!reader.IsDBNull(18)) needFeatureFromDb.properties.costs = reader.GetInt32(18);
+                            if (!reader.IsDBNull(18)) needFeatureFromDb.properties.costs = reader.GetInt32(18);
                             needFeatureFromDb.properties.noteOfAreaManager = reader.IsDBNull(19) ? "" : reader.GetString(19);
                             needFeatureFromDb.properties.areaManagerNoteDate = reader.IsDBNull(20) ? DateTime.MinValue : reader.GetDateTime(20);
 
@@ -243,33 +243,33 @@ namespace roadwork_portal_service.Controllers
                             needFeatureFromDb.properties.hasSpongeCityMeasures = reader.IsDBNull(34) ? false : reader.GetBoolean(34);
 
                             List<string> spongeCityMeasures = new List<string>();
-                            if(!reader.IsDBNull(35) && reader.GetBoolean(35)) spongeCityMeasures.Add("1.1");
-                            if(!reader.IsDBNull(36) && reader.GetBoolean(36)) spongeCityMeasures.Add("1.2");
-                            if(!reader.IsDBNull(37) && reader.GetBoolean(37)) spongeCityMeasures.Add("1.3");
-                            if(!reader.IsDBNull(38) && reader.GetBoolean(38)) spongeCityMeasures.Add("1.4");
-                            if(!reader.IsDBNull(39) && reader.GetBoolean(39)) spongeCityMeasures.Add("1.5");
-                            if(!reader.IsDBNull(40) && reader.GetBoolean(40)) spongeCityMeasures.Add("1.6");
-                            if(!reader.IsDBNull(41) && reader.GetBoolean(41)) spongeCityMeasures.Add("1.7");
-                            if(!reader.IsDBNull(42) && reader.GetBoolean(42)) spongeCityMeasures.Add("1.8");
-                            if(!reader.IsDBNull(43) && reader.GetBoolean(43)) spongeCityMeasures.Add("2.1");
-                            if(!reader.IsDBNull(44) && reader.GetBoolean(44)) spongeCityMeasures.Add("2.2");
-                            if(!reader.IsDBNull(45) && reader.GetBoolean(45)) spongeCityMeasures.Add("2.3");
-                            if(!reader.IsDBNull(46) && reader.GetBoolean(46)) spongeCityMeasures.Add("2.4");
-                            if(!reader.IsDBNull(47) && reader.GetBoolean(47)) spongeCityMeasures.Add("2.5");
-                            if(!reader.IsDBNull(48) && reader.GetBoolean(48)) spongeCityMeasures.Add("2.6");
-                            if(!reader.IsDBNull(49) && reader.GetBoolean(49)) spongeCityMeasures.Add("2.7");
-                            if(!reader.IsDBNull(50) && reader.GetBoolean(50)) spongeCityMeasures.Add("3.1");
-                            if(!reader.IsDBNull(51) && reader.GetBoolean(51)) spongeCityMeasures.Add("3.2");
-                            if(!reader.IsDBNull(52) && reader.GetBoolean(52)) spongeCityMeasures.Add("3.3");
-                            if(!reader.IsDBNull(53) && reader.GetBoolean(53)) spongeCityMeasures.Add("4.1");
-                            if(!reader.IsDBNull(54) && reader.GetBoolean(54)) spongeCityMeasures.Add("4.2");
-                            if(!reader.IsDBNull(55) && reader.GetBoolean(55)) spongeCityMeasures.Add("5.1");
+                            if (!reader.IsDBNull(35) && reader.GetBoolean(35)) spongeCityMeasures.Add("1.1");
+                            if (!reader.IsDBNull(36) && reader.GetBoolean(36)) spongeCityMeasures.Add("1.2");
+                            if (!reader.IsDBNull(37) && reader.GetBoolean(37)) spongeCityMeasures.Add("1.3");
+                            if (!reader.IsDBNull(38) && reader.GetBoolean(38)) spongeCityMeasures.Add("1.4");
+                            if (!reader.IsDBNull(39) && reader.GetBoolean(39)) spongeCityMeasures.Add("1.5");
+                            if (!reader.IsDBNull(40) && reader.GetBoolean(40)) spongeCityMeasures.Add("1.6");
+                            if (!reader.IsDBNull(41) && reader.GetBoolean(41)) spongeCityMeasures.Add("1.7");
+                            if (!reader.IsDBNull(42) && reader.GetBoolean(42)) spongeCityMeasures.Add("1.8");
+                            if (!reader.IsDBNull(43) && reader.GetBoolean(43)) spongeCityMeasures.Add("2.1");
+                            if (!reader.IsDBNull(44) && reader.GetBoolean(44)) spongeCityMeasures.Add("2.2");
+                            if (!reader.IsDBNull(45) && reader.GetBoolean(45)) spongeCityMeasures.Add("2.3");
+                            if (!reader.IsDBNull(46) && reader.GetBoolean(46)) spongeCityMeasures.Add("2.4");
+                            if (!reader.IsDBNull(47) && reader.GetBoolean(47)) spongeCityMeasures.Add("2.5");
+                            if (!reader.IsDBNull(48) && reader.GetBoolean(48)) spongeCityMeasures.Add("2.6");
+                            if (!reader.IsDBNull(49) && reader.GetBoolean(49)) spongeCityMeasures.Add("2.7");
+                            if (!reader.IsDBNull(50) && reader.GetBoolean(50)) spongeCityMeasures.Add("3.1");
+                            if (!reader.IsDBNull(51) && reader.GetBoolean(51)) spongeCityMeasures.Add("3.2");
+                            if (!reader.IsDBNull(52) && reader.GetBoolean(52)) spongeCityMeasures.Add("3.3");
+                            if (!reader.IsDBNull(53) && reader.GetBoolean(53)) spongeCityMeasures.Add("4.1");
+                            if (!reader.IsDBNull(54) && reader.GetBoolean(54)) spongeCityMeasures.Add("4.2");
+                            if (!reader.IsDBNull(55) && reader.GetBoolean(55)) spongeCityMeasures.Add("5.1");
 
                             needFeatureFromDb.properties.spongeCityMeasures = spongeCityMeasures.ToArray();
 
-                            if(!reader.IsDBNull(56)) needFeatureFromDb.properties.workTitle = reader.GetString(56);
-                            if(!reader.IsDBNull(57)) needFeatureFromDb.properties.projectType = reader.GetString(57);
-                            if(!reader.IsDBNull(58)) needFeatureFromDb.properties.costsComment = reader.GetString(58);
+                            if (!reader.IsDBNull(56)) needFeatureFromDb.properties.workTitle = reader.GetString(56);
+                            if (!reader.IsDBNull(57)) needFeatureFromDb.properties.projectType = reader.GetString(57);
+                            if (!reader.IsDBNull(58)) needFeatureFromDb.properties.costsComment = reader.GetString(58);
 
                             Polygon ntsPoly = reader.IsDBNull(59) ? Polygon.Empty : reader.GetValue(59) as Polygon;
                             needFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
@@ -377,6 +377,10 @@ namespace roadwork_portal_service.Controllers
                     _logger.LogWarning("The given desired year value of a newly created roadwork need is invalid.");
                 else if (roadWorkNeedFeature.errorMessage == "SSP-38")
                     _logger.LogWarning("If sponge city measure is activated then at least one sponge city measure must be provided.");
+                else if (roadWorkNeedFeature.errorMessage == "SSP-40")
+                    _logger.LogWarning("Roadwork need is from civil engineering but one or more required cost " +
+                        "estrimation attribute values are missing.");
+
 
                 return Ok(roadWorkNeedFeature);
             }
@@ -464,6 +468,36 @@ namespace roadwork_portal_service.Controllers
                         roadWorkNeedFeature.errorMessage = "SSP-38";
                         return roadWorkNeedFeature;
                     }
+                }
+
+                if (roadWorkNeedFeature.properties.workTitle != null)
+                    roadWorkNeedFeature.properties.workTitle = roadWorkNeedFeature.properties.workTitle.Trim().ToLower();
+
+                if (roadWorkNeedFeature.properties.projectType != null)
+                    roadWorkNeedFeature.properties.projectType = roadWorkNeedFeature.properties.projectType.Trim().ToLower();
+
+                if (roadWorkNeedFeature.properties.orderer.organisationalUnit.isCivilEngineering)
+                {
+                    bool notValid = false;
+                    if (roadWorkNeedFeature.properties.workTitle == null || roadWorkNeedFeature.properties.workTitle == "")
+                        notValid = true;
+                    if (roadWorkNeedFeature.properties.projectType == null || roadWorkNeedFeature.properties.projectType == "")
+                        notValid = true;
+                    if (roadWorkNeedFeature.properties.costs == null ||
+                            roadWorkNeedFeature.properties.costs == 0)
+                        notValid = true;
+
+                    if (notValid)
+                    {
+                        _logger.LogWarning("Roadwork need is from civil engineering but one or more required cost "+
+                                "estrimation attribute values are missing.");
+                        roadWorkNeedFeature.errorMessage = "SSP-40";
+                        return Ok(roadWorkNeedFeature);
+                    }
+                } else {
+                    roadWorkNeedFeature.properties.workTitle = null;
+                    roadWorkNeedFeature.properties.projectType = null;
+                    roadWorkNeedFeature.properties.costs = null;
                 }
 
                 if (roadWorkNeedFeature.geometry == null ||

@@ -97,6 +97,30 @@ public class RoadWorkNeedDAO
             }
         }
 
+        if (roadWorkNeedFeature.properties.orderer.organisationalUnit.isCivilEngineering)
+        {
+            bool notValid = false;
+            if (roadWorkNeedFeature.properties.workTitle == null || roadWorkNeedFeature.properties.workTitle == "")
+                notValid = true;
+            if (roadWorkNeedFeature.properties.projectType == null || roadWorkNeedFeature.properties.projectType == "")
+                notValid = true;
+            if (roadWorkNeedFeature.properties.costs == null ||
+                    roadWorkNeedFeature.properties.costs == 0)
+                notValid = true;
+
+            if (notValid)
+            {
+                roadWorkNeedFeature.errorMessage = "SSP-40";
+                return roadWorkNeedFeature;
+            }
+        }
+        else
+        {
+            roadWorkNeedFeature.properties.workTitle = null;
+            roadWorkNeedFeature.properties.projectType = null;
+            roadWorkNeedFeature.properties.costs = null;
+        }
+
         Polygon roadWorkNeedPoly = roadWorkNeedFeature.geometry.getNtsPolygon();
         Coordinate[] coordinates = roadWorkNeedPoly.Coordinates;
 

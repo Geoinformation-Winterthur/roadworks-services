@@ -200,8 +200,8 @@ public class LoginController : ControllerBase
             NpgsqlCommand selectComm = pgConn.CreateCommand();
             selectComm.CommandText = @"SELECT u.uuid, u.last_name, u.first_name, u.e_mail, u.pwd,
                         u.last_login_attempt, CURRENT_TIMESTAMP(0)::TIMESTAMP,
-                        u.org_unit, o.name, o.abbreviation, u.active,
-                        u.role_projectmanager, u.role_eventmanager, u.role_orderer,
+                        u.org_unit, o.name, o.abbreviation, o.is_civil_eng,
+                        u.active, u.role_projectmanager, u.role_eventmanager, u.role_orderer,
                         u.role_trafficmanager, u.role_territorymanager, u.role_administrator
                         FROM ""wtb_ssp_users"" u
                         LEFT JOIN ""wtb_ssp_organisationalunits"" o ON u.org_unit = o.uuid
@@ -226,14 +226,15 @@ public class LoginController : ControllerBase
                     orgUnit.uuid = reader.GetGuid(7).ToString();
                     orgUnit.name = reader.GetString(8);
                     orgUnit.abbreviation = reader.GetString(9);
+                    orgUnit.isCivilEngineering = reader.GetBoolean(10);
                     userFromDb.organisationalUnit = orgUnit;
-                    userFromDb.active = reader.GetBoolean(10);
-                    userFromDb.grantedRoles.projectmanager = reader.GetBoolean(11);
-                    userFromDb.grantedRoles.eventmanager = reader.GetBoolean(12);
-                    userFromDb.grantedRoles.orderer = reader.GetBoolean(13);
-                    userFromDb.grantedRoles.trafficmanager = reader.GetBoolean(14);
-                    userFromDb.grantedRoles.territorymanager = reader.GetBoolean(15);
-                    userFromDb.grantedRoles.administrator = reader.GetBoolean(16);
+                    userFromDb.active = reader.GetBoolean(11);
+                    userFromDb.grantedRoles.projectmanager = reader.GetBoolean(12);
+                    userFromDb.grantedRoles.eventmanager = reader.GetBoolean(13);
+                    userFromDb.grantedRoles.orderer = reader.GetBoolean(14);
+                    userFromDb.grantedRoles.trafficmanager = reader.GetBoolean(15);
+                    userFromDb.grantedRoles.territorymanager = reader.GetBoolean(16);
+                    userFromDb.grantedRoles.administrator = reader.GetBoolean(17);
 
                     if (userFromDb.lastName == null || userFromDb.lastName.Trim().Equals(""))
                     {
