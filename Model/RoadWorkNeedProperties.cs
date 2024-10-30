@@ -37,5 +37,6 @@ public class RoadWorkNeedProperties
     public string? workTitle { get; set; }
     public string? projectType { get; set; }
     public string? costsComment { get; set; }
+    public string? deleteReason { get; set; }
 }
 

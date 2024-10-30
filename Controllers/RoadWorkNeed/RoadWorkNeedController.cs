@@ -30,7 +30,8 @@ namespace roadwork_portal_service.Controllers
         public IEnumerable<RoadWorkNeedFeature> GetNeeds(int? relevance,
                 DateTime? dateOfCreation, int? year, string? uuids,
                 string? roadWorkActivityUuid, string? name,
-                string? areaManagerUuid, bool? onlyMyNeeds, string? status,
+                string? areaManagerUuid, bool? onlyMyNeeds,
+                bool? onlyWithDeleteComment, string? status,
                 bool summary = false)
         {
             List<RoadWorkNeedFeature> projectsFromDb = new List<RoadWorkNeedFeature>();
@@ -69,6 +70,9 @@ namespace roadwork_portal_service.Controllers
                 if (onlyMyNeeds == null)
                     onlyMyNeeds = false;
 
+                if (onlyWithDeleteComment == null)
+                    onlyWithDeleteComment = false;                    
+
                 User userFromDb = LoginController.getAuthorizedUserFromDb(this.User, false);
 
                 // get data of current user from database:
@@ -93,7 +97,7 @@ namespace roadwork_portal_service.Controllers
                             r.is_sponge_2_3, r.is_sponge_2_4, r.is_sponge_2_5, r.is_sponge_2_6,
                             r.is_sponge_2_7, r.is_sponge_3_1, r.is_sponge_3_2, r.is_sponge_3_3,
                             r.is_sponge_4_1, r.is_sponge_4_2, r.is_sponge_5_1, work_title,
-                            project_type, costs_comment, r.geom
+                            project_type, costs_comment, r.delete_reason, r.geom
                         FROM ""wtb_ssp_roadworkneeds"" r
                         LEFT JOIN ""wtb_ssp_activities_to_needs"" an ON an.uuid_roadwork_need = r.uuid
                         LEFT JOIN ""wtb_ssp_users"" u ON r.orderer = u.uuid
@@ -159,6 +163,11 @@ namespace roadwork_portal_service.Controllers
                         if ((bool)onlyMyNeeds)
                         {
                             selectComm.CommandText += " AND r.orderer = @orderer_uuid";
+                        }
+
+                        if ((bool)onlyWithDeleteComment)
+                        {
+                            selectComm.CommandText += " AND r.delete_reason IS NOT NULL";
                         }
 
                         if (statusArray[0] != "")
@@ -271,7 +280,9 @@ namespace roadwork_portal_service.Controllers
                             if (!reader.IsDBNull(57)) needFeatureFromDb.properties.projectType = reader.GetString(57);
                             if (!reader.IsDBNull(58)) needFeatureFromDb.properties.costsComment = reader.GetString(58);
 
-                            Polygon ntsPoly = reader.IsDBNull(59) ? Polygon.Empty : reader.GetValue(59) as Polygon;
+                            if (!reader.IsDBNull(59)) needFeatureFromDb.properties.deleteReason = reader.GetString(59);
+
+                            Polygon ntsPoly = reader.IsDBNull(60) ? Polygon.Empty : reader.GetValue(60) as Polygon;
                             needFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
 
                             if (User.IsInRole("administrator"))
