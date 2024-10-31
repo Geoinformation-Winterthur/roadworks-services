@@ -24,10 +24,10 @@ public class AppConfigController : ControllerBase
 
     // GET /appconfig/?pastdates=false
     [HttpGet]
-    [Authorize(Roles = "administrator")]
+    [Authorize(Roles = "administrator, territorymanager")]
     public ActionResult<ConfigurationData> GetConfiguration(bool? pastDates = false)
     {
-        ConfigurationData result = new ConfigurationData();
+        ConfigurationData result;
 
         try
         {
