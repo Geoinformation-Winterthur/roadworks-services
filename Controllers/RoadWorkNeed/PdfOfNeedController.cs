@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Npgsql;
 using roadwork_portal_service.Configuration;
+using roadwork_portal_service.Model;
 
 namespace roadwork_portal_service.Controllers
 {
@@ -16,24 +17,26 @@ namespace roadwork_portal_service.Controllers
             _logger = logger;
         }
 
-        // GET roadworkneed/1321231/pdf/
+        // GET roadworkneed/1321231/pdf/?docuuid=676fb676s...
         [HttpGet]
         [Authorize(Roles = "orderer,trefficmanager,territorymanager,administrator")]
-        public IActionResult GetPdf(string uuid)
+        public IActionResult GetPdf(string? docUuid)
         {
-            uuid = uuid.Trim().ToLower();
+            if (docUuid == null) docUuid = "";
 
-            if (uuid != null && uuid != String.Empty)
+            docUuid = docUuid.Trim().ToLower();
+
+            if (docUuid != String.Empty)
             {
                 using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
                 {
                     pgConn.Open();
 
                     NpgsqlCommand selectPdfCommand = pgConn.CreateCommand();
-                    selectPdfCommand.CommandText = "SELECT pdf_document" +
-                                " FROM \"wtb_ssp_roadworkneeds\"" +
-                                " WHERE uuid=@uuid";
-                    selectPdfCommand.Parameters.AddWithValue("uuid", new Guid(uuid));
+                    selectPdfCommand.CommandText = "SELECT document" +
+                                " FROM \"wtb_ssp_documents\"" +
+                                " WHERE uuid=@doc_uuid";
+                    selectPdfCommand.Parameters.AddWithValue("doc_uuid", new Guid(docUuid));
 
                     NpgsqlDataReader reader = selectPdfCommand.ExecuteReader();
                     if (reader.Read())
@@ -45,7 +48,7 @@ namespace roadwork_portal_service.Controllers
                 }
             }
 
-            _logger.LogError("Could not provide PDF for roadworkneed");
+            _logger.LogError("Could not provide PDF for roadwork need");
             return BadRequest();
         }
 
@@ -53,12 +56,13 @@ namespace roadwork_portal_service.Controllers
         // POST roadworkneed/1321231/pdf/
         [HttpPost]
         [Authorize(Roles = "orderer,trefficmanager,territorymanager,administrator")]
-        public IActionResult AddPdf(string uuid, IFormFile pdfFile)
+        public ActionResult<DocumentAttributes> AddPdf(string uuid, IFormFile pdfFile)
         {
             uuid = uuid.Trim().ToLower();
 
             if (uuid != null && uuid != String.Empty)
             {
+                Guid docUuid = Guid.NewGuid();
                 byte[] pdfBytes = new byte[0];
 
                 Stream pdfStream = pdfFile.OpenReadStream();
@@ -75,35 +79,39 @@ namespace roadwork_portal_service.Controllers
                     using (NpgsqlTransaction trans = pgConn.BeginTransaction())
                     {
                         NpgsqlCommand updatePdfCommand = pgConn.CreateCommand();
-                        updatePdfCommand.CommandText = "UPDATE \"wtb_ssp_roadworkneeds\"" +
-                                    " SET pdf_document=@pdf_document" +
-                                    " WHERE uuid=@uuid";
-                        updatePdfCommand.Parameters.AddWithValue("pdf_document", pdfBytes);
-                        updatePdfCommand.Parameters.AddWithValue("uuid", new Guid(uuid));
+                        updatePdfCommand.CommandText = "INSERT INTO \"wtb_ssp_documents\"" +
+                                    "(uuid, roadworkneed, filename, document) " +
+                                    "VALUES(@uuid, @roadworkneed, @filename, @document)";
+                        updatePdfCommand.Parameters.AddWithValue("uuid", docUuid);
+                        updatePdfCommand.Parameters.AddWithValue("roadworkneed", new Guid(uuid));
+                        updatePdfCommand.Parameters.AddWithValue("filename", pdfFile.FileName);
+                        updatePdfCommand.Parameters.AddWithValue("document", pdfBytes);
 
                         updatePdfCommand.ExecuteNonQuery();
                         trans.Commit();
                     }
 
                 }
-
-                return Ok();
-
+                DocumentAttributes documentAtts = new DocumentAttributes();
+                documentAtts.uuid = docUuid.ToString();
+                documentAtts.filename = pdfFile.FileName;
+                return Ok(documentAtts);
             }
 
-            _logger.LogError("Could not update PDF for roadworkneed");
-            return BadRequest();
-
+            DocumentAttributes errorObj = new DocumentAttributes();
+            errorObj.errorMessage = "Could not update PDF for roadwork need";
+            _logger.LogError("Could not update PDF for roadwork need");
+            return BadRequest(errorObj);
         }
 
-        // DELETE roadworkneed/1321231/pdf/
+        // DELETE roadworkneed/1321231/pdf/?docuuid=72623723...
         [HttpDelete]
         [Authorize(Roles = "orderer,trefficmanager,territorymanager,administrator")]
-        public IActionResult DeletePdf(string uuid)
+        public IActionResult DeletePdf(string docUuid)
         {
-            uuid = uuid.Trim().ToLower();
+            docUuid = docUuid.Trim().ToLower();
 
-            if (uuid != null && uuid != String.Empty)
+            if (docUuid != null && docUuid != String.Empty)
             {
 
                 using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
@@ -113,11 +121,9 @@ namespace roadwork_portal_service.Controllers
                     using (NpgsqlTransaction trans = pgConn.BeginTransaction())
                     {
                         NpgsqlCommand updatePdfCommand = pgConn.CreateCommand();
-                        updatePdfCommand.CommandText = "UPDATE \"wtb_ssp_roadworkneeds\"" +
-                                    " SET pdf_document=@pdf_document" +
-                                    " WHERE uuid=@uuid";
-                        updatePdfCommand.Parameters.AddWithValue("pdf_document", DBNull.Value);
-                        updatePdfCommand.Parameters.AddWithValue("uuid", new Guid(uuid));
+                        updatePdfCommand.CommandText = "DELETE FROM \"wtb_ssp_documents\"" +
+                                    " WHERE uuid=@doc_uuid";
+                        updatePdfCommand.Parameters.AddWithValue("doc_uuid", new Guid(docUuid));
 
                         updatePdfCommand.ExecuteNonQuery();
                         trans.Commit();

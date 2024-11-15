@@ -31,9 +31,9 @@ public class RoadWorkNeedProperties
     public bool overarchingMeasure { get; set; } = false;
     public int? desiredYearFrom { get; set; }
     public int? desiredYearTo { get; set; }
-    public bool hasPdfDocument { get; set; } = false;
+    public DocumentAttributes[]? documentAtts { get; set; }
     public bool hasSpongeCityMeasures { get; set; } = false;
-    public string?[] spongeCityMeasures { get; set; }
+    public string[]? spongeCityMeasures { get; set; }
     public string? workTitle { get; set; }
     public string? projectType { get; set; }
     public string? costsComment { get; set; }

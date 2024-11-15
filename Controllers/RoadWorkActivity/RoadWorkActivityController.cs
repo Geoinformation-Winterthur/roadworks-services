@@ -51,7 +51,7 @@ namespace roadwork_portal_service.Controllers
                             r.date_consult_end, r.date_consult_close, r.date_report_start,
                             r.date_report_end, r.date_report_close, r.date_info_start,
                             r.date_info_end, r.date_info_close, r.is_aggloprog, r.date_optimum,
-                            r.date_of_acceptance, r.url, r.pdf_document IS NOT NULL has_pdf,
+                            r.date_of_acceptance, r.url,
                             r.project_study_approved, r.study_approved, r.date_sks_real,
                             r.date_kap_real, r.date_oks_real, r.date_gl_tba_real, r.geom
                         FROM ""wtb_ssp_roadworkactivities"" r
@@ -176,20 +176,50 @@ namespace roadwork_portal_service.Controllers
                         projectFeatureFromDb.properties.finishOptimumTo = reader.IsDBNull(63) ? DateTime.MinValue : reader.GetDateTime(63);
                         if (!reader.IsDBNull(64)) projectFeatureFromDb.properties.dateOfAcceptance = reader.GetDateTime(64);
                         if (!reader.IsDBNull(65)) projectFeatureFromDb.properties.url = reader.GetString(65);
-                        if (!reader.IsDBNull(66)) projectFeatureFromDb.properties.hasPdfDocument = reader.GetBoolean(66);
-                        if (!reader.IsDBNull(67)) projectFeatureFromDb.properties.projectStudyApproved = reader.GetDateTime(67);
-                        if (!reader.IsDBNull(68)) projectFeatureFromDb.properties.studyApproved = reader.GetDateTime(68);
-                        projectFeatureFromDb.properties.dateSksReal = reader.IsDBNull(69) ? null : reader.GetDateTime(69);
-                        projectFeatureFromDb.properties.dateKapReal = reader.IsDBNull(70) ? null : reader.GetDateTime(70);
-                        projectFeatureFromDb.properties.dateOksReal = reader.IsDBNull(71) ? null : reader.GetDateTime(71);
-                        projectFeatureFromDb.properties.dateGlTbaReal = reader.IsDBNull(72) ? null : reader.GetDateTime(72);
+                        if (!reader.IsDBNull(66)) projectFeatureFromDb.properties.projectStudyApproved = reader.GetDateTime(67);
+                        if (!reader.IsDBNull(67)) projectFeatureFromDb.properties.studyApproved = reader.GetDateTime(67);
+                        projectFeatureFromDb.properties.dateSksReal = reader.IsDBNull(68) ? null : reader.GetDateTime(68);
+                        projectFeatureFromDb.properties.dateKapReal = reader.IsDBNull(69) ? null : reader.GetDateTime(69);
+                        projectFeatureFromDb.properties.dateOksReal = reader.IsDBNull(70) ? null : reader.GetDateTime(70);
+                        projectFeatureFromDb.properties.dateGlTbaReal = reader.IsDBNull(71) ? null : reader.GetDateTime(71);
 
-                        Polygon ntsPoly = reader.IsDBNull(73) ? Polygon.Empty : reader.GetValue(73) as Polygon;
+                        Polygon ntsPoly = reader.IsDBNull(72) ? Polygon.Empty : reader.GetValue(72) as Polygon;
                         projectFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
 
                         projectsFromDb.Add(projectFeatureFromDb);
                     }
                 }
+
+                foreach (RoadWorkActivityFeature projectFeatureFromDb in projectsFromDb)
+                {
+
+                    NpgsqlCommand selectDocAttsComm = pgConn.CreateCommand();
+                    selectDocAttsComm.CommandText = "SELECT uuid, filename FROM \"wtb_ssp_documents\" " +
+                        "WHERE roadworkactivity=@roadworkactivity";
+                    selectDocAttsComm.Parameters.AddWithValue("roadworkactivity", new Guid(projectFeatureFromDb.properties.uuid));
+
+                    List<DocumentAttributes> multipleDocumentsAttributes = new List<DocumentAttributes>();
+                    using (NpgsqlDataReader docsReader = selectDocAttsComm.ExecuteReader())
+                    {
+                        DocumentAttributes documentAttributes;
+                        while (docsReader.Read())
+                        {
+                            if (!docsReader.IsDBNull(0))
+                            {
+                                documentAttributes = new DocumentAttributes();
+                                documentAttributes.uuid = docsReader.GetGuid(0).ToString();
+                                documentAttributes.filename = "";
+                                if (!docsReader.IsDBNull(1))
+                                {
+                                    documentAttributes.filename = docsReader.GetString(1);
+                                }
+                                multipleDocumentsAttributes.Add(documentAttributes);
+                            }
+                        }
+                    }
+                    projectFeatureFromDb.properties.documentAtts = multipleDocumentsAttributes.ToArray();
+                }
+
 
                 foreach (RoadWorkActivityFeature activityFromDb in projectsFromDb)
                 {

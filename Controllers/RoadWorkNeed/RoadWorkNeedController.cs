@@ -71,7 +71,7 @@ namespace roadwork_portal_service.Controllers
                     onlyMyNeeds = false;
 
                 if (onlyWithDeleteComment == null)
-                    onlyWithDeleteComment = false;                    
+                    onlyWithDeleteComment = false;
 
                 User userFromDb = LoginController.getAuthorizedUserFromDb(this.User, false);
 
@@ -90,7 +90,7 @@ namespace roadwork_portal_service.Controllers
                             n.first_name as area_manager_first_name, n.last_name as area_manager_last_name,
                             r.private, r.section, r.comment, r.url, o.is_civil_eng, o.abbreviation,
                             r.overarching_measure, r.desired_year_from, r.desired_year_to,
-                            u.e_mail, r.pdf_document IS NOT NULL has_pdf,
+                            u.e_mail,
                             r.has_sponge_city_meas, r.is_sponge_1_1, r.is_sponge_1_2,
                             r.is_sponge_1_3, r.is_sponge_1_4, r.is_sponge_1_5, r.is_sponge_1_6,
                             r.is_sponge_1_7, r.is_sponge_1_8, r.is_sponge_2_1, r.is_sponge_2_2,
@@ -248,41 +248,40 @@ namespace roadwork_portal_service.Controllers
                             needFeatureFromDb.properties.desiredYearTo = reader.IsDBNull(31) ? null : reader.GetInt32(31);
 
                             needFeatureFromDb.properties.orderer.mailAddress = reader.IsDBNull(32) ? "" : reader.GetString(32);
-                            needFeatureFromDb.properties.hasPdfDocument = reader.IsDBNull(33) ? false : reader.GetBoolean(33);
-                            needFeatureFromDb.properties.hasSpongeCityMeasures = reader.IsDBNull(34) ? false : reader.GetBoolean(34);
+                            needFeatureFromDb.properties.hasSpongeCityMeasures = reader.IsDBNull(33) ? false : reader.GetBoolean(33);
 
                             List<string> spongeCityMeasures = new List<string>();
-                            if (!reader.IsDBNull(35) && reader.GetBoolean(35)) spongeCityMeasures.Add("1.1");
-                            if (!reader.IsDBNull(36) && reader.GetBoolean(36)) spongeCityMeasures.Add("1.2");
-                            if (!reader.IsDBNull(37) && reader.GetBoolean(37)) spongeCityMeasures.Add("1.3");
-                            if (!reader.IsDBNull(38) && reader.GetBoolean(38)) spongeCityMeasures.Add("1.4");
-                            if (!reader.IsDBNull(39) && reader.GetBoolean(39)) spongeCityMeasures.Add("1.5");
-                            if (!reader.IsDBNull(40) && reader.GetBoolean(40)) spongeCityMeasures.Add("1.6");
-                            if (!reader.IsDBNull(41) && reader.GetBoolean(41)) spongeCityMeasures.Add("1.7");
-                            if (!reader.IsDBNull(42) && reader.GetBoolean(42)) spongeCityMeasures.Add("1.8");
-                            if (!reader.IsDBNull(43) && reader.GetBoolean(43)) spongeCityMeasures.Add("2.1");
-                            if (!reader.IsDBNull(44) && reader.GetBoolean(44)) spongeCityMeasures.Add("2.2");
-                            if (!reader.IsDBNull(45) && reader.GetBoolean(45)) spongeCityMeasures.Add("2.3");
-                            if (!reader.IsDBNull(46) && reader.GetBoolean(46)) spongeCityMeasures.Add("2.4");
-                            if (!reader.IsDBNull(47) && reader.GetBoolean(47)) spongeCityMeasures.Add("2.5");
-                            if (!reader.IsDBNull(48) && reader.GetBoolean(48)) spongeCityMeasures.Add("2.6");
-                            if (!reader.IsDBNull(49) && reader.GetBoolean(49)) spongeCityMeasures.Add("2.7");
-                            if (!reader.IsDBNull(50) && reader.GetBoolean(50)) spongeCityMeasures.Add("3.1");
-                            if (!reader.IsDBNull(51) && reader.GetBoolean(51)) spongeCityMeasures.Add("3.2");
-                            if (!reader.IsDBNull(52) && reader.GetBoolean(52)) spongeCityMeasures.Add("3.3");
-                            if (!reader.IsDBNull(53) && reader.GetBoolean(53)) spongeCityMeasures.Add("4.1");
-                            if (!reader.IsDBNull(54) && reader.GetBoolean(54)) spongeCityMeasures.Add("4.2");
-                            if (!reader.IsDBNull(55) && reader.GetBoolean(55)) spongeCityMeasures.Add("5.1");
+                            if (!reader.IsDBNull(34) && reader.GetBoolean(34)) spongeCityMeasures.Add("1.1");
+                            if (!reader.IsDBNull(35) && reader.GetBoolean(35)) spongeCityMeasures.Add("1.2");
+                            if (!reader.IsDBNull(36) && reader.GetBoolean(36)) spongeCityMeasures.Add("1.3");
+                            if (!reader.IsDBNull(37) && reader.GetBoolean(37)) spongeCityMeasures.Add("1.4");
+                            if (!reader.IsDBNull(38) && reader.GetBoolean(38)) spongeCityMeasures.Add("1.5");
+                            if (!reader.IsDBNull(39) && reader.GetBoolean(39)) spongeCityMeasures.Add("1.6");
+                            if (!reader.IsDBNull(40) && reader.GetBoolean(40)) spongeCityMeasures.Add("1.7");
+                            if (!reader.IsDBNull(41) && reader.GetBoolean(41)) spongeCityMeasures.Add("1.8");
+                            if (!reader.IsDBNull(42) && reader.GetBoolean(42)) spongeCityMeasures.Add("2.1");
+                            if (!reader.IsDBNull(43) && reader.GetBoolean(43)) spongeCityMeasures.Add("2.2");
+                            if (!reader.IsDBNull(44) && reader.GetBoolean(44)) spongeCityMeasures.Add("2.3");
+                            if (!reader.IsDBNull(45) && reader.GetBoolean(45)) spongeCityMeasures.Add("2.4");
+                            if (!reader.IsDBNull(46) && reader.GetBoolean(46)) spongeCityMeasures.Add("2.5");
+                            if (!reader.IsDBNull(47) && reader.GetBoolean(47)) spongeCityMeasures.Add("2.6");
+                            if (!reader.IsDBNull(48) && reader.GetBoolean(48)) spongeCityMeasures.Add("2.7");
+                            if (!reader.IsDBNull(49) && reader.GetBoolean(49)) spongeCityMeasures.Add("3.1");
+                            if (!reader.IsDBNull(50) && reader.GetBoolean(50)) spongeCityMeasures.Add("3.2");
+                            if (!reader.IsDBNull(51) && reader.GetBoolean(51)) spongeCityMeasures.Add("3.3");
+                            if (!reader.IsDBNull(52) && reader.GetBoolean(52)) spongeCityMeasures.Add("4.1");
+                            if (!reader.IsDBNull(53) && reader.GetBoolean(53)) spongeCityMeasures.Add("4.2");
+                            if (!reader.IsDBNull(54) && reader.GetBoolean(54)) spongeCityMeasures.Add("5.1");
 
                             needFeatureFromDb.properties.spongeCityMeasures = spongeCityMeasures.ToArray();
 
-                            if (!reader.IsDBNull(56)) needFeatureFromDb.properties.workTitle = reader.GetString(56);
-                            if (!reader.IsDBNull(57)) needFeatureFromDb.properties.projectType = reader.GetString(57);
-                            if (!reader.IsDBNull(58)) needFeatureFromDb.properties.costsComment = reader.GetString(58);
+                            if (!reader.IsDBNull(55)) needFeatureFromDb.properties.workTitle = reader.GetString(55);
+                            if (!reader.IsDBNull(56)) needFeatureFromDb.properties.projectType = reader.GetString(56);
+                            if (!reader.IsDBNull(57)) needFeatureFromDb.properties.costsComment = reader.GetString(57);
 
-                            if (!reader.IsDBNull(59)) needFeatureFromDb.properties.deleteReason = reader.GetString(59);
+                            if (!reader.IsDBNull(58)) needFeatureFromDb.properties.deleteReason = reader.GetString(58);
 
-                            Polygon ntsPoly = reader.IsDBNull(60) ? Polygon.Empty : reader.GetValue(60) as Polygon;
+                            Polygon ntsPoly = reader.IsDBNull(59) ? Polygon.Empty : reader.GetValue(59) as Polygon;
                             needFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
 
                             if (User.IsInRole("administrator"))
@@ -297,7 +296,36 @@ namespace roadwork_portal_service.Controllers
                             }
 
                             projectsFromDbTemp.Add(needFeatureFromDb);
+
                         }
+                    }
+
+                    foreach (RoadWorkNeedFeature needFeatureFromDb in projectsFromDbTemp)
+                    {
+                        NpgsqlCommand selectDocAttsComm = pgConn.CreateCommand();
+                        selectDocAttsComm.CommandText = "SELECT uuid, filename " +
+                            "FROM \"wtb_ssp_documents\" " +
+                            "WHERE roadworkneed=@roadworkneed";
+                        selectDocAttsComm.Parameters.AddWithValue("roadworkneed", new Guid(needFeatureFromDb.properties.uuid));
+
+                        List<DocumentAttributes> multipleDocumentsAttributes = new List<DocumentAttributes>();
+                        using (NpgsqlDataReader docsReader = selectDocAttsComm.ExecuteReader())
+                        {
+                            DocumentAttributes documentAttributes;
+                            while (docsReader.Read())
+                            {
+                                if (!docsReader.IsDBNull(0)){
+                                    documentAttributes = new DocumentAttributes();
+                                    documentAttributes.uuid = docsReader.GetGuid(0).ToString();
+                                    documentAttributes.filename = "";
+                                    if(!docsReader.IsDBNull(1)){
+                                        documentAttributes.filename = docsReader.GetString(1);
+                                    }
+                                    multipleDocumentsAttributes.Add(documentAttributes);
+                                }
+                            }
+                        }
+                        needFeatureFromDb.properties.documentAtts = multipleDocumentsAttributes.ToArray();
                     }
 
                     if (areaManagerUuid != "")
@@ -500,12 +528,14 @@ namespace roadwork_portal_service.Controllers
 
                     if (notValid)
                     {
-                        _logger.LogWarning("Roadwork need is from civil engineering but one or more required cost "+
+                        _logger.LogWarning("Roadwork need is from civil engineering but one or more required cost " +
                                 "estrimation attribute values are missing.");
                         roadWorkNeedFeature.errorMessage = "SSP-40";
                         return Ok(roadWorkNeedFeature);
                     }
-                } else {
+                }
+                else
+                {
                     roadWorkNeedFeature.properties.workTitle = null;
                     roadWorkNeedFeature.properties.projectType = null;
                     roadWorkNeedFeature.properties.costs = null;
