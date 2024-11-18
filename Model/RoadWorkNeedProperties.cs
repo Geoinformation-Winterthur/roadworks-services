@@ -1,6 +1,6 @@
-// <copyright company="Vermessungsamt Winterthur">
+// <copyright company="Geoinformation Winterthur">
 //      Author: Edgar Butwilowski
-//      Copyright (c) Vermessungsamt Winterthur. All rights reserved.
+//      Copyright (c) Geoinformation Winterthur. All rights reserved.
 // </copyright>
 namespace roadwork_portal_service.Model;
 
@@ -16,7 +16,7 @@ public class RoadWorkNeedProperties
     public DateTime finishLateTo { get; set; } = DateTime.MinValue;
     public Priority priority { get; set; } = new Priority();
     public string status { get; set; } = "";
-    public decimal? costs { get; set; }
+    public Costs[]? costs { get; set; }
     public string activityRelationType { get; set; } = "";    
     public string description { get; set; } = "";
     public string roadWorkActivityUuid { get; set; } = "";
@@ -34,9 +34,6 @@ public class RoadWorkNeedProperties
     public DocumentAttributes[]? documentAtts { get; set; }
     public bool hasSpongeCityMeasures { get; set; } = false;
     public string[]? spongeCityMeasures { get; set; }
-    public string? workTitle { get; set; }
-    public string? projectType { get; set; }
-    public string? costsComment { get; set; }
     public string? deleteReason { get; set; }
 }
 

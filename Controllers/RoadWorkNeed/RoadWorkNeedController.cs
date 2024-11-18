@@ -85,7 +85,7 @@ namespace roadwork_portal_service.Controllers
                             r.finish_optimum_to, r.finish_late_to, p.code, r.status as statusname,
                             r.description, 
                             r.created, r.last_modified, an.uuid_roadwork_activity, u.e_mail,
-                            r.relevance, an.activityrelationtype, r.costs,
+                            r.relevance, an.activityrelationtype,
                             r.note_of_area_man, r.area_man_note_date,
                             n.first_name as area_manager_first_name, n.last_name as area_manager_last_name,
                             r.private, r.section, r.comment, r.url, o.is_civil_eng, o.abbreviation,
@@ -96,8 +96,8 @@ namespace roadwork_portal_service.Controllers
                             r.is_sponge_1_7, r.is_sponge_1_8, r.is_sponge_2_1, r.is_sponge_2_2,
                             r.is_sponge_2_3, r.is_sponge_2_4, r.is_sponge_2_5, r.is_sponge_2_6,
                             r.is_sponge_2_7, r.is_sponge_3_1, r.is_sponge_3_2, r.is_sponge_3_3,
-                            r.is_sponge_4_1, r.is_sponge_4_2, r.is_sponge_5_1, work_title,
-                            project_type, costs_comment, r.delete_reason, r.geom
+                            r.is_sponge_4_1, r.is_sponge_4_2, r.is_sponge_5_1, r.delete_reason,
+                            r.geom
                         FROM ""wtb_ssp_roadworkneeds"" r
                         LEFT JOIN ""wtb_ssp_activities_to_needs"" an ON an.uuid_roadwork_need = r.uuid
                         LEFT JOIN ""wtb_ssp_users"" u ON r.orderer = u.uuid
@@ -227,61 +227,56 @@ namespace roadwork_portal_service.Controllers
                             string mailOfLoggedInUser = User.FindFirstValue(ClaimTypes.Email);
 
                             needFeatureFromDb.properties.activityRelationType = reader.IsDBNull(17) ? "" : reader.GetString(17);
-                            if (!reader.IsDBNull(18)) needFeatureFromDb.properties.costs = reader.GetInt32(18);
-                            needFeatureFromDb.properties.noteOfAreaManager = reader.IsDBNull(19) ? "" : reader.GetString(19);
-                            needFeatureFromDb.properties.areaManagerNoteDate = reader.IsDBNull(20) ? DateTime.MinValue : reader.GetDateTime(20);
+                            needFeatureFromDb.properties.noteOfAreaManager = reader.IsDBNull(18) ? "" : reader.GetString(18);
+                            needFeatureFromDb.properties.areaManagerNoteDate = reader.IsDBNull(19) ? DateTime.MinValue : reader.GetDateTime(19);
 
                             User areaManagerOfNote = new User();
-                            areaManagerOfNote.firstName = reader.IsDBNull(21) ? "" : reader.GetString(21);
-                            areaManagerOfNote.lastName = reader.IsDBNull(22) ? "" : reader.GetString(22);
+                            areaManagerOfNote.firstName = reader.IsDBNull(20) ? "" : reader.GetString(20);
+                            areaManagerOfNote.lastName = reader.IsDBNull(21) ? "" : reader.GetString(21);
                             needFeatureFromDb.properties.areaManagerOfNote = areaManagerOfNote;
-                            needFeatureFromDb.properties.isPrivate = reader.IsDBNull(23) ? true : reader.GetBoolean(23);
-                            needFeatureFromDb.properties.section = reader.IsDBNull(24) ? "" : reader.GetString(24);
-                            needFeatureFromDb.properties.comment = reader.IsDBNull(25) ? "" : reader.GetString(25);
-                            needFeatureFromDb.properties.url = reader.IsDBNull(26) ? "" : reader.GetString(26);
-                            needFeatureFromDb.properties.orderer.organisationalUnit.isCivilEngineering = reader.IsDBNull(27) ? false : reader.GetBoolean(27);
+                            needFeatureFromDb.properties.isPrivate = reader.IsDBNull(22) ? true : reader.GetBoolean(22);
+                            needFeatureFromDb.properties.section = reader.IsDBNull(23) ? "" : reader.GetString(23);
+                            needFeatureFromDb.properties.comment = reader.IsDBNull(24) ? "" : reader.GetString(24);
+                            needFeatureFromDb.properties.url = reader.IsDBNull(25) ? "" : reader.GetString(25);
+                            needFeatureFromDb.properties.orderer.organisationalUnit.isCivilEngineering = reader.IsDBNull(26) ? false : reader.GetBoolean(26);
 
-                            orgUnit.abbreviation = reader.IsDBNull(28) ? "" : reader.GetString(28);
+                            orgUnit.abbreviation = reader.IsDBNull(27) ? "" : reader.GetString(27);
 
-                            needFeatureFromDb.properties.overarchingMeasure = reader.IsDBNull(29) ? false : reader.GetBoolean(29);
-                            needFeatureFromDb.properties.desiredYearFrom = reader.IsDBNull(30) ? null : reader.GetInt32(30);
-                            needFeatureFromDb.properties.desiredYearTo = reader.IsDBNull(31) ? null : reader.GetInt32(31);
+                            needFeatureFromDb.properties.overarchingMeasure = reader.IsDBNull(28) ? false : reader.GetBoolean(28);
+                            needFeatureFromDb.properties.desiredYearFrom = reader.IsDBNull(29) ? null : reader.GetInt32(29);
+                            needFeatureFromDb.properties.desiredYearTo = reader.IsDBNull(30) ? null : reader.GetInt32(30);
 
-                            needFeatureFromDb.properties.orderer.mailAddress = reader.IsDBNull(32) ? "" : reader.GetString(32);
-                            needFeatureFromDb.properties.hasSpongeCityMeasures = reader.IsDBNull(33) ? false : reader.GetBoolean(33);
+                            needFeatureFromDb.properties.orderer.mailAddress = reader.IsDBNull(31) ? "" : reader.GetString(31);
+                            needFeatureFromDb.properties.hasSpongeCityMeasures = reader.IsDBNull(32) ? false : reader.GetBoolean(32);
 
                             List<string> spongeCityMeasures = new List<string>();
-                            if (!reader.IsDBNull(34) && reader.GetBoolean(34)) spongeCityMeasures.Add("1.1");
-                            if (!reader.IsDBNull(35) && reader.GetBoolean(35)) spongeCityMeasures.Add("1.2");
-                            if (!reader.IsDBNull(36) && reader.GetBoolean(36)) spongeCityMeasures.Add("1.3");
-                            if (!reader.IsDBNull(37) && reader.GetBoolean(37)) spongeCityMeasures.Add("1.4");
-                            if (!reader.IsDBNull(38) && reader.GetBoolean(38)) spongeCityMeasures.Add("1.5");
-                            if (!reader.IsDBNull(39) && reader.GetBoolean(39)) spongeCityMeasures.Add("1.6");
-                            if (!reader.IsDBNull(40) && reader.GetBoolean(40)) spongeCityMeasures.Add("1.7");
-                            if (!reader.IsDBNull(41) && reader.GetBoolean(41)) spongeCityMeasures.Add("1.8");
-                            if (!reader.IsDBNull(42) && reader.GetBoolean(42)) spongeCityMeasures.Add("2.1");
-                            if (!reader.IsDBNull(43) && reader.GetBoolean(43)) spongeCityMeasures.Add("2.2");
-                            if (!reader.IsDBNull(44) && reader.GetBoolean(44)) spongeCityMeasures.Add("2.3");
-                            if (!reader.IsDBNull(45) && reader.GetBoolean(45)) spongeCityMeasures.Add("2.4");
-                            if (!reader.IsDBNull(46) && reader.GetBoolean(46)) spongeCityMeasures.Add("2.5");
-                            if (!reader.IsDBNull(47) && reader.GetBoolean(47)) spongeCityMeasures.Add("2.6");
-                            if (!reader.IsDBNull(48) && reader.GetBoolean(48)) spongeCityMeasures.Add("2.7");
-                            if (!reader.IsDBNull(49) && reader.GetBoolean(49)) spongeCityMeasures.Add("3.1");
-                            if (!reader.IsDBNull(50) && reader.GetBoolean(50)) spongeCityMeasures.Add("3.2");
-                            if (!reader.IsDBNull(51) && reader.GetBoolean(51)) spongeCityMeasures.Add("3.3");
-                            if (!reader.IsDBNull(52) && reader.GetBoolean(52)) spongeCityMeasures.Add("4.1");
-                            if (!reader.IsDBNull(53) && reader.GetBoolean(53)) spongeCityMeasures.Add("4.2");
-                            if (!reader.IsDBNull(54) && reader.GetBoolean(54)) spongeCityMeasures.Add("5.1");
+                            if (!reader.IsDBNull(33) && reader.GetBoolean(33)) spongeCityMeasures.Add("1.1");
+                            if (!reader.IsDBNull(34) && reader.GetBoolean(34)) spongeCityMeasures.Add("1.2");
+                            if (!reader.IsDBNull(35) && reader.GetBoolean(35)) spongeCityMeasures.Add("1.3");
+                            if (!reader.IsDBNull(36) && reader.GetBoolean(36)) spongeCityMeasures.Add("1.4");
+                            if (!reader.IsDBNull(37) && reader.GetBoolean(37)) spongeCityMeasures.Add("1.5");
+                            if (!reader.IsDBNull(38) && reader.GetBoolean(38)) spongeCityMeasures.Add("1.6");
+                            if (!reader.IsDBNull(39) && reader.GetBoolean(39)) spongeCityMeasures.Add("1.7");
+                            if (!reader.IsDBNull(40) && reader.GetBoolean(40)) spongeCityMeasures.Add("1.8");
+                            if (!reader.IsDBNull(41) && reader.GetBoolean(41)) spongeCityMeasures.Add("2.1");
+                            if (!reader.IsDBNull(42) && reader.GetBoolean(42)) spongeCityMeasures.Add("2.2");
+                            if (!reader.IsDBNull(43) && reader.GetBoolean(43)) spongeCityMeasures.Add("2.3");
+                            if (!reader.IsDBNull(44) && reader.GetBoolean(44)) spongeCityMeasures.Add("2.4");
+                            if (!reader.IsDBNull(45) && reader.GetBoolean(45)) spongeCityMeasures.Add("2.5");
+                            if (!reader.IsDBNull(46) && reader.GetBoolean(46)) spongeCityMeasures.Add("2.6");
+                            if (!reader.IsDBNull(47) && reader.GetBoolean(47)) spongeCityMeasures.Add("2.7");
+                            if (!reader.IsDBNull(48) && reader.GetBoolean(48)) spongeCityMeasures.Add("3.1");
+                            if (!reader.IsDBNull(49) && reader.GetBoolean(49)) spongeCityMeasures.Add("3.2");
+                            if (!reader.IsDBNull(50) && reader.GetBoolean(50)) spongeCityMeasures.Add("3.3");
+                            if (!reader.IsDBNull(51) && reader.GetBoolean(51)) spongeCityMeasures.Add("4.1");
+                            if (!reader.IsDBNull(52) && reader.GetBoolean(52)) spongeCityMeasures.Add("4.2");
+                            if (!reader.IsDBNull(53) && reader.GetBoolean(53)) spongeCityMeasures.Add("5.1");
 
                             needFeatureFromDb.properties.spongeCityMeasures = spongeCityMeasures.ToArray();
 
-                            if (!reader.IsDBNull(55)) needFeatureFromDb.properties.workTitle = reader.GetString(55);
-                            if (!reader.IsDBNull(56)) needFeatureFromDb.properties.projectType = reader.GetString(56);
-                            if (!reader.IsDBNull(57)) needFeatureFromDb.properties.costsComment = reader.GetString(57);
+                            if (!reader.IsDBNull(54)) needFeatureFromDb.properties.deleteReason = reader.GetString(54);
 
-                            if (!reader.IsDBNull(58)) needFeatureFromDb.properties.deleteReason = reader.GetString(58);
-
-                            Polygon ntsPoly = reader.IsDBNull(59) ? Polygon.Empty : reader.GetValue(59) as Polygon;
+                            Polygon ntsPoly = reader.IsDBNull(55) ? Polygon.Empty : reader.GetValue(55) as Polygon;
                             needFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
 
                             if (User.IsInRole("administrator"))
@@ -314,11 +309,13 @@ namespace roadwork_portal_service.Controllers
                             DocumentAttributes documentAttributes;
                             while (docsReader.Read())
                             {
-                                if (!docsReader.IsDBNull(0)){
+                                if (!docsReader.IsDBNull(0))
+                                {
                                     documentAttributes = new DocumentAttributes();
                                     documentAttributes.uuid = docsReader.GetGuid(0).ToString();
                                     documentAttributes.filename = "";
-                                    if(!docsReader.IsDBNull(1)){
+                                    if (!docsReader.IsDBNull(1))
+                                    {
                                         documentAttributes.filename = docsReader.GetString(1);
                                     }
                                     multipleDocumentsAttributes.Add(documentAttributes);
@@ -326,6 +323,27 @@ namespace roadwork_portal_service.Controllers
                             }
                         }
                         needFeatureFromDb.properties.documentAtts = multipleDocumentsAttributes.ToArray();
+                    }
+
+                    foreach (RoadWorkNeedFeature needFeatureFromDb in projectsFromDbTemp)
+                    {
+                        NpgsqlCommand selectCostsComm =
+                            _CreatePreparedStatementForGetCosts(needFeatureFromDb.properties.uuid, pgConn);
+                        using (NpgsqlDataReader reader = selectCostsComm.ExecuteReader())
+                        {
+                            List<Costs> costsOfRoadwork = new List<Costs>();
+                            while (reader.Read())
+                            {
+                                Costs costs = new Costs();
+                                if (!reader.IsDBNull(0)) costs.uuid = reader.GetGuid(0).ToString();
+                                if (!reader.IsDBNull(1)) costs.costs = reader.GetDecimal(1);
+                                if (!reader.IsDBNull(2)) costs.workTitle = reader.GetString(2);
+                                if (!reader.IsDBNull(3)) costs.projectType = reader.GetString(3);
+                                if (!reader.IsDBNull(4)) costs.costsComment = reader.GetString(4);
+                                costsOfRoadwork.Add(costs);
+                            }
+                            needFeatureFromDb.properties.costs = costsOfRoadwork.ToArray();
+                        }
                     }
 
                     if (areaManagerUuid != "")
@@ -509,22 +527,32 @@ namespace roadwork_portal_service.Controllers
                     }
                 }
 
-                if (roadWorkNeedFeature.properties.workTitle != null)
-                    roadWorkNeedFeature.properties.workTitle = roadWorkNeedFeature.properties.workTitle.Trim().ToLower();
-
-                if (roadWorkNeedFeature.properties.projectType != null)
-                    roadWorkNeedFeature.properties.projectType = roadWorkNeedFeature.properties.projectType.Trim().ToLower();
-
                 if (roadWorkNeedFeature.properties.orderer.organisationalUnit.isCivilEngineering)
                 {
                     bool notValid = false;
-                    if (roadWorkNeedFeature.properties.workTitle == null || roadWorkNeedFeature.properties.workTitle == "")
-                        notValid = true;
-                    if (roadWorkNeedFeature.properties.projectType == null || roadWorkNeedFeature.properties.projectType == "")
-                        notValid = true;
                     if (roadWorkNeedFeature.properties.costs == null ||
-                            roadWorkNeedFeature.properties.costs == 0)
+                            roadWorkNeedFeature.properties.costs.Length == 0)
                         notValid = true;
+
+                    if (!notValid)
+                    {
+                        foreach (Costs costs in roadWorkNeedFeature.properties.costs)
+                        {
+                            if (costs.workTitle == null) costs.workTitle = "";
+                            if (costs.projectType == null) costs.projectType = "";
+                            if (costs.costsComment == null) costs.costsComment = "";
+
+                            costs.workTitle = costs.workTitle.Trim().ToLower();
+                            costs.projectType = costs.projectType.Trim().ToLower();
+                            costs.costsComment = costs.costsComment.Trim();
+
+                            if (!RoadWorkNeedDAO.IsCostsValid(costs))
+                            {
+                                notValid = true;
+                                break;
+                            }
+                        }
+                    }
 
                     if (notValid)
                     {
@@ -536,8 +564,6 @@ namespace roadwork_portal_service.Controllers
                 }
                 else
                 {
-                    roadWorkNeedFeature.properties.workTitle = null;
-                    roadWorkNeedFeature.properties.projectType = null;
                     roadWorkNeedFeature.properties.costs = null;
                 }
 
@@ -637,7 +663,7 @@ namespace roadwork_portal_service.Controllers
                                     finish_early_to=@finish_early_to, finish_optimum_to=@finish_optimum_to,
                                     finish_late_to=@finish_late_to, priority=@priority,
                                     description=@description, 
-                                    costs=@costs, section=@section, comment=@comment, 
+                                    section=@section, comment=@comment, 
                                     url=@url, private=@private, overarching_measure=@overarching_measure,
                                     desired_year_from=@desired_year_from,
                                     desired_year_to=@desired_year_to, has_sponge_city_meas=@has_sponge_city_meas,
@@ -651,8 +677,7 @@ namespace roadwork_portal_service.Controllers
                                     is_sponge_2_7=@is_sponge_2_7, is_sponge_3_1=@is_sponge_3_1,
                                     is_sponge_3_2=@is_sponge_3_2, is_sponge_3_3=@is_sponge_3_3,
                                     is_sponge_4_1=@is_sponge_4_1, is_sponge_4_2=@is_sponge_4_2,
-                                    is_sponge_5_1=@is_sponge_5_1, work_title=@work_title,
-                                    project_type=@project_type, costs_comment=@costs_comment, geom=@geom";
+                                    is_sponge_5_1=@is_sponge_5_1, geom=@geom";
 
                         updateComm.Parameters.AddWithValue("name", roadWorkNeedFeature.properties.name);
                         if (roadWorkNeedFeature.properties.orderer.uuid != "")
@@ -670,7 +695,6 @@ namespace roadwork_portal_service.Controllers
                         updateComm.Parameters.AddWithValue("finish_late_to", roadWorkNeedFeature.properties.finishLateTo);
                         updateComm.Parameters.AddWithValue("priority", roadWorkNeedFeature.properties.priority.code);
                         updateComm.Parameters.AddWithValue("description", roadWorkNeedFeature.properties.description);
-                        updateComm.Parameters.AddWithValue("costs", roadWorkNeedFeature.properties.costs != null ? roadWorkNeedFeature.properties.costs : DBNull.Value);
                         updateComm.Parameters.AddWithValue("section", roadWorkNeedFeature.properties.section);
                         updateComm.Parameters.AddWithValue("comment", roadWorkNeedFeature.properties.comment);
                         updateComm.Parameters.AddWithValue("url", roadWorkNeedFeature.properties.url);
@@ -708,11 +732,6 @@ namespace roadwork_portal_service.Controllers
                         updateComm.Parameters.AddWithValue("is_sponge_4_1", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("4.1"));
                         updateComm.Parameters.AddWithValue("is_sponge_4_2", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("4.2"));
                         updateComm.Parameters.AddWithValue("is_sponge_5_1", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("5.1"));
-
-                        updateComm.Parameters.AddWithValue("work_title", roadWorkNeedFeature.properties.workTitle != null ? roadWorkNeedFeature.properties.workTitle : DBNull.Value);
-                        updateComm.Parameters.AddWithValue("project_type", roadWorkNeedFeature.properties.projectType != null ? roadWorkNeedFeature.properties.projectType : DBNull.Value);
-                        updateComm.Parameters.AddWithValue("costs_comment", roadWorkNeedFeature.properties.costsComment != null ? roadWorkNeedFeature.properties.costsComment : DBNull.Value);
-
                         updateComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
 
                         string activityRelationType = "";
@@ -738,7 +757,6 @@ namespace roadwork_portal_service.Controllers
 
                         if (roadWorkNeedFeature.properties.roadWorkActivityUuid != "")
                         {
-
 
                             NpgsqlCommand selectCommand = pgConn.CreateCommand();
                             selectCommand.CommandText = @"SELECT uuid_roadwork_activity
@@ -816,6 +834,44 @@ namespace roadwork_portal_service.Controllers
                                 insertHistoryComm.ExecuteNonQuery();
                             }
                         }
+
+                        if (roadWorkNeedFeature.properties.costs != null)
+                        {
+                            NpgsqlCommand deleteCostsComm = pgConn.CreateCommand();
+                            deleteCostsComm.CommandText = @"DELETE FROM ""wtb_ssp_costs""
+                                        WHERE roadworkneed=@roadworkneed";
+                            deleteCostsComm.Parameters.AddWithValue("roadworkneed", new Guid(roadWorkNeedFeature.properties.uuid));
+                            deleteCostsComm.ExecuteNonQuery();
+
+                            foreach (Costs costs in roadWorkNeedFeature.properties.costs)
+                            {
+                                if (costs != null && costs.uuid != null)
+                                    costs.uuid = costs.uuid.Trim().ToLower();
+
+                                if (costs != null && costs.uuid != null
+                                        && costs.uuid != String.Empty)
+                                {
+                                    if (costs.workTitle != null) costs.workTitle = costs.workTitle.Trim().ToLower();
+                                    if (costs.projectType != null) costs.projectType = costs.projectType.Trim().ToLower();
+                                    if (costs.costsComment != null) costs.costsComment = costs.costsComment.Trim();
+
+                                    NpgsqlCommand insertCostsComm = pgConn.CreateCommand();
+                                    insertCostsComm.CommandText = @"INSERT INTO ""wtb_ssp_costs""
+                                        (uuid, roadworkneed, costs, work_title,
+                                        project_type, costs_comment)
+                                        VALUES (@uuid, @roadworkneed, @costs, @work_title,
+                                        @project_type, @costs_comment)";
+                                    insertCostsComm.Parameters.AddWithValue("uuid", Guid.NewGuid());
+                                    insertCostsComm.Parameters.AddWithValue("roadworkneed", new Guid(roadWorkNeedFeature.properties.uuid));
+                                    insertCostsComm.Parameters.AddWithValue("costs", costs.costs != null ? costs.costs : DBNull.Value);
+                                    insertCostsComm.Parameters.AddWithValue("work_title", costs.workTitle != null ? costs.workTitle : DBNull.Value);
+                                    insertCostsComm.Parameters.AddWithValue("project_type", costs.projectType != null ? costs.projectType : DBNull.Value);
+                                    insertCostsComm.Parameters.AddWithValue("costs_comment", costs.costsComment != null ? costs.costsComment : DBNull.Value);
+                                    insertCostsComm.ExecuteNonQuery();
+                                }
+                            }
+                        }
+
                         updateTransAction.Commit();
                     }
                 }
@@ -1000,6 +1056,18 @@ namespace roadwork_portal_service.Controllers
 
             }
             return result;
+        }
+
+        private NpgsqlCommand _CreatePreparedStatementForGetCosts(string roadWorkNeedUuid,
+                NpgsqlConnection pgConn)
+        {
+            NpgsqlCommand selectCostsComm = pgConn.CreateCommand();
+            selectCostsComm.CommandText = @"SELECT uuid, costs, work_title,
+                        project_type, costs_comment
+                        FROM ""wtb_ssp_costs""
+                        WHERE roadworkneed=@roadworkneed";
+            selectCostsComm.Parameters.AddWithValue("roadworkneed", new Guid(roadWorkNeedUuid));
+            return selectCostsComm;
         }
 
     }

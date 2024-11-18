@@ -3,8 +3,6 @@
 //      Copyright (c) Geoinformation Winterthur. All rights reserved.
 // </copyright>
 
-using Microsoft.AspNetCore.Mvc.Routing;
-using Microsoft.Extensions.ObjectPool;
 using NetTopologySuite.Geometries;
 using Npgsql;
 using roadwork_portal_service.Configuration;
@@ -99,25 +97,24 @@ public class RoadWorkNeedDAO
 
         if (roadWorkNeedFeature.properties.orderer.organisationalUnit.isCivilEngineering)
         {
-            bool notValid = false;
-            if (roadWorkNeedFeature.properties.workTitle == null || roadWorkNeedFeature.properties.workTitle == "")
-                notValid = true;
-            if (roadWorkNeedFeature.properties.projectType == null || roadWorkNeedFeature.properties.projectType == "")
-                notValid = true;
             if (roadWorkNeedFeature.properties.costs == null ||
-                    roadWorkNeedFeature.properties.costs == 0)
-                notValid = true;
-
-            if (notValid)
+                    roadWorkNeedFeature.properties.costs.Length == 0)
             {
                 roadWorkNeedFeature.errorMessage = "SSP-40";
                 return roadWorkNeedFeature;
             }
+
+            foreach (Costs cost in roadWorkNeedFeature.properties.costs)
+            {
+                if (!IsCostsValid(cost))
+                {
+                    roadWorkNeedFeature.errorMessage = "SSP-40";
+                    return roadWorkNeedFeature;
+                }
+            }
         }
         else
         {
-            roadWorkNeedFeature.properties.workTitle = null;
-            roadWorkNeedFeature.properties.projectType = null;
             roadWorkNeedFeature.properties.costs = null;
         }
 
@@ -164,10 +161,34 @@ public class RoadWorkNeedDAO
         using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
         {
             pgConn.Open();
-            NpgsqlCommand insertComm = _CreatePreparedStatementForInsert(roadWorkNeedFeature,
+
+            using (NpgsqlTransaction trans = pgConn.BeginTransaction())
+            {
+                NpgsqlCommand insertComm = _CreatePreparedStatementForInsert(roadWorkNeedFeature,
                             roadWorkNeedPoly, pgConn);
-            insertComm.ExecuteNonQuery();
+                insertComm.ExecuteNonQuery();
+
+                if (roadWorkNeedFeature.properties.costs != null)
+                {
+                    foreach (Costs costs in roadWorkNeedFeature.properties.costs)
+                    {
+                        if (costs != null)
+                        {
+                            if (costs.workTitle != null) costs.workTitle = costs.workTitle.Trim().ToLower();
+                            if (costs.projectType != null) costs.projectType = costs.projectType.Trim().ToLower();
+                            if (costs.costsComment != null) costs.costsComment = costs.costsComment.Trim();
+
+                            NpgsqlCommand insertCostsComm =
+                                _CreatePreparedStatementForInsertCosts(costs,
+                                            roadWorkNeedFeature.properties.uuid, pgConn);
+                            insertCostsComm.ExecuteNonQuery();
+                        }
+                    }
+                }
+                trans.Commit();
+            }
         }
+
         return roadWorkNeedFeature;
     }
 
@@ -178,18 +199,18 @@ public class RoadWorkNeedDAO
         insertComm.CommandText = @"INSERT INTO ""wtb_ssp_roadworkneeds""
                                     (uuid, name, orderer, created, last_modified, finish_early_to,
                                     finish_optimum_to, finish_late_to, priority, status, description,
-                                    costs, private, section, comment, url, overarching_measure,
+                                    private, section, comment, url, overarching_measure,
                                     desired_year_from, desired_year_to, has_sponge_city_meas,
                                     is_sponge_1_1, is_sponge_1_2, is_sponge_1_3, is_sponge_1_4,
                                     is_sponge_1_5, is_sponge_1_6, is_sponge_1_7, is_sponge_1_8,
                                     is_sponge_2_1, is_sponge_2_2, is_sponge_2_3, is_sponge_2_4,
                                     is_sponge_2_5, is_sponge_2_6, is_sponge_2_7, is_sponge_3_1,
                                     is_sponge_3_2, is_sponge_3_3, is_sponge_4_1, is_sponge_4_2,
-                                    is_sponge_5_1, work_title, project_type, costs_comment, geom)
+                                    is_sponge_5_1, geom)
                                     VALUES (@uuid, @name, @orderer, @created, @last_modified,
                                     @finish_early_to, @finish_optimum_to,
                                     @finish_late_to, @priority, @status, @description,
-                                    @costs, @private, @section, @comment, @url,
+                                    @private, @section, @comment, @url,
                                     @overarching_measure, @desired_year_from, @desired_year_to, 
                                     @has_sponge_city_meas, @is_sponge_1_1, @is_sponge_1_2,
                                     @is_sponge_1_3, @is_sponge_1_4, @is_sponge_1_5,
@@ -197,7 +218,7 @@ public class RoadWorkNeedDAO
                                     @is_sponge_2_1, @is_sponge_2_2, @is_sponge_2_3, @is_sponge_2_4,
                                     @is_sponge_2_5, @is_sponge_2_6, @is_sponge_2_7, @is_sponge_3_1,
                                     @is_sponge_3_2, @is_sponge_3_3, @is_sponge_4_1, @is_sponge_4_2,
-                                    @is_sponge_5_1, @work_title, @project_type, @costs_comment, @geom)";
+                                    @is_sponge_5_1, @geom)";
         insertComm.Parameters.AddWithValue("uuid", new Guid(roadWorkNeedFeature.properties.uuid));
         insertComm.Parameters.AddWithValue("name", roadWorkNeedFeature.properties.name);
         if (roadWorkNeedFeature.properties.orderer.uuid != "")
@@ -218,7 +239,6 @@ public class RoadWorkNeedDAO
         insertComm.Parameters.AddWithValue("priority", roadWorkNeedFeature.properties.priority.code);
         insertComm.Parameters.AddWithValue("status", roadWorkNeedFeature.properties.status);
         insertComm.Parameters.AddWithValue("description", roadWorkNeedFeature.properties.description);
-        insertComm.Parameters.AddWithValue("costs", roadWorkNeedFeature.properties.costs != null ? roadWorkNeedFeature.properties.costs : DBNull.Value);
         insertComm.Parameters.AddWithValue("private", roadWorkNeedFeature.properties.isPrivate);
         insertComm.Parameters.AddWithValue("section", roadWorkNeedFeature.properties.section);
         insertComm.Parameters.AddWithValue("comment", roadWorkNeedFeature.properties.comment);
@@ -255,14 +275,41 @@ public class RoadWorkNeedDAO
         insertComm.Parameters.AddWithValue("is_sponge_4_1", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("4.1"));
         insertComm.Parameters.AddWithValue("is_sponge_4_2", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("4.2"));
         insertComm.Parameters.AddWithValue("is_sponge_5_1", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("5.1"));
-
-        insertComm.Parameters.AddWithValue("work_title", roadWorkNeedFeature.properties.workTitle != null ? roadWorkNeedFeature.properties.workTitle : DBNull.Value);
-        insertComm.Parameters.AddWithValue("project_type", roadWorkNeedFeature.properties.projectType != null ? roadWorkNeedFeature.properties.projectType : DBNull.Value);
-        insertComm.Parameters.AddWithValue("costs_comment", roadWorkNeedFeature.properties.costsComment != null ? roadWorkNeedFeature.properties.costsComment : DBNull.Value);
-
         insertComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
 
         return insertComm;
+    }
+
+    private NpgsqlCommand _CreatePreparedStatementForInsertCosts(Costs costs, string roadWorkNeedUuid,
+                    NpgsqlConnection pgConn)
+    {
+        NpgsqlCommand insertCostsComm = pgConn.CreateCommand();
+        insertCostsComm.CommandText = @"INSERT INTO ""wtb_ssp_costs""
+                                    (uuid, roadworkneed, costs, work_title,
+                                    project_type, costs_comment)
+                                    VALUES (@uuid, @roadworkneed, @costs, @work_title,
+                                    @project_type, @costs_comment)";
+        insertCostsComm.Parameters.AddWithValue("uuid", Guid.NewGuid());
+        insertCostsComm.Parameters.AddWithValue("roadworkneed", new Guid(roadWorkNeedUuid));
+        insertCostsComm.Parameters.AddWithValue("costs", costs.costs != null ? costs.costs : DBNull.Value);
+        insertCostsComm.Parameters.AddWithValue("work_title", costs.workTitle != null ? costs.workTitle : DBNull.Value);
+        insertCostsComm.Parameters.AddWithValue("project_type", costs.projectType != null ? costs.projectType : DBNull.Value);
+        insertCostsComm.Parameters.AddWithValue("costs_comment", costs.costsComment != null ? costs.costsComment : DBNull.Value);
+
+        return insertCostsComm;
+    }
+
+    public static bool IsCostsValid(Costs costs)
+    {
+        bool isNotValid = false;
+        if (costs == null) return false;
+        if (costs.workTitle == null || costs.workTitle == "")
+            isNotValid = true;
+        if (costs.projectType == null || costs.projectType == "")
+            isNotValid = true;
+        if (costs.costs == null || costs.costs == 0)
+            isNotValid = true;
+        return !isNotValid;
     }
 
 }
