@@ -53,7 +53,10 @@ namespace roadwork_portal_service.Controllers
                             r.date_info_end, r.date_info_close, r.is_aggloprog, r.date_optimum,
                             r.date_of_acceptance, r.url,
                             r.project_study_approved, r.study_approved, r.date_sks_real,
-                            r.date_kap_real, r.date_oks_real, r.date_gl_tba_real, r.geom
+                            r.date_kap_real, r.date_oks_real, r.date_gl_tba_real,
+                            r.date_start_inconsult, r.date_start_verified, r.date_start_reporting,
+                            r.date_start_suspended, r.date_start_coordinated,
+                            r.geom
                         FROM ""wtb_ssp_roadworkactivities"" r
                         LEFT JOIN ""wtb_ssp_users"" pm ON r.projectmanager = pm.uuid
                         LEFT JOIN ""wtb_ssp_users"" ta ON r.traffic_agent = ta.uuid";
@@ -182,8 +185,13 @@ namespace roadwork_portal_service.Controllers
                         projectFeatureFromDb.properties.dateKapReal = reader.IsDBNull(69) ? null : reader.GetDateTime(69);
                         projectFeatureFromDb.properties.dateOksReal = reader.IsDBNull(70) ? null : reader.GetDateTime(70);
                         projectFeatureFromDb.properties.dateGlTbaReal = reader.IsDBNull(71) ? null : reader.GetDateTime(71);
+                        projectFeatureFromDb.properties.dateStartInconsult = reader.IsDBNull(72) ? null : reader.GetDateTime(72);
+                        projectFeatureFromDb.properties.dateStartVerified = reader.IsDBNull(73) ? null : reader.GetDateTime(73);
+                        projectFeatureFromDb.properties.dateStartReporting = reader.IsDBNull(74) ? null : reader.GetDateTime(74);
+                        projectFeatureFromDb.properties.dateStartSuspended = reader.IsDBNull(75) ? null : reader.GetDateTime(75);
+                        projectFeatureFromDb.properties.dateStartCoordinated = reader.IsDBNull(76) ? null : reader.GetDateTime(76);
 
-                        Polygon ntsPoly = reader.IsDBNull(72) ? Polygon.Empty : reader.GetValue(72) as Polygon;
+                        Polygon ntsPoly = reader.IsDBNull(77) ? Polygon.Empty : reader.GetValue(77) as Polygon;
                         projectFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
 
                         projectsFromDb.Add(projectFeatureFromDb);
