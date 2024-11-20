@@ -1427,7 +1427,7 @@ namespace roadwork_portal_service.Controllers
 
                     using (NpgsqlTransaction deleteTransAction = pgConn.BeginTransaction())
                     {
-                        string revertNeedStatus = isPrivate ? "requirement" : "suspended";
+                        string revertNeedStatus = isPrivate ? "requirement" : "edited";
 
                         NpgsqlCommand updateComm = pgConn.CreateCommand();
                         updateComm.CommandText = @$"UPDATE ""wtb_ssp_roadworkneeds""
