@@ -987,6 +987,23 @@ namespace roadwork_portal_service.Controllers
 
                     deleteRelationComm.ExecuteNonQuery();
 
+                    if (!releaseOnly)
+                    {
+                        NpgsqlCommand deleteDocumentsComm = pgConn.CreateCommand();
+                        deleteDocumentsComm = pgConn.CreateCommand();
+                        deleteDocumentsComm.CommandText = @"DELETE FROM ""wtb_ssp_documents""
+                                WHERE roadworkneed=@uuid";
+                        deleteDocumentsComm.Parameters.AddWithValue("uuid", new Guid(uuid));
+                        deleteDocumentsComm.ExecuteNonQuery();
+
+                        NpgsqlCommand deleteCostsComm = pgConn.CreateCommand();
+                        deleteCostsComm = pgConn.CreateCommand();
+                        deleteCostsComm.CommandText = @"DELETE FROM ""wtb_ssp_costs""
+                                WHERE roadworkneed=@uuid";
+                        deleteCostsComm.Parameters.AddWithValue("uuid", new Guid(uuid));
+                        deleteCostsComm.ExecuteNonQuery();
+                    }
+
                     NpgsqlCommand changeNeedComm = pgConn.CreateCommand();
                     if (releaseOnly)
                     {

@@ -1441,6 +1441,13 @@ namespace roadwork_portal_service.Controllers
                         updateComm.Parameters.AddWithValue("delete_reason", deleteReason);
                         updateComm.ExecuteNonQuery();
 
+                        NpgsqlCommand deleteDocumentsComm = pgConn.CreateCommand();
+                        deleteDocumentsComm = pgConn.CreateCommand();
+                        deleteDocumentsComm.CommandText = @"DELETE FROM ""wtb_ssp_documents""
+                                WHERE roadworkactivity=@uuid";
+                        deleteDocumentsComm.Parameters.AddWithValue("uuid", new Guid(uuid));
+                        countAffectedRows = deleteDocumentsComm.ExecuteNonQuery();
+
                         NpgsqlCommand deleteActivityComm = pgConn.CreateCommand();
                         deleteActivityComm = pgConn.CreateCommand();
                         deleteActivityComm.CommandText = @"DELETE FROM ""wtb_ssp_roadworkactivities""
