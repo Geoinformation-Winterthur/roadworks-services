@@ -10,7 +10,7 @@ public class RoadWorkNeedProperties
     public string name { get; set; } = "";
     public User orderer { get; set; } = new User();
     public DateTime created { get; set; } = DateTime.MinValue;
-    public DateTime lastModified { get; set; } = DateTime.MinValue;
+    public DateTime? lastModified { get; set; }
     public DateTime finishEarlyTo { get; set; } = DateTime.MinValue;
     public DateTime finishOptimumTo { get; set; } = DateTime.MinValue;
     public DateTime finishLateTo { get; set; } = DateTime.MinValue;
@@ -35,5 +35,6 @@ public class RoadWorkNeedProperties
     public bool hasSpongeCityMeasures { get; set; } = false;
     public string[]? spongeCityMeasures { get; set; }
     public string? deleteReason { get; set; }
+    public bool? isPrimary { get; set; }
 }
 

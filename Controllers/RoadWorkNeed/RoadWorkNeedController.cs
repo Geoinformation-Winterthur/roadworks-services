@@ -31,7 +31,7 @@ namespace roadwork_portal_service.Controllers
                 DateTime? dateOfCreation, int? year, string? uuids,
                 string? roadWorkActivityUuid, string? name,
                 string? areaManagerUuid, bool? onlyMyNeeds,
-                bool? onlyWithDeleteComment, string? status,
+                string? status, string? intersectsActivityUuid,
                 bool summary = false)
         {
             List<RoadWorkNeedFeature> projectsFromDb = new List<RoadWorkNeedFeature>();
@@ -50,6 +50,11 @@ namespace roadwork_portal_service.Controllers
                     roadWorkActivityUuid = "";
                 else
                     roadWorkActivityUuid = roadWorkActivityUuid.Trim().ToLower();
+
+                if (intersectsActivityUuid == null)
+                    intersectsActivityUuid = "";
+                else
+                    intersectsActivityUuid = intersectsActivityUuid.Trim().ToLower();
 
                 if (name == null)
                     name = "";
@@ -70,9 +75,6 @@ namespace roadwork_portal_service.Controllers
                 if (onlyMyNeeds == null)
                     onlyMyNeeds = false;
 
-                if (onlyWithDeleteComment == null)
-                    onlyWithDeleteComment = false;
-
                 User userFromDb = LoginController.getAuthorizedUserFromDb(this.User, false);
 
                 // get data of current user from database:
@@ -84,31 +86,42 @@ namespace roadwork_portal_service.Controllers
                             u.first_name, u.last_name, o.name as orgname, r.finish_early_to,
                             r.finish_optimum_to, r.finish_late_to, p.code, r.status as statusname,
                             r.description, 
-                            r.created, r.last_modified, an.uuid_roadwork_activity, u.e_mail,
-                            r.relevance, an.activityrelationtype,
+                            r.created, r.last_modified, u.e_mail,
+                            r.relevance, 
                             r.note_of_area_man, r.area_man_note_date,
                             n.first_name as area_manager_first_name, n.last_name as area_manager_last_name,
                             r.private, r.section, r.comment, r.url, o.is_civil_eng, o.abbreviation,
                             r.overarching_measure, r.desired_year_from, r.desired_year_to,
-                            u.e_mail,
                             r.has_sponge_city_meas, r.is_sponge_1_1, r.is_sponge_1_2,
                             r.is_sponge_1_3, r.is_sponge_1_4, r.is_sponge_1_5, r.is_sponge_1_6,
                             r.is_sponge_1_7, r.is_sponge_1_8, r.is_sponge_2_1, r.is_sponge_2_2,
                             r.is_sponge_2_3, r.is_sponge_2_4, r.is_sponge_2_5, r.is_sponge_2_6,
                             r.is_sponge_2_7, r.is_sponge_3_1, r.is_sponge_3_2, r.is_sponge_3_3,
                             r.is_sponge_4_1, r.is_sponge_4_2, r.is_sponge_5_1, r.delete_reason,
-                            r.geom
-                        FROM ""wtb_ssp_roadworkneeds"" r
-                        LEFT JOIN ""wtb_ssp_activities_to_needs"" an ON an.uuid_roadwork_need = r.uuid
+                            r.geom";
+
+                    if (uuids == "" && roadWorkActivityUuid != "")
+                    {
+                        selectComm.CommandText += @", an.uuid_roadwork_activity, an.activityrelationtype, an.is_primary";
+                    }
+
+                    selectComm.CommandText += @" FROM ""wtb_ssp_roadworkneeds"" r
                         LEFT JOIN ""wtb_ssp_users"" u ON r.orderer = u.uuid
                         LEFT JOIN ""wtb_ssp_organisationalunits"" o ON u.org_unit = o.uuid
                         LEFT JOIN ""wtb_ssp_priorities"" p ON r.priority = p.code
                         LEFT JOIN ""wtb_ssp_users"" n ON r.area_man_of_note = n.uuid";
 
-                    if (roadWorkActivityUuid != "")
+                    if (uuids == "")
                     {
-                        selectComm.CommandText += @" LEFT JOIN ""wtb_ssp_roadworkactivities"" act ON act.uuid = @act_uuid";
-                        selectComm.Parameters.AddWithValue("act_uuid", new Guid(roadWorkActivityUuid));
+                        if (roadWorkActivityUuid != "")
+                        {
+                            selectComm.CommandText += @" LEFT JOIN ""wtb_ssp_activities_to_needs"" an ON an.uuid_roadwork_need = r.uuid";
+                        }
+                        else if (intersectsActivityUuid != "")
+                        {
+                            selectComm.CommandText += @" LEFT JOIN ""wtb_ssp_roadworkactivities"" act ON act.uuid = @act_uuid";
+                            selectComm.Parameters.AddWithValue("act_uuid", new Guid(intersectsActivityUuid));
+                        }
                     }
 
                     selectComm.CommandText += " WHERE (r.private = false OR r.orderer = @orderer_uuid)";
@@ -131,8 +144,12 @@ namespace roadwork_portal_service.Controllers
                     }
                     else if (roadWorkActivityUuid != "")
                     {
-                        selectComm.CommandText += @" AND ST_Intersects(act.geom, r.geom)";
+                        selectComm.CommandText += @" AND an.uuid_roadwork_activity = @act_uuid";
                         selectComm.Parameters.AddWithValue("act_uuid", new Guid(roadWorkActivityUuid));
+                    }
+                    else if (intersectsActivityUuid != "")
+                    {
+                        selectComm.CommandText += @" AND ST_Intersects(act.geom, r.geom)";
                     }
                     else
                     {
@@ -163,11 +180,6 @@ namespace roadwork_portal_service.Controllers
                         if ((bool)onlyMyNeeds)
                         {
                             selectComm.CommandText += " AND r.orderer = @orderer_uuid";
-                        }
-
-                        if ((bool)onlyWithDeleteComment)
-                        {
-                            selectComm.CommandText += " AND r.delete_reason IS NOT NULL";
                         }
 
                         if (statusArray[0] != "")
@@ -203,87 +215,98 @@ namespace roadwork_portal_service.Controllers
                                     reader.IsDBNull(reader.GetOrdinal("name")) ?
                                         "" : reader.GetString(reader.GetOrdinal("name"));
                             User orderer = new User();
-                            orderer.uuid = reader.IsDBNull(2) ? "" : reader.GetGuid(2).ToString();
-                            orderer.firstName = reader.IsDBNull(3) ? "" : reader.GetString(3);
-                            orderer.lastName = reader.IsDBNull(4) ? "" : reader.GetString(4);
+                            orderer.uuid = reader.IsDBNull(reader.GetOrdinal("orderer")) ? "" : reader.GetGuid(reader.GetOrdinal("orderer")).ToString();
+                            orderer.firstName = reader.IsDBNull(reader.GetOrdinal("first_name")) ? "" : reader.GetString(reader.GetOrdinal("first_name"));
+                            orderer.lastName = reader.IsDBNull(reader.GetOrdinal("last_name")) ? "" : reader.GetString(reader.GetOrdinal("last_name"));
                             OrganisationalUnit orgUnit = new OrganisationalUnit();
-                            orgUnit.name = reader.IsDBNull(5) ? "" : reader.GetString(5);
+                            orgUnit.name = reader.IsDBNull(reader.GetOrdinal("orgname")) ? "" : reader.GetString(reader.GetOrdinal("orgname"));
                             orderer.organisationalUnit = orgUnit;
                             needFeatureFromDb.properties.orderer = orderer;
-                            needFeatureFromDb.properties.finishEarlyTo = reader.IsDBNull(6) ? DateTime.MinValue : reader.GetDateTime(6);
-                            needFeatureFromDb.properties.finishOptimumTo = reader.IsDBNull(7) ? DateTime.MinValue : reader.GetDateTime(7);
-                            needFeatureFromDb.properties.finishLateTo = reader.IsDBNull(8) ? DateTime.MinValue : reader.GetDateTime(8);
+                            needFeatureFromDb.properties.finishEarlyTo = reader.IsDBNull(reader.GetOrdinal("finish_early_to")) ? DateTime.MinValue : reader.GetDateTime(reader.GetOrdinal("finish_early_to"));
+                            needFeatureFromDb.properties.finishOptimumTo = reader.IsDBNull(reader.GetOrdinal("finish_optimum_to")) ? DateTime.MinValue : reader.GetDateTime(reader.GetOrdinal("finish_optimum_to"));
+                            needFeatureFromDb.properties.finishLateTo = reader.IsDBNull(reader.GetOrdinal("finish_late_to")) ? DateTime.MinValue : reader.GetDateTime(reader.GetOrdinal("finish_late_to"));
                             Priority priority = new Priority();
-                            priority.code = reader.IsDBNull(9) ? "" : reader.GetString(9);
+                            priority.code = reader.IsDBNull(reader.GetOrdinal("code")) ? "" : reader.GetString(reader.GetOrdinal("code"));
                             needFeatureFromDb.properties.priority = priority;
-                            needFeatureFromDb.properties.status = reader.IsDBNull(10) ? "" : reader.GetString(10);
-                            needFeatureFromDb.properties.description = reader.IsDBNull(11) ? "" : reader.GetString(11);
-
-                            needFeatureFromDb.properties.created = reader.IsDBNull(12) ? DateTime.MinValue : reader.GetDateTime(12);
-                            needFeatureFromDb.properties.lastModified = reader.IsDBNull(13) ? DateTime.MinValue : reader.GetDateTime(13);
-                            needFeatureFromDb.properties.roadWorkActivityUuid = reader.IsDBNull(14) ? "" : reader.GetGuid(14).ToString();
-
-                            string ordererMailAddress = reader.IsDBNull(15) ? "" : reader.GetString(15);
-                            string mailOfLoggedInUser = User.FindFirstValue(ClaimTypes.Email);
-
-                            needFeatureFromDb.properties.activityRelationType = reader.IsDBNull(17) ? "" : reader.GetString(17);
-                            needFeatureFromDb.properties.noteOfAreaManager = reader.IsDBNull(18) ? "" : reader.GetString(18);
-                            needFeatureFromDb.properties.areaManagerNoteDate = reader.IsDBNull(19) ? DateTime.MinValue : reader.GetDateTime(19);
+                            needFeatureFromDb.properties.status = reader.IsDBNull(reader.GetOrdinal("statusname")) ? "" : reader.GetString(reader.GetOrdinal("statusname"));
+                            needFeatureFromDb.properties.description = reader.IsDBNull(reader.GetOrdinal("description")) ? "" : reader.GetString(reader.GetOrdinal("description"));
+                            needFeatureFromDb.properties.created = reader.IsDBNull(reader.GetOrdinal("created")) ? DateTime.MinValue : reader.GetDateTime(reader.GetOrdinal("created"));
+                            needFeatureFromDb.properties.lastModified = reader.IsDBNull(reader.GetOrdinal("last_modified")) ? DateTime.MinValue : reader.GetDateTime(reader.GetOrdinal("last_modified"));
+                            needFeatureFromDb.properties.orderer.mailAddress = reader.IsDBNull(reader.GetOrdinal("e_mail")) ? "" : reader.GetString(reader.GetOrdinal("e_mail"));
+                            needFeatureFromDb.properties.noteOfAreaManager = reader.IsDBNull(reader.GetOrdinal("note_of_area_man")) ? "" : reader.GetString(reader.GetOrdinal("note_of_area_man"));
+                            needFeatureFromDb.properties.areaManagerNoteDate = reader.IsDBNull(reader.GetOrdinal("area_man_note_date")) ? DateTime.MinValue : reader.GetDateTime(reader.GetOrdinal("area_man_note_date"));
 
                             User areaManagerOfNote = new User();
-                            areaManagerOfNote.firstName = reader.IsDBNull(20) ? "" : reader.GetString(20);
-                            areaManagerOfNote.lastName = reader.IsDBNull(21) ? "" : reader.GetString(21);
+                            areaManagerOfNote.firstName = reader.IsDBNull(reader.GetOrdinal("area_manager_first_name")) ? "" : reader.GetString(reader.GetOrdinal("area_manager_first_name"));
+                            areaManagerOfNote.lastName = reader.IsDBNull(reader.GetOrdinal("area_manager_last_name")) ? "" : reader.GetString(reader.GetOrdinal("area_manager_last_name"));
                             needFeatureFromDb.properties.areaManagerOfNote = areaManagerOfNote;
-                            needFeatureFromDb.properties.isPrivate = reader.IsDBNull(22) ? true : reader.GetBoolean(22);
-                            needFeatureFromDb.properties.section = reader.IsDBNull(23) ? "" : reader.GetString(23);
-                            needFeatureFromDb.properties.comment = reader.IsDBNull(24) ? "" : reader.GetString(24);
-                            needFeatureFromDb.properties.url = reader.IsDBNull(25) ? "" : reader.GetString(25);
-                            needFeatureFromDb.properties.orderer.organisationalUnit.isCivilEngineering = reader.IsDBNull(26) ? false : reader.GetBoolean(26);
+                            needFeatureFromDb.properties.isPrivate = reader.IsDBNull(reader.GetOrdinal("private")) ? true : reader.GetBoolean(reader.GetOrdinal("private"));
+                            needFeatureFromDb.properties.section = reader.IsDBNull(reader.GetOrdinal("section")) ? "" : reader.GetString(reader.GetOrdinal("section"));
+                            needFeatureFromDb.properties.comment = reader.IsDBNull(reader.GetOrdinal("comment")) ? "" : reader.GetString(reader.GetOrdinal("comment"));
+                            needFeatureFromDb.properties.url = reader.IsDBNull(reader.GetOrdinal("url")) ? "" : reader.GetString(reader.GetOrdinal("url"));
+                            needFeatureFromDb.properties.orderer.organisationalUnit.isCivilEngineering = reader.IsDBNull(reader.GetOrdinal("is_civil_eng")) ? false : reader.GetBoolean(reader.GetOrdinal("is_civil_eng"));
 
-                            orgUnit.abbreviation = reader.IsDBNull(27) ? "" : reader.GetString(27);
+                            orgUnit.abbreviation = reader.IsDBNull(reader.GetOrdinal("abbreviation")) ? "" : reader.GetString(reader.GetOrdinal("abbreviation"));
 
-                            needFeatureFromDb.properties.overarchingMeasure = reader.IsDBNull(28) ? false : reader.GetBoolean(28);
-                            needFeatureFromDb.properties.desiredYearFrom = reader.IsDBNull(29) ? null : reader.GetInt32(29);
-                            needFeatureFromDb.properties.desiredYearTo = reader.IsDBNull(30) ? null : reader.GetInt32(30);
+                            needFeatureFromDb.properties.overarchingMeasure = reader.IsDBNull(reader.GetOrdinal("overarching_measure")) ? false : reader.GetBoolean(reader.GetOrdinal("overarching_measure"));
+                            needFeatureFromDb.properties.desiredYearFrom = reader.IsDBNull(reader.GetOrdinal("desired_year_from")) ? null : reader.GetInt32(reader.GetOrdinal("desired_year_from"));
+                            needFeatureFromDb.properties.desiredYearTo = reader.IsDBNull(reader.GetOrdinal("desired_year_to")) ? null : reader.GetInt32(reader.GetOrdinal("desired_year_to"));
 
-                            needFeatureFromDb.properties.orderer.mailAddress = reader.IsDBNull(31) ? "" : reader.GetString(31);
-                            needFeatureFromDb.properties.hasSpongeCityMeasures = reader.IsDBNull(32) ? false : reader.GetBoolean(32);
+                            needFeatureFromDb.properties.hasSpongeCityMeasures = reader.IsDBNull(reader.GetOrdinal("has_sponge_city_meas")) ? false : reader.GetBoolean(reader.GetOrdinal("has_sponge_city_meas"));
 
                             List<string> spongeCityMeasures = new List<string>();
-                            if (!reader.IsDBNull(33) && reader.GetBoolean(33)) spongeCityMeasures.Add("1.1");
-                            if (!reader.IsDBNull(34) && reader.GetBoolean(34)) spongeCityMeasures.Add("1.2");
-                            if (!reader.IsDBNull(35) && reader.GetBoolean(35)) spongeCityMeasures.Add("1.3");
-                            if (!reader.IsDBNull(36) && reader.GetBoolean(36)) spongeCityMeasures.Add("1.4");
-                            if (!reader.IsDBNull(37) && reader.GetBoolean(37)) spongeCityMeasures.Add("1.5");
-                            if (!reader.IsDBNull(38) && reader.GetBoolean(38)) spongeCityMeasures.Add("1.6");
-                            if (!reader.IsDBNull(39) && reader.GetBoolean(39)) spongeCityMeasures.Add("1.7");
-                            if (!reader.IsDBNull(40) && reader.GetBoolean(40)) spongeCityMeasures.Add("1.8");
-                            if (!reader.IsDBNull(41) && reader.GetBoolean(41)) spongeCityMeasures.Add("2.1");
-                            if (!reader.IsDBNull(42) && reader.GetBoolean(42)) spongeCityMeasures.Add("2.2");
-                            if (!reader.IsDBNull(43) && reader.GetBoolean(43)) spongeCityMeasures.Add("2.3");
-                            if (!reader.IsDBNull(44) && reader.GetBoolean(44)) spongeCityMeasures.Add("2.4");
-                            if (!reader.IsDBNull(45) && reader.GetBoolean(45)) spongeCityMeasures.Add("2.5");
-                            if (!reader.IsDBNull(46) && reader.GetBoolean(46)) spongeCityMeasures.Add("2.6");
-                            if (!reader.IsDBNull(47) && reader.GetBoolean(47)) spongeCityMeasures.Add("2.7");
-                            if (!reader.IsDBNull(48) && reader.GetBoolean(48)) spongeCityMeasures.Add("3.1");
-                            if (!reader.IsDBNull(49) && reader.GetBoolean(49)) spongeCityMeasures.Add("3.2");
-                            if (!reader.IsDBNull(50) && reader.GetBoolean(50)) spongeCityMeasures.Add("3.3");
-                            if (!reader.IsDBNull(51) && reader.GetBoolean(51)) spongeCityMeasures.Add("4.1");
-                            if (!reader.IsDBNull(52) && reader.GetBoolean(52)) spongeCityMeasures.Add("4.2");
-                            if (!reader.IsDBNull(53) && reader.GetBoolean(53)) spongeCityMeasures.Add("5.1");
+                            if (!reader.IsDBNull(reader.GetOrdinal("is_sponge_1_1")) && reader.GetBoolean(reader.GetOrdinal("is_sponge_1_1"))) spongeCityMeasures.Add("1.1");
+                            if (!reader.IsDBNull(reader.GetOrdinal("is_sponge_1_2")) && reader.GetBoolean(reader.GetOrdinal("is_sponge_1_2"))) spongeCityMeasures.Add("1.2");
+                            if (!reader.IsDBNull(reader.GetOrdinal("is_sponge_1_3")) && reader.GetBoolean(reader.GetOrdinal("is_sponge_1_3"))) spongeCityMeasures.Add("1.3");
+                            if (!reader.IsDBNull(reader.GetOrdinal("is_sponge_1_4")) && reader.GetBoolean(reader.GetOrdinal("is_sponge_1_4"))) spongeCityMeasures.Add("1.4");
+                            if (!reader.IsDBNull(reader.GetOrdinal("is_sponge_1_5")) && reader.GetBoolean(reader.GetOrdinal("is_sponge_1_5"))) spongeCityMeasures.Add("1.5");
+                            if (!reader.IsDBNull(reader.GetOrdinal("is_sponge_1_6")) && reader.GetBoolean(reader.GetOrdinal("is_sponge_1_6"))) spongeCityMeasures.Add("1.6");
+                            if (!reader.IsDBNull(reader.GetOrdinal("is_sponge_1_7")) && reader.GetBoolean(reader.GetOrdinal("is_sponge_1_7"))) spongeCityMeasures.Add("1.7");
+                            if (!reader.IsDBNull(reader.GetOrdinal("is_sponge_1_8")) && reader.GetBoolean(reader.GetOrdinal("is_sponge_1_8"))) spongeCityMeasures.Add("1.8");
+                            if (!reader.IsDBNull(reader.GetOrdinal("is_sponge_2_1")) && reader.GetBoolean(reader.GetOrdinal("is_sponge_2_1"))) spongeCityMeasures.Add("2.1");
+                            if (!reader.IsDBNull(reader.GetOrdinal("is_sponge_2_2")) && reader.GetBoolean(reader.GetOrdinal("is_sponge_2_2"))) spongeCityMeasures.Add("2.2");
+                            if (!reader.IsDBNull(reader.GetOrdinal("is_sponge_2_3")) && reader.GetBoolean(reader.GetOrdinal("is_sponge_2_3"))) spongeCityMeasures.Add("2.3");
+                            if (!reader.IsDBNull(reader.GetOrdinal("is_sponge_2_4")) && reader.GetBoolean(reader.GetOrdinal("is_sponge_2_4"))) spongeCityMeasures.Add("2.4");
+                            if (!reader.IsDBNull(reader.GetOrdinal("is_sponge_2_5")) && reader.GetBoolean(reader.GetOrdinal("is_sponge_2_5"))) spongeCityMeasures.Add("2.5");
+                            if (!reader.IsDBNull(reader.GetOrdinal("is_sponge_2_6")) && reader.GetBoolean(reader.GetOrdinal("is_sponge_2_6"))) spongeCityMeasures.Add("2.6");
+                            if (!reader.IsDBNull(reader.GetOrdinal("is_sponge_2_7")) && reader.GetBoolean(reader.GetOrdinal("is_sponge_2_7"))) spongeCityMeasures.Add("2.7");
+                            if (!reader.IsDBNull(reader.GetOrdinal("is_sponge_3_1")) && reader.GetBoolean(reader.GetOrdinal("is_sponge_3_1"))) spongeCityMeasures.Add("3.1");
+                            if (!reader.IsDBNull(reader.GetOrdinal("is_sponge_3_2")) && reader.GetBoolean(reader.GetOrdinal("is_sponge_3_2"))) spongeCityMeasures.Add("3.2");
+                            if (!reader.IsDBNull(reader.GetOrdinal("is_sponge_3_3")) && reader.GetBoolean(reader.GetOrdinal("is_sponge_3_3"))) spongeCityMeasures.Add("3.3");
+                            if (!reader.IsDBNull(reader.GetOrdinal("is_sponge_4_1")) && reader.GetBoolean(reader.GetOrdinal("is_sponge_4_1"))) spongeCityMeasures.Add("4.1");
+                            if (!reader.IsDBNull(reader.GetOrdinal("is_sponge_4_2")) && reader.GetBoolean(reader.GetOrdinal("is_sponge_4_2"))) spongeCityMeasures.Add("4.2");
+                            if (!reader.IsDBNull(reader.GetOrdinal("is_sponge_5_1")) && reader.GetBoolean(reader.GetOrdinal("is_sponge_5_1"))) spongeCityMeasures.Add("5.1");
 
                             needFeatureFromDb.properties.spongeCityMeasures = spongeCityMeasures.ToArray();
 
-                            if (!reader.IsDBNull(54)) needFeatureFromDb.properties.deleteReason = reader.GetString(54);
+                            if (!reader.IsDBNull(reader.GetOrdinal("delete_reason")))
+                                needFeatureFromDb.properties.deleteReason =
+                                    reader.GetString(reader.GetOrdinal("delete_reason"));
 
-                            Polygon ntsPoly = reader.IsDBNull(55) ? Polygon.Empty : reader.GetValue(55) as Polygon;
+                            Polygon ntsPoly =
+                                    reader.IsDBNull(reader.GetOrdinal("geom")) ?
+                                            Polygon.Empty : reader.GetValue(reader.GetOrdinal("geom")) as Polygon;
                             needFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
 
+                            if (roadWorkActivityUuid != "")
+                            {
+                                needFeatureFromDb.properties.roadWorkActivityUuid =
+                                            reader.IsDBNull(reader.GetOrdinal("uuid_roadwork_activity")) ?
+                                                    "" : reader.GetGuid(reader.GetOrdinal("uuid_roadwork_activity")).ToString();
+                                needFeatureFromDb.properties.activityRelationType =
+                                            reader.IsDBNull(reader.GetOrdinal("activityrelationtype")) ?
+                                                    "" : reader.GetString(reader.GetOrdinal("activityrelationtype"));
+                                needFeatureFromDb.properties.isPrimary =
+                                            reader.IsDBNull(reader.GetOrdinal("is_primary")) ?
+                                                    false : reader.GetBoolean(reader.GetOrdinal("is_primary"));
+                            }
+
+                            string mailOfLoggedInUser = User.FindFirstValue(ClaimTypes.Email);
                             if (User.IsInRole("administrator"))
                             {
                                 needFeatureFromDb.properties.isEditingAllowed = true;
                             }
-                            else if (ordererMailAddress == mailOfLoggedInUser
+                            else if (needFeatureFromDb.properties.orderer.mailAddress == mailOfLoggedInUser
                                         && needFeatureFromDb.properties.isPrivate)
                             {
                                 // editing for the orderer is only allowed as long as the need is not public (is private):
@@ -654,6 +677,8 @@ namespace roadwork_portal_service.Controllers
 
                     }
 
+                    bool isFirstNeed = _isFirstNeed(roadWorkNeedFeature, pgConn);
+
                     using (NpgsqlTransaction updateTransAction = pgConn.BeginTransaction())
                     {
 
@@ -745,10 +770,6 @@ namespace roadwork_portal_service.Controllers
                             updateComm.CommandText += ", status=(SELECT status FROM wtb_ssp_roadworkactivities WHERE uuid = @uuid_roadwork_activity)";
                             updateComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkNeedFeature.properties.roadWorkActivityUuid));
                         }
-                        else
-                        {
-                            updateComm.CommandText += ", status='requirement'";
-                        }
 
                         updateComm.CommandText += " WHERE uuid=@uuid";
                         updateComm.Parameters.AddWithValue("uuid", new Guid(roadWorkNeedFeature.properties.uuid));
@@ -801,12 +822,15 @@ namespace roadwork_portal_service.Controllers
                             {
                                 NpgsqlCommand insertComm = pgConn.CreateCommand();
                                 insertComm.CommandText = @"INSERT INTO ""wtb_ssp_activities_to_needs""
-                                        (uuid, uuid_roadwork_need, uuid_roadwork_activity, activityrelationtype)
-                                        VALUES(@uuid, @uuid_roadwork_need, @uuid_roadwork_activity, @activityrelationtype)";
+                                        (uuid, uuid_roadwork_need, uuid_roadwork_activity, activityrelationtype,
+                                        is_primary)
+                                        VALUES(@uuid, @uuid_roadwork_need, @uuid_roadwork_activity,
+                                        @activityrelationtype, @is_primary)";
                                 insertComm.Parameters.AddWithValue("uuid", Guid.NewGuid());
                                 insertComm.Parameters.AddWithValue("uuid_roadwork_need", new Guid(roadWorkNeedFeature.properties.uuid));
                                 insertComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkNeedFeature.properties.roadWorkActivityUuid));
                                 insertComm.Parameters.AddWithValue("activityrelationtype", activityRelationType);
+                                insertComm.Parameters.AddWithValue("is_primary", isFirstNeed);
                                 insertComm.ExecuteNonQuery();
 
                                 NpgsqlCommand insertHistoryComm = pgConn.CreateCommand();
@@ -1050,6 +1074,32 @@ namespace roadwork_portal_service.Controllers
 
             return Ok();
 
+        }
+
+        private bool _isFirstNeed(RoadWorkNeedFeature roadWorkNeedFeature, NpgsqlConnection pgConn)
+        {
+            if (roadWorkNeedFeature.properties.roadWorkActivityUuid == null
+                    || roadWorkNeedFeature.properties.roadWorkActivityUuid == "")
+                if (roadWorkNeedFeature.properties.isPrimary == null)
+                    return false;
+                else
+                    return (bool)roadWorkNeedFeature.properties.isPrimary;
+
+            NpgsqlCommand selectIsFirstNeedComm = pgConn.CreateCommand();
+            selectIsFirstNeedComm.CommandText = @"SELECT count(*)
+                                    FROM ""wtb_ssp_activities_to_needs""
+                                    WHERE activityrelationtype = 'assignedneed' AND
+                                        uuid_roadwork_activity=@uuid";
+            selectIsFirstNeedComm.Parameters.AddWithValue("uuid", new Guid(roadWorkNeedFeature.properties.roadWorkActivityUuid));
+
+            using (NpgsqlDataReader reader = selectIsFirstNeedComm.ExecuteReader())
+            {
+                if (reader.Read())
+                {
+                    return reader.IsDBNull(0) ? false : reader.GetInt32(0) == 0;
+                }
+            }
+            return false;
         }
 
         private int _countAssignedNeeds(string affectedActivityUuid, NpgsqlConnection pgConn)
