@@ -46,7 +46,8 @@ namespace roadwork_portal_service.Controllers
                 pgConn.Open();
 
                 NpgsqlCommand selectConsultationComm = pgConn.CreateCommand();
-                selectConsultationComm.CommandText = @"SELECT c.uuid, c.last_edit, c.decline, 
+                selectConsultationComm.CommandText = @"SELECT c.uuid, c.last_edit, c.decline,
+                                            u.uuid as user_uuid, 
                                             u.e_mail, u.last_name, u.first_name, c.orderer_feedback,
                                             c.manager_feedback, c.valuation, c.feedback_phase,
                                             c.feedback_given
@@ -71,15 +72,16 @@ namespace roadwork_portal_service.Controllers
                         if (!activityConsultationReader.IsDBNull(1)) activityConsulationInput.lastEdit = activityConsultationReader.GetDateTime(1);
                         activityConsulationInput.decline = activityConsultationReader.IsDBNull(2) ? false : activityConsultationReader.GetBoolean(2);
                         User consultationUser = new User();
-                        consultationUser.mailAddress = activityConsultationReader.IsDBNull(3) ? "" : activityConsultationReader.GetString(3);
-                        consultationUser.lastName = activityConsultationReader.IsDBNull(4) ? "" : activityConsultationReader.GetString(4);
-                        consultationUser.firstName = activityConsultationReader.IsDBNull(5) ? "" : activityConsultationReader.GetString(5);
+                        consultationUser.uuid = activityConsultationReader.IsDBNull(3) ? "" : activityConsultationReader.GetGuid(3).ToString();
+                        consultationUser.mailAddress = activityConsultationReader.IsDBNull(4) ? "" : activityConsultationReader.GetString(4);
+                        consultationUser.lastName = activityConsultationReader.IsDBNull(5) ? "" : activityConsultationReader.GetString(5);
+                        consultationUser.firstName = activityConsultationReader.IsDBNull(6) ? "" : activityConsultationReader.GetString(6);
                         activityConsulationInput.inputBy = consultationUser;
-                        activityConsulationInput.ordererFeedback = activityConsultationReader.IsDBNull(6) ? "" : activityConsultationReader.GetString(6);
-                        activityConsulationInput.managerFeedback = activityConsultationReader.IsDBNull(7) ? "" : activityConsultationReader.GetString(7);
-                        activityConsulationInput.valuation = activityConsultationReader.IsDBNull(8) ? 0 : activityConsultationReader.GetInt32(8);
-                        activityConsulationInput.feedbackPhase = activityConsultationReader.IsDBNull(9) ? "" : activityConsultationReader.GetString(9);
-                        activityConsulationInput.feedbackGiven = activityConsultationReader.IsDBNull(10) ? false : activityConsultationReader.GetBoolean(10);
+                        activityConsulationInput.ordererFeedback = activityConsultationReader.IsDBNull(7) ? "" : activityConsultationReader.GetString(7);
+                        activityConsulationInput.managerFeedback = activityConsultationReader.IsDBNull(8) ? "" : activityConsultationReader.GetString(8);
+                        activityConsulationInput.valuation = activityConsultationReader.IsDBNull(9) ? 0 : activityConsultationReader.GetInt32(9);
+                        activityConsulationInput.feedbackPhase = activityConsultationReader.IsDBNull(10) ? "" : activityConsultationReader.GetString(10);
+                        activityConsulationInput.feedbackGiven = activityConsultationReader.IsDBNull(11) ? false : activityConsultationReader.GetBoolean(11);
 
                         consultationInputs.Add(activityConsulationInput);
                     }
