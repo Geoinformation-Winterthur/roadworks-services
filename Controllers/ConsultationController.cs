@@ -50,9 +50,11 @@ namespace roadwork_portal_service.Controllers
                                             u.uuid as user_uuid, 
                                             u.e_mail, u.last_name, u.first_name, c.orderer_feedback,
                                             c.manager_feedback, c.valuation, c.feedback_phase,
-                                            c.feedback_given
+                                            c.feedback_given, c.orderer_feedback_text,
+                                            org.uuid, org.name, org.abbreviation, org.is_civil_eng
                                         FROM ""wtb_ssp_activity_consult"" c
                                         LEFT JOIN ""wtb_ssp_users"" u ON c.input_by = u.uuid
+                                        LEFT JOIN ""wtb_ssp_organisationalunits"" org ON u.org_unit = org.uuid
                                         WHERE uuid_roadwork_activity = @uuid_roadwork_activity";
                 selectConsultationComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadworkActivityUuid));
 
@@ -82,7 +84,13 @@ namespace roadwork_portal_service.Controllers
                         activityConsulationInput.valuation = activityConsultationReader.IsDBNull(9) ? 0 : activityConsultationReader.GetInt32(9);
                         activityConsulationInput.feedbackPhase = activityConsultationReader.IsDBNull(10) ? "" : activityConsultationReader.GetString(10);
                         activityConsulationInput.feedbackGiven = activityConsultationReader.IsDBNull(11) ? false : activityConsultationReader.GetBoolean(11);
-
+                        activityConsulationInput.ordererFeedbackText = activityConsultationReader.IsDBNull(12) ? "" : activityConsultationReader.GetString(12);
+                        OrganisationalUnit orgUnit = new OrganisationalUnit();
+                        orgUnit.uuid = activityConsultationReader.IsDBNull(13) ? "" : activityConsultationReader.GetGuid(13).ToString();
+                        orgUnit.name = activityConsultationReader.IsDBNull(14) ? "" : activityConsultationReader.GetString(14);
+                        orgUnit.abbreviation = activityConsultationReader.IsDBNull(15) ? "" : activityConsultationReader.GetString(15);
+                        orgUnit.isCivilEngineering = activityConsultationReader.IsDBNull(16) ? false : activityConsultationReader.GetBoolean(16);
+                        activityConsulationInput.inputBy.organisationalUnit = orgUnit;
                         consultationInputs.Add(activityConsulationInput);
                     }
                 }
@@ -136,17 +144,18 @@ namespace roadwork_portal_service.Controllers
                     insertComm.CommandText = @"INSERT INTO ""wtb_ssp_activity_consult""
                                     (uuid, uuid_roadwork_activity, last_edit,
                                     input_by, orderer_feedback, manager_feedback, decline,
-                                    valuation, feedback_phase, feedback_given)
+                                    valuation, feedback_phase, feedback_given, orderer_feedback_text)
                                     VALUES (@uuid, @uuid_roadwork_activity, @last_edit,
                                     @input_by, @orderer_feedback, @manager_feedback, @decline,
-                                    @valuation, @feedback_phase, @feedback_given)";
+                                    @valuation, @feedback_phase, @feedback_given, @orderer_feedback_text)";
                     insertComm.Parameters.AddWithValue("uuid", new Guid(consultationInput.uuid));
                     insertComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadworkActivityUuid));
                     insertComm.Parameters.AddWithValue("last_edit", DateTime.Now);
                     insertComm.Parameters.AddWithValue("input_by", new Guid(userFromDb.uuid));
-                    if (consultationInput.decline)
-                        consultationInput.ordererFeedback = "";
                     insertComm.Parameters.AddWithValue("orderer_feedback", consultationInput.ordererFeedback);
+                    if (consultationInput.decline)
+                        consultationInput.ordererFeedbackText = "";
+                    insertComm.Parameters.AddWithValue("orderer_feedback_text", consultationInput.ordererFeedbackText);
 
                     if (User.IsInRole("administrator") || User.IsInRole("territorymanager"))
                     {
@@ -242,7 +251,7 @@ namespace roadwork_portal_service.Controllers
                     NpgsqlCommand updateComm = pgConn.CreateCommand();
                     updateComm.CommandText = @"UPDATE ""wtb_ssp_activity_consult""
                                     SET last_edit=@last_edit, orderer_feedback=@orderer_feedback,
-                                    decline=@decline, valuation=@valuation,
+                                    decline=@decline, valuation=@valuation, orderer_feedback_text=@orderer_feedback_text,
                                     feedback_phase=@feedback_phase, feedback_given=@feedback_given";
 
                     if (User.IsInRole("administrator") || User.IsInRole("territorymanager"))
@@ -254,9 +263,10 @@ namespace roadwork_portal_service.Controllers
 
                     consultationInput.lastEdit = DateTime.Now;
                     updateComm.Parameters.AddWithValue("last_edit", consultationInput.lastEdit);
-                    if (consultationInput.decline)
-                        consultationInput.ordererFeedback = "";
                     updateComm.Parameters.AddWithValue("orderer_feedback", consultationInput.ordererFeedback);
+                    if (consultationInput.decline)
+                        consultationInput.ordererFeedbackText = "";
+                    updateComm.Parameters.AddWithValue("orderer_feedback_text", consultationInput.ordererFeedbackText);
 
                     if (User.IsInRole("administrator") || User.IsInRole("territorymanager"))
                     {
