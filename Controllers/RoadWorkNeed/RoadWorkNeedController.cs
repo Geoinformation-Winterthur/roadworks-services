@@ -233,6 +233,7 @@ namespace roadwork_portal_service.Controllers
                             needFeatureFromDb.properties.created = reader.IsDBNull(reader.GetOrdinal("created")) ? DateTime.MinValue : reader.GetDateTime(reader.GetOrdinal("created"));
                             needFeatureFromDb.properties.lastModified = reader.IsDBNull(reader.GetOrdinal("last_modified")) ? DateTime.MinValue : reader.GetDateTime(reader.GetOrdinal("last_modified"));
                             needFeatureFromDb.properties.orderer.mailAddress = reader.IsDBNull(reader.GetOrdinal("e_mail")) ? "" : reader.GetString(reader.GetOrdinal("e_mail"));
+                            needFeatureFromDb.properties.timeFactor = reader.IsDBNull(reader.GetOrdinal("relevance")) ? null : reader.GetInt32(reader.GetOrdinal("relevance"));
                             needFeatureFromDb.properties.noteOfAreaManager = reader.IsDBNull(reader.GetOrdinal("note_of_area_man")) ? "" : reader.GetString(reader.GetOrdinal("note_of_area_man"));
                             needFeatureFromDb.properties.areaManagerNoteDate = reader.IsDBNull(reader.GetOrdinal("area_man_note_date")) ? DateTime.MinValue : reader.GetDateTime(reader.GetOrdinal("area_man_note_date"));
 
@@ -455,6 +456,8 @@ namespace roadwork_portal_service.Controllers
                     _logger.LogWarning("URI of given roadwork need is not valid.");
                 else if (roadWorkNeedFeature.errorMessage == "SSP-27")
                     _logger.LogWarning("The given desired year value of a newly created roadwork need is invalid.");
+                else if (roadWorkNeedFeature.errorMessage == "SSP-30")
+                    _logger.LogWarning("Provided roadwork need has no time factor.");
                 else if (roadWorkNeedFeature.errorMessage == "SSP-38")
                     _logger.LogWarning("If sponge city measure is activated then at least one sponge city measure must be provided.");
                 else if (roadWorkNeedFeature.errorMessage == "SSP-40")
@@ -512,6 +515,13 @@ namespace roadwork_portal_service.Controllers
                     _logger.LogWarning("The given desired year value of an updated roadwork need is invalid.");
                     roadWorkNeedFeature.errorMessage = "SSP-27";
                     return Ok(roadWorkNeedFeature);
+                }
+
+                if (roadWorkNeedFeature.properties.timeFactor == null)
+                {
+                    _logger.LogWarning("Provided roadwork need has no time factor.");
+                    roadWorkNeedFeature.errorMessage = "SSP-30";
+                    return roadWorkNeedFeature;
                 }
 
                 Uri uri;
@@ -687,7 +697,7 @@ namespace roadwork_portal_service.Controllers
                                     SET name=@name, orderer=@orderer, last_modified=@last_modified,
                                     finish_early_to=@finish_early_to, finish_optimum_to=@finish_optimum_to,
                                     finish_late_to=@finish_late_to, priority=@priority,
-                                    description=@description, 
+                                    description=@description, relevance=@time_factor,
                                     section=@section, comment=@comment, 
                                     url=@url, private=@private, overarching_measure=@overarching_measure,
                                     desired_year_from=@desired_year_from,
@@ -733,6 +743,10 @@ namespace roadwork_portal_service.Controllers
                             updateComm.Parameters.AddWithValue("desired_year_to", roadWorkNeedFeature.properties.desiredYearTo);
                         else
                             updateComm.Parameters.AddWithValue("desired_year_to", DBNull.Value);
+                        if (roadWorkNeedFeature.properties.timeFactor != null)
+                            updateComm.Parameters.AddWithValue("time_factor", roadWorkNeedFeature.properties.timeFactor);
+                        else
+                            updateComm.Parameters.AddWithValue("time_factor", DBNull.Value);
 
                         updateComm.Parameters.AddWithValue("has_sponge_city_meas", roadWorkNeedFeature.properties.hasSpongeCityMeasures);
 

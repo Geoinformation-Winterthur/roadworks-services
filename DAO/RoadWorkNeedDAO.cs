@@ -44,6 +44,12 @@ public class RoadWorkNeedDAO
             return roadWorkNeedFeature;
         }
 
+        if (roadWorkNeedFeature.properties.timeFactor == null)
+        {
+            roadWorkNeedFeature.errorMessage = "SSP-30";
+            return roadWorkNeedFeature;
+        }
+
         if (roadWorkNeedFeature.properties.overarchingMeasure &&
         ((roadWorkNeedFeature.properties.desiredYearFrom == null
             || roadWorkNeedFeature.properties.desiredYearFrom < DateTime.Now.Year) ||
@@ -206,7 +212,7 @@ public class RoadWorkNeedDAO
                                     is_sponge_2_1, is_sponge_2_2, is_sponge_2_3, is_sponge_2_4,
                                     is_sponge_2_5, is_sponge_2_6, is_sponge_2_7, is_sponge_3_1,
                                     is_sponge_3_2, is_sponge_3_3, is_sponge_4_1, is_sponge_4_2,
-                                    is_sponge_5_1, geom)
+                                    is_sponge_5_1, relevance, geom)
                                     VALUES (@uuid, @name, @orderer, @created, @last_modified,
                                     @finish_early_to, @finish_optimum_to,
                                     @finish_late_to, @priority, @status, @description,
@@ -218,7 +224,7 @@ public class RoadWorkNeedDAO
                                     @is_sponge_2_1, @is_sponge_2_2, @is_sponge_2_3, @is_sponge_2_4,
                                     @is_sponge_2_5, @is_sponge_2_6, @is_sponge_2_7, @is_sponge_3_1,
                                     @is_sponge_3_2, @is_sponge_3_3, @is_sponge_4_1, @is_sponge_4_2,
-                                    @is_sponge_5_1, @geom)";
+                                    @is_sponge_5_1, @time_factor, @geom)";
         insertComm.Parameters.AddWithValue("uuid", new Guid(roadWorkNeedFeature.properties.uuid));
         insertComm.Parameters.AddWithValue("name", roadWorkNeedFeature.properties.name);
         if (roadWorkNeedFeature.properties.orderer.uuid != "")
@@ -275,6 +281,12 @@ public class RoadWorkNeedDAO
         insertComm.Parameters.AddWithValue("is_sponge_4_1", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("4.1"));
         insertComm.Parameters.AddWithValue("is_sponge_4_2", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("4.2"));
         insertComm.Parameters.AddWithValue("is_sponge_5_1", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("5.1"));
+
+        if (roadWorkNeedFeature.properties.timeFactor != null)
+            insertComm.Parameters.AddWithValue("time_factor", roadWorkNeedFeature.properties.timeFactor);
+        else
+            insertComm.Parameters.AddWithValue("time_factor", DBNull.Value);
+
         insertComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
 
         return insertComm;

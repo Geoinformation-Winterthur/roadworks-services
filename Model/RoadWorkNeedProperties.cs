@@ -36,5 +36,6 @@ public class RoadWorkNeedProperties
     public string[]? spongeCityMeasures { get; set; }
     public string? deleteReason { get; set; }
     public bool? isPrimary { get; set; }
+    public int? timeFactor { get; set; }
 }
 
