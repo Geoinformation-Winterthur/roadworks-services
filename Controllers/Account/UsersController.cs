@@ -39,9 +39,9 @@ public class UsersController : ControllerBase
             pgConn.Open();
             NpgsqlCommand selectComm = pgConn.CreateCommand();
             selectComm.CommandText = @"SELECT u.uuid, u.last_name, u.first_name,
-                                trim(lower(u.e_mail)), u.org_unit, o.name,
+                                u.e_mail as mail_address, u.org_unit, o.name,
                                 o.abbreviation, o.is_civil_eng, u.active,
-                                u.pref_table_view,
+                                u.pref_table_view, u.role_view,
                                 u.role_projectmanager, u.role_eventmanager,
                                 u.role_orderer, u.role_trafficmanager,
                                 u.role_territorymanager, u.role_administrator
@@ -72,7 +72,8 @@ public class UsersController : ControllerBase
                 role = role.Trim().ToLower();
                 if (role != "")
                 {
-                    if (role == "projectmanager") selectComm.CommandText += " WHERE u.role_projectmanager=true";
+                    if (role == "view") selectComm.CommandText += " WHERE u.role_view=true";
+                    else if (role == "projectmanager") selectComm.CommandText += " WHERE u.role_projectmanager=true";
                     else if (role == "eventmanager") selectComm.CommandText += " WHERE u.role_eventmanager=true";
                     else if (role == "orderer") selectComm.CommandText += " WHERE u.role_orderer=true";
                     else if (role == "trafficmanager") selectComm.CommandText += " WHERE u.role_trafficmanager=true";
@@ -88,26 +89,26 @@ public class UsersController : ControllerBase
                 while (reader.Read())
                 {
                     userFromDb = new User();
-                    userFromDb.uuid = reader.IsDBNull(0) ? "" :
-                                reader.GetGuid(0).ToString();
+                    userFromDb.uuid = reader.IsDBNull(reader.GetOrdinal("uuid")) ? "" :
+                                reader.GetGuid(reader.GetOrdinal("uuid")).ToString();
                     userFromDb.mailAddress =
-                            reader.IsDBNull(3) ? "" :
-                                    reader.GetString(3).ToLower().Trim();
+                            reader.IsDBNull(reader.GetOrdinal("mail_address")) ? "" :
+                                    reader.GetString(reader.GetOrdinal("mail_address")).ToLower().Trim();
                     if (userFromDb.mailAddress != null &&
                             userFromDb.mailAddress != "" &&
                             userFromDb.uuid != null && userFromDb.uuid != "")
                     {
-                        userFromDb.lastName = reader.GetString(1);
-                        userFromDb.firstName = reader.GetString(2);
+                        userFromDb.lastName = reader.GetString(reader.GetOrdinal("last_name"));
+                        userFromDb.firstName = reader.GetString(reader.GetOrdinal("first_name"));
                         OrganisationalUnit orgUnit = new OrganisationalUnit
                         {
-                            uuid = reader.GetGuid(4).ToString(),
-                            name = reader.GetString(5),
-                            abbreviation = reader.GetString(6),
-                            isCivilEngineering = reader.GetBoolean(7)
+                            uuid = reader.GetGuid(reader.GetOrdinal("org_unit")).ToString(),
+                            name = reader.GetString(reader.GetOrdinal("name")),
+                            abbreviation = reader.GetString(reader.GetOrdinal("abbreviation")),
+                            isCivilEngineering = reader.GetBoolean(reader.GetOrdinal("is_civil_eng"))
                         };
                         userFromDb.organisationalUnit = orgUnit;
-                        userFromDb.active = reader.GetBoolean(8);
+                        userFromDb.active = reader.GetBoolean(reader.GetOrdinal("active"));
 
                         if (userFromDb.lastName == null || userFromDb.lastName.Trim().Equals(""))
                         {
@@ -118,14 +119,15 @@ public class UsersController : ControllerBase
                         {
                             userFromDb.firstName = "unbekannt";
                         }
-                        userFromDb.prefTableView = reader.GetBoolean(9);
+                        userFromDb.prefTableView = reader.GetBoolean(reader.GetOrdinal("pref_table_view"));
 
-                        userFromDb.grantedRoles.projectmanager = reader.GetBoolean(10);
-                        userFromDb.grantedRoles.eventmanager = reader.GetBoolean(11);
-                        userFromDb.grantedRoles.orderer = reader.GetBoolean(12);
-                        userFromDb.grantedRoles.trafficmanager = reader.GetBoolean(13);
-                        userFromDb.grantedRoles.territorymanager = reader.GetBoolean(14);
-                        userFromDb.grantedRoles.administrator = reader.GetBoolean(15);
+                        userFromDb.grantedRoles.view = reader.GetBoolean(reader.GetOrdinal("role_view"));
+                        userFromDb.grantedRoles.projectmanager = reader.GetBoolean(reader.GetOrdinal("role_projectmanager"));
+                        userFromDb.grantedRoles.eventmanager = reader.GetBoolean(reader.GetOrdinal("role_eventmanager"));
+                        userFromDb.grantedRoles.orderer = reader.GetBoolean(reader.GetOrdinal("role_orderer"));
+                        userFromDb.grantedRoles.trafficmanager = reader.GetBoolean(reader.GetOrdinal("role_trafficmanager"));
+                        userFromDb.grantedRoles.territorymanager = reader.GetBoolean(reader.GetOrdinal("role_territorymanager"));
+                        userFromDb.grantedRoles.administrator = reader.GetBoolean(reader.GetOrdinal("role_administrator"));
 
                         usersFromDb.Add(userFromDb);
                     }
@@ -205,11 +207,11 @@ public class UsersController : ControllerBase
                     last_name, first_name, e_mail, pwd, org_unit, active,
                     pref_table_view, role_projectmanager, role_eventmanager,
                     role_orderer, role_trafficmanager, role_territorymanager,
-                    role_administrator)
+                    role_view, role_administrator)
                     VALUES(@uuid, @last_name, @first_name, @e_mail, @pwd,
                     @org_unit, @active, false, @role_projectmanager,
                     @role_eventmanager, @role_orderer, @role_trafficmanager,
-                    @role_territorymanager, @role_administrator)";
+                    @role_territorymanager, @role_view, @role_administrator)";
 
             Guid userUuid = Guid.NewGuid();
             user.uuid = userUuid.ToString();
@@ -222,6 +224,7 @@ public class UsersController : ControllerBase
             insertComm.Parameters.AddWithValue("org_unit", new Guid(user.organisationalUnit.uuid));
             insertComm.Parameters.AddWithValue("active", user.active);
 
+            insertComm.Parameters.AddWithValue("role_view", user.grantedRoles.view);
             insertComm.Parameters.AddWithValue("role_projectmanager", user.grantedRoles.projectmanager);
             insertComm.Parameters.AddWithValue("role_eventmanager", user.grantedRoles.eventmanager);
             insertComm.Parameters.AddWithValue("role_orderer", user.grantedRoles.orderer);
@@ -361,6 +364,7 @@ public class UsersController : ControllerBase
                 {
                     updateComm.CommandText += @"last_name=@last_name,
                         first_name=@first_name, e_mail=@e_mail,
+                        role_view=@role_view,
                         role_projectmanager=@role_projectmanager,
                         role_eventmanager=@role_eventmanager,
                         role_orderer=@role_orderer,
@@ -379,6 +383,7 @@ public class UsersController : ControllerBase
                     updateComm.Parameters.AddWithValue("last_name", userToUpdate.lastName);
                     updateComm.Parameters.AddWithValue("first_name", userToUpdate.firstName);
                     updateComm.Parameters.AddWithValue("e_mail", userToUpdate.mailAddress);
+                    updateComm.Parameters.AddWithValue("role_view", userToUpdate.grantedRoles.view);
                     updateComm.Parameters.AddWithValue("role_projectmanager", userToUpdate.grantedRoles.projectmanager);
                     updateComm.Parameters.AddWithValue("role_eventmanager", userToUpdate.grantedRoles.eventmanager);
                     updateComm.Parameters.AddWithValue("role_orderer", userToUpdate.grantedRoles.orderer);

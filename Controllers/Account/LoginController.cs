@@ -199,9 +199,9 @@ public class LoginController : ControllerBase
             pgConn.Open();
             NpgsqlCommand selectComm = pgConn.CreateCommand();
             selectComm.CommandText = @"SELECT u.uuid, u.last_name, u.first_name, u.e_mail, u.pwd,
-                        u.last_login_attempt, CURRENT_TIMESTAMP(0)::TIMESTAMP,
+                        u.last_login_attempt, CURRENT_TIMESTAMP(0)::TIMESTAMP as database_time,
                         u.org_unit, o.name, o.abbreviation, o.is_civil_eng,
-                        u.active, u.role_projectmanager, u.role_eventmanager, u.role_orderer,
+                        u.active, u.role_view, u.role_projectmanager, u.role_eventmanager, u.role_orderer,
                         u.role_trafficmanager, u.role_territorymanager, u.role_administrator
                         FROM ""wtb_ssp_users"" u
                         LEFT JOIN ""wtb_ssp_organisationalunits"" o ON u.org_unit = o.uuid
@@ -214,27 +214,28 @@ public class LoginController : ControllerBase
                 if (hasUser)
                 {
                     userFromDb = new User();
-                    userFromDb.uuid = reader.GetGuid(0).ToString();
-                    userFromDb.mailAddress = reader.GetString(3);
-                    userFromDb.passPhrase = reader.GetString(4);
+                    userFromDb.uuid = reader.GetGuid(reader.GetOrdinal("uuid")).ToString();
+                    userFromDb.mailAddress = reader.GetString(reader.GetOrdinal("e_mail"));
+                    userFromDb.passPhrase = reader.GetString(reader.GetOrdinal("pwd"));
 
-                    userFromDb.lastName = reader.GetString(1);
-                    userFromDb.firstName = reader.GetString(2);
-                    userFromDb.lastLoginAttempt = !reader.IsDBNull(5) ? reader.GetDateTime(5) : null;
-                    userFromDb.databaseTime = !reader.IsDBNull(6) ? reader.GetDateTime(6) : null;
+                    userFromDb.lastName = reader.GetString(reader.GetOrdinal("last_name"));
+                    userFromDb.firstName = reader.GetString(reader.GetOrdinal("first_name"));
+                    userFromDb.lastLoginAttempt = !reader.IsDBNull(reader.GetOrdinal("last_login_attempt")) ? reader.GetDateTime(reader.GetOrdinal("last_login_attempt")) : null;
+                    userFromDb.databaseTime = !reader.IsDBNull(reader.GetOrdinal("database_time")) ? reader.GetDateTime(reader.GetOrdinal("database_time")) : null;
                     OrganisationalUnit orgUnit = new OrganisationalUnit();
-                    orgUnit.uuid = reader.GetGuid(7).ToString();
-                    orgUnit.name = reader.GetString(8);
-                    orgUnit.abbreviation = reader.GetString(9);
-                    orgUnit.isCivilEngineering = reader.GetBoolean(10);
+                    orgUnit.uuid = reader.GetGuid(reader.GetOrdinal("org_unit")).ToString();
+                    orgUnit.name = reader.GetString(reader.GetOrdinal("name"));
+                    orgUnit.abbreviation = reader.GetString(reader.GetOrdinal("abbreviation"));
+                    orgUnit.isCivilEngineering = reader.GetBoolean(reader.GetOrdinal("is_civil_eng"));
                     userFromDb.organisationalUnit = orgUnit;
-                    userFromDb.active = reader.GetBoolean(11);
-                    userFromDb.grantedRoles.projectmanager = reader.GetBoolean(12);
-                    userFromDb.grantedRoles.eventmanager = reader.GetBoolean(13);
-                    userFromDb.grantedRoles.orderer = reader.GetBoolean(14);
-                    userFromDb.grantedRoles.trafficmanager = reader.GetBoolean(15);
-                    userFromDb.grantedRoles.territorymanager = reader.GetBoolean(16);
-                    userFromDb.grantedRoles.administrator = reader.GetBoolean(17);
+                    userFromDb.active = reader.GetBoolean(reader.GetOrdinal("active"));
+                    userFromDb.grantedRoles.view = reader.GetBoolean(reader.GetOrdinal("role_view"));
+                    userFromDb.grantedRoles.projectmanager = reader.GetBoolean(reader.GetOrdinal("role_projectmanager"));
+                    userFromDb.grantedRoles.eventmanager = reader.GetBoolean(reader.GetOrdinal("role_eventmanager"));
+                    userFromDb.grantedRoles.orderer = reader.GetBoolean(reader.GetOrdinal("role_orderer"));
+                    userFromDb.grantedRoles.trafficmanager = reader.GetBoolean(reader.GetOrdinal("role_trafficmanager"));
+                    userFromDb.grantedRoles.territorymanager = reader.GetBoolean(reader.GetOrdinal("role_territorymanager"));
+                    userFromDb.grantedRoles.administrator = reader.GetBoolean(reader.GetOrdinal("role_administrator"));
 
                     if (userFromDb.lastName == null || userFromDb.lastName.Trim().Equals(""))
                     {

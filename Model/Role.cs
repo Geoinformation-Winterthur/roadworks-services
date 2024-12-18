@@ -6,6 +6,7 @@ namespace roadwork_portal_service.Model;
 
 public class Role
 {
+    public bool view { get; set; } = false;
     public bool projectmanager { get; set; } = false;
     public bool eventmanager { get; set; } = false;
     public bool orderer { get; set; } = false;

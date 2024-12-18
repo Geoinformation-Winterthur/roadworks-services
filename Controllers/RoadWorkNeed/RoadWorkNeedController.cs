@@ -26,7 +26,7 @@ namespace roadwork_portal_service.Controllers
 
         // GET roadworkneed/?year=2023&uuids=...&roadworkactivityuuid=...
         [HttpGet]
-        [Authorize(Roles = "orderer,trefficmanager,territorymanager,administrator")]
+        [Authorize(Roles = "view,orderer,trefficmanager,territorymanager,administrator")]
         public IEnumerable<RoadWorkNeedFeature> GetNeeds(int? relevance,
                 DateTime? dateOfCreation, int? year, string? uuids,
                 string? roadWorkActivityUuid, string? name,
@@ -302,6 +302,7 @@ namespace roadwork_portal_service.Controllers
                                                     false : reader.GetBoolean(reader.GetOrdinal("is_primary"));
                             }
 
+                            needFeatureFromDb.properties.isEditingAllowed = false;
                             string mailOfLoggedInUser = User.FindFirstValue(ClaimTypes.Email);
                             if (User.IsInRole("administrator"))
                             {

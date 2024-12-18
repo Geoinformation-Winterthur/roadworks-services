@@ -23,7 +23,8 @@ public class User
     internal void setRole(string role)
     {
         string clearRole = role.Trim().ToLower();
-        if (clearRole == "projectmanager") this.grantedRoles.projectmanager = true;
+        if (clearRole == "view") this.grantedRoles.view = true;
+        else if (clearRole == "projectmanager") this.grantedRoles.projectmanager = true;
         else if (clearRole == "eventmanager") this.grantedRoles.eventmanager = true;
         else if (clearRole == "orderer") this.grantedRoles.orderer = true;
         else if (clearRole == "trafficmanager") this.grantedRoles.trafficmanager = true;
@@ -34,6 +35,7 @@ public class User
     internal bool hasRole(string role)
     {
         string clearRole = role.Trim().ToLower();
+        if (clearRole == "view") return this.grantedRoles.view;
         if (clearRole == "projectmanager") return this.grantedRoles.projectmanager;
         if (clearRole == "eventmanager") return this.grantedRoles.eventmanager;
         if (clearRole == "orderer") return this.grantedRoles.orderer;
