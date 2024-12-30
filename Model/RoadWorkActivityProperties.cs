@@ -86,4 +86,5 @@ public class RoadWorkActivityProperties
     public DateTime? dateStartCoordinated { get; set; }
     public string? url { get; set; }
     public DocumentAttributes[]? documentAtts { get; set; }
+    public bool? isSksRelevant { get; set; }
 }

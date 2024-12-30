@@ -55,7 +55,7 @@ namespace roadwork_portal_service.Controllers
                             r.project_study_approved, r.study_approved, r.date_sks_real,
                             r.date_kap_real, r.date_oks_real, r.date_gl_tba_real,
                             r.date_start_inconsult, r.date_start_verified, r.date_start_reporting,
-                            r.date_start_suspended, r.date_start_coordinated,
+                            r.date_start_suspended, r.date_start_coordinated, r.sks_relevant,
                             r.geom
                         FROM ""wtb_ssp_roadworkactivities"" r
                         LEFT JOIN ""wtb_ssp_users"" pm ON r.projectmanager = pm.uuid
@@ -190,8 +190,9 @@ namespace roadwork_portal_service.Controllers
                         projectFeatureFromDb.properties.dateStartReporting = reader.IsDBNull(74) ? null : reader.GetDateTime(74);
                         projectFeatureFromDb.properties.dateStartSuspended = reader.IsDBNull(75) ? null : reader.GetDateTime(75);
                         projectFeatureFromDb.properties.dateStartCoordinated = reader.IsDBNull(76) ? null : reader.GetDateTime(76);
+                        projectFeatureFromDb.properties.isSksRelevant = reader.IsDBNull(77) ? false : reader.GetBoolean(77);
 
-                        Polygon ntsPoly = reader.IsDBNull(77) ? Polygon.Empty : reader.GetValue(77) as Polygon;
+                        Polygon ntsPoly = reader.IsDBNull(78) ? Polygon.Empty : reader.GetValue(78) as Polygon;
                         projectFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
 
                         projectsFromDb.Add(projectFeatureFromDb);
@@ -430,6 +431,10 @@ namespace roadwork_portal_service.Controllers
                     return Ok(roadWorkActivityFeature);
                 }
 
+                if (roadWorkActivityFeature.properties.isAggloprog != null &&
+                        (bool)roadWorkActivityFeature.properties.isAggloprog)
+                    roadWorkActivityFeature.properties.isSksRelevant = true;
+
                 User userFromDb = LoginController.getAuthorizedUserFromDb(this.User, false);
 
                 ConfigurationData configurationData = AppConfigController.getConfigurationFromDb(false);
@@ -459,7 +464,7 @@ namespace roadwork_portal_service.Controllers
                                     billing_address2, investment_no, date_sks,
                                     date_kap, private, date_consult_start,
                                     date_consult_end, date_report_start, date_report_end,
-                                    url, geom)
+                                    url, sks_relevant, geom)
                                     VALUES (@uuid, @name, @projectmanager, @traffic_agent,
                                     @description, @project_no, @comment, @section, @type, @projecttype,
                                     @overarching_measure, @desired_year_from, @desired_year_to, @prestudy, 
@@ -468,7 +473,7 @@ namespace roadwork_portal_service.Controllers
                                     @date_to, @costs, @costs_type, @status, @in_internet, @billing_address1,
                                     @billing_address2, @investment_no, @date_sks, @date_kap,
                                     @private, @date_consult_start, @date_consult_end,
-                                    @date_report_start, @date_report_end, @url, @geom)";
+                                    @date_report_start, @date_report_end, @url, @sks_relevant, @geom)";
                     insertComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
                     if (roadWorkActivityFeature.properties.projectManager.uuid != "")
                     {
@@ -517,6 +522,7 @@ namespace roadwork_portal_service.Controllers
                     insertComm.Parameters.AddWithValue("date_report_start", DateTime.Now.AddDays(35));
                     insertComm.Parameters.AddWithValue("date_report_end", DateTime.Now.AddDays(56));
                     insertComm.Parameters.AddWithValue("url", roadWorkActivityFeature.properties.url != null ? roadWorkActivityFeature.properties.url : DBNull.Value);
+                    insertComm.Parameters.AddWithValue("sks_relevant", roadWorkActivityFeature.properties.isSksRelevant != null ? roadWorkActivityFeature.properties.isSksRelevant : DBNull.Value);
                     insertComm.Parameters.AddWithValue("geom", roadWorkActivityPoly);
 
                     DateTime? nextKap = null;
@@ -727,6 +733,10 @@ namespace roadwork_portal_service.Controllers
                     roadWorkActivityFeature.errorMessage = "SSP-36";
                     return Ok(roadWorkActivityFeature);
                 }
+
+                if (roadWorkActivityFeature.properties.isAggloprog != null &&
+                        (bool)roadWorkActivityFeature.properties.isAggloprog)
+                    roadWorkActivityFeature.properties.isSksRelevant = true;
 
                 User userFromDb = LoginController.getAuthorizedUserFromDb(this.User, false);
 
@@ -1055,7 +1065,8 @@ namespace roadwork_portal_service.Controllers
                                     date_report_end=@date_report_end, date_report_close=@date_report_close,
                                     date_info_start=@date_info_start, date_info_end=@date_info_end,
                                     date_info_close=@date_info_close, is_aggloprog=@is_aggloprog,
-                                    project_study_approved=@project_study_approved, study_approved=@study_approved,";
+                                    project_study_approved=@project_study_approved, study_approved=@study_approved,
+                                    sks_relevant=@sks_relevant,";
 
                     if (hasStatusChanged)
                     {
@@ -1168,6 +1179,7 @@ namespace roadwork_portal_service.Controllers
                     updateComm.Parameters.AddWithValue("date_info_end", roadWorkActivityFeature.properties.dateInfoEnd != null ? roadWorkActivityFeature.properties.dateInfoEnd : DBNull.Value);
                     updateComm.Parameters.AddWithValue("date_info_close", roadWorkActivityFeature.properties.dateInfoClose != null ? roadWorkActivityFeature.properties.dateInfoClose : DBNull.Value);
                     updateComm.Parameters.AddWithValue("is_aggloprog", roadWorkActivityFeature.properties.isAggloprog);
+                    updateComm.Parameters.AddWithValue("sks_relevant", roadWorkActivityFeature.properties.isSksRelevant != null ? roadWorkActivityFeature.properties.isSksRelevant : DBNull.Value);
                     updateComm.Parameters.AddWithValue("geom", roadWorkActivityPoly);
                     updateComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
 
