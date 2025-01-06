@@ -1646,19 +1646,22 @@ namespace roadwork_portal_service.Controllers
         {
             string projectNo = "";
             int countProjectNo = 1;
+            int noOfRetries = 0;
 
-            while (countProjectNo != 0)
+            while (countProjectNo != 0 && noOfRetries < 10)
             {
-                projectNo = Guid.NewGuid().ToString("N").Substring(0, 15);
+                string projectNoTemp = Guid.NewGuid().ToString("N").Substring(0, 15);
 
                 NpgsqlCommand selectCountAssignedNeedsComm = pgConn.CreateCommand();
                 selectCountAssignedNeedsComm.CommandText = @"SELECT count(*) FROM ""wtb_ssp_roadworkactivities""
                                                             WHERE project_no=@project_no";
-                selectCountAssignedNeedsComm.Parameters.AddWithValue("project_no", projectNo);
+                selectCountAssignedNeedsComm.Parameters.AddWithValue("project_no", projectNoTemp);
                 using (NpgsqlDataReader reader = selectCountAssignedNeedsComm.ExecuteReader())
                     if (reader.Read())
                         countProjectNo = reader.IsDBNull(0) ? 0 : reader.GetInt32(0);
-
+                if(countProjectNo == 0)
+                    projectNo = projectNoTemp;
+                noOfRetries++;
             }
             return projectNo;
         }
