@@ -44,14 +44,38 @@ namespace roadwork_portal_service.Helper
 
                 if (greatestDistanceTuple[0].Item1 != null && greatestDistanceTuple[1].Item1 != null)
                 {
-                    result = greatestDistanceTuple[0].Item1;
-                    if(greatestDistanceTuple[0].Item1 != greatestDistanceTuple[1].Item1)
-                        result  += " bis " + greatestDistanceTuple[1].Item1;
+                    var address1 = greatestDistanceTuple[0].Item1;
+                    var address2 = greatestDistanceTuple[1].Item1;
+
+                    string streetName1 = address1.Substring(0, address1.LastIndexOf(' '));
+                    string houseNumber1 = address1.Substring(address1.LastIndexOf(' ') + 1);
+
+                    string streetName2 = address2.Substring(0, address2.LastIndexOf(' '));
+                    string houseNumber2 = address2.Substring(address2.LastIndexOf(' ') + 1);
+
+                    int comparison = string.Compare(houseNumber1, houseNumber2, StringComparison.OrdinalIgnoreCase);
+
+                    if (address1 == address2)
+                        result = address1;
+                    else
+                    {
+                        if (streetName1 == streetName2)
+                        {
+                            // Strassennamen sind identisch
+                            if (comparison < 0)
+                                result = $"{streetName1} {houseNumber1} bis {houseNumber2}";
+                            else
+                                result = $"{streetName1} {houseNumber2} bis {houseNumber1}";
+                        }
+                        else
+                            // Strassennamen sind unterschiedlich
+                            result = address1 + " bis " + address2;
+                    }
                 }
                 bufferSize += 10;
             } while (bufferSize < 100 && result == "");
 
-            if(result == "")
+            if (result == "")
                 result = "Es konnte keine Bezeichnung gefunden werden";
 
             return result;
@@ -59,21 +83,21 @@ namespace roadwork_portal_service.Helper
 
         public static string translateStatusCodes(string code)
         {
-            if(code == "requirement")
+            if (code == "requirement")
                 return "Bedarf";
-            else if(code == "review")
+            else if (code == "review")
                 return "Prüfung";
-            else if(code == "verified")
+            else if (code == "verified")
                 return "verifiziert";
-            else if(code == "inconsult")
+            else if (code == "inconsult")
                 return "Bedarfsklärung";
-            else if(code == "reporting")
+            else if (code == "reporting")
                 return "Stellungnahme";
-            else if(code == "coordinated")
+            else if (code == "coordinated")
                 return "koordiniert";
-            else if(code == "prestudy")
+            else if (code == "prestudy")
                 return "Vorstudie";
-            else if(code == "suspended")
+            else if (code == "suspended")
                 return "sistiert";
             else return "";
         }
