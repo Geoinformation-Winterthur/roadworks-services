@@ -206,7 +206,7 @@ public class RoadWorkNeedDAO
                                     is_sponge_2_1, is_sponge_2_2, is_sponge_2_3, is_sponge_2_4,
                                     is_sponge_2_5, is_sponge_2_6, is_sponge_2_7, is_sponge_3_1,
                                     is_sponge_3_2, is_sponge_3_3, is_sponge_4_1, is_sponge_4_2,
-                                    is_sponge_5_1, geom)
+                                    is_sponge_5_1, still_relevant, decline, feedback_given, geom)
                                     VALUES (@uuid, @name, @orderer, @created, @last_modified,
                                     @finish_early_to, @finish_optimum_to,
                                     @finish_late_to, @priority, @status, @description,
@@ -218,7 +218,7 @@ public class RoadWorkNeedDAO
                                     @is_sponge_2_1, @is_sponge_2_2, @is_sponge_2_3, @is_sponge_2_4,
                                     @is_sponge_2_5, @is_sponge_2_6, @is_sponge_2_7, @is_sponge_3_1,
                                     @is_sponge_3_2, @is_sponge_3_3, @is_sponge_4_1, @is_sponge_4_2,
-                                    @is_sponge_5_1, @geom)";
+                                    @is_sponge_5_1, @still_relevant, @decline, @feedback_given, @geom)";
         insertComm.Parameters.AddWithValue("uuid", new Guid(roadWorkNeedFeature.properties.uuid));
         insertComm.Parameters.AddWithValue("name", roadWorkNeedFeature.properties.name);
         if (roadWorkNeedFeature.properties.orderer.uuid != "")
@@ -240,6 +240,9 @@ public class RoadWorkNeedDAO
         insertComm.Parameters.AddWithValue("status", roadWorkNeedFeature.properties.status);
         insertComm.Parameters.AddWithValue("description", roadWorkNeedFeature.properties.description);
         insertComm.Parameters.AddWithValue("private", roadWorkNeedFeature.properties.isPrivate);
+        insertComm.Parameters.AddWithValue("still_relevant", roadWorkNeedFeature.properties.stillRelevant != null ? roadWorkNeedFeature.properties.stillRelevant : DBNull.Value);
+        insertComm.Parameters.AddWithValue("feedback_given", roadWorkNeedFeature.properties.feedbackGiven != null ? roadWorkNeedFeature.properties.feedbackGiven : DBNull.Value);
+        insertComm.Parameters.AddWithValue("decline", roadWorkNeedFeature.properties.decline != null ? roadWorkNeedFeature.properties.decline : DBNull.Value);
         insertComm.Parameters.AddWithValue("section", roadWorkNeedFeature.properties.section);
         insertComm.Parameters.AddWithValue("comment", roadWorkNeedFeature.properties.comment);
         insertComm.Parameters.AddWithValue("url", roadWorkNeedFeature.properties.url);

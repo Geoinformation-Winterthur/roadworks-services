@@ -85,9 +85,9 @@ namespace roadwork_portal_service.Controllers
                     selectComm.CommandText = @"SELECT r.uuid, r.name, r.orderer,
                             u.first_name, u.last_name, o.name as orgname, r.finish_early_to,
                             r.finish_optimum_to, r.finish_late_to, p.code, r.status as statusname,
-                            r.description, 
+                            r.description, r.still_relevant, r.decline,
                             r.created, r.last_modified, u.e_mail,
-                            r.relevance, 
+                            r.relevance, r.feedback_given,
                             r.note_of_area_man, r.area_man_note_date,
                             n.first_name as area_manager_first_name, n.last_name as area_manager_last_name,
                             r.private, r.section, r.comment, r.url, o.is_civil_eng, o.abbreviation,
@@ -240,7 +240,11 @@ namespace roadwork_portal_service.Controllers
                             areaManagerOfNote.firstName = reader.IsDBNull(reader.GetOrdinal("area_manager_first_name")) ? "" : reader.GetString(reader.GetOrdinal("area_manager_first_name"));
                             areaManagerOfNote.lastName = reader.IsDBNull(reader.GetOrdinal("area_manager_last_name")) ? "" : reader.GetString(reader.GetOrdinal("area_manager_last_name"));
                             needFeatureFromDb.properties.areaManagerOfNote = areaManagerOfNote;
+
                             needFeatureFromDb.properties.isPrivate = reader.IsDBNull(reader.GetOrdinal("private")) ? true : reader.GetBoolean(reader.GetOrdinal("private"));
+                            needFeatureFromDb.properties.stillRelevant = reader.IsDBNull(reader.GetOrdinal("still_relevant")) ? true : reader.GetBoolean(reader.GetOrdinal("still_relevant"));
+                            needFeatureFromDb.properties.feedbackGiven = reader.IsDBNull(reader.GetOrdinal("feedback_given")) ? true : reader.GetBoolean(reader.GetOrdinal("feedback_given"));
+                            needFeatureFromDb.properties.decline = reader.IsDBNull(reader.GetOrdinal("decline")) ? true : reader.GetBoolean(reader.GetOrdinal("decline"));
                             needFeatureFromDb.properties.section = reader.IsDBNull(reader.GetOrdinal("section")) ? "" : reader.GetString(reader.GetOrdinal("section"));
                             needFeatureFromDb.properties.comment = reader.IsDBNull(reader.GetOrdinal("comment")) ? "" : reader.GetString(reader.GetOrdinal("comment"));
                             needFeatureFromDb.properties.url = reader.IsDBNull(reader.GetOrdinal("url")) ? "" : reader.GetString(reader.GetOrdinal("url"));
@@ -690,10 +694,10 @@ namespace roadwork_portal_service.Controllers
                                     SET name=@name, orderer=@orderer, last_modified=@last_modified,
                                     finish_early_to=@finish_early_to, finish_optimum_to=@finish_optimum_to,
                                     finish_late_to=@finish_late_to, priority=@priority,
-                                    description=@description,
-                                    section=@section, comment=@comment, 
+                                    description=@description, still_relevant=@still_relevant,
+                                    section=@section, comment=@comment, decline=@decline,
                                     url=@url, private=@private, overarching_measure=@overarching_measure,
-                                    desired_year_from=@desired_year_from,
+                                    desired_year_from=@desired_year_from, feedback_given=@feedback_given,
                                     desired_year_to=@desired_year_to, has_sponge_city_meas=@has_sponge_city_meas,
                                     is_sponge_1_1=@is_sponge_1_1, is_sponge_1_2=@is_sponge_1_2,
                                     is_sponge_1_3=@is_sponge_1_3, is_sponge_1_4=@is_sponge_1_4,
@@ -760,6 +764,9 @@ namespace roadwork_portal_service.Controllers
                         updateComm.Parameters.AddWithValue("is_sponge_4_1", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("4.1"));
                         updateComm.Parameters.AddWithValue("is_sponge_4_2", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("4.2"));
                         updateComm.Parameters.AddWithValue("is_sponge_5_1", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("5.1"));
+                        updateComm.Parameters.AddWithValue("still_relevant", roadWorkNeedFeature.properties.stillRelevant != null ? roadWorkNeedFeature.properties.stillRelevant : DBNull.Value);
+                        updateComm.Parameters.AddWithValue("feedback_given", roadWorkNeedFeature.properties.feedbackGiven != null ? roadWorkNeedFeature.properties.feedbackGiven : DBNull.Value);
+                        updateComm.Parameters.AddWithValue("decline", roadWorkNeedFeature.properties.decline != null ? roadWorkNeedFeature.properties.decline : DBNull.Value);
                         updateComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
 
                         string activityRelationType = "";
@@ -768,7 +775,7 @@ namespace roadwork_portal_service.Controllers
                             activityRelationType = roadWorkNeedFeature.properties.activityRelationType.Trim();
                         }
 
-                        if (activityRelationType == "assignedneed")
+                        if (activityRelationType == "assignedneed" && roadWorkNeedFeature.properties.roadWorkActivityUuid != "")
                         {
                             updateComm.CommandText += ", status=(SELECT status FROM wtb_ssp_roadworkactivities WHERE uuid = @uuid_roadwork_activity)";
                             updateComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkNeedFeature.properties.roadWorkActivityUuid));
@@ -779,46 +786,55 @@ namespace roadwork_portal_service.Controllers
 
                         updateComm.ExecuteNonQuery();
 
-                        if (roadWorkNeedFeature.properties.roadWorkActivityUuid != "")
-                        {
-
-                            NpgsqlCommand selectCommand = pgConn.CreateCommand();
-                            selectCommand.CommandText = @"SELECT uuid_roadwork_activity
+                        NpgsqlCommand selectCommand = pgConn.CreateCommand();
+                        selectCommand.CommandText = @"SELECT uuid_roadwork_activity
                                 FROM ""wtb_ssp_activities_to_needs""
                                 WHERE uuid_roadwork_need=@uuid
                                 AND activityrelationtype='assignedneed'";
-                            selectCommand.Parameters.AddWithValue("uuid", new Guid(roadWorkNeedFeature.properties.uuid));
+                        selectCommand.Parameters.AddWithValue("uuid", new Guid(roadWorkNeedFeature.properties.uuid));
 
-                            string affectedActivityUuid = "";
+                        string affectedActivityUuid = "";
 
-                            using (NpgsqlDataReader reader = selectCommand.ExecuteReader())
+                        using (NpgsqlDataReader reader = selectCommand.ExecuteReader())
+                        {
+                            if (reader.Read())
                             {
-                                if (reader.Read())
-                                {
-                                    affectedActivityUuid = reader.IsDBNull(0) ? "" : reader.GetGuid(0).ToString();
-                                }
+                                affectedActivityUuid = reader.IsDBNull(0) ? "" : reader.GetGuid(0).ToString();
                             }
+                        }
 
-                            int assignedNeedsCount = _countAssignedNeeds(affectedActivityUuid, pgConn);
-                            if (assignedNeedsCount == 1)
+                        if (roadWorkNeedFeature.properties.roadWorkActivityUuid != "")
+                        {
+
+                            if (activityRelationType != "assignedneed" ||
+                                    roadWorkNeedFeature.properties.roadWorkActivityUuid != affectedActivityUuid)
                             {
-                                _logger.LogWarning("The roadwork need cannot be deleted since it is the last need of the roadwork activity " + affectedActivityUuid);
-                                roadWorkNeedFeature.errorMessage = "SSP-29";
-                                return Ok(roadWorkNeedFeature);
+
+                                int assignedNeedsCount = _countAssignedNeeds(affectedActivityUuid, pgConn);
+                                if (assignedNeedsCount == 1)
+                                {
+                                    _logger.LogWarning("The roadwork need cannot be removed as assigned need since it is the last need of the roadwork activity " + affectedActivityUuid);
+                                    roadWorkNeedFeature.errorMessage = "SSP-29";
+                                    return Ok(roadWorkNeedFeature);
+                                }
                             }
 
 
                             NpgsqlCommand deleteComm = pgConn.CreateCommand();
-                            deleteComm.CommandText = @"DELETE FROM ""wtb_ssp_activities_to_needs""
+                            if (affectedActivityUuid != null && affectedActivityUuid != "")
+                            {
+                                deleteComm.CommandText = @"DELETE FROM ""wtb_ssp_activities_to_needs""
                                     WHERE uuid_roadwork_need=@uuid_roadwork_need
                                         AND uuid_roadwork_activity=@uuid_roadwork_activity";
-                            deleteComm.Parameters.AddWithValue("uuid_roadwork_need", new Guid(roadWorkNeedFeature.properties.uuid));
-                            deleteComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkNeedFeature.properties.roadWorkActivityUuid));
-                            deleteComm.ExecuteNonQuery();
+                                deleteComm.Parameters.AddWithValue("uuid_roadwork_need", new Guid(roadWorkNeedFeature.properties.uuid));
+                                deleteComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(affectedActivityUuid));
+                                deleteComm.ExecuteNonQuery();
+                            }
 
                             deleteComm.CommandText = @"DELETE FROM ""wtb_ssp_activities_to_needs""
                                     WHERE uuid_roadwork_need=@uuid_roadwork_need
                                         AND activityrelationtype='assignedneed'";
+                            deleteComm.Parameters.AddWithValue("uuid_roadwork_need", new Guid(roadWorkNeedFeature.properties.uuid));
                             deleteComm.ExecuteNonQuery();
 
                             if (activityRelationType != "")
@@ -860,6 +876,7 @@ namespace roadwork_portal_service.Controllers
 
                                 insertHistoryComm.ExecuteNonQuery();
                             }
+
                         }
 
                         if (roadWorkNeedFeature.properties.costs != null)

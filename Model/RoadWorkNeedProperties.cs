@@ -36,5 +36,8 @@ public class RoadWorkNeedProperties
     public string[]? spongeCityMeasures { get; set; }
     public string? deleteReason { get; set; }
     public bool? isPrimary { get; set; }
+    public bool? stillRelevant { get; set; }
+    public bool? feedbackGiven { get; set; }
+    public bool? decline { get; set; }
 }
 
