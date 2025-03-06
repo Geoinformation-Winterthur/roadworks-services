@@ -22,9 +22,9 @@ public class RoadWorkActivityProperties
     public bool? prestudy { get; set; } = false;
     public DateTime? created { get; set; } = DateTime.MinValue;
     public DateTime? lastModified { get; set; } = DateTime.MinValue;
-    public DateTime? finishEarlyTo { get; set; } = DateTime.MinValue;
+    public DateTime? finishEarlyTo { get; set; }
     public DateTime? finishOptimumTo { get; set; } = DateTime.MinValue;
-    public DateTime? finishLateTo { get; set; } = DateTime.MinValue;
+    public DateTime? finishLateTo { get; set; }
     public DateTime? startOfConstruction { get; set; }
     public DateTime? endOfConstruction { get; set; }
     public DateTime? dateOfAcceptance { get; set; }

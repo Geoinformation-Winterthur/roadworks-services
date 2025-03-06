@@ -114,8 +114,8 @@ namespace roadwork_portal_service.Controllers
                         projectFeatureFromDb.properties.description = reader.IsDBNull(8) ? "" : reader.GetString(8);
                         projectFeatureFromDb.properties.created = reader.IsDBNull(9) ? DateTime.MinValue : reader.GetDateTime(9);
                         projectFeatureFromDb.properties.lastModified = reader.IsDBNull(10) ? DateTime.MinValue : reader.GetDateTime(10);
-                        projectFeatureFromDb.properties.finishEarlyTo = reader.IsDBNull(11) ? DateTime.MinValue : reader.GetDateTime(11);
-                        projectFeatureFromDb.properties.finishLateTo = reader.IsDBNull(12) ? DateTime.MinValue : reader.GetDateTime(12);
+                        if(!reader.IsDBNull(11)) projectFeatureFromDb.properties.finishEarlyTo = reader.GetDateTime(11);
+                        if(!reader.IsDBNull(12)) projectFeatureFromDb.properties.finishLateTo = reader.GetDateTime(12);
                         projectFeatureFromDb.properties.costs = reader.IsDBNull(13) ? 0m : reader.GetDecimal(13);
 
                         projectFeatureFromDb.properties.costsType = reader.IsDBNull(14) ? "" : reader.GetString(14); ;
@@ -423,7 +423,7 @@ namespace roadwork_portal_service.Controllers
                     return Ok(roadWorkActivityFeature);
                 }
 
-                if (roadWorkActivityFeature.properties.finishEarlyTo > roadWorkActivityFeature.properties.finishLateTo)
+                if (roadWorkActivityFeature.properties.finishEarlyTo! > roadWorkActivityFeature.properties.finishLateTo)
                 {
                     _logger.LogWarning("The finish from date of a roadwork activity cannot be higher than its finish to date");
                     roadWorkActivityFeature = new RoadWorkActivityFeature();
@@ -501,9 +501,9 @@ namespace roadwork_portal_service.Controllers
                     }
                     insertComm.Parameters.AddWithValue("name", roadWorkActivityFeature.properties.name);
                     insertComm.Parameters.AddWithValue("description", roadWorkActivityFeature.properties.description);
-                    insertComm.Parameters.AddWithValue("date_from", roadWorkActivityFeature.properties.finishEarlyTo);
-                    insertComm.Parameters.AddWithValue("date_optimum", roadWorkActivityFeature.properties.finishOptimumTo);
-                    insertComm.Parameters.AddWithValue("date_to", roadWorkActivityFeature.properties.finishLateTo);
+                    insertComm.Parameters.AddWithValue("date_from", roadWorkActivityFeature.properties.finishEarlyTo != null ? roadWorkActivityFeature.properties.finishEarlyTo : DBNull.Value);
+                    insertComm.Parameters.AddWithValue("date_optimum", roadWorkActivityFeature.properties.finishOptimumTo != null ? roadWorkActivityFeature.properties.finishOptimumTo : DBNull.Value);
+                    insertComm.Parameters.AddWithValue("date_to", roadWorkActivityFeature.properties.finishLateTo != null ? roadWorkActivityFeature.properties.finishLateTo : DBNull.Value);
                     insertComm.Parameters.AddWithValue("costs", roadWorkActivityFeature.properties.costs <= 0 ? DBNull.Value : roadWorkActivityFeature.properties.costs);
                     insertComm.Parameters.AddWithValue("costs_type", roadWorkActivityFeature.properties.costsType);
                     insertComm.Parameters.AddWithValue("status", "review");
@@ -719,7 +719,7 @@ namespace roadwork_portal_service.Controllers
                     return Ok(roadWorkActivityFeature);
                 }
 
-                if (roadWorkActivityFeature.properties.finishEarlyTo > roadWorkActivityFeature.properties.finishLateTo)
+                if (roadWorkActivityFeature.properties.finishEarlyTo! > roadWorkActivityFeature.properties.finishLateTo)
                 {
                     roadWorkActivityFeature = new RoadWorkActivityFeature();
                     roadWorkActivityFeature.errorMessage = "SSP-19";
@@ -1131,9 +1131,9 @@ namespace roadwork_portal_service.Controllers
                     updateComm.Parameters.AddWithValue("description", roadWorkActivityFeature.properties.description);
                     roadWorkActivityFeature.properties.lastModified = DateTime.Now;
                     updateComm.Parameters.AddWithValue("last_modified", roadWorkActivityFeature.properties.lastModified);
-                    updateComm.Parameters.AddWithValue("date_from", roadWorkActivityFeature.properties.finishEarlyTo);
-                    updateComm.Parameters.AddWithValue("date_optimum", roadWorkActivityFeature.properties.finishOptimumTo);
-                    updateComm.Parameters.AddWithValue("date_to", roadWorkActivityFeature.properties.finishLateTo);
+                    updateComm.Parameters.AddWithValue("date_from", roadWorkActivityFeature.properties.finishEarlyTo != null ? roadWorkActivityFeature.properties.finishEarlyTo : DBNull.Value);
+                    updateComm.Parameters.AddWithValue("date_optimum", roadWorkActivityFeature.properties.finishOptimumTo != null ? roadWorkActivityFeature.properties.finishOptimumTo : DBNull.Value);
+                    updateComm.Parameters.AddWithValue("date_to", roadWorkActivityFeature.properties.finishLateTo != null ? roadWorkActivityFeature.properties.finishLateTo : DBNull.Value);
                     updateComm.Parameters.AddWithValue("costs", roadWorkActivityFeature.properties.costs);
                     updateComm.Parameters.AddWithValue("costs_type", roadWorkActivityFeature.properties.costsType);
                     updateComm.Parameters.AddWithValue("status", roadWorkActivityFeature.properties.status);

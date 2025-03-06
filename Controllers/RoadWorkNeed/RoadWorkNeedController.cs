@@ -684,8 +684,6 @@ namespace roadwork_portal_service.Controllers
 
                     }
 
-                    bool isFirstNeed = _isFirstNeed(roadWorkNeedFeature, pgConn);
-
                     using (NpgsqlTransaction updateTransAction = pgConn.BeginTransaction())
                     {
 
@@ -849,7 +847,7 @@ namespace roadwork_portal_service.Controllers
                                 insertComm.Parameters.AddWithValue("uuid_roadwork_need", new Guid(roadWorkNeedFeature.properties.uuid));
                                 insertComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkNeedFeature.properties.roadWorkActivityUuid));
                                 insertComm.Parameters.AddWithValue("activityrelationtype", activityRelationType);
-                                insertComm.Parameters.AddWithValue("is_primary", isFirstNeed);
+                                insertComm.Parameters.AddWithValue("is_primary", roadWorkNeedFeature.properties.isPrimary != null ? roadWorkNeedFeature.properties.isPrimary : false);
                                 insertComm.ExecuteNonQuery();
 
                                 NpgsqlCommand insertHistoryComm = pgConn.CreateCommand();
@@ -1094,32 +1092,6 @@ namespace roadwork_portal_service.Controllers
 
             return Ok();
 
-        }
-
-        private bool _isFirstNeed(RoadWorkNeedFeature roadWorkNeedFeature, NpgsqlConnection pgConn)
-        {
-            if (roadWorkNeedFeature.properties.roadWorkActivityUuid == null
-                    || roadWorkNeedFeature.properties.roadWorkActivityUuid == "")
-                if (roadWorkNeedFeature.properties.isPrimary == null)
-                    return false;
-                else
-                    return (bool)roadWorkNeedFeature.properties.isPrimary;
-
-            NpgsqlCommand selectIsFirstNeedComm = pgConn.CreateCommand();
-            selectIsFirstNeedComm.CommandText = @"SELECT count(*)
-                                    FROM ""wtb_ssp_activities_to_needs""
-                                    WHERE activityrelationtype = 'assignedneed' AND
-                                        uuid_roadwork_activity=@uuid";
-            selectIsFirstNeedComm.Parameters.AddWithValue("uuid", new Guid(roadWorkNeedFeature.properties.roadWorkActivityUuid));
-
-            using (NpgsqlDataReader reader = selectIsFirstNeedComm.ExecuteReader())
-            {
-                if (reader.Read())
-                {
-                    return reader.IsDBNull(0) ? false : reader.GetInt32(0) == 0;
-                }
-            }
-            return false;
         }
 
         private int _countAssignedNeeds(string affectedActivityUuid, NpgsqlConnection pgConn)
