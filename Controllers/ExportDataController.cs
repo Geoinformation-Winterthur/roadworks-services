@@ -31,7 +31,7 @@ namespace roadwork_portal_service.Controllers
             {
                 string resultCsv = "UUID;Titel/Strasse;Projektleiter Vorname;Projektleiter Nachname;" +
                         "Leiter Baustellenverkehr Vorname;Leiter Baustellenverkehr Nachname;Auslösegrund;" +
-                        "Erstellungsdatum;Datum letzte Bearbeitung;Datum von;Datum bis;Kosten;Ist privat;Kostenart;" +
+                        "Erstellungsdatum;Datum letzte Bearbeitung;Datum von;Datum bis;Ist privat;" +
                         "Status;Im Internet publiziert;Rechnungsadresse 1;Rechnungsadresse 2;PDB-FID;" +
                         "Strabako-Nr.;Investitionsnummer;Datum SKS;Datum KAP;Datum OKS;Datum GL-TBA;" +
                         "Projektnummer;Kommentar;Abschnitt;URL;Projekttyp;Übergeordnete Massnahme;Wunschjahr von;" +
@@ -56,7 +56,7 @@ namespace roadwork_portal_service.Controllers
                     selectComm.CommandText = @"SELECT r.uuid, r.name,
                             o.first_name, o.last_name, r.created, r.last_modified,
                             r.finish_early_to, r.finish_optimum_to, r.finish_late_to,
-                            prio.name, r.status, r.costs, r.private, r.description,
+                            prio.name, r.status, r.private, r.description,
                             r.note_of_area_man, r.area_man_note_date,
                             areaman.first_name, areaman.last_name, r.relevance
                         FROM ""wtb_ssp_roadworkneeds"" r
@@ -70,21 +70,20 @@ namespace roadwork_portal_service.Controllers
                         string status = "";
                         while (await reader.ReadAsync())
                         {
-                            status = reader.IsDBNull(10) ? "" : _sanitizeForCsv(reader.GetString(10));
+                            status = reader.IsDBNull(reader.GetOrdinal("status")) ? "" : _sanitizeForCsv(reader.GetString(reader.GetOrdinal("status")));
                             if (status == "requirement")
                             {
-                                resultCsv += reader.IsDBNull(0) ? ";" : reader.GetGuid(0).ToString() + ";";
-                                resultCsv += reader.IsDBNull(1) ? ";" : _sanitizeForCsv(reader.GetString(1)) + ";";
+                                resultCsv += reader.IsDBNull(reader.GetOrdinal("uuid")) ? ";" : reader.GetGuid(reader.GetOrdinal("uuid")).ToString() + ";";
+                                resultCsv += reader.IsDBNull(reader.GetOrdinal("name")) ? ";" : _sanitizeForCsv(reader.GetString(reader.GetOrdinal("name"))) + ";";
                                 resultCsv += ";;;;";
-                                resultCsv += reader.IsDBNull(13) ? ";" : _sanitizeForCsv(reader.GetString(13)) + ";";
-                                resultCsv += reader.IsDBNull(5) ? ";" : reader.GetDateTime(5).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                                resultCsv += reader.IsDBNull(6) ? ";" : reader.GetDateTime(6).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                                resultCsv += reader.IsDBNull(7) ? ";" : reader.GetDateTime(7).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                                resultCsv += reader.IsDBNull(8) ? ";" : reader.GetDateTime(8).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                                resultCsv += reader.IsDBNull(11) ? ";" : reader.GetInt32(11) + ";";
-                                resultCsv += reader.IsDBNull(12) ? ";" : reader.GetBoolean(12) + ";";
+                                resultCsv += reader.IsDBNull(reader.GetOrdinal("description")) ? ";" : _sanitizeForCsv(reader.GetString(reader.GetOrdinal("description"))) + ";";
+                                resultCsv += reader.IsDBNull(reader.GetOrdinal("created")) ? ";" : reader.GetDateTime(reader.GetOrdinal("created")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                                resultCsv += reader.IsDBNull(reader.GetOrdinal("last_modified")) ? ";" : reader.GetDateTime(reader.GetOrdinal("last_modified")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                                resultCsv += reader.IsDBNull(reader.GetOrdinal("finish_early_to")) ? ";" : reader.GetDateTime(reader.GetOrdinal("finish_early_to")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                                resultCsv += reader.IsDBNull(reader.GetOrdinal("finish_late_to")) ? ";" : reader.GetDateTime(reader.GetOrdinal("finish_late_to")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                                resultCsv += reader.IsDBNull(reader.GetOrdinal("private")) ? ";" : reader.GetBoolean(reader.GetOrdinal("private")) + ";";
                                 string statusName = HelperFunctions.translateStatusCodes(status);
-                                resultCsv += ";" + statusName + ";;;;;;;;;;;";
+                                resultCsv += statusName + ";;;;;;;;;;;";
                                 resultCsv += "\r\n";
                             }
                         }
@@ -98,9 +97,10 @@ namespace roadwork_portal_service.Controllers
                     pgConn.Open();
                     NpgsqlCommand selectComm = pgConn.CreateCommand();
                     selectComm.CommandText = @"SELECT r.uuid, r.name,
-                            p.first_name, p.last_name, t.first_name, t.last_name,
+                            p.first_name as p_first_name, p.last_name as p_last_name,
+                            t.first_name as t_first_name, t.last_name as t_last_name,
                             r.description, r.created, r.last_modified,
-                            r.date_from, r.date_to, r.costs, r.private, c.name, r.status,
+                            r.date_from, r.date_to, r.private, r.status,
                             r.in_internet, r.billing_address1, r.billing_address2,
                             r.pdb_fid, r.strabako_no, r.investment_no, r.date_sks,
                             r.date_kap, r.date_oks, r.date_gl_tba, r.project_no,
@@ -124,89 +124,84 @@ namespace roadwork_portal_service.Controllers
                             r.date_start_coordinated
                         FROM ""wtb_ssp_roadworkactivities"" r
                         LEFT JOIN ""wtb_ssp_users"" p ON r.projectmanager = p.uuid
-                        LEFT JOIN ""wtb_ssp_users"" t ON r.traffic_agent = t.uuid
-                        LEFT JOIN ""wtb_ssp_costtypes"" c ON r.costs_type = c.code";
+                        LEFT JOIN ""wtb_ssp_users"" t ON r.traffic_agent = t.uuid";
 
 
                     using (NpgsqlDataReader reader = await selectComm.ExecuteReaderAsync())
                     {
                         while (await reader.ReadAsync())
                         {
-                            resultCsv += reader.IsDBNull(0) ? ";" : reader.GetGuid(0).ToString() + ";";
-                            resultCsv += reader.IsDBNull(1) ? ";" : _sanitizeForCsv(reader.GetString(1)) + ";";
-                            resultCsv += reader.IsDBNull(2) ? ";" : _sanitizeForCsv(reader.GetString(2)) + ";";
-                            resultCsv += reader.IsDBNull(3) ? ";" : _sanitizeForCsv(reader.GetString(3)) + ";";
-                            resultCsv += reader.IsDBNull(4) ? ";" : _sanitizeForCsv(reader.GetString(4)) + ";";
-                            resultCsv += reader.IsDBNull(5) ? ";" : _sanitizeForCsv(reader.GetString(5)) + ";";
-                            resultCsv += reader.IsDBNull(6) ? ";" : _sanitizeForCsv(reader.GetString(6)) + ";";
-                            resultCsv += reader.IsDBNull(7) ? ";" : reader.GetDateTime(7).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(8) ? ";" : reader.GetDateTime(8).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(9) ? ";" : reader.GetDateTime(9).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(10) ? ";" : reader.GetDateTime(10).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(11) ? ";" : reader.GetInt32(11) + ";";
-                            resultCsv += reader.IsDBNull(12) ? ";" : reader.GetBoolean(12) + ";";
-                            resultCsv += reader.IsDBNull(13) ? ";" : _sanitizeForCsv(reader.GetString(13)) + ";";
-                            resultCsv += reader.IsDBNull(14) ? ";" : _sanitizeForCsv(reader.GetString(14)) + ";";
-                            resultCsv += reader.IsDBNull(15) ? ";" : reader.GetBoolean(15) + ";";
-                            resultCsv += reader.IsDBNull(16) ? ";" : _sanitizeForCsv(reader.GetString(16)) + ";";
-                            resultCsv += reader.IsDBNull(17) ? ";" : _sanitizeForCsv(reader.GetString(17)) + ";";
-                            resultCsv += reader.IsDBNull(18) ? ";" : reader.GetInt32(18) + ";";
-                            resultCsv += reader.IsDBNull(19) ? ";" : _sanitizeForCsv(reader.GetString(19)) + ";";
-                            resultCsv += reader.IsDBNull(20) ? ";" : reader.GetInt32(20) + ";";
-                            resultCsv += reader.IsDBNull(21) ? ";" : reader.GetDateTime(21).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(22) ? ";" : reader.GetDateTime(22).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(23) ? ";" : _sanitizeForCsv(reader.GetString(23)) + ";";
-                            resultCsv += reader.IsDBNull(24) ? ";" : reader.GetDateTime(24).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(25) ? ";" : _sanitizeForCsv(reader.GetString(25)) + ";";
-                            resultCsv += reader.IsDBNull(26) ? ";" : _sanitizeForCsv(reader.GetString(26)) + ";";
-                            resultCsv += reader.IsDBNull(27) ? ";" : _sanitizeForCsv(reader.GetString(27)) + ";";
-                            resultCsv += reader.IsDBNull(28) ? ";" : _sanitizeForCsv(reader.GetString(28)) + ";";
-                            resultCsv += reader.IsDBNull(29) ? ";" : _sanitizeForCsv(reader.GetString(29)) + ";";
-                            resultCsv += reader.IsDBNull(30) ? ";" : reader.GetBoolean(30) + ";";
-                            resultCsv += reader.IsDBNull(31) ? ";" : reader.GetInt32(31) + ";";
-                            resultCsv += reader.IsDBNull(32) ? ";" : reader.GetInt32(32) + ";";
-                            resultCsv += reader.IsDBNull(33) ? ";" : reader.GetBoolean(33) + ";";
-                            resultCsv += reader.IsDBNull(34) ? ";" : reader.GetDateTime(34).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(35) ? ";" : reader.GetDateTime(35).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(36) ? ";" : reader.GetDateTime(36).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(37) ? ";" : reader.GetDateTime(37).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(38) ? ";" : reader.GetDateTime(38).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(39) ? ";" : reader.GetDateTime(39).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(40) ? ";" : reader.GetDateTime(40).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(41) ? ";" : reader.GetDateTime(41).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(42) ? ";" : reader.GetDateTime(42).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(43) ? ";" : reader.GetDateTime(43).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(44) ? ";" : reader.GetDateTime(44).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(45) ? ";" : reader.GetDateTime(45).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(46) ? ";" : reader.GetBoolean(46) + ";";
-                            resultCsv += reader.IsDBNull(47) ? ";" : reader.GetDateTime(47).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(48) ? ";" : reader.GetDateTime(48).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(49) ? ";" : reader.GetDateTime(49).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(50) ? ";" : reader.GetDateTime(50).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(51) ? ";" : reader.GetBoolean(51) + ";";
-                            resultCsv += reader.IsDBNull(52) ? ";" : reader.GetDateTime(52).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(53) ? ";" : reader.GetDateTime(53).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(54) ? ";" : reader.GetBoolean(54) + ";";
-                            resultCsv += reader.IsDBNull(55) ? ";" : reader.GetDateTime(55).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(56) ? ";" : reader.GetDateTime(56).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(57) ? ";" : reader.GetBoolean(57) + ";";
-                            resultCsv += reader.IsDBNull(58) ? ";" : reader.GetDateTime(58).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(59) ? ";" : reader.GetDateTime(59).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(60) ? ";" : reader.GetDateTime(60).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(61) ? ";" : reader.GetDateTime(61).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(62) ? ";" : reader.GetDateTime(62).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(63) ? ";" : reader.GetDateTime(63).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(64) ? ";" : reader.GetDateTime(64).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(65) ? ";" : reader.GetDateTime(65).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(66) ? ";" : reader.GetDateTime(66).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(67) ? ";" : reader.GetDateTime(67).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(68) ? ";" : reader.GetDateTime(68).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(69) ? ";" : reader.GetBoolean(69) + ";";
-                            resultCsv += reader.IsDBNull(70) ? ";" : reader.GetDateTime(70).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(71) ? ";" : reader.GetDateTime(71).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(72) ? ";" : reader.GetDateTime(72).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(73) ? ";" : reader.GetDateTime(73).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(74) ? ";" : reader.GetDateTime(74).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("uuid")) ? ";" : reader.GetGuid(reader.GetOrdinal("uuid")).ToString() + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("name")) ? ";" : _sanitizeForCsv(reader.GetString(reader.GetOrdinal("name"))) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("p_first_name")) ? ";" : _sanitizeForCsv(reader.GetString(reader.GetOrdinal("p_first_name"))) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("p_last_name")) ? ";" : _sanitizeForCsv(reader.GetString(reader.GetOrdinal("p_last_name"))) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("t_first_name")) ? ";" : _sanitizeForCsv(reader.GetString(reader.GetOrdinal("t_first_name"))) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("t_last_name")) ? ";" : _sanitizeForCsv(reader.GetString(reader.GetOrdinal("t_last_name"))) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("description")) ? ";" : _sanitizeForCsv(reader.GetString(reader.GetOrdinal("description"))) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("created")) ? ";" : reader.GetDateTime(reader.GetOrdinal("created")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("last_modified")) ? ";" : reader.GetDateTime(reader.GetOrdinal("last_modified")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_from")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_from")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_to")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_to")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("private")) ? ";" : reader.GetBoolean(reader.GetOrdinal("private")) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("status")) ? ";" : _sanitizeForCsv(reader.GetString(reader.GetOrdinal("status"))) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("in_internet")) ? ";" : reader.GetBoolean(reader.GetOrdinal("in_internet")) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("billing_address1")) ? ";" : _sanitizeForCsv(reader.GetString(reader.GetOrdinal("billing_address1"))) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("billing_address2")) ? ";" : _sanitizeForCsv(reader.GetString(reader.GetOrdinal("billing_address2"))) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("pdb_fid")) ? ";" : reader.GetInt32(reader.GetOrdinal("pdb_fid")) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("strabako_no")) ? ";" : reader.GetString(reader.GetOrdinal("strabako_no")) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("investment_no")) ? ";" : reader.GetInt32(reader.GetOrdinal("investment_no")) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_sks")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_sks")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_kap")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_kap")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_oks")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_oks")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_gl_tba")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_gl_tba")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("project_no")) ? ";" : _sanitizeForCsv(reader.GetString(reader.GetOrdinal("project_no")) + ";");
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("comment")) ? ";" : _sanitizeForCsv(reader.GetString(reader.GetOrdinal("comment")) + ";");
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("section")) ? ";" : _sanitizeForCsv(reader.GetString(reader.GetOrdinal("section")) + ";");
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("url")) ? ";" : _sanitizeForCsv(reader.GetString(reader.GetOrdinal("url")) + ";");
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("projecttype")) ? ";" : _sanitizeForCsv(reader.GetString(reader.GetOrdinal("projecttype")) + ";");
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("overarching_measure")) ? ";" : reader.GetBoolean(reader.GetOrdinal("overarching_measure")) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("desired_year_from")) ? ";" : reader.GetInt32(reader.GetOrdinal("desired_year_from")) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("desired_year_to")) ? ";" : reader.GetInt32(reader.GetOrdinal("desired_year_to")) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("prestudy")) ? ";" : reader.GetBoolean(reader.GetOrdinal("prestudy")) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_optimum")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_optimum")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("start_of_construction")) ? ";" : reader.GetDateTime(reader.GetOrdinal("start_of_construction")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("end_of_construction")) ? ";" : reader.GetDateTime(reader.GetOrdinal("end_of_construction")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_of_acceptance")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_of_acceptance")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("consult_due")) ? ";" : reader.GetDateTime(reader.GetOrdinal("consult_due")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_sks_real")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_sks_real")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_kap_real")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_kap_real")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_oks_real")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_oks_real")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_gl_tba_real")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_gl_tba_real")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_planned")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_planned")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_accept")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_accept")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_guarantee")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_guarantee")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("is_study")) ? ";" : reader.GetBoolean(reader.GetOrdinal("is_study")) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_study_start")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_study_start")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_study_end")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_study_end")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("project_study_approved")) ? ";" : reader.GetBoolean(reader.GetOrdinal("project_study_approved")) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("study_approved")) ? ";" : reader.GetBoolean(reader.GetOrdinal("study_approved")) + ";";
+                            resultCsv += "False;;;";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("is_particip")) ? ";" : reader.GetBoolean(reader.GetOrdinal("is_particip")) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_particip_start")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_particip_start")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_particip_end")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_particip_end")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("is_plan_circ")) ? ";" : reader.GetBoolean(reader.GetOrdinal("is_plan_circ")) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_plan_circ_start")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_plan_circ_start")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_plan_circ_end")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_plan_circ_end")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_consult_start")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_consult_start")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_consult_end")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_consult_end")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_consult_close")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_consult_close")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_report_start")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_report_start")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_report_end")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_report_end")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_report_close")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_report_close")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_info_start")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_info_start")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_info_end")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_info_end")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_info_close")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_info_close")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("is_aggloprog")) ? ";" : reader.GetBoolean(reader.GetOrdinal("is_aggloprog")) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_start_inconsult")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_start_inconsult")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_start_verified")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_start_verified")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_start_reporting")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_start_reporting")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_start_suspended")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_start_suspended")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_start_coordinated")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_start_coordinated")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
                             resultCsv += "\r\n";
                         }
                     }
