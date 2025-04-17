@@ -30,8 +30,9 @@ namespace roadwork_portal_service.Controllers
         public IEnumerable<RoadWorkNeedFeature> GetNeeds(int? relevance,
                 DateTime? dateOfCreation, int? year, string? uuids,
                 string? roadWorkActivityUuid, string? name,
-                string? areaManagerUuid, bool? onlyMyNeeds,
-                string? status, string? intersectsActivityUuid,
+                string? areaManagerUuid, string? ordererUuid,
+                bool? onlyMyNeeds, string? status, DateTime? finishOptimumTo, 
+                string? intersectsActivityUuid,
                 bool summary = false)
         {
             List<RoadWorkNeedFeature> projectsFromDb = new List<RoadWorkNeedFeature>();
@@ -72,6 +73,11 @@ namespace roadwork_portal_service.Controllers
                 else
                     areaManagerUuid = areaManagerUuid.Trim().ToLower();
 
+                if (ordererUuid == null)
+                    ordererUuid = "";
+                else
+                    ordererUuid = ordererUuid.Trim().ToLower();
+
                 if (onlyMyNeeds == null)
                     onlyMyNeeds = false;
 
@@ -102,7 +108,7 @@ namespace roadwork_portal_service.Controllers
 
                     if (uuids == "" && roadWorkActivityUuid != "")
                     {
-                        selectComm.CommandText += @", an.uuid_roadwork_activity, an.activityrelationtype, an.is_primary";
+                        selectComm.CommandText += ", an.uuid_roadwork_activity, an.activityrelationtype, an.is_primary";
                     }
 
                     selectComm.CommandText += @" FROM ""wtb_ssp_roadworkneeds"" r
@@ -144,12 +150,12 @@ namespace roadwork_portal_service.Controllers
                     }
                     else if (roadWorkActivityUuid != "")
                     {
-                        selectComm.CommandText += @" AND an.uuid_roadwork_activity = @act_uuid";
+                        selectComm.CommandText += " AND an.uuid_roadwork_activity = @act_uuid";
                         selectComm.Parameters.AddWithValue("act_uuid", new Guid(roadWorkActivityUuid));
                     }
                     else if (intersectsActivityUuid != "")
                     {
-                        selectComm.CommandText += @" AND ST_Intersects(act.geom, r.geom)";
+                        selectComm.CommandText += " AND ST_Intersects(act.geom, r.geom)";
                     }
                     else
                     {
@@ -175,6 +181,18 @@ namespace roadwork_portal_service.Controllers
                         {
                             selectComm.CommandText += " AND r.created = @created";
                             selectComm.Parameters.AddWithValue("created", dateOfCreation);
+                        }
+
+                        if (finishOptimumTo != null)
+                        {
+                            selectComm.CommandText += " AND r.finish_optimum_to = @finish_optimum_to";
+                            selectComm.Parameters.AddWithValue("finish_optimum_to", finishOptimumTo);
+                        }
+
+                        if (ordererUuid != "")
+                        {
+                            selectComm.CommandText += " AND r.orderer = @orderer";
+                            selectComm.Parameters.AddWithValue("orderer", new Guid(ordererUuid));
                         }
 
                         if ((bool)onlyMyNeeds)
