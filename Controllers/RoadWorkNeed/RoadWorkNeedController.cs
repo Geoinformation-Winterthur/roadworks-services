@@ -383,8 +383,8 @@ namespace roadwork_portal_service.Controllers
                                 Costs costs = new Costs();
                                 if (!reader.IsDBNull(0)) costs.uuid = reader.GetGuid(0).ToString();
                                 if (!reader.IsDBNull(1)) costs.costs = reader.GetDecimal(1);
-                                if (!reader.IsDBNull(3)) costs.projectType = reader.GetString(2);
-                                if (!reader.IsDBNull(4)) costs.costsComment = reader.GetString(3);
+                                if (!reader.IsDBNull(2)) costs.projectType = reader.GetString(2);
+                                if (!reader.IsDBNull(3)) costs.costsComment = reader.GetString(3);
                                 costsOfRoadwork.Add(costs);
                             }
                             needFeatureFromDb.properties.costs = costsOfRoadwork.ToArray();
