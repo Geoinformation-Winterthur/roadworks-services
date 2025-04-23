@@ -87,4 +87,6 @@ public class RoadWorkActivityProperties
     public string? url { get; set; }
     public DocumentAttributes[]? documentAtts { get; set; }
     public bool? isSksRelevant { get; set; }
+    public DateTime? costLastModified { get; set; }
+    public User? costLastModifiedBy { get; set; } = new User();
 }

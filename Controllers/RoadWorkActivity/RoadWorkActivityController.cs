@@ -36,30 +36,33 @@ namespace roadwork_portal_service.Controllers
                 pgConn.Open();
                 NpgsqlCommand selectComm = pgConn.CreateCommand();
                 selectComm.CommandText = @"SELECT r.uuid, r.name, 
-                            r.projectmanager, pm.first_name, pm.last_name, r.traffic_agent,
-                            ta.first_name, ta.last_name, description, created, last_modified, r.date_from, r.date_to,
-                            r.costs, r.costs_type, r.status, r.in_internet,
-                            r.billing_address1, r.billing_address2, r.investment_no, r.pdb_fid,
-                            r.strabako_no, r.date_sks, r.date_kap, r.date_oks, r.date_gl_tba,
-                            r.comment, r.section, r.type, r.projecttype, r.overarching_measure,
-                            r.desired_year_from, r.desired_year_to, r.prestudy, r.start_of_construction,
-                            r.end_of_construction, r.consult_due, r.project_no, r.private, r.date_accept,
-                            r.date_guarantee, r.is_study, r.date_study_start, r.date_study_end,
-                            r.is_desire, r.date_desire_start, r.date_desire_end, r.is_particip,
-                            r.date_particip_start, r.date_particip_end, r.is_plan_circ,
-                            r.date_plan_circ_start, r.date_plan_circ_end, r.date_consult_start,
-                            r.date_consult_end, r.date_consult_close, r.date_report_start,
-                            r.date_report_end, r.date_report_close, r.date_info_start,
-                            r.date_info_end, r.date_info_close, r.is_aggloprog, r.date_optimum,
-                            r.date_of_acceptance, r.url,
-                            r.project_study_approved, r.study_approved, r.date_sks_real,
-                            r.date_kap_real, r.date_oks_real, r.date_gl_tba_real,
-                            r.date_start_inconsult, r.date_start_verified, r.date_start_reporting,
-                            r.date_start_suspended, r.date_start_coordinated, r.sks_relevant,
-                            r.geom
-                        FROM ""wtb_ssp_roadworkactivities"" r
-                        LEFT JOIN ""wtb_ssp_users"" pm ON r.projectmanager = pm.uuid
-                        LEFT JOIN ""wtb_ssp_users"" ta ON r.traffic_agent = ta.uuid";
+                        r.projectmanager, pm.first_name AS pm_first_name, pm.last_name AS pm_last_name, r.traffic_agent,
+                        ta.first_name AS ta_first_name, ta.last_name AS ta_last_name, description, created, last_modified, r.date_from, r.date_to,
+                        r.costs, r.costs_type, r.status, r.in_internet,
+                        r.billing_address1, r.billing_address2, r.investment_no, r.pdb_fid,
+                        r.strabako_no, r.date_sks, r.date_kap, r.date_oks, r.date_gl_tba,
+                        r.comment, r.section, r.type, r.projecttype, r.overarching_measure,
+                        r.desired_year_from, r.desired_year_to, r.prestudy, r.start_of_construction,
+                        r.end_of_construction, r.consult_due, r.project_no, r.private, r.date_accept,
+                        r.date_guarantee, r.is_study, r.date_study_start, r.date_study_end,
+                        r.is_desire, r.date_desire_start, r.date_desire_end, r.is_particip,
+                        r.date_particip_start, r.date_particip_end, r.is_plan_circ,
+                        r.date_plan_circ_start, r.date_plan_circ_end, r.date_consult_start,
+                        r.date_consult_end, r.date_consult_close, r.date_report_start,
+                        r.date_report_end, r.date_report_close, r.date_info_start,
+                        r.date_info_end, r.date_info_close, r.is_aggloprog, r.date_optimum,
+                        r.date_of_acceptance, r.url,
+                        r.project_study_approved, r.study_approved, r.date_sks_real,
+                        r.date_kap_real, r.date_oks_real, r.date_gl_tba_real,
+                        r.date_start_inconsult, r.date_start_verified, r.date_start_reporting,
+                        r.date_start_suspended, r.date_start_coordinated, r.sks_relevant,
+                        r.costs_last_modified, r.costs_last_modified_by,
+                        cm.first_name AS cm_first_name, cm.last_name AS cm_last_name,
+                        r.geom
+                    FROM ""wtb_ssp_roadworkactivities"" r
+                    LEFT JOIN ""wtb_ssp_users"" pm ON r.projectmanager = pm.uuid
+                    LEFT JOIN ""wtb_ssp_users"" ta ON r.traffic_agent = ta.uuid
+                    LEFT JOIN ""wtb_ssp_users"" cm ON r.costs_last_modified_by = cm.uuid";
 
                 if (uuid != null)
                 {
@@ -96,103 +99,270 @@ namespace roadwork_portal_service.Controllers
                     while (reader.Read())
                     {
                         projectFeatureFromDb = new RoadWorkActivityFeature();
-                        projectFeatureFromDb.properties.uuid = reader.IsDBNull(0) ? "" : reader.GetGuid(0).ToString();
-                        projectFeatureFromDb.properties.name = reader.IsDBNull(1) ? "" : reader.GetString(1);
+                        projectFeatureFromDb.properties.uuid = reader.IsDBNull(reader.GetOrdinal("uuid"))
+                            ? ""
+                            : reader.GetGuid(reader.GetOrdinal("uuid")).ToString();
+
+                        projectFeatureFromDb.properties.name = reader.IsDBNull(reader.GetOrdinal("name"))
+                            ? ""
+                            : reader.GetString(reader.GetOrdinal("name"));
 
                         User projectManager = new User();
-                        projectManager.uuid = reader.IsDBNull(2) ? "" : reader.GetGuid(2).ToString();
-                        projectManager.firstName = reader.IsDBNull(3) ? "" : reader.GetString(3);
-                        projectManager.lastName = reader.IsDBNull(4) ? "" : reader.GetString(4);
+                        projectManager.uuid = reader.IsDBNull(reader.GetOrdinal("projectmanager"))
+                            ? ""
+                            : reader.GetGuid(reader.GetOrdinal("projectmanager")).ToString();
+                        projectManager.firstName = reader.IsDBNull(reader.GetOrdinal("pm_first_name"))
+                            ? ""
+                            : reader.GetString(reader.GetOrdinal("pm_first_name"));
+                        projectManager.lastName = reader.IsDBNull(reader.GetOrdinal("pm_last_name"))
+                            ? ""
+                            : reader.GetString(reader.GetOrdinal("pm_last_name"));
                         projectFeatureFromDb.properties.projectManager = projectManager;
 
                         User trafficAgent = new User();
-                        trafficAgent.uuid = reader.IsDBNull(5) ? "" : reader.GetGuid(5).ToString();
-                        trafficAgent.firstName = reader.IsDBNull(6) ? "" : reader.GetString(6);
-                        trafficAgent.lastName = reader.IsDBNull(7) ? "" : reader.GetString(7);
+                        trafficAgent.uuid = reader.IsDBNull(reader.GetOrdinal("traffic_agent"))
+                            ? ""
+                            : reader.GetGuid(reader.GetOrdinal("traffic_agent")).ToString();
+                        trafficAgent.firstName = reader.IsDBNull(reader.GetOrdinal("ta_first_name"))
+                            ? ""
+                            : reader.GetString(reader.GetOrdinal("ta_first_name"));
+                        trafficAgent.lastName = reader.IsDBNull(reader.GetOrdinal("ta_last_name"))
+                            ? ""
+                            : reader.GetString(reader.GetOrdinal("ta_last_name"));
                         projectFeatureFromDb.properties.trafficAgent = trafficAgent;
 
-                        projectFeatureFromDb.properties.description = reader.IsDBNull(8) ? "" : reader.GetString(8);
-                        projectFeatureFromDb.properties.created = reader.IsDBNull(9) ? DateTime.MinValue : reader.GetDateTime(9);
-                        projectFeatureFromDb.properties.lastModified = reader.IsDBNull(10) ? DateTime.MinValue : reader.GetDateTime(10);
-                        if(!reader.IsDBNull(11)) projectFeatureFromDb.properties.finishEarlyTo = reader.GetDateTime(11);
-                        if(!reader.IsDBNull(12)) projectFeatureFromDb.properties.finishLateTo = reader.GetDateTime(12);
-                        projectFeatureFromDb.properties.costs = reader.IsDBNull(13) ? 0m : reader.GetDecimal(13);
+                        User costLastModifiedBy = new User();
+                        costLastModifiedBy.uuid = reader.IsDBNull(reader.GetOrdinal("costs_last_modified_by"))
+                            ? ""
+                            : reader.GetGuid(reader.GetOrdinal("costs_last_modified_by")).ToString();
+                        costLastModifiedBy.firstName = reader.IsDBNull(reader.GetOrdinal("cm_first_name"))
+                            ? ""
+                            : reader.GetString(reader.GetOrdinal("cm_first_name"));
+                        costLastModifiedBy.lastName = reader.IsDBNull(reader.GetOrdinal("cm_last_name"))
+                            ? ""
+                            : reader.GetString(reader.GetOrdinal("cm_last_name"));
+                        projectFeatureFromDb.properties.costLastModifiedBy = costLastModifiedBy;
 
-                        projectFeatureFromDb.properties.costsType = reader.IsDBNull(14) ? "" : reader.GetString(14); ;
+                        projectFeatureFromDb.properties.description = reader.IsDBNull(reader.GetOrdinal("description"))
+                            ? ""
+                            : reader.GetString(reader.GetOrdinal("description"));
+                        projectFeatureFromDb.properties.created = reader.IsDBNull(reader.GetOrdinal("created"))
+                            ? DateTime.MinValue
+                            : reader.GetDateTime(reader.GetOrdinal("created"));
+                        projectFeatureFromDb.properties.lastModified = reader.IsDBNull(reader.GetOrdinal("last_modified"))
+                            ? DateTime.MinValue
+                            : reader.GetDateTime(reader.GetOrdinal("last_modified"));
+                        if (!reader.IsDBNull(reader.GetOrdinal("date_from")))
+                            projectFeatureFromDb.properties.finishEarlyTo = reader.GetDateTime(reader.GetOrdinal("date_from"));
+                        if (!reader.IsDBNull(reader.GetOrdinal("date_to")))
+                            projectFeatureFromDb.properties.finishLateTo = reader.GetDateTime(reader.GetOrdinal("date_to"));
+                        projectFeatureFromDb.properties.costs = reader.IsDBNull(reader.GetOrdinal("costs"))
+                            ? 0m
+                            : reader.GetDecimal(reader.GetOrdinal("costs"));
+
+                        projectFeatureFromDb.properties.costsType = reader.IsDBNull(reader.GetOrdinal("costs_type"))
+                            ? ""
+                            : reader.GetString(reader.GetOrdinal("costs_type"));
 
                         if (User.IsInRole("administrator") || User.IsInRole("territorymanager"))
                         {
                             projectFeatureFromDb.properties.isEditingAllowed = true;
                         }
 
-                        projectFeatureFromDb.properties.status = reader.IsDBNull(15) ? "" : reader.GetString(15);
+                        projectFeatureFromDb.properties.status = reader.IsDBNull(reader.GetOrdinal("status"))
+                            ? ""
+                            : reader.GetString(reader.GetOrdinal("status"));
 
-                        projectFeatureFromDb.properties.isInInternet = reader.IsDBNull(16) ? false : reader.GetBoolean(16);
-                        projectFeatureFromDb.properties.billingAddress1 = reader.IsDBNull(17) ? "" : reader.GetString(17);
-                        projectFeatureFromDb.properties.billingAddress2 = reader.IsDBNull(18) ? "" : reader.GetString(18);
-                        projectFeatureFromDb.properties.investmentNo = reader.IsDBNull(19) ? 0 : reader.GetInt32(19);
-                        projectFeatureFromDb.properties.pdbFid = reader.IsDBNull(20) ? 0 : reader.GetInt32(20);
-                        projectFeatureFromDb.properties.strabakoNo = reader.IsDBNull(21) ? "" : reader.GetString(21);
+                        projectFeatureFromDb.properties.isInInternet = reader.IsDBNull(reader.GetOrdinal("in_internet"))
+                            ? false
+                            : reader.GetBoolean(reader.GetOrdinal("in_internet"));
+                        projectFeatureFromDb.properties.billingAddress1 = reader.IsDBNull(reader.GetOrdinal("billing_address1"))
+                            ? ""
+                            : reader.GetString(reader.GetOrdinal("billing_address1"));
+                        projectFeatureFromDb.properties.billingAddress2 = reader.IsDBNull(reader.GetOrdinal("billing_address2"))
+                            ? ""
+                            : reader.GetString(reader.GetOrdinal("billing_address2"));
+                        projectFeatureFromDb.properties.investmentNo = reader.IsDBNull(reader.GetOrdinal("investment_no"))
+                            ? 0
+                            : reader.GetInt32(reader.GetOrdinal("investment_no"));
+                        projectFeatureFromDb.properties.pdbFid = reader.IsDBNull(reader.GetOrdinal("pdb_fid"))
+                            ? 0
+                            : reader.GetInt32(reader.GetOrdinal("pdb_fid"));
+                        projectFeatureFromDb.properties.strabakoNo = reader.IsDBNull(reader.GetOrdinal("strabako_no"))
+                            ? ""
+                            : reader.GetString(reader.GetOrdinal("strabako_no"));
 
-                        projectFeatureFromDb.properties.dateSks = reader.IsDBNull(22) ? null : reader.GetDateTime(22);
-                        projectFeatureFromDb.properties.dateKap = reader.IsDBNull(23) ? null : reader.GetDateTime(23);
-                        projectFeatureFromDb.properties.dateOks = reader.IsDBNull(24) ? null : reader.GetDateTime(24);
-                        projectFeatureFromDb.properties.dateGlTba = reader.IsDBNull(25) ? null : reader.GetDateTime(25);
+                        projectFeatureFromDb.properties.dateSks = reader.IsDBNull(reader.GetOrdinal("date_sks"))
+                            ? null
+                            : reader.GetDateTime(reader.GetOrdinal("date_sks"));
+                        projectFeatureFromDb.properties.dateKap = reader.IsDBNull(reader.GetOrdinal("date_kap"))
+                            ? null
+                            : reader.GetDateTime(reader.GetOrdinal("date_kap"));
+                        projectFeatureFromDb.properties.dateOks = reader.IsDBNull(reader.GetOrdinal("date_oks"))
+                            ? null
+                            : reader.GetDateTime(reader.GetOrdinal("date_oks"));
+                        projectFeatureFromDb.properties.dateGlTba = reader.IsDBNull(reader.GetOrdinal("date_gl_tba"))
+                            ? null
+                            : reader.GetDateTime(reader.GetOrdinal("date_gl_tba"));
 
-                        projectFeatureFromDb.properties.comment = reader.IsDBNull(26) ? "" : reader.GetString(26);
-                        projectFeatureFromDb.properties.section = reader.IsDBNull(27) ? "" : reader.GetString(27);
-                        projectFeatureFromDb.properties.type = reader.IsDBNull(28) ? "" : reader.GetString(28);
-                        projectFeatureFromDb.properties.projectType = reader.IsDBNull(29) ? "" : reader.GetString(29);
-                        projectFeatureFromDb.properties.overarchingMeasure = reader.IsDBNull(30) ? false : reader.GetBoolean(30);
-                        projectFeatureFromDb.properties.desiredYearFrom = reader.IsDBNull(31) ? -1 : reader.GetInt32(31);
-                        projectFeatureFromDb.properties.desiredYearTo = reader.IsDBNull(32) ? -1 : reader.GetInt32(32);
-                        projectFeatureFromDb.properties.prestudy = reader.IsDBNull(33) ? false : reader.GetBoolean(33);
-                        if (!reader.IsDBNull(34)) projectFeatureFromDb.properties.startOfConstruction = reader.GetDateTime(34);
-                        if (!reader.IsDBNull(35)) projectFeatureFromDb.properties.endOfConstruction = reader.GetDateTime(35);
-                        projectFeatureFromDb.properties.consultDue = reader.IsDBNull(36) ? DateTime.MinValue : reader.GetDateTime(36);
-                        projectFeatureFromDb.properties.projectNo = reader.IsDBNull(37) ? "" : reader.GetString(37);
-                        projectFeatureFromDb.properties.isPrivate = reader.IsDBNull(38) ? false : reader.GetBoolean(38);
-                        if (!reader.IsDBNull(39)) projectFeatureFromDb.properties.dateAccept = reader.GetDateTime(39);
-                        if (!reader.IsDBNull(40)) projectFeatureFromDb.properties.dateGuarantee = reader.GetDateTime(40);
-                        if (!reader.IsDBNull(41)) projectFeatureFromDb.properties.isStudy = reader.GetBoolean(41);
-                        if (!reader.IsDBNull(42)) projectFeatureFromDb.properties.dateStudyStart = reader.GetDateTime(42);
-                        if (!reader.IsDBNull(43)) projectFeatureFromDb.properties.dateStudyEnd = reader.GetDateTime(43);
-                        if (!reader.IsDBNull(44)) projectFeatureFromDb.properties.isDesire = reader.GetBoolean(44);
-                        if (!reader.IsDBNull(45)) projectFeatureFromDb.properties.dateDesireStart = reader.GetDateTime(45);
-                        if (!reader.IsDBNull(46)) projectFeatureFromDb.properties.dateDesireEnd = reader.GetDateTime(46);
-                        if (!reader.IsDBNull(47)) projectFeatureFromDb.properties.isParticip = reader.GetBoolean(47);
-                        if (!reader.IsDBNull(48)) projectFeatureFromDb.properties.dateParticipStart = reader.GetDateTime(48);
-                        if (!reader.IsDBNull(49)) projectFeatureFromDb.properties.dateParticipEnd = reader.GetDateTime(49);
-                        if (!reader.IsDBNull(50)) projectFeatureFromDb.properties.isPlanCirc = reader.GetBoolean(50);
-                        if (!reader.IsDBNull(51)) projectFeatureFromDb.properties.datePlanCircStart = reader.GetDateTime(51);
-                        if (!reader.IsDBNull(52)) projectFeatureFromDb.properties.datePlanCircEnd = reader.GetDateTime(52);
-                        if (!reader.IsDBNull(53)) projectFeatureFromDb.properties.dateConsultStart = reader.GetDateTime(53);
-                        if (!reader.IsDBNull(54)) projectFeatureFromDb.properties.dateConsultEnd = reader.GetDateTime(54);
-                        if (!reader.IsDBNull(55)) projectFeatureFromDb.properties.dateConsultClose = reader.GetDateTime(55);
-                        if (!reader.IsDBNull(56)) projectFeatureFromDb.properties.dateReportStart = reader.GetDateTime(56);
-                        if (!reader.IsDBNull(57)) projectFeatureFromDb.properties.dateReportEnd = reader.GetDateTime(57);
-                        if (!reader.IsDBNull(58)) projectFeatureFromDb.properties.dateReportClose = reader.GetDateTime(58);
-                        if (!reader.IsDBNull(59)) projectFeatureFromDb.properties.dateInfoStart = reader.GetDateTime(59);
-                        if (!reader.IsDBNull(60)) projectFeatureFromDb.properties.dateInfoEnd = reader.GetDateTime(60);
-                        if (!reader.IsDBNull(61)) projectFeatureFromDb.properties.dateInfoClose = reader.GetDateTime(61);
-                        if (!reader.IsDBNull(62)) projectFeatureFromDb.properties.isAggloprog = reader.GetBoolean(62);
-                        projectFeatureFromDb.properties.finishOptimumTo = reader.IsDBNull(63) ? DateTime.MinValue : reader.GetDateTime(63);
-                        if (!reader.IsDBNull(64)) projectFeatureFromDb.properties.dateOfAcceptance = reader.GetDateTime(64);
-                        if (!reader.IsDBNull(65)) projectFeatureFromDb.properties.url = reader.GetString(65);
-                        if (!reader.IsDBNull(66)) projectFeatureFromDb.properties.projectStudyApproved = reader.GetDateTime(67);
-                        if (!reader.IsDBNull(67)) projectFeatureFromDb.properties.studyApproved = reader.GetDateTime(67);
-                        projectFeatureFromDb.properties.dateSksReal = reader.IsDBNull(68) ? null : reader.GetDateTime(68);
-                        projectFeatureFromDb.properties.dateKapReal = reader.IsDBNull(69) ? null : reader.GetDateTime(69);
-                        projectFeatureFromDb.properties.dateOksReal = reader.IsDBNull(70) ? null : reader.GetDateTime(70);
-                        projectFeatureFromDb.properties.dateGlTbaReal = reader.IsDBNull(71) ? null : reader.GetDateTime(71);
-                        projectFeatureFromDb.properties.dateStartInconsult = reader.IsDBNull(72) ? null : reader.GetDateTime(72);
-                        projectFeatureFromDb.properties.dateStartVerified = reader.IsDBNull(73) ? null : reader.GetDateTime(73);
-                        projectFeatureFromDb.properties.dateStartReporting = reader.IsDBNull(74) ? null : reader.GetDateTime(74);
-                        projectFeatureFromDb.properties.dateStartSuspended = reader.IsDBNull(75) ? null : reader.GetDateTime(75);
-                        projectFeatureFromDb.properties.dateStartCoordinated = reader.IsDBNull(76) ? null : reader.GetDateTime(76);
-                        projectFeatureFromDb.properties.isSksRelevant = reader.IsDBNull(77) ? false : reader.GetBoolean(77);
+                        projectFeatureFromDb.properties.comment = reader.IsDBNull(reader.GetOrdinal("comment"))
+                            ? ""
+                            : reader.GetString(reader.GetOrdinal("comment"));
+                        projectFeatureFromDb.properties.section = reader.IsDBNull(reader.GetOrdinal("section"))
+                            ? ""
+                            : reader.GetString(reader.GetOrdinal("section"));
+                        projectFeatureFromDb.properties.type = reader.IsDBNull(reader.GetOrdinal("type"))
+                            ? ""
+                            : reader.GetString(reader.GetOrdinal("type"));
+                        projectFeatureFromDb.properties.projectType = reader.IsDBNull(reader.GetOrdinal("projecttype"))
+                            ? ""
+                            : reader.GetString(reader.GetOrdinal("projecttype"));
+                        projectFeatureFromDb.properties.overarchingMeasure = reader.IsDBNull(reader.GetOrdinal("overarching_measure"))
+                            ? false
+                            : reader.GetBoolean(reader.GetOrdinal("overarching_measure"));
+                        projectFeatureFromDb.properties.desiredYearFrom = reader.IsDBNull(reader.GetOrdinal("desired_year_from"))
+                            ? -1
+                            : reader.GetInt32(reader.GetOrdinal("desired_year_from"));
+                        projectFeatureFromDb.properties.desiredYearTo = reader.IsDBNull(reader.GetOrdinal("desired_year_to"))
+                            ? -1
+                            : reader.GetInt32(reader.GetOrdinal("desired_year_to"));
+                        projectFeatureFromDb.properties.prestudy = reader.IsDBNull(reader.GetOrdinal("prestudy"))
+                            ? false
+                            : reader.GetBoolean(reader.GetOrdinal("prestudy"));
+                        if (!reader.IsDBNull(reader.GetOrdinal("start_of_construction")))
+                            projectFeatureFromDb.properties.startOfConstruction =
+                                reader.GetDateTime(reader.GetOrdinal("start_of_construction"));
+                        if (!reader.IsDBNull(reader.GetOrdinal("end_of_construction")))
+                            projectFeatureFromDb.properties.endOfConstruction =
+                                reader.GetDateTime(reader.GetOrdinal("end_of_construction"));
+                        projectFeatureFromDb.properties.consultDue = reader.IsDBNull(reader.GetOrdinal("consult_due"))
+                            ? DateTime.MinValue
+                            : reader.GetDateTime(reader.GetOrdinal("consult_due"));
+                        projectFeatureFromDb.properties.projectNo = reader.IsDBNull(reader.GetOrdinal("project_no"))
+                            ? ""
+                            : reader.GetString(reader.GetOrdinal("project_no"));
+                        projectFeatureFromDb.properties.isPrivate = reader.IsDBNull(reader.GetOrdinal("private"))
+                            ? false
+                            : reader.GetBoolean(reader.GetOrdinal("private"));
+                        if (!reader.IsDBNull(reader.GetOrdinal("date_accept")))
+                            projectFeatureFromDb.properties.dateAccept = reader.GetDateTime(reader.GetOrdinal("date_accept"));
+                        if (!reader.IsDBNull(reader.GetOrdinal("date_guarantee")))
+                            projectFeatureFromDb.properties.dateGuarantee = reader.GetDateTime(reader.GetOrdinal("date_guarantee"));
+                        if (!reader.IsDBNull(reader.GetOrdinal("is_study")))
+                            projectFeatureFromDb.properties.isStudy = reader.GetBoolean(reader.GetOrdinal("is_study"));
+                        if (!reader.IsDBNull(reader.GetOrdinal("date_study_start")))
+                            projectFeatureFromDb.properties.dateStudyStart =
+                                reader.GetDateTime(reader.GetOrdinal("date_study_start"));
+                        if (!reader.IsDBNull(reader.GetOrdinal("date_study_end")))
+                            projectFeatureFromDb.properties.dateStudyEnd = reader.GetDateTime(reader.GetOrdinal("date_study_end"));
+                        if (!reader.IsDBNull(reader.GetOrdinal("is_desire")))
+                            projectFeatureFromDb.properties.isDesire = reader.GetBoolean(reader.GetOrdinal("is_desire"));
+                        if (!reader.IsDBNull(reader.GetOrdinal("date_desire_start")))
+                            projectFeatureFromDb.properties.dateDesireStart =
+                                reader.GetDateTime(reader.GetOrdinal("date_desire_start"));
+                        if (!reader.IsDBNull(reader.GetOrdinal("date_desire_end")))
+                            projectFeatureFromDb.properties.dateDesireEnd =
+                                reader.GetDateTime(reader.GetOrdinal("date_desire_end"));
+                        if (!reader.IsDBNull(reader.GetOrdinal("is_particip")))
+                            projectFeatureFromDb.properties.isParticip = reader.GetBoolean(reader.GetOrdinal("is_particip"));
+                        if (!reader.IsDBNull(reader.GetOrdinal("date_particip_start")))
+                            projectFeatureFromDb.properties.dateParticipStart =
+                                reader.GetDateTime(reader.GetOrdinal("date_particip_start"));
+                        if (!reader.IsDBNull(reader.GetOrdinal("date_particip_end")))
+                            projectFeatureFromDb.properties.dateParticipEnd =
+                                reader.GetDateTime(reader.GetOrdinal("date_particip_end"));
+                        if (!reader.IsDBNull(reader.GetOrdinal("is_plan_circ")))
+                            projectFeatureFromDb.properties.isPlanCirc = reader.GetBoolean(reader.GetOrdinal("is_plan_circ"));
+                        if (!reader.IsDBNull(reader.GetOrdinal("date_plan_circ_start")))
+                            projectFeatureFromDb.properties.datePlanCircStart =
+                                reader.GetDateTime(reader.GetOrdinal("date_plan_circ_start"));
+                        if (!reader.IsDBNull(reader.GetOrdinal("date_plan_circ_end")))
+                            projectFeatureFromDb.properties.datePlanCircEnd =
+                                reader.GetDateTime(reader.GetOrdinal("date_plan_circ_end"));
+                        if (!reader.IsDBNull(reader.GetOrdinal("date_consult_start")))
+                            projectFeatureFromDb.properties.dateConsultStart =
+                                reader.GetDateTime(reader.GetOrdinal("date_consult_start"));
+                        if (!reader.IsDBNull(reader.GetOrdinal("date_consult_end")))
+                            projectFeatureFromDb.properties.dateConsultEnd =
+                                reader.GetDateTime(reader.GetOrdinal("date_consult_end"));
+                        if (!reader.IsDBNull(reader.GetOrdinal("date_consult_close")))
+                            projectFeatureFromDb.properties.dateConsultClose =
+                                reader.GetDateTime(reader.GetOrdinal("date_consult_close"));
+                        if (!reader.IsDBNull(reader.GetOrdinal("date_report_start")))
+                            projectFeatureFromDb.properties.dateReportStart =
+                                reader.GetDateTime(reader.GetOrdinal("date_report_start"));
+                        if (!reader.IsDBNull(reader.GetOrdinal("date_report_end")))
+                            projectFeatureFromDb.properties.dateReportEnd =
+                                reader.GetDateTime(reader.GetOrdinal("date_report_end"));
+                        if (!reader.IsDBNull(reader.GetOrdinal("date_report_close")))
+                            projectFeatureFromDb.properties.dateReportClose =
+                                reader.GetDateTime(reader.GetOrdinal("date_report_close"));
+                        if (!reader.IsDBNull(reader.GetOrdinal("date_info_start")))
+                            projectFeatureFromDb.properties.dateInfoStart =
+                                reader.GetDateTime(reader.GetOrdinal("date_info_start"));
+                        if (!reader.IsDBNull(reader.GetOrdinal("date_info_end")))
+                            projectFeatureFromDb.properties.dateInfoEnd =
+                                reader.GetDateTime(reader.GetOrdinal("date_info_end"));
+                        if (!reader.IsDBNull(reader.GetOrdinal("date_info_close")))
+                            projectFeatureFromDb.properties.dateInfoClose =
+                                reader.GetDateTime(reader.GetOrdinal("date_info_close"));
+                        if (!reader.IsDBNull(reader.GetOrdinal("is_aggloprog")))
+                            projectFeatureFromDb.properties.isAggloprog = reader.GetBoolean(reader.GetOrdinal("is_aggloprog"));
+                        projectFeatureFromDb.properties.finishOptimumTo = reader.IsDBNull(reader.GetOrdinal("date_optimum"))
+                            ? DateTime.MinValue
+                            : reader.GetDateTime(reader.GetOrdinal("date_optimum"));
+                        if (!reader.IsDBNull(reader.GetOrdinal("date_of_acceptance")))
+                            projectFeatureFromDb.properties.dateOfAcceptance =
+                                reader.GetDateTime(reader.GetOrdinal("date_of_acceptance"));
+                        if (!reader.IsDBNull(reader.GetOrdinal("url")))
+                            projectFeatureFromDb.properties.url = reader.GetString(reader.GetOrdinal("url"));
 
-                        Polygon ntsPoly = reader.IsDBNull(78) ? Polygon.Empty : reader.GetValue(78) as Polygon;
+                        /*  intentionally mirrors original logic, assigning both properties from "study_approved" */
+                        if (!reader.IsDBNull(reader.GetOrdinal("project_study_approved")))
+                            projectFeatureFromDb.properties.projectStudyApproved =
+                                reader.GetDateTime(reader.GetOrdinal("study_approved"));
+                        if (!reader.IsDBNull(reader.GetOrdinal("study_approved")))
+                            projectFeatureFromDb.properties.studyApproved =
+                                reader.GetDateTime(reader.GetOrdinal("study_approved"));
+
+                        projectFeatureFromDb.properties.dateSksReal = reader.IsDBNull(reader.GetOrdinal("date_sks_real"))
+                            ? null
+                            : reader.GetDateTime(reader.GetOrdinal("date_sks_real"));
+                        projectFeatureFromDb.properties.dateKapReal = reader.IsDBNull(reader.GetOrdinal("date_kap_real"))
+                            ? null
+                            : reader.GetDateTime(reader.GetOrdinal("date_kap_real"));
+                        projectFeatureFromDb.properties.dateOksReal = reader.IsDBNull(reader.GetOrdinal("date_oks_real"))
+                            ? null
+                            : reader.GetDateTime(reader.GetOrdinal("date_oks_real"));
+                        projectFeatureFromDb.properties.dateGlTbaReal = reader.IsDBNull(reader.GetOrdinal("date_gl_tba_real"))
+                            ? null
+                            : reader.GetDateTime(reader.GetOrdinal("date_gl_tba_real"));
+                        projectFeatureFromDb.properties.dateStartInconsult = reader.IsDBNull(reader.GetOrdinal("date_start_inconsult"))
+                            ? null
+                            : reader.GetDateTime(reader.GetOrdinal("date_start_inconsult"));
+                        projectFeatureFromDb.properties.dateStartVerified = reader.IsDBNull(reader.GetOrdinal("date_start_verified"))
+                            ? null
+                            : reader.GetDateTime(reader.GetOrdinal("date_start_verified"));
+                        projectFeatureFromDb.properties.dateStartReporting = reader.IsDBNull(reader.GetOrdinal("date_start_reporting"))
+                            ? null
+                            : reader.GetDateTime(reader.GetOrdinal("date_start_reporting"));
+                        projectFeatureFromDb.properties.dateStartSuspended = reader.IsDBNull(reader.GetOrdinal("date_start_suspended"))
+                            ? null
+                            : reader.GetDateTime(reader.GetOrdinal("date_start_suspended"));
+                        projectFeatureFromDb.properties.dateStartCoordinated =
+                            reader.IsDBNull(reader.GetOrdinal("date_start_coordinated"))
+                                ? null
+                                : reader.GetDateTime(reader.GetOrdinal("date_start_coordinated"));
+                        projectFeatureFromDb.properties.isSksRelevant = reader.IsDBNull(reader.GetOrdinal("sks_relevant"))
+                            ? false
+                            : reader.GetBoolean(reader.GetOrdinal("sks_relevant"));
+                        projectFeatureFromDb.properties.costLastModified = reader.IsDBNull(reader.GetOrdinal("costs_last_modified"))
+                            ? null
+                            : reader.GetDateTime(reader.GetOrdinal("costs_last_modified"));
+
+                        Polygon ntsPoly = reader.IsDBNull(reader.GetOrdinal("geom"))
+                            ? Polygon.Empty
+                            : reader.GetValue(reader.GetOrdinal("geom")) as Polygon;
                         projectFeatureFromDb.geometry = new RoadworkPolygon(ntsPoly);
 
                         projectsFromDb.Add(projectFeatureFromDb);
@@ -912,7 +1082,7 @@ namespace roadwork_portal_service.Controllers
 
                     NpgsqlCommand selectMainAttributeValues = pgConn.CreateCommand();
                     selectMainAttributeValues.CommandText = @"SELECT projectmanager,
-                                    projecttype, name, section
+                                    projecttype, name, section, costs
                                     FROM ""wtb_ssp_roadworkactivities""
                                     WHERE uuid=@uuid";
                     selectMainAttributeValues.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
@@ -921,6 +1091,7 @@ namespace roadwork_portal_service.Controllers
                     string projectTypeInDb = "";
                     string nameInDb = "";
                     string sectionInDb = "";
+                    decimal? costsInDb = null;
                     using (NpgsqlDataReader reader = selectMainAttributeValues.ExecuteReader())
                     {
                         if (reader.Read())
@@ -929,6 +1100,7 @@ namespace roadwork_portal_service.Controllers
                             if (!reader.IsDBNull(1)) projectTypeInDb = reader.GetString(1);
                             if (!reader.IsDBNull(2)) nameInDb = reader.GetString(2);
                             if (!reader.IsDBNull(3)) sectionInDb = reader.GetString(3);
+                            if (!reader.IsDBNull(4)) costsInDb = reader.GetDecimal(4);
                         }
                     }
 
@@ -1077,6 +1249,11 @@ namespace roadwork_portal_service.Controllers
                                     project_study_approved=@project_study_approved, study_approved=@study_approved,
                                     sks_relevant=@sks_relevant, strabako_no=@strabako_no,";
 
+                    if (costsInDb != roadWorkActivityFeature.properties.costs){
+                        updateComm.CommandText += "costs_last_modified=@costs_last_modified, ";
+                        updateComm.CommandText += "costs_last_modified_by=@costs_last_modified_by, ";
+                    }
+
                     if (hasStatusChanged)
                     {
                         if (roadWorkActivityFeature.properties.status == "inconsult")
@@ -1190,6 +1367,11 @@ namespace roadwork_portal_service.Controllers
                     updateComm.Parameters.AddWithValue("is_aggloprog", roadWorkActivityFeature.properties.isAggloprog != null ? roadWorkActivityFeature.properties.isAggloprog : DBNull.Value);
                     updateComm.Parameters.AddWithValue("sks_relevant", roadWorkActivityFeature.properties.isSksRelevant != null ? roadWorkActivityFeature.properties.isSksRelevant : DBNull.Value);
                     updateComm.Parameters.AddWithValue("strabako_no", roadWorkActivityFeature.properties.strabakoNo != null ? roadWorkActivityFeature.properties.strabakoNo : DBNull.Value);
+                    if (costsInDb != roadWorkActivityFeature.properties.costs)
+                    {
+                        updateComm.Parameters.AddWithValue("costs_last_modified", DateTime.Now);
+                        updateComm.Parameters.AddWithValue("costs_last_modified_by", new Guid(userFromDb.uuid));
+                    }
                     updateComm.Parameters.AddWithValue("geom", roadWorkActivityPoly);
                     updateComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
 
