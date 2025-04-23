@@ -8,7 +8,6 @@ public class Costs
 {
     public string? uuid { get; set; }
     public decimal? costs { get; set; }
-    public string? workTitle { get; set; }
     public string? projectType { get; set; }
     public string? costsComment { get; set; }
     public string? errorMessage { get; set; }

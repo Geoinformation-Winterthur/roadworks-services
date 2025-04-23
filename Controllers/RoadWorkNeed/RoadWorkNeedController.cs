@@ -383,9 +383,8 @@ namespace roadwork_portal_service.Controllers
                                 Costs costs = new Costs();
                                 if (!reader.IsDBNull(0)) costs.uuid = reader.GetGuid(0).ToString();
                                 if (!reader.IsDBNull(1)) costs.costs = reader.GetDecimal(1);
-                                if (!reader.IsDBNull(2)) costs.workTitle = reader.GetString(2);
-                                if (!reader.IsDBNull(3)) costs.projectType = reader.GetString(3);
-                                if (!reader.IsDBNull(4)) costs.costsComment = reader.GetString(4);
+                                if (!reader.IsDBNull(3)) costs.projectType = reader.GetString(2);
+                                if (!reader.IsDBNull(4)) costs.costsComment = reader.GetString(3);
                                 costsOfRoadwork.Add(costs);
                             }
                             needFeatureFromDb.properties.costs = costsOfRoadwork.ToArray();
@@ -586,11 +585,9 @@ namespace roadwork_portal_service.Controllers
                     {
                         foreach (Costs costs in roadWorkNeedFeature.properties.costs)
                         {
-                            if (costs.workTitle == null) costs.workTitle = "";
                             if (costs.projectType == null) costs.projectType = "";
                             if (costs.costsComment == null) costs.costsComment = "";
 
-                            costs.workTitle = costs.workTitle.Trim().ToLower();
                             costs.projectType = costs.projectType.Trim().ToLower();
                             costs.costsComment = costs.costsComment.Trim();
 
@@ -911,20 +908,18 @@ namespace roadwork_portal_service.Controllers
                                 if (costs != null && costs.uuid != null
                                         && costs.uuid != String.Empty)
                                 {
-                                    if (costs.workTitle != null) costs.workTitle = costs.workTitle.Trim().ToLower();
                                     if (costs.projectType != null) costs.projectType = costs.projectType.Trim().ToLower();
                                     if (costs.costsComment != null) costs.costsComment = costs.costsComment.Trim();
 
                                     NpgsqlCommand insertCostsComm = pgConn.CreateCommand();
                                     insertCostsComm.CommandText = @"INSERT INTO ""wtb_ssp_costs""
-                                        (uuid, roadworkneed, costs, work_title,
+                                        (uuid, roadworkneed, costs,
                                         project_type, costs_comment)
-                                        VALUES (@uuid, @roadworkneed, @costs, @work_title,
+                                        VALUES (@uuid, @roadworkneed, @costs,
                                         @project_type, @costs_comment)";
                                     insertCostsComm.Parameters.AddWithValue("uuid", Guid.NewGuid());
                                     insertCostsComm.Parameters.AddWithValue("roadworkneed", new Guid(roadWorkNeedFeature.properties.uuid));
                                     insertCostsComm.Parameters.AddWithValue("costs", costs.costs != null ? costs.costs : DBNull.Value);
-                                    insertCostsComm.Parameters.AddWithValue("work_title", costs.workTitle != null ? costs.workTitle : DBNull.Value);
                                     insertCostsComm.Parameters.AddWithValue("project_type", costs.projectType != null ? costs.projectType : DBNull.Value);
                                     insertCostsComm.Parameters.AddWithValue("costs_comment", costs.costsComment != null ? costs.costsComment : DBNull.Value);
                                     insertCostsComm.ExecuteNonQuery();
@@ -1139,7 +1134,7 @@ namespace roadwork_portal_service.Controllers
                 NpgsqlConnection pgConn)
         {
             NpgsqlCommand selectCostsComm = pgConn.CreateCommand();
-            selectCostsComm.CommandText = @"SELECT uuid, costs, work_title,
+            selectCostsComm.CommandText = @"SELECT uuid, costs,
                         project_type, costs_comment
                         FROM ""wtb_ssp_costs""
                         WHERE roadworkneed=@roadworkneed";

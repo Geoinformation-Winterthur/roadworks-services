@@ -174,7 +174,6 @@ public class RoadWorkNeedDAO
                     {
                         if (costs != null)
                         {
-                            if (costs.workTitle != null) costs.workTitle = costs.workTitle.Trim().ToLower();
                             if (costs.projectType != null) costs.projectType = costs.projectType.Trim().ToLower();
                             if (costs.costsComment != null) costs.costsComment = costs.costsComment.Trim();
 
@@ -289,14 +288,13 @@ public class RoadWorkNeedDAO
     {
         NpgsqlCommand insertCostsComm = pgConn.CreateCommand();
         insertCostsComm.CommandText = @"INSERT INTO ""wtb_ssp_costs""
-                                    (uuid, roadworkneed, costs, work_title,
+                                    (uuid, roadworkneed, costs,
                                     project_type, costs_comment)
-                                    VALUES (@uuid, @roadworkneed, @costs, @work_title,
+                                    VALUES (@uuid, @roadworkneed, @costs,
                                     @project_type, @costs_comment)";
         insertCostsComm.Parameters.AddWithValue("uuid", Guid.NewGuid());
         insertCostsComm.Parameters.AddWithValue("roadworkneed", new Guid(roadWorkNeedUuid));
         insertCostsComm.Parameters.AddWithValue("costs", costs.costs != null ? costs.costs : DBNull.Value);
-        insertCostsComm.Parameters.AddWithValue("work_title", costs.workTitle != null ? costs.workTitle : DBNull.Value);
         insertCostsComm.Parameters.AddWithValue("project_type", costs.projectType != null ? costs.projectType : DBNull.Value);
         insertCostsComm.Parameters.AddWithValue("costs_comment", costs.costsComment != null ? costs.costsComment : DBNull.Value);
 
@@ -307,8 +305,6 @@ public class RoadWorkNeedDAO
     {
         bool isNotValid = false;
         if (costs == null) return false;
-        if (costs.workTitle == null || costs.workTitle == "")
-            isNotValid = true;
         if (costs.projectType == null || costs.projectType == "")
             isNotValid = true;
         if (costs.costs == null || costs.costs == 0)
