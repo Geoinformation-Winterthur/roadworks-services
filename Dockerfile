@@ -1,6 +1,6 @@
-FROM mcr.microsoft.com/dotnet/aspnet:6.0
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
-COPY ./bin/Test/net6.0/publish/ .
+COPY ./bin/Test/net8.0/publish/ .
 ENV DOTNET_CLI_TELEMETRY_OPTOUT=true
 ENV ASPNETCORE_ENVIRONMENT=Test
 COPY ./resolv.conf /etc/resolv.conf.override
