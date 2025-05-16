@@ -486,36 +486,6 @@ namespace roadwork_portal_service.Controllers
             return projectsFromDb.ToArray();
         }
 
-        // GET roadworkactivity/costtypes/
-        [HttpGet]
-        [Route("/Roadworkactivity/Costtypes/")]
-        [Authorize]
-        public IEnumerable<EnumType> GetCostTypes()
-        {
-            List<EnumType> result = new List<EnumType>();
-            // get data of current user from database:
-            using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
-            {
-                pgConn.Open();
-                NpgsqlCommand selectComm = pgConn.CreateCommand();
-                selectComm.CommandText = "SELECT code, name FROM \"wtb_ssp_costtypes\"";
-
-                using (NpgsqlDataReader reader = selectComm.ExecuteReader())
-                {
-                    EnumType costType;
-                    while (reader.Read())
-                    {
-                        costType = new EnumType();
-                        costType.code = reader.IsDBNull(0) ? "" : reader.GetString(0);
-                        costType.name = reader.IsDBNull(1) ? "" : reader.GetString(1);
-                        result.Add(costType);
-                    }
-                }
-                pgConn.Close();
-            }
-            return result.ToArray();
-        }
-
         // GET roadworkactivity/projecttypes/
         [HttpGet]
         [Route("/Roadworkactivity/Projecttypes/")]
