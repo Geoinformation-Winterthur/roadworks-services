@@ -724,6 +724,10 @@ namespace roadwork_portal_service.Controllers
                                     is_sponge_4_1=@is_sponge_4_1, is_sponge_4_2=@is_sponge_4_2,
                                     is_sponge_5_1=@is_sponge_5_1, geom=@geom";
 
+                        if (User.IsInRole("administrator") || User.IsInRole("territorymanager"))
+                            updateComm.CommandText += ", note_of_area_man=@note_of_area_man";
+
+
                         updateComm.Parameters.AddWithValue("name", roadWorkNeedFeature.properties.name);
                         if (roadWorkNeedFeature.properties.orderer.uuid != "")
                         {
@@ -781,6 +785,7 @@ namespace roadwork_portal_service.Controllers
                         updateComm.Parameters.AddWithValue("feedback_given", roadWorkNeedFeature.properties.feedbackGiven != null ? roadWorkNeedFeature.properties.feedbackGiven : DBNull.Value);
                         updateComm.Parameters.AddWithValue("decline", roadWorkNeedFeature.properties.decline != null ? roadWorkNeedFeature.properties.decline : DBNull.Value);
                         updateComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
+                        updateComm.Parameters.AddWithValue("note_of_area_man", roadWorkNeedFeature.properties.noteOfAreaManager);
 
                         string activityRelationType = "";
                         if (roadWorkNeedFeature.properties.activityRelationType != null)
