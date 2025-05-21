@@ -586,10 +586,7 @@ namespace roadwork_portal_service.Controllers
                 using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
                 {
 
-                    pgConn.Open();
-
-                    if (roadWorkActivityFeature.properties.projectNo == String.Empty)
-                        roadWorkActivityFeature.properties.projectNo = _generateProjectNo(pgConn);
+                    pgConn.Open();                    
 
                     if (roadWorkActivityFeature.properties.name == null || roadWorkActivityFeature.properties.name == "")
                     {
