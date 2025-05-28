@@ -340,7 +340,7 @@ namespace roadwork_portal_service.Controllers
                         if (User.IsInRole("administrator"))
                         {
                             needFeatureFromDb.properties.isEditingAllowed = true;
-                            //continue;
+                            continue;
                         }
                         
                         if (needFeatureFromDb.properties.orderer?.mailAddress == mailOfLoggedInUser)
@@ -880,6 +880,36 @@ namespace roadwork_portal_service.Controllers
                                 }
                             }
 
+                            if (roadWorkNeedFeature.properties.isPrimary == true)
+                            {
+
+                                
+                                    NpgsqlCommand checkIsPrimary = pgConn.CreateCommand();
+                                    checkIsPrimary.CommandText = @"SELECT is_primary FROM ""wtb_ssp_activities_to_needs"" 
+                                                                WHERE uuid_roadwork_need=@uuid_roadwork_need
+                                                                AND uuid_roadwork_activity=@uuid_roadwork_activity";
+                                    checkIsPrimary.Parameters.AddWithValue("uuid_roadwork_need", new Guid(roadWorkNeedFeature.properties.uuid));
+                                    checkIsPrimary.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkNeedFeature.properties.roadWorkActivityUuid));
+                                    object result = checkIsPrimary.ExecuteScalar();
+
+
+                                    if (result != null && result != DBNull.Value && result is bool previousIsPrimary && previousIsPrimary == false)
+                                    {
+                                        NpgsqlCommand updateActivityDates = pgConn.CreateCommand();
+                                        updateActivityDates.CommandText = @"UPDATE ""wtb_ssp_roadworkactivities""
+                                                                                SET date_from = @date_from,
+                                                                                    date_optimum = @date_optimum,
+                                                                                    date_to = @date_to                                            
+                                                                                WHERE uuid = @uuid";
+                                        updateActivityDates.Parameters.AddWithValue("uuid", new Guid(roadWorkNeedFeature.properties.roadWorkActivityUuid));
+                                        updateActivityDates.Parameters.AddWithValue("date_from", roadWorkNeedFeature.properties.finishEarlyTo);
+                                        updateActivityDates.Parameters.AddWithValue("date_optimum", roadWorkNeedFeature.properties.finishOptimumTo);
+                                        updateActivityDates.Parameters.AddWithValue("date_to", roadWorkNeedFeature.properties.finishLateTo);
+                                        updateActivityDates.ExecuteNonQuery();
+                                    }
+                             
+                            }
+
 
                             NpgsqlCommand deleteComm = pgConn.CreateCommand();
                             if (affectedActivityUuid != null && affectedActivityUuid != "")
@@ -911,7 +941,7 @@ namespace roadwork_portal_service.Controllers
                                 insertComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkNeedFeature.properties.roadWorkActivityUuid));
                                 insertComm.Parameters.AddWithValue("activityrelationtype", activityRelationType);
                                 insertComm.Parameters.AddWithValue("is_primary", roadWorkNeedFeature.properties.isPrimary != null ? roadWorkNeedFeature.properties.isPrimary : false);
-                                insertComm.ExecuteNonQuery();
+                                insertComm.ExecuteNonQuery();                            
 
                                 NpgsqlCommand insertHistoryComm = pgConn.CreateCommand();
                                 insertHistoryComm.CommandText = @"INSERT INTO ""wtb_ssp_activities_history""
