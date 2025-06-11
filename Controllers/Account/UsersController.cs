@@ -119,7 +119,9 @@ public class UsersController : ControllerBase
                         {
                             userFromDb.firstName = "unbekannt";
                         }
-                        userFromDb.prefTableView = reader.GetBoolean(reader.GetOrdinal("pref_table_view"));
+                        
+                        // We fully support the table view preference now.
+                        userFromDb.prefTableView = true; 
 
                         userFromDb.grantedRoles.view = reader.GetBoolean(reader.GetOrdinal("role_view"));
                         userFromDb.grantedRoles.projectmanager = reader.GetBoolean(reader.GetOrdinal("role_projectmanager"));
