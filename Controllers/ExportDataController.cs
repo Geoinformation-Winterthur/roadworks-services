@@ -179,7 +179,7 @@ namespace roadwork_portal_service.Controllers
                             resultCsv += reader.IsDBNull(reader.GetOrdinal("date_study_start")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_study_start")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
                             resultCsv += reader.IsDBNull(reader.GetOrdinal("date_study_end")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_study_end")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
                             resultCsv += reader.IsDBNull(reader.GetOrdinal("project_study_approved")) ? ";" : reader.GetBoolean(reader.GetOrdinal("project_study_approved")) + ";";
-                            resultCsv += reader.IsDBNull(reader.GetOrdinal("study_approved")) ? ";" : reader.GetBoolean(reader.GetOrdinal("study_approved")) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("study_approved")) ? ";" : reader.GetDateTime(reader.GetOrdinal("study_approved")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
                             resultCsv += "False;;;";
                             resultCsv += reader.IsDBNull(reader.GetOrdinal("is_particip")) ? ";" : reader.GetBoolean(reader.GetOrdinal("is_particip")) + ";";
                             resultCsv += reader.IsDBNull(reader.GetOrdinal("date_particip_start")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_particip_start")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
