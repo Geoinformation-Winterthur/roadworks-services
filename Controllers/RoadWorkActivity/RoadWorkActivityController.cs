@@ -47,14 +47,14 @@ namespace roadwork_portal_service.Controllers
                         r.date_guarantee, r.is_study, r.date_study_start, r.date_study_end,
                         r.is_desire, r.date_desire_start, r.date_desire_end, r.is_particip,
                         r.date_particip_start, r.date_particip_end, r.is_plan_circ,
-                        r.date_plan_circ_start, r.date_plan_circ_end, r.date_consult_start,
-                        r.date_consult_end, r.date_consult_close, r.date_report_start,
+                        r.date_plan_circ_start, r.date_plan_circ_end, r.date_consult_start1, r.date_consult_end1,
+                        r.date_consult_start2, r.date_consult_end2, r.date_consult_close, r.date_report_start,
                         r.date_report_end, r.date_report_close, r.date_info_start,
                         r.date_info_end, r.date_info_close, r.is_aggloprog, r.date_optimum,
                         r.date_of_acceptance, r.url,
                         r.project_study_approved, r.study_approved, r.date_sks_real,
                         r.date_kap_real, r.date_oks_real, r.date_gl_tba_real,
-                        r.date_start_inconsult, r.date_start_verified, r.date_start_reporting,
+                        r.date_start_inconsult1, r.date_start_verified1, r.date_start_inconsult2, r.date_start_verified2, r.date_start_reporting,
                         r.date_start_suspended, r.date_start_coordinated, r.sks_relevant,
                         r.costs_last_modified, r.costs_last_modified_by,
                         cm.first_name AS cm_first_name, cm.last_name AS cm_last_name,
@@ -279,12 +279,18 @@ namespace roadwork_portal_service.Controllers
                         if (!reader.IsDBNull(reader.GetOrdinal("date_plan_circ_end")))
                             projectFeatureFromDb.properties.datePlanCircEnd =
                                 reader.GetDateTime(reader.GetOrdinal("date_plan_circ_end"));
-                        if (!reader.IsDBNull(reader.GetOrdinal("date_consult_start")))
-                            projectFeatureFromDb.properties.dateConsultStart =
-                                reader.GetDateTime(reader.GetOrdinal("date_consult_start"));
-                        if (!reader.IsDBNull(reader.GetOrdinal("date_consult_end")))
-                            projectFeatureFromDb.properties.dateConsultEnd =
-                                reader.GetDateTime(reader.GetOrdinal("date_consult_end"));
+                        if (!reader.IsDBNull(reader.GetOrdinal("date_consult_start1")))
+                            projectFeatureFromDb.properties.dateConsultStart1 =
+                                reader.GetDateTime(reader.GetOrdinal("date_consult_start1"));
+                        if (!reader.IsDBNull(reader.GetOrdinal("date_consult_end1")))
+                            projectFeatureFromDb.properties.dateConsultEnd1 =
+                                reader.GetDateTime(reader.GetOrdinal("date_consult_end1"));
+                        if (!reader.IsDBNull(reader.GetOrdinal("date_consult_start2")))
+                            projectFeatureFromDb.properties.dateConsultStart2 =
+                                reader.GetDateTime(reader.GetOrdinal("date_consult_start2"));
+                        if (!reader.IsDBNull(reader.GetOrdinal("date_consult_end2")))
+                            projectFeatureFromDb.properties.dateConsultEnd2 =
+                                reader.GetDateTime(reader.GetOrdinal("date_consult_end2"));
                         if (!reader.IsDBNull(reader.GetOrdinal("date_consult_close")))
                             projectFeatureFromDb.properties.dateConsultClose =
                                 reader.GetDateTime(reader.GetOrdinal("date_consult_close"));
@@ -337,12 +343,18 @@ namespace roadwork_portal_service.Controllers
                         projectFeatureFromDb.properties.dateGlTbaReal = reader.IsDBNull(reader.GetOrdinal("date_gl_tba_real"))
                             ? null
                             : reader.GetDateTime(reader.GetOrdinal("date_gl_tba_real"));
-                        projectFeatureFromDb.properties.dateStartInconsult = reader.IsDBNull(reader.GetOrdinal("date_start_inconsult"))
+                        projectFeatureFromDb.properties.dateStartInconsult1 = reader.IsDBNull(reader.GetOrdinal("date_start_inconsult1"))
                             ? null
-                            : reader.GetDateTime(reader.GetOrdinal("date_start_inconsult"));
-                        projectFeatureFromDb.properties.dateStartVerified = reader.IsDBNull(reader.GetOrdinal("date_start_verified"))
+                            : reader.GetDateTime(reader.GetOrdinal("date_start_inconsult1"));
+                        projectFeatureFromDb.properties.dateStartVerified1 = reader.IsDBNull(reader.GetOrdinal("date_start_verified1"))
                             ? null
-                            : reader.GetDateTime(reader.GetOrdinal("date_start_verified"));
+                            : reader.GetDateTime(reader.GetOrdinal("date_start_verified1"));
+                        projectFeatureFromDb.properties.dateStartInconsult2 = reader.IsDBNull(reader.GetOrdinal("date_start_inconsult2"))
+                            ? null
+                            : reader.GetDateTime(reader.GetOrdinal("date_start_inconsult2"));                            
+                        projectFeatureFromDb.properties.dateStartVerified2 = reader.IsDBNull(reader.GetOrdinal("date_start_verified2"))
+                            ? null
+                            : reader.GetDateTime(reader.GetOrdinal("date_start_verified2"));
                         projectFeatureFromDb.properties.dateStartReporting = reader.IsDBNull(reader.GetOrdinal("date_start_reporting"))
                             ? null
                             : reader.GetDateTime(reader.GetOrdinal("date_start_reporting"));
@@ -586,10 +598,7 @@ namespace roadwork_portal_service.Controllers
                 using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
                 {
 
-                    pgConn.Open();
-
-                    if (roadWorkActivityFeature.properties.projectNo == String.Empty)
-                        roadWorkActivityFeature.properties.projectNo = _generateProjectNo(pgConn);
+                    pgConn.Open();                    
 
                     if (roadWorkActivityFeature.properties.name == null || roadWorkActivityFeature.properties.name == "")
                     {
@@ -609,8 +618,8 @@ namespace roadwork_portal_service.Controllers
                                     created, last_modified, date_from, date_optimum, date_to,
                                     costs, costs_type, status, in_internet, billing_address1,
                                     billing_address2, investment_no, date_sks,
-                                    date_kap, private, date_consult_start,
-                                    date_consult_end, date_report_start, date_report_end,
+                                    date_kap, private, date_consult_start1, date_consult_end1,
+                                    date_consult_start2, date_consult_end2, date_report_start, date_report_end,
                                     url, sks_relevant, strabako_no, geom)
                                     VALUES (@uuid, @name, @projectmanager, @traffic_agent,
                                     @description, @project_no, @comment, @section, @type, @projecttype,
@@ -619,7 +628,7 @@ namespace roadwork_portal_service.Controllers
                                     current_timestamp, current_timestamp, @date_from, @date_optimum,
                                     @date_to, @costs, @costs_type, @status, @in_internet, @billing_address1,
                                     @billing_address2, @investment_no, @date_sks, @date_kap,
-                                    @private, @date_consult_start, @date_consult_end,
+                                    @private, @date_consult_start1, @date_consult_end1, @date_consult_start2, @date_consult_end2,
                                     @date_report_start, @date_report_end, @url, @sks_relevant,
                                     @strabako_no, @geom)";
                     insertComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
@@ -665,10 +674,12 @@ namespace roadwork_portal_service.Controllers
                     insertComm.Parameters.AddWithValue("date_of_acceptance", roadWorkActivityFeature.properties.dateOfAcceptance != null ? roadWorkActivityFeature.properties.dateOfAcceptance : DBNull.Value);
                     insertComm.Parameters.AddWithValue("project_no", roadWorkActivityFeature.properties.projectNo != null ? roadWorkActivityFeature.properties.projectNo : DBNull.Value);
                     insertComm.Parameters.AddWithValue("private", roadWorkActivityFeature.properties.isPrivate);
-                    insertComm.Parameters.AddWithValue("date_consult_start", DateTime.Now.AddDays(7));
-                    insertComm.Parameters.AddWithValue("date_consult_end", DateTime.Now.AddDays(28));
-                    insertComm.Parameters.AddWithValue("date_report_start", DateTime.Now.AddDays(35));
-                    insertComm.Parameters.AddWithValue("date_report_end", DateTime.Now.AddDays(56));
+                    insertComm.Parameters.AddWithValue("date_consult_start1", DateTime.Now.AddDays(7));
+                    insertComm.Parameters.AddWithValue("date_consult_end1", DateTime.Now.AddDays(28));
+                    insertComm.Parameters.AddWithValue("date_consult_start2", DateTime.Now.AddDays(35));
+                    insertComm.Parameters.AddWithValue("date_consult_end2", DateTime.Now.AddDays(56));
+                    insertComm.Parameters.AddWithValue("date_report_start", DateTime.Now.AddDays(63));
+                    insertComm.Parameters.AddWithValue("date_report_end", DateTime.Now.AddDays(73));
                     insertComm.Parameters.AddWithValue("url", roadWorkActivityFeature.properties.url != null ? roadWorkActivityFeature.properties.url : DBNull.Value);
                     insertComm.Parameters.AddWithValue("sks_relevant", roadWorkActivityFeature.properties.isSksRelevant != null ? roadWorkActivityFeature.properties.isSksRelevant : DBNull.Value);
                     insertComm.Parameters.AddWithValue("strabako_no", roadWorkActivityFeature.properties.strabakoNo != null ? roadWorkActivityFeature.properties.strabakoNo : DBNull.Value);
@@ -1210,7 +1221,8 @@ namespace roadwork_portal_service.Controllers
                                     date_particip_end=@date_particip_end, is_plan_circ=@is_plan_circ,
                                     date_plan_circ_start=@date_plan_circ_start,
                                     date_plan_circ_end=@date_plan_circ_end,
-                                    date_consult_start=@date_consult_start, date_consult_end=@date_consult_end,
+                                    date_consult_start1=@date_consult_start1, date_consult_end1=@date_consult_end1,
+                                    date_consult_start2=@date_consult_start2, date_consult_end2=@date_consult_end2,
                                     date_consult_close=@date_consult_close,
                                     date_report_start=@date_report_start,
                                     date_report_end=@date_report_end, date_report_close=@date_report_close,
@@ -1226,10 +1238,14 @@ namespace roadwork_portal_service.Controllers
 
                     if (hasStatusChanged)
                     {
-                        if (roadWorkActivityFeature.properties.status == "inconsult")
-                            updateComm.CommandText += "date_start_inconsult=@date_start_inconsult, ";
-                        else if (roadWorkActivityFeature.properties.status == "verified")
-                            updateComm.CommandText += "date_start_verified=@date_start_verified, ";
+                        if (roadWorkActivityFeature.properties.status == "inconsult1")
+                            updateComm.CommandText += "date_start_inconsult1=@date_start_inconsult1, ";
+                        else if (roadWorkActivityFeature.properties.status == "inconsult2")
+                            updateComm.CommandText += "date_start_inconsult2=@date_start_inconsult2, ";
+                        else if (roadWorkActivityFeature.properties.status == "verified1")
+                            updateComm.CommandText += "date_start_verified1=@date_start_verified1, ";
+                        else if (roadWorkActivityFeature.properties.status == "verified2")
+                            updateComm.CommandText += "date_start_verified2=@date_start_verified2, ";
                         else if (roadWorkActivityFeature.properties.status == "reporting")
                             updateComm.CommandText += "date_start_reporting=@date_start_reporting, ";
                         else if (roadWorkActivityFeature.properties.status == "suspended")
@@ -1238,12 +1254,20 @@ namespace roadwork_portal_service.Controllers
                             updateComm.CommandText += "date_start_coordinated=@date_start_coordinated, ";
                     }
 
-                    // if we are going one step back (from status "verified" to status "inconsult")
+                    // if we are going one step back (from status "verified1" to status "inconsult1")
                     // than delete timestamp:
-                    if (statusOfActivityInDb == "verified" &&
-                            roadWorkActivityFeature.properties.status == "inconsult")
+                    if (statusOfActivityInDb == "verified1" &&
+                            roadWorkActivityFeature.properties.status == "inconsult1")
                     {
-                        updateComm.CommandText += "date_start_verified=NULL, ";
+                        updateComm.CommandText += "date_start_verified1=NULL, ";
+                    }
+
+                    // if we are going one step back (from status "verified2" to status "inconsult2")
+                    // than delete timestamp:
+                    if (statusOfActivityInDb == "verified2" &&
+                            roadWorkActivityFeature.properties.status == "inconsult2")
+                    {
+                        updateComm.CommandText += "date_start_verified2=NULL, ";
                     }
 
                     // if we are going one step back (from status "coordinated" to status "reporting")
@@ -1325,8 +1349,10 @@ namespace roadwork_portal_service.Controllers
                     updateComm.Parameters.AddWithValue("is_plan_circ", roadWorkActivityFeature.properties.isPlanCirc);
                     updateComm.Parameters.AddWithValue("date_plan_circ_start", roadWorkActivityFeature.properties.datePlanCircStart != null ? roadWorkActivityFeature.properties.datePlanCircStart : DBNull.Value);
                     updateComm.Parameters.AddWithValue("date_plan_circ_end", roadWorkActivityFeature.properties.datePlanCircEnd != null ? roadWorkActivityFeature.properties.datePlanCircEnd : DBNull.Value);
-                    updateComm.Parameters.AddWithValue("date_consult_start", roadWorkActivityFeature.properties.dateConsultStart != null ? roadWorkActivityFeature.properties.dateConsultStart : DBNull.Value);
-                    updateComm.Parameters.AddWithValue("date_consult_end", roadWorkActivityFeature.properties.dateConsultEnd != null ? roadWorkActivityFeature.properties.dateConsultEnd : DBNull.Value);
+                    updateComm.Parameters.AddWithValue("date_consult_start1", roadWorkActivityFeature.properties.dateConsultStart1 != null ? roadWorkActivityFeature.properties.dateConsultStart1 : DBNull.Value);
+                    updateComm.Parameters.AddWithValue("date_consult_end1", roadWorkActivityFeature.properties.dateConsultEnd1 != null ? roadWorkActivityFeature.properties.dateConsultEnd1 : DBNull.Value);
+                    updateComm.Parameters.AddWithValue("date_consult_start2", roadWorkActivityFeature.properties.dateConsultStart2 != null ? roadWorkActivityFeature.properties.dateConsultStart2 : DBNull.Value);
+                    updateComm.Parameters.AddWithValue("date_consult_end2", roadWorkActivityFeature.properties.dateConsultEnd2 != null ? roadWorkActivityFeature.properties.dateConsultEnd2 : DBNull.Value);
                     updateComm.Parameters.AddWithValue("date_consult_close", roadWorkActivityFeature.properties.dateConsultClose != null ? roadWorkActivityFeature.properties.dateConsultClose : DBNull.Value);
                     updateComm.Parameters.AddWithValue("date_report_start", roadWorkActivityFeature.properties.dateReportStart != null ? roadWorkActivityFeature.properties.dateReportStart : DBNull.Value);
                     updateComm.Parameters.AddWithValue("date_report_end", roadWorkActivityFeature.properties.dateReportEnd != null ? roadWorkActivityFeature.properties.dateReportEnd : DBNull.Value);
@@ -1347,10 +1373,14 @@ namespace roadwork_portal_service.Controllers
 
                     if (hasStatusChanged)
                     {
-                        if (roadWorkActivityFeature.properties.status == "inconsult")
-                            updateComm.Parameters.AddWithValue("date_start_inconsult", DateTime.Now);
-                        else if (roadWorkActivityFeature.properties.status == "verified")
-                            updateComm.Parameters.AddWithValue("date_start_verified", DateTime.Now);
+                        if (roadWorkActivityFeature.properties.status == "inconsult1")
+                            updateComm.Parameters.AddWithValue("date_start_inconsult1", DateTime.Now);
+                        else if (roadWorkActivityFeature.properties.status == "inconsult2")
+                            updateComm.Parameters.AddWithValue("date_start_inconsult2", DateTime.Now);
+                        else if (roadWorkActivityFeature.properties.status == "verified1")
+                            updateComm.Parameters.AddWithValue("date_start_verified1", DateTime.Now);
+                        else if (roadWorkActivityFeature.properties.status == "verified2")
+                            updateComm.Parameters.AddWithValue("date_start_verified2", DateTime.Now);
                         else if (roadWorkActivityFeature.properties.status == "reporting")
                             updateComm.Parameters.AddWithValue("date_start_reporting", DateTime.Now);
                         else if (roadWorkActivityFeature.properties.status == "suspended")
@@ -1394,10 +1424,14 @@ namespace roadwork_portal_service.Controllers
                         string whatText = "Status des Bauvorhabens wurde geändert zu: ";
                         if (roadWorkActivityFeature.properties.status == "review")
                             whatText += "in Prüfung";
-                        else if (roadWorkActivityFeature.properties.status == "inconsult")
-                            whatText += "in Bedarfsklärung";
-                        else if (roadWorkActivityFeature.properties.status == "verified")
-                            whatText += "verifiziert";
+                        else if (roadWorkActivityFeature.properties.status == "inconsult1")
+                            whatText += "in Bedarfsklärung-1";
+                        else if (roadWorkActivityFeature.properties.status == "inconsult2")
+                            whatText += "in Bedarfsklärung-2";
+                        else if (roadWorkActivityFeature.properties.status == "verified1")
+                            whatText += "verifiziert-1";
+                        else if (roadWorkActivityFeature.properties.status == "verified2")
+                            whatText += "verifiziert-2";
                         else if (roadWorkActivityFeature.properties.status == "reporting")
                             whatText += "in Stellungnahme";
                         else if (roadWorkActivityFeature.properties.status == "coordinated")
@@ -1412,31 +1446,50 @@ namespace roadwork_portal_service.Controllers
                         updateActivityStatusComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
                         updateActivityStatusComm.ExecuteNonQuery();
 
-                        if (roadWorkActivityFeature.properties.status == "inconsult" ||
+                        if (roadWorkActivityFeature.properties.status == "inconsult1" ||
+                            roadWorkActivityFeature.properties.status == "inconsult2" ||
                             roadWorkActivityFeature.properties.status == "reporting")
                         {
-                            foreach (User involvedUser in roadWorkActivityFeature.properties.involvedUsers)
+                            foreach (String involvedNeedUuid in roadWorkActivityFeature.properties.roadWorkNeedsUuids)
                             {
                                 NpgsqlCommand insertEmptyCommentsComm = pgConn.CreateCommand();
                                 insertEmptyCommentsComm.CommandText = @"INSERT INTO ""wtb_ssp_activity_consult""
-                                    (uuid, uuid_roadwork_activity, input_by, feedback_phase, feedback_given)
+                                    (uuid, uuid_roadwork_activity, input_by, feedback_phase, feedback_given, uuid_roadwork_need, last_edit_by)
                                     VALUES
-                                    (@uuid, @uuid_roadwork_activity, @input_by, @feedback_phase, @feedback_given)";
+                                    (@uuid, @uuid_roadwork_activity, (SELECT orderer FROM wtb_ssp_roadworkneeds WHERE uuid = @uuid_roadwork_need), @feedback_phase, @feedback_given, @uuid_roadwork_need, @last_edit_by)";
 
                                 insertEmptyCommentsComm.Parameters.AddWithValue("uuid", Guid.NewGuid());
-                                insertEmptyCommentsComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkActivityFeature.properties.uuid));
-                                insertEmptyCommentsComm.Parameters.AddWithValue("input_by", new Guid(involvedUser.uuid));
+                                insertEmptyCommentsComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkActivityFeature.properties.uuid));                                
                                 insertEmptyCommentsComm.Parameters.AddWithValue("feedback_phase", roadWorkActivityFeature.properties.status);
                                 insertEmptyCommentsComm.Parameters.AddWithValue("feedback_given", false);
+
+                                insertEmptyCommentsComm.Parameters.AddWithValue("uuid_roadwork_need", new Guid(involvedNeedUuid));
+                                insertEmptyCommentsComm.Parameters.AddWithValue("last_edit_by", new Guid(userFromDb.uuid));
+                                
+
                                 insertEmptyCommentsComm.ExecuteNonQuery();
                             }
                         }
 
-                        if (roadWorkActivityFeature.properties.status == "verified")
+                        if (roadWorkActivityFeature.properties.status == "verified1")
                         {
                             NpgsqlCommand updateNeedsStatusComm = pgConn.CreateCommand();
                             updateNeedsStatusComm.CommandText = @"UPDATE ""wtb_ssp_roadworkneeds""
-                                                    SET status='verified'
+                                                    SET status='verified1'
+                                                    WHERE uuid IN
+                                                    (SELECT n.uuid
+                                                        FROM ""wtb_ssp_roadworkneeds"" n
+                                                        LEFT JOIN ""wtb_ssp_activities_to_needs"" an ON an.uuid_roadwork_need = n.uuid
+                                                        WHERE an.activityrelationtype='assignedneed'
+                                                        AND an.uuid_roadwork_activity=@uuid_roadwork_activity)";
+                            updateNeedsStatusComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkActivityFeature.properties.uuid));
+                            updateNeedsStatusComm.ExecuteNonQuery();
+                        }
+                        else if (roadWorkActivityFeature.properties.status == "verified2")
+                        {
+                            NpgsqlCommand updateNeedsStatusComm = pgConn.CreateCommand();
+                            updateNeedsStatusComm.CommandText = @"UPDATE ""wtb_ssp_roadworkneeds""
+                                                    SET status='verified2'
                                                     WHERE uuid IN
                                                     (SELECT n.uuid
                                                         FROM ""wtb_ssp_roadworkneeds"" n
@@ -1825,13 +1878,24 @@ namespace roadwork_portal_service.Controllers
                 if (newStatus == "review")
                     return false;
             }
-            else if (oldStatus == "inconsult")
+            else if (oldStatus == "inconsult1")
             {
-                if (newStatus == "inconsult" ||
+                if (newStatus == "inconsult1" ||
                     newStatus == "review")
                     return false;
             }
-            else if (oldStatus == "verified")
+            else if (oldStatus == "inconsult2")
+            {
+                if (newStatus == "inconsult2" ||
+                    newStatus == "review")
+                    return false;
+            }
+            else if (oldStatus == "verified1")
+            {
+                if (newStatus == "review")
+                    return false;
+            }
+            else if (oldStatus == "verified2")
             {
                 if (newStatus == "review")
                     return false;

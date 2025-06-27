@@ -51,10 +51,12 @@ namespace roadwork_portal_service.Controllers
                                             u.e_mail, u.last_name, u.first_name, c.orderer_feedback,
                                             c.manager_feedback, c.valuation, c.feedback_phase,
                                             c.feedback_given, c.orderer_feedback_text,
-                                            org.uuid, org.name, org.abbreviation, org.is_civil_eng
+                                            org.uuid, org.name, org.abbreviation, org.is_civil_eng,
+                                            c.last_edit_by, c.uuid_roadwork_need, n.name as roadworkname
                                         FROM ""wtb_ssp_activity_consult"" c
                                         LEFT JOIN ""wtb_ssp_users"" u ON c.input_by = u.uuid
                                         LEFT JOIN ""wtb_ssp_organisationalunits"" org ON u.org_unit = org.uuid
+                                        LEFT JOIN ""wtb_ssp_roadworkneeds"" n ON c.uuid_roadwork_need = n.uuid                                      
                                         WHERE uuid_roadwork_activity = @uuid_roadwork_activity";
                 selectConsultationComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadworkActivityUuid));
 
@@ -89,8 +91,13 @@ namespace roadwork_portal_service.Controllers
                         orgUnit.uuid = activityConsultationReader.IsDBNull(13) ? "" : activityConsultationReader.GetGuid(13).ToString();
                         orgUnit.name = activityConsultationReader.IsDBNull(14) ? "" : activityConsultationReader.GetString(14);
                         orgUnit.abbreviation = activityConsultationReader.IsDBNull(15) ? "" : activityConsultationReader.GetString(15);
-                        orgUnit.isCivilEngineering = activityConsultationReader.IsDBNull(16) ? false : activityConsultationReader.GetBoolean(16);
+                        orgUnit.isCivilEngineering = activityConsultationReader.IsDBNull(16) ? false : activityConsultationReader.GetBoolean(16);                        
                         activityConsulationInput.inputBy.organisationalUnit = orgUnit;
+                        User lastEditUser = new User();
+                        lastEditUser.uuid = activityConsultationReader.IsDBNull(17) ? "" : activityConsultationReader.GetGuid(17).ToString();                        
+                        activityConsulationInput.lastEditBy = lastEditUser;
+                        activityConsulationInput.roadworkNeedUuid = activityConsultationReader.IsDBNull(18) ? "" : activityConsultationReader.GetGuid(18).ToString();
+                        activityConsulationInput.roadworkNeedName= activityConsultationReader.IsDBNull(19) ? "" : activityConsultationReader.GetString(19);
                         consultationInputs.Add(activityConsulationInput);
                     }
                 }
@@ -109,7 +116,6 @@ namespace roadwork_portal_service.Controllers
             try
             {
                 User userFromDb = LoginController.getAuthorizedUserFromDb(this.User, false);
-                consultationInput.inputBy = userFromDb;
 
                 using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
                 {
@@ -130,7 +136,7 @@ namespace roadwork_portal_service.Controllers
                                         reader.GetString(0);
                     }
 
-                    if ((roadWorkActivityStatus != "inconsult" && roadWorkActivityStatus != "reporting") ||
+                    if ((roadWorkActivityStatus != "inconsult1" && roadWorkActivityStatus != "inconsult2" && roadWorkActivityStatus != "reporting") ||
                                 roadWorkActivityStatus != consultationInput.feedbackPhase)
                     {
                         _logger.LogWarning("User tried to add consultation feedback though " +
@@ -142,16 +148,17 @@ namespace roadwork_portal_service.Controllers
                     consultationInput.uuid = Guid.NewGuid().ToString();
                     NpgsqlCommand insertComm = pgConn.CreateCommand();
                     insertComm.CommandText = @"INSERT INTO ""wtb_ssp_activity_consult""
-                                    (uuid, uuid_roadwork_activity, last_edit,
+                                    (uuid, uuid_roadwork_activity, last_edit, last_edit_by,
                                     input_by, orderer_feedback, manager_feedback, decline,
                                     valuation, feedback_phase, feedback_given, orderer_feedback_text)
-                                    VALUES (@uuid, @uuid_roadwork_activity, @last_edit,
+                                    VALUES (@uuid, @uuid_roadwork_activity, @last_edit, @last_edit_by,
                                     @input_by, @orderer_feedback, @manager_feedback, @decline,
                                     @valuation, @feedback_phase, @feedback_given, @orderer_feedback_text)";
                     insertComm.Parameters.AddWithValue("uuid", new Guid(consultationInput.uuid));
                     insertComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadworkActivityUuid));
                     insertComm.Parameters.AddWithValue("last_edit", DateTime.Now);
-                    insertComm.Parameters.AddWithValue("input_by", new Guid(userFromDb.uuid));
+                    insertComm.Parameters.AddWithValue("last_edit_by", new Guid(userFromDb.uuid));
+                    insertComm.Parameters.AddWithValue("input_by", new Guid(consultationInput.inputBy.uuid));
                     insertComm.Parameters.AddWithValue("orderer_feedback", consultationInput.ordererFeedback);
                     if (consultationInput.decline)
                         consultationInput.ordererFeedbackText = "";
@@ -171,7 +178,7 @@ namespace roadwork_portal_service.Controllers
                     insertComm.Parameters.AddWithValue("valuation", consultationInput.valuation);
                     insertComm.Parameters.AddWithValue("feedback_phase", consultationInput.feedbackPhase);
 
-                    if(userFromDb.mailAddress == consultationInput.inputBy.mailAddress)
+                    if (userFromDb.mailAddress == consultationInput.inputBy.mailAddress)
                         insertComm.Parameters.AddWithValue("feedback_given", true);
                     else
                         insertComm.Parameters.AddWithValue("feedback_given", consultationInput.feedbackGiven);
@@ -250,7 +257,7 @@ namespace roadwork_portal_service.Controllers
 
                     NpgsqlCommand updateComm = pgConn.CreateCommand();
                     updateComm.CommandText = @"UPDATE ""wtb_ssp_activity_consult""
-                                    SET last_edit=@last_edit, orderer_feedback=@orderer_feedback,
+                                    SET last_edit=@last_edit, last_edit_by=@last_edit_by, orderer_feedback=@orderer_feedback,
                                     decline=@decline, valuation=@valuation, orderer_feedback_text=@orderer_feedback_text,
                                     feedback_phase=@feedback_phase, feedback_given=@feedback_given";
 
@@ -263,6 +270,7 @@ namespace roadwork_portal_service.Controllers
 
                     consultationInput.lastEdit = DateTime.Now;
                     updateComm.Parameters.AddWithValue("last_edit", consultationInput.lastEdit);
+                    updateComm.Parameters.AddWithValue("last_edit_by", new Guid(userFromDb.uuid));
                     updateComm.Parameters.AddWithValue("orderer_feedback", consultationInput.ordererFeedback);
                     if (consultationInput.decline)
                         consultationInput.ordererFeedbackText = "";
@@ -279,7 +287,7 @@ namespace roadwork_portal_service.Controllers
                     updateComm.Parameters.AddWithValue("valuation", consultationInput.valuation);
                     updateComm.Parameters.AddWithValue("feedback_phase", consultationInput.feedbackPhase);
 
-                    if(userFromDb.mailAddress == consultationInput.inputBy.mailAddress)
+                    if (userFromDb.mailAddress == consultationInput.inputBy.mailAddress)
                         updateComm.Parameters.AddWithValue("feedback_given", true);
                     else
                         updateComm.Parameters.AddWithValue("feedback_given", consultationInput.feedbackGiven);
@@ -324,5 +332,79 @@ namespace roadwork_portal_service.Controllers
             return Ok(consultationInput);
         }
 
+
+
+        // DELETE consultation/?roadworkactivityuuid=...
+        [HttpDelete]
+        [Authorize(Roles = "orderer,administrator")]          
+        public ActionResult<ErrorMessage> DeleteConsultation(string roadworkActivityUuid, string inputByUuid)
+        {
+            ErrorMessage errorResult = new ErrorMessage();
+
+            try
+            {
+
+                if (roadworkActivityUuid == null || inputByUuid == null)
+                {
+                    _logger.LogWarning("No uuid provided by user in delete consultation feature process. " +
+                                "Thus process is canceled, no consultation feature is deleted.");
+                    errorResult.errorMessage = "SSP-15";
+                    return Ok(errorResult);
+                }
+
+                roadworkActivityUuid = roadworkActivityUuid.ToLower().Trim();
+                inputByUuid = inputByUuid.ToLower().Trim();
+
+                if (roadworkActivityUuid == "" || inputByUuid == "")
+                {
+                    _logger.LogWarning("No uuid provided by user in delete consultation feature process. " +
+                                "Thus process is canceled, no consultation feature is deleted.");
+                    errorResult.errorMessage = "SSP-15";
+                    return Ok(errorResult);
+                }
+
+                int noAffectedRows = 0;
+                using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
+                {
+                    pgConn.Open();
+
+                    NpgsqlCommand deleteComm = pgConn.CreateCommand();
+                    deleteComm = pgConn.CreateCommand();
+                    deleteComm.CommandText = @"DELETE FROM ""wtb_ssp_activity_consult""
+                                WHERE input_by=@uuid_input_by AND uuid_roadwork_activity=@uuid_roadwork_activity";
+                    deleteComm.Parameters.AddWithValue("uuid_input_by", new Guid(inputByUuid));
+                    deleteComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadworkActivityUuid));
+                    noAffectedRows = deleteComm.ExecuteNonQuery();
+
+                    pgConn.Close();
+                }
+
+                if (noAffectedRows == 1)
+                {
+                    return Ok();
+                }
+
+                if (noAffectedRows == 0)
+                {
+                    _logger.LogWarning("Es wurde keine Konsultationsfunktion zum Löschen gefunden");
+                    errorResult.errorMessage = "SSP-41";
+                    return Ok(errorResult);
+                }
+
+                _logger.LogError("Unknown error.");
+                errorResult.errorMessage = "SSP-3";
+                return Ok(errorResult);
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                errorResult.errorMessage = "SSP-3";
+                return Ok(errorResult);
+            }
+
+        }
+
     }
+    
 }

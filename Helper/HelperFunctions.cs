@@ -87,10 +87,14 @@ namespace roadwork_portal_service.Helper
                 return "Bedarf";
             else if (code == "review")
                 return "Prüfung";
-            else if (code == "verified")
-                return "verifiziert";
-            else if (code == "inconsult")
-                return "Bedarfsklärung";
+            else if (code == "verified1")
+                return "verifiziert-1";
+            else if (code == "verified2")
+                return "verifiziert-2";
+            else if (code == "inconsult1")
+                return "Bedarfsklärung-1";
+            else if (code == "inconsult2")
+                return "Bedarfsklärung-2";                
             else if (code == "reporting")
                 return "Stellungnahme";
             else if (code == "coordinated")

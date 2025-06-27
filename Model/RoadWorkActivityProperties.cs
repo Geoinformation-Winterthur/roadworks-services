@@ -69,8 +69,10 @@ public class RoadWorkActivityProperties
     public bool? isPlanCirc { get; set; } = false;
     public DateTime? datePlanCircStart { get; set; }
     public DateTime? datePlanCircEnd { get; set; }
-    public DateTime? dateConsultStart { get; set; }
-    public DateTime? dateConsultEnd { get; set; }
+    public DateTime? dateConsultStart1 { get; set; }
+    public DateTime? dateConsultEnd1 { get; set; }
+    public DateTime? dateConsultStart2 { get; set; }
+    public DateTime? dateConsultEnd2 { get; set; }
     public DateTime? dateConsultClose { get; set; }
     public DateTime? dateReportStart { get; set; }
     public DateTime? dateReportEnd { get; set; }
@@ -79,8 +81,10 @@ public class RoadWorkActivityProperties
     public DateTime? dateInfoEnd { get; set; }
     public DateTime? dateInfoClose { get; set; }
     public bool? isAggloprog { get; set; } = false;
-    public DateTime? dateStartInconsult { get; set; }
-    public DateTime? dateStartVerified { get; set; }
+    public DateTime? dateStartInconsult1 { get; set; }
+    public DateTime? dateStartInconsult2 { get; set; }
+    public DateTime? dateStartVerified1 { get; set; }
+    public DateTime? dateStartVerified2 { get; set; }
     public DateTime? dateStartReporting { get; set; }
     public DateTime? dateStartSuspended { get; set; }
     public DateTime? dateStartCoordinated { get; set; }

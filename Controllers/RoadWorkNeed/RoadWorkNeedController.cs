@@ -323,53 +323,96 @@ namespace roadwork_portal_service.Controllers
                                                     false : reader.GetBoolean(reader.GetOrdinal("is_primary"));
                             }
 
-                            needFeatureFromDb.properties.isEditingAllowed = false;
-                            string mailOfLoggedInUser = User.FindFirstValue(ClaimTypes.Email);
-                            if (User.IsInRole("administrator"))
-                            {
-                                needFeatureFromDb.properties.isEditingAllowed = true;
-                            }
-                            else if (needFeatureFromDb.properties.orderer.mailAddress == mailOfLoggedInUser
-                                        && needFeatureFromDb.properties.isPrivate)
-                            {
-                                // editing for the orderer is only allowed as long as the need is not public (is private):
-                                needFeatureFromDb.properties.isEditingAllowed = true;
-                            }
+                            needFeatureFromDb.properties.isEditingAllowed = false;                           
 
                             projectsFromDbTemp.Add(needFeatureFromDb);
 
                         }
                     }
 
-                    foreach (RoadWorkNeedFeature needFeatureFromDb in projectsFromDbTemp)
-                    {
-                        NpgsqlCommand selectDocAttsComm = pgConn.CreateCommand();
-                        selectDocAttsComm.CommandText = "SELECT uuid, filename " +
-                            "FROM \"wtb_ssp_documents\" " +
-                            "WHERE roadworkneed=@roadworkneed";
-                        selectDocAttsComm.Parameters.AddWithValue("roadworkneed", new Guid(needFeatureFromDb.properties.uuid));
 
-                        List<DocumentAttributes> multipleDocumentsAttributes = new List<DocumentAttributes>();
-                        using (NpgsqlDataReader docsReader = selectDocAttsComm.ExecuteReader())
+                    foreach (RoadWorkNeedFeature needFeatureFromDb in projectsFromDbTemp)
+                    {                        
+                        needFeatureFromDb.properties.isEditingAllowed = false;
+
+                        string mailOfLoggedInUser = User.FindFirstValue(ClaimTypes.Email);
+                        
+                        if (User.IsInRole("administrator"))
                         {
-                            DocumentAttributes documentAttributes;
-                            while (docsReader.Read())
+                            needFeatureFromDb.properties.isEditingAllowed = true;
+                            continue;
+                        }
+                        
+                        if (needFeatureFromDb.properties.orderer?.mailAddress == mailOfLoggedInUser)
+                        {
+                            using (NpgsqlCommand selectActivityRelComm = pgConn.CreateCommand())
                             {
-                                if (!docsReader.IsDBNull(0))
+                                selectActivityRelComm.CommandText = @"
+                                    SELECT uuid_roadwork_activity, activityrelationtype
+                                    FROM ""wtb_ssp_activities_to_needs""
+                                    WHERE uuid_roadwork_need = @uuid";
+                                selectActivityRelComm.Parameters.AddWithValue("uuid", new Guid(needFeatureFromDb.properties.uuid));
+
+                                bool foundAssignedNeed = false;
+
+                                using (NpgsqlDataReader reader = selectActivityRelComm.ExecuteReader())
                                 {
-                                    documentAttributes = new DocumentAttributes();
-                                    documentAttributes.uuid = docsReader.GetGuid(0).ToString();
-                                    documentAttributes.filename = "";
-                                    if (!docsReader.IsDBNull(1))
+                                    while (reader.Read())
                                     {
-                                        documentAttributes.filename = docsReader.GetString(1);
+                                        string activityUuid = reader.IsDBNull(0) ? "" : reader.GetGuid(0).ToString();
+                                        string relationType = reader.IsDBNull(1) ? "" : reader.GetString(1);                                        
+
+                                        if (string.IsNullOrEmpty(needFeatureFromDb.properties.roadWorkActivityUuid))
+                                            needFeatureFromDb.properties.roadWorkActivityUuid = activityUuid;
+
+                                        if (string.IsNullOrEmpty(needFeatureFromDb.properties.activityRelationType))
+                                            needFeatureFromDb.properties.activityRelationType = relationType;
+
+                                        if (relationType == "assignedneed")
+                                        {
+                                            foundAssignedNeed = true;
+                                            //break; 
+                                        }
                                     }
-                                    multipleDocumentsAttributes.Add(documentAttributes);
                                 }
+
+                                // Editing is not allowed when assignedneed relation exists
+                                needFeatureFromDb.properties.isEditingAllowed = !foundAssignedNeed;
                             }
                         }
-                        needFeatureFromDb.properties.documentAtts = multipleDocumentsAttributes.ToArray();
                     }
+                                                                
+
+
+                    foreach (RoadWorkNeedFeature needFeatureFromDb in projectsFromDbTemp)
+                        {
+                            NpgsqlCommand selectDocAttsComm = pgConn.CreateCommand();
+                            selectDocAttsComm.CommandText = "SELECT uuid, filename " +
+                                "FROM \"wtb_ssp_documents\" " +
+                                "WHERE roadworkneed=@roadworkneed";
+                            selectDocAttsComm.Parameters.AddWithValue("roadworkneed", new Guid(needFeatureFromDb.properties.uuid));
+
+                            List<DocumentAttributes> multipleDocumentsAttributes = new List<DocumentAttributes>();
+                            using (NpgsqlDataReader docsReader = selectDocAttsComm.ExecuteReader())
+                            {
+                                DocumentAttributes documentAttributes;
+                                while (docsReader.Read())
+                                {
+                                    if (!docsReader.IsDBNull(0))
+                                    {
+                                        documentAttributes = new DocumentAttributes();
+                                        documentAttributes.uuid = docsReader.GetGuid(0).ToString();
+                                        documentAttributes.filename = "";
+                                        if (!docsReader.IsDBNull(1))
+                                        {
+                                            documentAttributes.filename = docsReader.GetString(1);
+                                        }
+                                        multipleDocumentsAttributes.Add(documentAttributes);
+                                    }
+                                }
+                            }
+                            needFeatureFromDb.properties.documentAtts = multipleDocumentsAttributes.ToArray();
+                        }
 
                     foreach (RoadWorkNeedFeature needFeatureFromDb in projectsFromDbTemp)
                     {
@@ -837,6 +880,36 @@ namespace roadwork_portal_service.Controllers
                                 }
                             }
 
+                            if (roadWorkNeedFeature.properties.isPrimary == true)
+                            {
+
+                                
+                                    NpgsqlCommand checkIsPrimary = pgConn.CreateCommand();
+                                    checkIsPrimary.CommandText = @"SELECT is_primary FROM ""wtb_ssp_activities_to_needs"" 
+                                                                WHERE uuid_roadwork_need=@uuid_roadwork_need
+                                                                AND uuid_roadwork_activity=@uuid_roadwork_activity";
+                                    checkIsPrimary.Parameters.AddWithValue("uuid_roadwork_need", new Guid(roadWorkNeedFeature.properties.uuid));
+                                    checkIsPrimary.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkNeedFeature.properties.roadWorkActivityUuid));
+                                    object result = checkIsPrimary.ExecuteScalar();
+
+
+                                    if (result != null && result != DBNull.Value && result is bool previousIsPrimary && previousIsPrimary == false)
+                                    {
+                                        NpgsqlCommand updateActivityDates = pgConn.CreateCommand();
+                                        updateActivityDates.CommandText = @"UPDATE ""wtb_ssp_roadworkactivities""
+                                                                                SET date_from = @date_from,
+                                                                                    date_optimum = @date_optimum,
+                                                                                    date_to = @date_to                                            
+                                                                                WHERE uuid = @uuid";
+                                        updateActivityDates.Parameters.AddWithValue("uuid", new Guid(roadWorkNeedFeature.properties.roadWorkActivityUuid));
+                                        updateActivityDates.Parameters.AddWithValue("date_from", roadWorkNeedFeature.properties.finishEarlyTo);
+                                        updateActivityDates.Parameters.AddWithValue("date_optimum", roadWorkNeedFeature.properties.finishOptimumTo);
+                                        updateActivityDates.Parameters.AddWithValue("date_to", roadWorkNeedFeature.properties.finishLateTo);
+                                        updateActivityDates.ExecuteNonQuery();
+                                    }
+                             
+                            }
+
 
                             NpgsqlCommand deleteComm = pgConn.CreateCommand();
                             if (affectedActivityUuid != null && affectedActivityUuid != "")
@@ -868,7 +941,7 @@ namespace roadwork_portal_service.Controllers
                                 insertComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadWorkNeedFeature.properties.roadWorkActivityUuid));
                                 insertComm.Parameters.AddWithValue("activityrelationtype", activityRelationType);
                                 insertComm.Parameters.AddWithValue("is_primary", roadWorkNeedFeature.properties.isPrimary != null ? roadWorkNeedFeature.properties.isPrimary : false);
-                                insertComm.ExecuteNonQuery();
+                                insertComm.ExecuteNonQuery();                            
 
                                 NpgsqlCommand insertHistoryComm = pgConn.CreateCommand();
                                 insertHistoryComm.CommandText = @"INSERT INTO ""wtb_ssp_activities_history""
