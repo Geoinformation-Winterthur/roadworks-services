@@ -8,6 +8,7 @@ public class ConsultationInput
 {
     public string uuid { get; set; } = "";
     public DateTime? lastEdit { get; set; }
+    public User? lastEditBy { get; set; }
     public User? inputBy { get; set; }
     public string ordererFeedback { get; set; } = "";
     public string ordererFeedbackText { get; set; } = "";
@@ -17,4 +18,6 @@ public class ConsultationInput
     public string feedbackPhase { get; set; } = "";
     public bool feedbackGiven { get; set; } = false;
     public string errorMessage { get; set; } = "";
+    public string? roadworkNeedUuid { get; set; } = "";
+    public string?  roadworkNeedName { get; set; } = "";
 }

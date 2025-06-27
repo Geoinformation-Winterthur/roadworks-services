@@ -45,7 +45,7 @@ namespace roadwork_portal_service.Controllers
                         "Planauflage Start;Planauflage Ende;Bedarfsklärung Start;Bedarfsklärung Ende;" +
                         "Bedarfsklärung Abschluss;Stellungnahme Start;Stellungnahme Ende;" +
                         "Stellungnahme Abschluss;Infoversand Start;" +
-                        "Infoversand Ende;Infoversand Abschluss;Aggloprogramm;date_start_inconsult;verifiziert;" +
+                        "Infoversand Ende;Infoversand Abschluss;Aggloprogramm;date_start_inconsult1;verifiziert1;date_start_inconsult2;verifiziert2;" +
                         "date_start_reporting;sistiert;koordiniert\r\n";
 
 
@@ -116,10 +116,10 @@ namespace roadwork_portal_service.Controllers
                             r.date_desire_start, r.date_desire_end, r.is_particip,
                             r.date_particip_start, r.date_particip_end,
                             r.is_plan_circ, r.date_plan_circ_start, r.date_plan_circ_end,
-                            r.date_consult_start, r.date_consult_end, r.date_consult_close,
+                            r.date_consult_start1, r.date_consult_end1, r.date_consult_start2, r.date_consult_end2, r.date_consult_close,
                             r.date_report_start, r.date_report_end, r.date_report_close,
                             r.date_info_start, r.date_info_end, r.date_info_close,
-                            r.is_aggloprog, r.date_start_inconsult, r.date_start_verified,
+                            r.is_aggloprog, r.date_start_inconsult1, r.date_start_verified1, r.date_start_inconsult2, r.date_start_verified2,
                             r.date_start_reporting, r.date_start_suspended,
                             r.date_start_coordinated
                         FROM ""wtb_ssp_roadworkactivities"" r
@@ -187,8 +187,10 @@ namespace roadwork_portal_service.Controllers
                             resultCsv += reader.IsDBNull(reader.GetOrdinal("is_plan_circ")) ? ";" : reader.GetBoolean(reader.GetOrdinal("is_plan_circ")) + ";";
                             resultCsv += reader.IsDBNull(reader.GetOrdinal("date_plan_circ_start")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_plan_circ_start")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
                             resultCsv += reader.IsDBNull(reader.GetOrdinal("date_plan_circ_end")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_plan_circ_end")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_consult_start")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_consult_start")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_consult_end")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_consult_end")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_consult_start1")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_consult_start1")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_consult_end1")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_consult_end1")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_consult_start2")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_consult_start2")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_consult_end2")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_consult_end2")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
                             resultCsv += reader.IsDBNull(reader.GetOrdinal("date_consult_close")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_consult_close")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
                             resultCsv += reader.IsDBNull(reader.GetOrdinal("date_report_start")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_report_start")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
                             resultCsv += reader.IsDBNull(reader.GetOrdinal("date_report_end")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_report_end")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
@@ -197,8 +199,10 @@ namespace roadwork_portal_service.Controllers
                             resultCsv += reader.IsDBNull(reader.GetOrdinal("date_info_end")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_info_end")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
                             resultCsv += reader.IsDBNull(reader.GetOrdinal("date_info_close")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_info_close")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
                             resultCsv += reader.IsDBNull(reader.GetOrdinal("is_aggloprog")) ? ";" : reader.GetBoolean(reader.GetOrdinal("is_aggloprog")) + ";";
-                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_start_inconsult")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_start_inconsult")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
-                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_start_verified")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_start_verified")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_start_inconsult1")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_start_inconsult1")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_start_verified1")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_start_verified1")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_start_inconsult2")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_start_inconsult2")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("date_start_verified2")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_start_verified2")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
                             resultCsv += reader.IsDBNull(reader.GetOrdinal("date_start_reporting")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_start_reporting")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
                             resultCsv += reader.IsDBNull(reader.GetOrdinal("date_start_suspended")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_start_suspended")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
                             resultCsv += reader.IsDBNull(reader.GetOrdinal("date_start_coordinated")) ? ";" : reader.GetDateTime(reader.GetOrdinal("date_start_coordinated")).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) + ";";
