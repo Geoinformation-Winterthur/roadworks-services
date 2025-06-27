@@ -8,7 +8,7 @@ public class ConsultationInput
 {
     public string uuid { get; set; } = "";
     public DateTime? lastEdit { get; set; }
-    public User? lastEditBy { get; set; }
+    public string? lastEditBy { get; set; } = "";
     public User? inputBy { get; set; }
     public string ordererFeedback { get; set; } = "";
     public string ordererFeedbackText { get; set; } = "";

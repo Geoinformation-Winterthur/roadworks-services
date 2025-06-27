@@ -52,9 +52,10 @@ namespace roadwork_portal_service.Controllers
                                             c.manager_feedback, c.valuation, c.feedback_phase,
                                             c.feedback_given, c.orderer_feedback_text,
                                             org.uuid, org.name, org.abbreviation, org.is_civil_eng,
-                                            c.last_edit_by, c.uuid_roadwork_need, n.name as roadworkname
+                                            ue.e_mail as last_edit_by, c.uuid_roadwork_need, n.name as roadworkname
                                         FROM ""wtb_ssp_activity_consult"" c
                                         LEFT JOIN ""wtb_ssp_users"" u ON c.input_by = u.uuid
+                                        LEFT JOIN ""wtb_ssp_users"" ue ON c.last_edit_by = ue.uuid
                                         LEFT JOIN ""wtb_ssp_organisationalunits"" org ON u.org_unit = org.uuid
                                         LEFT JOIN ""wtb_ssp_roadworkneeds"" n ON c.uuid_roadwork_need = n.uuid                                      
                                         WHERE uuid_roadwork_activity = @uuid_roadwork_activity";
@@ -93,9 +94,7 @@ namespace roadwork_portal_service.Controllers
                         orgUnit.abbreviation = activityConsultationReader.IsDBNull(15) ? "" : activityConsultationReader.GetString(15);
                         orgUnit.isCivilEngineering = activityConsultationReader.IsDBNull(16) ? false : activityConsultationReader.GetBoolean(16);                        
                         activityConsulationInput.inputBy.organisationalUnit = orgUnit;
-                        User lastEditUser = new User();
-                        lastEditUser.uuid = activityConsultationReader.IsDBNull(17) ? "" : activityConsultationReader.GetGuid(17).ToString();                        
-                        activityConsulationInput.lastEditBy = lastEditUser;
+                        activityConsulationInput.lastEditBy = activityConsultationReader.IsDBNull(17) ? "" : activityConsultationReader.GetString(17);                        ;
                         activityConsulationInput.roadworkNeedUuid = activityConsultationReader.IsDBNull(18) ? "" : activityConsultationReader.GetGuid(18).ToString();
                         activityConsulationInput.roadworkNeedName= activityConsultationReader.IsDBNull(19) ? "" : activityConsultationReader.GetString(19);
                         consultationInputs.Add(activityConsulationInput);
