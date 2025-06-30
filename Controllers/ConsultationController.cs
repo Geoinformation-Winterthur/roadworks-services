@@ -336,7 +336,7 @@ namespace roadwork_portal_service.Controllers
         // DELETE consultation/?roadworkactivityuuid=...
         [HttpDelete]
         [Authorize(Roles = "territorymanager,orderer,administrator")]          
-        public ActionResult<ErrorMessage> DeleteConsultation(string roadworkActivityUuid, string inputByUuid)
+        public ActionResult<ErrorMessage> DeleteConsultation(string roadworkActivityUuid, string inputByUuid, string feedbackPhase)
         {
             ErrorMessage errorResult = new ErrorMessage();
 
@@ -370,9 +370,10 @@ namespace roadwork_portal_service.Controllers
                     NpgsqlCommand deleteComm = pgConn.CreateCommand();
                     deleteComm = pgConn.CreateCommand();
                     deleteComm.CommandText = @"DELETE FROM ""wtb_ssp_activity_consult""
-                                WHERE input_by=@uuid_input_by AND uuid_roadwork_activity=@uuid_roadwork_activity";
+                                WHERE input_by=@uuid_input_by AND uuid_roadwork_activity=@uuid_roadwork_activity AND feedback_phase=@feedback_phase";
                     deleteComm.Parameters.AddWithValue("uuid_input_by", new Guid(inputByUuid));
                     deleteComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadworkActivityUuid));
+                    deleteComm.Parameters.AddWithValue("feedback_phase", feedbackPhase);
                     noAffectedRows = deleteComm.ExecuteNonQuery();
 
                     pgConn.Close();
