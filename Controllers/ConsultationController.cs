@@ -108,7 +108,7 @@ namespace roadwork_portal_service.Controllers
 
         // POST consultation/?roadworkactivityuuid=...
         [HttpPost]
-        [Authorize(Roles = "orderer,administrator")]
+        [Authorize(Roles = "territorymanager,orderer,administrator")]
         public ActionResult<ConsultationInput> AddConsultation(string roadworkActivityUuid,
                     [FromBody] ConsultationInput consultationInput, bool isDryRun = false)
         {
@@ -335,7 +335,7 @@ namespace roadwork_portal_service.Controllers
 
         // DELETE consultation/?roadworkactivityuuid=...
         [HttpDelete]
-        [Authorize(Roles = "orderer,administrator")]          
+        [Authorize(Roles = "territorymanager,orderer,administrator")]          
         public ActionResult<ErrorMessage> DeleteConsultation(string roadworkActivityUuid, string inputByUuid)
         {
             ErrorMessage errorResult = new ErrorMessage();
