@@ -61,12 +61,12 @@ namespace roadwork_portal_service.Controllers
                                         WHERE uuid_roadwork_activity = @uuid_roadwork_activity";
                 selectConsultationComm.Parameters.AddWithValue("uuid_roadwork_activity", new Guid(roadworkActivityUuid));
 
-                if (userFromDb != null && userFromDb.mailAddress != null &&
+              /*   if (userFromDb != null && userFromDb.mailAddress != null &&
                         userFromDb.mailAddress != "" && User.IsInRole("orderer"))
                 {
                     selectConsultationComm.CommandText += " AND u.e_mail = @e_mail";
                     selectConsultationComm.Parameters.AddWithValue("e_mail", userFromDb.mailAddress);
-                }
+                } */
 
                 using (NpgsqlDataReader activityConsultationReader = await selectConsultationComm.ExecuteReaderAsync())
                 {
