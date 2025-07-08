@@ -286,7 +286,8 @@ namespace roadwork_portal_service.Controllers
                     updateComm.Parameters.AddWithValue("valuation", consultationInput.valuation);
                     updateComm.Parameters.AddWithValue("feedback_phase", consultationInput.feedbackPhase);
 
-                    if (userFromDb.mailAddress == consultationInput.inputBy.mailAddress)
+                    if (userFromDb.mailAddress == consultationInput.inputBy.mailAddress
+                        &&  consultationInput.ordererFeedback != null && consultationInput.ordererFeedback != "")                        
                         updateComm.Parameters.AddWithValue("feedback_given", true);
                     else
                         updateComm.Parameters.AddWithValue("feedback_given", consultationInput.feedbackGiven);
