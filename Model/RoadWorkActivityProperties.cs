@@ -23,7 +23,7 @@ public class RoadWorkActivityProperties
     public DateTime? created { get; set; } = DateTime.MinValue;
     public DateTime? lastModified { get; set; } = DateTime.MinValue;
     public DateTime? finishEarlyTo { get; set; }
-    public DateTime? finishOptimumTo { get; set; } = DateTime.MinValue;
+    public DateTime? finishOptimumTo { get; set; }
     public DateTime? finishLateTo { get; set; }
     public DateTime? startOfConstruction { get; set; }
     public DateTime? endOfConstruction { get; set; }

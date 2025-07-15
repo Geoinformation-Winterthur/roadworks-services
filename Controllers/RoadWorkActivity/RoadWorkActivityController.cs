@@ -156,6 +156,10 @@ namespace roadwork_portal_service.Controllers
                             projectFeatureFromDb.properties.finishEarlyTo = reader.GetDateTime(reader.GetOrdinal("date_from"));
                         if (!reader.IsDBNull(reader.GetOrdinal("date_to")))
                             projectFeatureFromDb.properties.finishLateTo = reader.GetDateTime(reader.GetOrdinal("date_to"));
+                        if (!reader.IsDBNull(reader.GetOrdinal("date_optimum")))
+                            projectFeatureFromDb.properties.finishEarlyTo = reader.GetDateTime(reader.GetOrdinal("date_optimum"));
+                        else
+                            projectFeatureFromDb.properties.finishEarlyTo = null;
                         projectFeatureFromDb.properties.costs = reader.IsDBNull(reader.GetOrdinal("costs"))
                             ? 0m
                             : reader.GetDecimal(reader.GetOrdinal("costs"));
@@ -314,9 +318,7 @@ namespace roadwork_portal_service.Controllers
                                 reader.GetDateTime(reader.GetOrdinal("date_info_close"));
                         if (!reader.IsDBNull(reader.GetOrdinal("is_aggloprog")))
                             projectFeatureFromDb.properties.isAggloprog = reader.GetBoolean(reader.GetOrdinal("is_aggloprog"));
-                        projectFeatureFromDb.properties.finishOptimumTo = reader.IsDBNull(reader.GetOrdinal("date_optimum"))
-                            ? DateTime.MinValue
-                            : reader.GetDateTime(reader.GetOrdinal("date_optimum"));
+                        
                         if (!reader.IsDBNull(reader.GetOrdinal("date_of_acceptance")))
                             projectFeatureFromDb.properties.dateOfAcceptance =
                                 reader.GetDateTime(reader.GetOrdinal("date_of_acceptance"));
