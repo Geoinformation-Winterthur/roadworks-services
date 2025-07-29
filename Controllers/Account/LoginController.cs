@@ -154,13 +154,9 @@ public class LoginController : ControllerBase
                 string securityTokenString = new JwtSecurityTokenHandler().WriteToken(securityToken);
 
                 _logger.LogInformation("User " + receivedUser.mailAddress + " has logged in.");
-                string safeUserOK = receivedUser.mailAddress?.Replace("\n", "").Replace("\r", "").Trim()
-                                                                                .Split('@')[0]
-                                                                                .Split('.') is var nameParts && nameParts.Length == 2
-                                                                                ? nameParts[0] + nameParts[1].Substring(0, Math.Min(2, nameParts[1].Length))
-                                                                                : "";
-                string safeRoleOK = receivedUser.chosenRole?.Replace("\n", "").Replace("\r", "").Trim();
-                _eslogger.LogInformation("Login_OK;" + safeUserOK + ";" + safeRoleOK);
+                string safeUserOK = ExtractSafeUsername(receivedUser.mailAddress);
+                string safeRoleOK = receivedUser.chosenRole?.Replace("\n", "").Replace("\r", "").Trim();                
+                 _eslogger.LogWarning($"Login_FAILED;{safeUserOK};{safeRoleOK}");
                 return Ok(new { securityTokenString });
             }
             else
@@ -174,19 +170,15 @@ public class LoginController : ControllerBase
             _logger.LogWarning("User " + receivedUser.mailAddress + " could not be found in the database.");
         }
         _logger.LogWarning("User " + receivedUser.mailAddress + " is not authenticated.");
-        string safeUser = receivedUser.mailAddress?.Replace("\n", "").Replace("\r", "").Trim()
-                                                                    .Split('@')[0]
-                                                                    .Split('.') is var nameParts2 && nameParts2.Length == 2
-                                                                    ? nameParts2[0] + nameParts2[1].Substring(0, Math.Min(2, nameParts2[1].Length))
-                                                                    : "";;
+        string safeUser = ExtractSafeUsername(receivedUser.mailAddress);
         string safeRole = receivedUser.chosenRole?.Replace("\n", "").Replace("\r", "").Trim();
-        _eslogger.LogWarning("Login_FAILED;" + safeUser + ";" + safeRole);
+        _eslogger.LogWarning($"Login_FAILED;{safeUser};{safeRole}");
         return BadRequest("No or bad login credentials provided.");
     }
 
 
     [HttpPost("EndSession")]
-    [ProducesResponseType(StatusCodes.Status200OK)]    
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public IActionResult EndSession([FromBody] EndSessionRequest request)
     {
@@ -195,8 +187,10 @@ public class LoginController : ControllerBase
             _logger.LogWarning("No user provided for logout.");
             return BadRequest("No user provided for logout.");
         }
-                
-        _eslogger.LogInformation($"Logout_OK;{request.LogoutUser}");
+
+        string safeUser = ExtractSafeUsername(request.LogoutUser);
+
+        _eslogger.LogInformation($"Logout_OK;{safeUser}");
         return Ok(new { message = "Logged out" });
     }
 
@@ -307,6 +301,26 @@ public class LoginController : ControllerBase
 
             pgConn.Close();
         }
+    }
+    
+    private static string ExtractSafeUsername(string? email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+            return "";
+
+        var cleaned = email.Replace("\n", "").Replace("\r", "").Trim();
+        var atParts = cleaned.Split('@');
+        if (atParts.Length == 0) return "";
+
+        var nameParts = atParts[0].Split('.');
+        if (nameParts.Length == 2)
+        {
+            var first = nameParts[0];
+            var second = nameParts[1];
+            return first + second.Substring(0, Math.Min(2, second.Length));
+        }
+
+        return "Failed";
     }
 
 }
