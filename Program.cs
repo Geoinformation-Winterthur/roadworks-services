@@ -3,6 +3,7 @@
 //      Copyright (c) Vermessungsamt Winterthur. All rights reserved.
 // </copyright>
 using roadwork_portal_service.Configuration;
+using roadwork_portal_service.ElasticsearchLogger;
 using Serilog;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -12,9 +13,7 @@ using Prometheus;
 using NetTopologySuite.IO.Converters;
 using Microsoft.OpenApi.Models;
 
-Log.Logger = new LoggerConfiguration()
-            .ReadFrom.Configuration(AppConfig.Configuration)
-            .CreateLogger();
+
 
 try
 {
@@ -52,6 +51,31 @@ try
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(securityKey))
             };
         });
+
+
+    var useElastic = builder.Configuration.GetValue<bool>("ElasticLogger:Use");
+
+    if (useElastic)
+    {
+        var elasticUrl = builder.Configuration.GetValue<string>("ElasticLogger:EndpointUrl");
+        var elasticApplication = builder.Configuration.GetValue<string>("ElasticLogger:Application");
+
+        var environment = !string.IsNullOrWhiteSpace(AppConfig.Configuration.GetValue<string>("Environment"))
+                            ? AppConfig.Configuration.GetValue<string>("Environment")
+                            : AppConfig.connectionString.IndexOf("wsstadt723", StringComparison.OrdinalIgnoreCase) > -1
+                                ? "Test"
+                                : AppConfig.connectionString.IndexOf("wsstadt724", StringComparison.OrdinalIgnoreCase) > -1
+                                    ? "Production"
+                                    : "Unknown";
+        Console.WriteLine("I am configured to use Elasticsearch logging.", elasticApplication, environment);
+
+        builder.Services.AddSingleton<IElasticsearchLogger>(new ElasticsearchLogger(elasticUrl, environment, elasticApplication));
+    }
+    else
+    {
+        builder.Services.AddSingleton<IElasticsearchLogger, ElasticsearchLoggerNotUsed>();
+        Console.WriteLine("I am configured to NOT use Elasticsearch logging.");
+    }
 
     builder.Services.AddControllers()
             .AddJsonOptions(options => {
@@ -98,6 +122,12 @@ try
     */
 
     var app = builder.Build();
+
+    var elasticLogger = app.Services.GetRequiredService<IElasticsearchLogger>();
+
+    Log.Logger = new LoggerConfiguration()
+        .ReadFrom.Configuration(AppConfig.Configuration)       
+        .CreateLogger();
 
     app.UseSerilogRequestLogging();
 

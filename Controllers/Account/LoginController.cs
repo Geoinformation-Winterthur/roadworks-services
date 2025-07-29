@@ -11,6 +11,7 @@ using Npgsql;
 using roadwork_portal_service.Model;
 using roadwork_portal_service.Configuration;
 using roadwork_portal_service.Helper;
+using roadwork_portal_service.ElasticsearchLogger;
 using Microsoft.AspNetCore.Connections.Features;
 
 namespace roadwork_portal_service.Controllers;
@@ -20,10 +21,16 @@ namespace roadwork_portal_service.Controllers;
 public class LoginController : ControllerBase
 {
     private readonly ILogger<LoginController> _logger;
+    private readonly IElasticsearchLogger _eslogger;
+    public class EndSessionRequest
+    {
+        public string LogoutUser { get; set; }
+    }
 
-    public LoginController(ILogger<LoginController> logger)
+    public LoginController(ILogger<LoginController> logger, IElasticsearchLogger eslogger)
     {
         _logger = logger;
+        _eslogger = eslogger;        
     }
 
     /// <summary>
@@ -147,6 +154,13 @@ public class LoginController : ControllerBase
                 string securityTokenString = new JwtSecurityTokenHandler().WriteToken(securityToken);
 
                 _logger.LogInformation("User " + receivedUser.mailAddress + " has logged in.");
+                string safeUserOK = receivedUser.mailAddress?.Replace("\n", "").Replace("\r", "").Trim()
+                                                                                .Split('@')[0]
+                                                                                .Split('.') is var nameParts && nameParts.Length == 2
+                                                                                ? nameParts[0] + nameParts[1].Substring(0, Math.Min(2, nameParts[1].Length))
+                                                                                : "";
+                string safeRoleOK = receivedUser.chosenRole?.Replace("\n", "").Replace("\r", "").Trim();
+                _eslogger.LogInformation("Login_OK;" + safeUserOK + ";" + safeRoleOK);
                 return Ok(new { securityTokenString });
             }
             else
@@ -160,7 +174,30 @@ public class LoginController : ControllerBase
             _logger.LogWarning("User " + receivedUser.mailAddress + " could not be found in the database.");
         }
         _logger.LogWarning("User " + receivedUser.mailAddress + " is not authenticated.");
+        string safeUser = receivedUser.mailAddress?.Replace("\n", "").Replace("\r", "").Trim()
+                                                                    .Split('@')[0]
+                                                                    .Split('.') is var nameParts2 && nameParts2.Length == 2
+                                                                    ? nameParts2[0] + nameParts2[1].Substring(0, Math.Min(2, nameParts2[1].Length))
+                                                                    : "";;
+        string safeRole = receivedUser.chosenRole?.Replace("\n", "").Replace("\r", "").Trim();
+        _eslogger.LogWarning("Login_FAILED;" + safeUser + ";" + safeRole);
         return BadRequest("No or bad login credentials provided.");
+    }
+
+
+    [HttpPost("EndSession")]
+    [ProducesResponseType(StatusCodes.Status200OK)]    
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public IActionResult EndSession([FromBody] EndSessionRequest request)
+    {
+        if (request == null || request.LogoutUser == null || request.LogoutUser.Trim().Equals(""))
+        {
+            _logger.LogWarning("No user provided for logout.");
+            return BadRequest("No user provided for logout.");
+        }
+                
+        _eslogger.LogInformation($"Logout_OK;{request.LogoutUser}");
+        return Ok(new { message = "Logged out" });
     }
 
 
