@@ -48,13 +48,24 @@ namespace roadwork_portal_service.ElasticsearchLogger
 
         public async Task<bool> SendLogAsync(string level, string message)
         {
+            var messageParts = message.Split(";");
+
+            var action = messageParts.Length > 0 ? messageParts[0] : "";
+            var email = messageParts.Length > 1 ? messageParts[1] : "";
+            var role = messageParts.Length > 2 ? messageParts[2] : "";                                    
+
             var logEntry = new
             {
                 @timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"),
                 level,
                 Application = _elasticApplication,
                 Environment = _environment,
-                message                
+                message = message,
+                user = new {
+                    action = action,
+                    email = email,
+                    role = role
+                }
             };
 
             var json = JsonSerializer.Serialize(logEntry);
