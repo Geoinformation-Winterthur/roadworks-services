@@ -34,7 +34,7 @@ namespace roadwork_portal_service.Controllers
                         "Erstellungsdatum;Datum letzte Bearbeitung;Datum von;Datum bis;Ist privat;" +
                         "Status;Im Internet publiziert;Rechnungsadresse 1;Rechnungsadresse 2;PDB-FID;" +
                         "Strabako-Nr.;Investitionsnummer;Datum SKS;Datum KAP;Datum OKS;Datum GL-TBA;" +
-                        "Projektnummer;Kommentar;Abschnitt;URL;Projekttyp;Übergeordnete Massnahme;Wunschjahr von;" +
+                        "Projektnummer;Kommentar;Abschnitt;URL;Projekttyp;Projekt-Art;Übergeordnete Massnahme;Wunschjahr von;" +
                         "Wunschjahr bis;Vorstudie;date_optimum;Baubeginn;Bauende;" +
                         "Abnahmedatum;consult_due;SKS, genehmigt;KAP, genehmigt;OKS, genehmigt;" +
                         "GL TBA, genehmigt;date_planned;date_accept;Garantie;is_study;Plantermin: Vorstudie Start;" +
@@ -104,7 +104,7 @@ namespace roadwork_portal_service.Controllers
                             r.in_internet, r.billing_address1, r.billing_address2,
                             r.pdb_fid, r.strabako_no, r.investment_no, r.date_sks,
                             r.date_kap, r.date_oks, r.date_gl_tba, r.project_no,
-                            r.comment, r.section, r.url, r.projecttype,
+                            r.comment, r.section, r.url, r.projecttype, r.projectkind,
                             r.overarching_measure, r.desired_year_from,
                             r.desired_year_to, r.prestudy, r.date_optimum,
                             r.start_of_construction, r.end_of_construction,
@@ -159,6 +159,7 @@ namespace roadwork_portal_service.Controllers
                             resultCsv += reader.IsDBNull(reader.GetOrdinal("section")) ? ";" : _sanitizeForCsv(reader.GetString(reader.GetOrdinal("section")) + ";");
                             resultCsv += reader.IsDBNull(reader.GetOrdinal("url")) ? ";" : _sanitizeForCsv(reader.GetString(reader.GetOrdinal("url")) + ";");
                             resultCsv += reader.IsDBNull(reader.GetOrdinal("projecttype")) ? ";" : _sanitizeForCsv(reader.GetString(reader.GetOrdinal("projecttype")) + ";");
+                            resultCsv += reader.IsDBNull(reader.GetOrdinal("projectkind")) ? ";" : _sanitizeForCsv(reader.GetString(reader.GetOrdinal("projectkind")) + ";");
                             resultCsv += reader.IsDBNull(reader.GetOrdinal("overarching_measure")) ? ";" : reader.GetBoolean(reader.GetOrdinal("overarching_measure")) + ";";
                             resultCsv += reader.IsDBNull(reader.GetOrdinal("desired_year_from")) ? ";" : reader.GetInt32(reader.GetOrdinal("desired_year_from")) + ";";
                             resultCsv += reader.IsDBNull(reader.GetOrdinal("desired_year_to")) ? ";" : reader.GetInt32(reader.GetOrdinal("desired_year_to")) + ";";
