@@ -58,7 +58,7 @@ namespace roadwork_portal_service.Controllers
                         r.date_start_suspended, r.date_start_coordinated, r.sks_relevant,
                         r.costs_last_modified, r.costs_last_modified_by,
                         cm.first_name AS cm_first_name, cm.last_name AS cm_last_name,
-                        r.geom
+                        r.date_sks_planned, r.geom
                     FROM ""wtb_ssp_roadworkactivities"" r
                     LEFT JOIN ""wtb_ssp_users"" pm ON r.projectmanager = pm.uuid
                     LEFT JOIN ""wtb_ssp_users"" ta ON r.traffic_agent = ta.uuid
