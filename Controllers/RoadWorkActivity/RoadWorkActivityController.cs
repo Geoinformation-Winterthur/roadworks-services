@@ -199,6 +199,9 @@ namespace roadwork_portal_service.Controllers
                         projectFeatureFromDb.properties.dateSks = reader.IsDBNull(reader.GetOrdinal("date_sks"))
                             ? null
                             : reader.GetDateTime(reader.GetOrdinal("date_sks"));
+                        projectFeatureFromDb.properties.dateSksPlanned = reader.IsDBNull(reader.GetOrdinal("date_sks_planned"))
+                            ? null
+                            : reader.GetDateTime(reader.GetOrdinal("date_sks_planned"));
                         projectFeatureFromDb.properties.dateKap = reader.IsDBNull(reader.GetOrdinal("date_kap"))
                             ? null
                             : reader.GetDateTime(reader.GetOrdinal("date_kap"));
@@ -625,7 +628,7 @@ namespace roadwork_portal_service.Controllers
                                     billing_address2, investment_no, date_sks,
                                     date_kap, private, date_consult_start1, date_consult_end1,
                                     date_consult_start2, date_consult_end2, date_report_start, date_report_end,
-                                    url, sks_relevant, strabako_no, geom)
+                                    url, sks_relevant, strabako_no, date_sks_planned, geom)
                                     VALUES (@uuid, @name, @projectmanager, @traffic_agent,
                                     @description, @project_no, @comment, @section, @type, @projecttype, @projectkind,
                                     @overarching_measure, @desired_year_from, @desired_year_to, @prestudy, 
@@ -635,7 +638,7 @@ namespace roadwork_portal_service.Controllers
                                     @billing_address2, @investment_no, @date_sks, @date_kap,
                                     @private, @date_consult_start1, @date_consult_end1, @date_consult_start2, @date_consult_end2,
                                     @date_report_start, @date_report_end, @url, @sks_relevant,
-                                    @strabako_no, @geom)";
+                                    @strabako_no, @date_sks_planned, @geom)";
                     insertComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
                     if (roadWorkActivityFeature.properties.projectManager.uuid != "")
                     {
@@ -681,6 +684,7 @@ namespace roadwork_portal_service.Controllers
                     insertComm.Parameters.AddWithValue("date_of_acceptance", roadWorkActivityFeature.properties.dateOfAcceptance != null ? roadWorkActivityFeature.properties.dateOfAcceptance : DBNull.Value);
                     insertComm.Parameters.AddWithValue("project_no", roadWorkActivityFeature.properties.projectNo != null ? roadWorkActivityFeature.properties.projectNo : DBNull.Value);
                     insertComm.Parameters.AddWithValue("private", roadWorkActivityFeature.properties.isPrivate);
+                    insertComm.Parameters.AddWithValue("date_sks_planned", roadWorkActivityFeature.properties.dateSksPlanned != null ? roadWorkActivityFeature.properties.dateSksPlanned : DBNull.Value);
                     insertComm.Parameters.AddWithValue("date_consult_start1", DateTime.Now.AddDays(7));
                     insertComm.Parameters.AddWithValue("date_consult_end1", DateTime.Now.AddDays(28));
                     insertComm.Parameters.AddWithValue("date_consult_start2", DateTime.Now.AddDays(35));
@@ -1236,7 +1240,7 @@ namespace roadwork_portal_service.Controllers
                                     date_info_start=@date_info_start, date_info_end=@date_info_end,
                                     date_info_close=@date_info_close, is_aggloprog=@is_aggloprog,
                                     project_study_approved=@project_study_approved, study_approved=@study_approved,
-                                    sks_relevant=@sks_relevant, strabako_no=@strabako_no,";
+                                    sks_relevant=@sks_relevant, strabako_no=@strabako_no, date_sks_planned=@date_sks_planned,";
 
                     if (costsInDb != roadWorkActivityFeature.properties.costs){
                         updateComm.CommandText += "costs_last_modified=@costs_last_modified, ";
@@ -1321,6 +1325,7 @@ namespace roadwork_portal_service.Controllers
                     updateComm.Parameters.AddWithValue("url", roadWorkActivityFeature.properties.url != null ? roadWorkActivityFeature.properties.url : DBNull.Value);
                     updateComm.Parameters.AddWithValue("investment_no", roadWorkActivityFeature.properties.investmentNo);
                     updateComm.Parameters.AddWithValue("date_sks_real", roadWorkActivityFeature.properties.dateSksReal != null ? roadWorkActivityFeature.properties.dateSksReal : DBNull.Value);
+                    updateComm.Parameters.AddWithValue("date_sks_planned", roadWorkActivityFeature.properties.dateSksPlanned != null ? roadWorkActivityFeature.properties.dateSksPlanned : DBNull.Value);
                     updateComm.Parameters.AddWithValue("date_kap_real", roadWorkActivityFeature.properties.dateKapReal != null ? roadWorkActivityFeature.properties.dateKapReal : DBNull.Value);
                     updateComm.Parameters.AddWithValue("date_oks_real", roadWorkActivityFeature.properties.dateOksReal != null ? roadWorkActivityFeature.properties.dateOksReal : DBNull.Value);
                     updateComm.Parameters.AddWithValue("date_gl_tba", roadWorkActivityFeature.properties.dateGlTba != null ? roadWorkActivityFeature.properties.dateGlTba : DBNull.Value);

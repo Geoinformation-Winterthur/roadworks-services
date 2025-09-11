@@ -44,6 +44,7 @@ public class RoadWorkActivityProperties
     public string? strabakoNo { get; set; } = "";
     public DateTime? dateSks { get; set; }
     public DateTime? dateSksReal { get; set; }
+    public DateTime? dateSksPlanned { get; set; }
     public DateTime? dateKap { get; set; }
     public DateTime? dateKapReal { get; set; }
     public DateTime? dateOks { get; set; }
