@@ -75,14 +75,15 @@ public class AppConfigController : ControllerBase
 
                 NpgsqlCommand deleteDatesComm = pgConn.CreateCommand();
                 deleteDatesComm.CommandText = @"DELETE FROM ""wtb_ssp_config_dates"" WHERE
-                        planneddate > current_timestamp";
+                        planneddate::timestamp >= CURRENT_DATE";
                 deleteDatesComm.ExecuteNonQuery();
 
-                DateTime today = DateTime.Now;
+                DateTime today = DateTime.Today;
+                DateTime todayDateOnly = new DateTime(today.Year, today.Month, today.Day, 0,0,0);
 
                 foreach (DateTime? plannedDateSks in configData.plannedDatesSks)
                 {
-                    if (plannedDateSks != null && plannedDateSks > today)
+                    if (plannedDateSks != null &&  plannedDateSks >= todayDateOnly)
                     {
                         NpgsqlCommand insertDatesComm = pgConn.CreateCommand();
                         insertDatesComm.CommandText = @"INSERT INTO ""wtb_ssp_config_dates""
@@ -96,7 +97,7 @@ public class AppConfigController : ControllerBase
 
                 foreach (DateTime? plannedDateKap in configData.plannedDatesKap)
                 {
-                    if (plannedDateKap != null && plannedDateKap > today)
+                    if (plannedDateKap != null && plannedDateKap >= todayDateOnly)
                     {
                         NpgsqlCommand insertDatesComm = pgConn.CreateCommand();
                         insertDatesComm.CommandText = @"INSERT INTO ""wtb_ssp_config_dates""
@@ -110,7 +111,7 @@ public class AppConfigController : ControllerBase
 
                 foreach (DateTime? plannedDateOks in configData.plannedDatesOks)
                 {
-                    if (plannedDateOks != null && plannedDateOks > today)
+                    if (plannedDateOks != null && plannedDateOks >= todayDateOnly)
                     {
                         NpgsqlCommand insertDatesComm = pgConn.CreateCommand();
                         insertDatesComm.CommandText = @"INSERT INTO ""wtb_ssp_config_dates""
@@ -214,7 +215,7 @@ public class AppConfigController : ControllerBase
             {
                 selectComm.CommandText = @"SELECT date_type, planneddate
                             FROM ""wtb_ssp_config_dates""
-                            WHERE planneddate > current_timestamp
+                            WHERE planneddate::timestamp >= CURRENT_DATE
                             ORDER BY planneddate ASC";
                 using (NpgsqlDataReader reader = selectComm.ExecuteReader())
                 {
