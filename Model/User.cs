@@ -19,6 +19,8 @@ public class User
     public Role grantedRoles { get; set; } = new Role();
     public string? chosenRole { get; set; }
     public string errorMessage { get; set; } = "";
+    public bool isDistributionList { get; set; } = false;
+    public bool isParticipantList { get; set; } = false;
 
     internal void setRole(string role)
     {

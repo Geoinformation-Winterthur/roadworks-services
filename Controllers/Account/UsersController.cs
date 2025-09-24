@@ -44,7 +44,8 @@ public class UsersController : ControllerBase
                                 u.pref_table_view, u.role_view,
                                 u.role_projectmanager, u.role_eventmanager,
                                 u.role_orderer, u.role_trafficmanager,
-                                u.role_territorymanager, u.role_administrator
+                                u.role_territorymanager, u.role_administrator,
+                                u.is_distribution_list, u.is_participant_list
                             FROM ""wtb_ssp_users"" u
                             LEFT JOIN ""wtb_ssp_organisationalunits"" o ON u.org_unit = o.uuid";
 
@@ -130,6 +131,8 @@ public class UsersController : ControllerBase
                         userFromDb.grantedRoles.trafficmanager = reader.GetBoolean(reader.GetOrdinal("role_trafficmanager"));
                         userFromDb.grantedRoles.territorymanager = reader.GetBoolean(reader.GetOrdinal("role_territorymanager"));
                         userFromDb.grantedRoles.administrator = reader.GetBoolean(reader.GetOrdinal("role_administrator"));
+                        userFromDb.isDistributionList = reader.GetBoolean(reader.GetOrdinal("is_distribution_list"));
+                        userFromDb.isParticipantList = reader.GetBoolean(reader.GetOrdinal("is_participant_list"));                        
 
                         usersFromDb.Add(userFromDb);
                     }
@@ -209,17 +212,18 @@ public class UsersController : ControllerBase
                     last_name, first_name, e_mail, pwd, org_unit, active,
                     pref_table_view, role_projectmanager, role_eventmanager,
                     role_orderer, role_trafficmanager, role_territorymanager,
-                    role_view, role_administrator)
+                    role_view, role_administrator, is_distribution_list, is_participant_list)
                     VALUES(@uuid, @last_name, @first_name, @e_mail, @pwd,
                     @org_unit, @active, false, @role_projectmanager,
                     @role_eventmanager, @role_orderer, @role_trafficmanager,
-                    @role_territorymanager, @role_view, @role_administrator)";
+                    @role_territorymanager, @role_view, @role_administrator, 
+                    @is_distribution_list, @is_participant_list)";
 
             Guid userUuid = Guid.NewGuid();
             user.uuid = userUuid.ToString();
             insertComm.Parameters.AddWithValue("uuid", new Guid(user.uuid));
             insertComm.Parameters.AddWithValue("last_name", user.lastName);
-            insertComm.Parameters.AddWithValue("first_name", user.firstName);
+            insertComm.Parameters.AddWithValue("first_name", user.firstName);            
             insertComm.Parameters.AddWithValue("e_mail", user.mailAddress);
             string hashedPassphrase = HelperFunctions.hashPassphrase(userPassphrase);
             insertComm.Parameters.AddWithValue("pwd", hashedPassphrase);
@@ -233,6 +237,9 @@ public class UsersController : ControllerBase
             insertComm.Parameters.AddWithValue("role_trafficmanager", user.grantedRoles.trafficmanager);
             insertComm.Parameters.AddWithValue("role_territorymanager", user.grantedRoles.territorymanager);
             insertComm.Parameters.AddWithValue("role_administrator", user.grantedRoles.administrator);
+            
+            insertComm.Parameters.AddWithValue("is_distribution_list", user.isDistributionList);
+            insertComm.Parameters.AddWithValue("is_participant_list", user.isParticipantList);
                     
             int noAffectedRows = insertComm.ExecuteNonQuery();
 
@@ -373,7 +380,9 @@ public class UsersController : ControllerBase
                         role_trafficmanager=@role_trafficmanager,
                         role_territorymanager=@role_territorymanager,
                         role_administrator=@role_administrator,
-                        org_unit=@org_unit, ";
+                        org_unit=@org_unit,
+                        is_distribution_list=@is_distribution_list,
+                        is_participant_list=@is_participant_list,";
                 }
 
                 updateComm.CommandText += @"active=@active,
@@ -393,6 +402,8 @@ public class UsersController : ControllerBase
                     updateComm.Parameters.AddWithValue("role_territorymanager", userToUpdate.grantedRoles.territorymanager);
                     updateComm.Parameters.AddWithValue("role_administrator", userToUpdate.grantedRoles.administrator);
                     updateComm.Parameters.AddWithValue("org_unit", new Guid(userToUpdate.organisationalUnit.uuid));
+                    updateComm.Parameters.AddWithValue("is_distribution_list", userToUpdate.isDistributionList);
+                    updateComm.Parameters.AddWithValue("is_participant_list", userToUpdate.isParticipantList);
                 }
 
                 updateComm.Parameters.AddWithValue("active", userToUpdate.active);

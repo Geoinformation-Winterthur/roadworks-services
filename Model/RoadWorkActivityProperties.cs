@@ -12,7 +12,11 @@ public class RoadWorkActivityProperties
     public User? trafficAgent { get; set; } = new User();
     public string? description { get; set; } = "";
     public string? projectNo { get; set; } = "";
+    public string? roadWorkActivityNo { get; set; } = "";
     public string? comment { get; set; } = "";
+    public string? sessionComment1 { get; set; } = "";
+    public string? sessionComment2 { get; set; } = "";
+    public string? sessionComment3 { get; set; } = "";
     public string? section { get; set; } = "";
     public string? type { get; set; } = "";
     public string projectType { get; set; } = "";

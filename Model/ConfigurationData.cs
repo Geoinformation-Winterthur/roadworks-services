@@ -13,5 +13,7 @@ public class ConfigurationData
     public DateTime?[] plannedDatesKap { get; set; } = new DateTime?[0];
     public DateTime?[] plannedDatesOks { get; set; } = new DateTime?[0];
 
+    public long?[] sksNos { get; set; } = new long?[0];
+
     public string errorMessage { get; set; } = "";
 }

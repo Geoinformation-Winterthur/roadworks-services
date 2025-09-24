@@ -162,7 +162,7 @@ public class AppConfigController : ControllerBase
 
             if (pastDates)
             {
-                selectComm.CommandText = @"SELECT planneddate
+                selectComm.CommandText = @"SELECT planneddate, sks_no
                             FROM ""wtb_ssp_config_dates""
                             WHERE date_type='SKS' AND planneddate < current_timestamp
                             ORDER BY planneddate DESC
@@ -170,13 +170,22 @@ public class AppConfigController : ControllerBase
                 using (NpgsqlDataReader reader = selectComm.ExecuteReader())
                 {
                     List<DateTime?> plannedDatesSks = new List<DateTime?>();
+                    List<long?> sksNos = new List<long?>();
+
+
                     while (reader.Read())
                     {
                         DateTime? dateSks = reader.IsDBNull(0) ? null : reader.GetDateTime(0);
-                        if(dateSks != null)
+
+                        if (dateSks != null)
                             plannedDatesSks.Add((DateTime)dateSks);
+
+                        long? sksNo       = reader.IsDBNull(1) ? (long?)null     : reader.GetInt64(1);
+                        if (sksNo != null)
+                            sksNos.Add((long)sksNo);
                     }
                     result.plannedDatesSks = plannedDatesSks.ToArray();
+                    result.sksNos = sksNos.ToArray();
                 }
                 selectComm.CommandText = @"SELECT planneddate
                             FROM ""wtb_ssp_config_dates""
@@ -219,7 +228,7 @@ public class AppConfigController : ControllerBase
                             ORDER BY planneddate ASC";
                 using (NpgsqlDataReader reader = selectComm.ExecuteReader())
                 {
-                    List<DateTime?> plannedDatesSks = new List<DateTime?>();
+                    List<DateTime?> plannedDatesSks = new List<DateTime?>();                    
                     List<DateTime?> plannedDatesKap = new List<DateTime?>();
                     List<DateTime?> plannedDatesOks = new List<DateTime?>();
                     while (reader.Read())
