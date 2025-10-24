@@ -156,7 +156,7 @@ public class LoginController : ControllerBase
                 _logger.LogInformation("User " + receivedUser.mailAddress + " has logged in.");
                 string safeUserOK = ExtractSafeUsername(receivedUser.mailAddress);
                 string safeRoleOK = receivedUser.chosenRole?.Replace("\n", "").Replace("\r", "").Trim();                
-                 _eslogger.LogWarning($"Login_FAILED;{safeUserOK};{safeRoleOK}");
+                _eslogger.LogWarning($"Login_OK;{safeUserOK};{safeRoleOK}");
                 return Ok(new { securityTokenString });
             }
             else

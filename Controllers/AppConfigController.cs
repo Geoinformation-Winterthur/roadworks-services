@@ -87,8 +87,8 @@ public class AppConfigController : ControllerBase
                     {
                         NpgsqlCommand insertDatesComm = pgConn.CreateCommand();
                         insertDatesComm.CommandText = @"INSERT INTO ""wtb_ssp_config_dates""
-                        (date_type, planneddate)
-                        VALUES (@date_type, @planneddate)";
+                        (date_type, planneddate, sks_no)
+                        VALUES (@date_type, @planneddate, public.next_sks_no())";
                         insertDatesComm.Parameters.AddWithValue("date_type", "SKS");
                         insertDatesComm.Parameters.AddWithValue("planneddate", plannedDateSks);
                         insertDatesComm.ExecuteNonQuery();
@@ -167,12 +167,11 @@ public class AppConfigController : ControllerBase
                             WHERE date_type='SKS' AND planneddate < current_timestamp
                             ORDER BY planneddate DESC
                             LIMIT 5";
+                List<long?> sksNos = new List<long?>();
+
                 using (NpgsqlDataReader reader = selectComm.ExecuteReader())
                 {
                     List<DateTime?> plannedDatesSks = new List<DateTime?>();
-                    List<long?> sksNos = new List<long?>();
-
-
                     while (reader.Read())
                     {
                         DateTime? dateSks = reader.IsDBNull(0) ? null : reader.GetDateTime(0);
@@ -180,7 +179,7 @@ public class AppConfigController : ControllerBase
                         if (dateSks != null)
                             plannedDatesSks.Add((DateTime)dateSks);
 
-                        long? sksNo       = reader.IsDBNull(1) ? (long?)null     : reader.GetInt64(1);
+                        long? sksNo = reader.IsDBNull(1) ? (long?)null : reader.GetInt64(1);
                         if (sksNo != null)
                             sksNos.Add((long)sksNo);
                     }
@@ -198,7 +197,7 @@ public class AppConfigController : ControllerBase
                     while (reader.Read())
                     {
                         DateTime? dateKap = reader.IsDBNull(0) ? null : reader.GetDateTime(0);
-                        if(dateKap != null)
+                        if (dateKap != null)
                             plannedDatesKap.Add((DateTime)dateKap);
                     }
                     result.plannedDatesKap = plannedDatesKap.ToArray();
@@ -214,7 +213,7 @@ public class AppConfigController : ControllerBase
                     while (reader.Read())
                     {
                         DateTime? dateOks = reader.IsDBNull(0) ? null : reader.GetDateTime(0);
-                        if(dateOks != null)
+                        if (dateOks != null)
                             plannedDatesOks.Add((DateTime)dateOks);
                     }
                     result.plannedDatesOks = plannedDatesOks.ToArray();
@@ -222,31 +221,40 @@ public class AppConfigController : ControllerBase
             }
             else
             {
-                selectComm.CommandText = @"SELECT date_type, planneddate
+                selectComm.CommandText = @"SELECT date_type, planneddate, sks_no
                             FROM ""wtb_ssp_config_dates""
                             WHERE planneddate::timestamp >= CURRENT_DATE
                             ORDER BY planneddate ASC";
                 using (NpgsqlDataReader reader = selectComm.ExecuteReader())
                 {
-                    List<DateTime?> plannedDatesSks = new List<DateTime?>();                    
+                    List<DateTime?> plannedDatesSks = new List<DateTime?>();
                     List<DateTime?> plannedDatesKap = new List<DateTime?>();
                     List<DateTime?> plannedDatesOks = new List<DateTime?>();
+                    List<long?> sksNos = new List<long?>();
                     while (reader.Read())
                     {
                         string dateType = reader.IsDBNull(0) ? "" : reader.GetString(0);
                         DateTime? plannedDate = reader.IsDBNull(1) ? null : reader.GetDateTime(1);
-                        if(plannedDate != null){
-                            if(dateType == "SKS")
+                        if (plannedDate != null)
+                        {
+                            if (dateType == "SKS")
+                            {
                                 plannedDatesSks.Add((DateTime)plannedDate);
-                            if(dateType == "OKS")
+                                long? sksNo = reader.IsDBNull(2) ? (long?)null : reader.GetInt64(2);
+                                if (sksNo != null)
+                                    sksNos.Add((long)sksNo);
+                            }
+                            if (dateType == "OKS")
                                 plannedDatesOks.Add((DateTime)plannedDate);
-                            if(dateType == "KAP")
+                            if (dateType == "KAP")
                                 plannedDatesKap.Add((DateTime)plannedDate);
                         }
+
                     }
                     result.plannedDatesSks = plannedDatesSks.ToArray();
                     result.plannedDatesOks = plannedDatesOks.ToArray();
                     result.plannedDatesKap = plannedDatesKap.ToArray();
+                    result.sksNos = sksNos.ToArray();
                 }
 
             }
