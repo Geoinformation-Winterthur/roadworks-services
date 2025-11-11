@@ -21,6 +21,7 @@ public class User
     public string errorMessage { get; set; } = "";
     public bool isDistributionList { get; set; } = false;
     public bool isParticipantList { get; set; } = false;
+    public string workArea { get; set; } = "";
 
     internal void setRole(string role)
     {
