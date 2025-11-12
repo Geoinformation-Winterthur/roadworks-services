@@ -87,6 +87,7 @@ public class RoadWorkActivityProperties
     public DateTime? dateInfoEnd { get; set; }
     public DateTime? dateInfoClose { get; set; }
     public bool? isAggloprog { get; set; } = false;
+    public bool? isTrafficRegulationRequired { get; set; } = false;
     public DateTime? dateStartInconsult1 { get; set; }
     public DateTime? dateStartInconsult2 { get; set; }
     public DateTime? dateStartVerified1 { get; set; }

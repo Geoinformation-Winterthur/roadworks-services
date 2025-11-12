@@ -52,7 +52,7 @@ namespace roadwork_portal_service.Controllers
                         r.date_plan_circ_start, r.date_plan_circ_end, r.date_consult_start1, r.date_consult_end1,
                         r.date_consult_start2, r.date_consult_end2, r.date_consult_close, r.date_report_start,
                         r.date_report_end, r.date_report_close, r.date_info_start,
-                        r.date_info_end, r.date_info_close, r.is_aggloprog, r.date_optimum,
+                        r.date_info_end, r.date_info_close, r.is_aggloprog, r.is_traffic_regulation_required, r.date_optimum,
                         r.date_of_acceptance, r.url,
                         r.project_study_approved, r.study_approved, r.date_sks_real,
                         r.date_kap_real, r.date_oks_real, r.date_gl_tba_real,
@@ -338,7 +338,8 @@ namespace roadwork_portal_service.Controllers
                                 reader.GetDateTime(reader.GetOrdinal("date_info_close"));
                         if (!reader.IsDBNull(reader.GetOrdinal("is_aggloprog")))
                             projectFeatureFromDb.properties.isAggloprog = reader.GetBoolean(reader.GetOrdinal("is_aggloprog"));
-                        
+                        if (!reader.IsDBNull(reader.GetOrdinal("is_traffic_regulation_required")))
+                            projectFeatureFromDb.properties.isTrafficRegulationRequired = reader.GetBoolean(reader.GetOrdinal("is_traffic_regulation_required"));                            
                         if (!reader.IsDBNull(reader.GetOrdinal("date_of_acceptance")))
                             projectFeatureFromDb.properties.dateOfAcceptance =
                                 reader.GetDateTime(reader.GetOrdinal("date_of_acceptance"));
@@ -1256,7 +1257,7 @@ namespace roadwork_portal_service.Controllers
                                     date_report_start=@date_report_start,
                                     date_report_end=@date_report_end, date_report_close=@date_report_close,
                                     date_info_start=@date_info_start, date_info_end=@date_info_end,
-                                    date_info_close=@date_info_close, is_aggloprog=@is_aggloprog,
+                                    date_info_close=@date_info_close, is_aggloprog=@is_aggloprog, is_traffic_regulation_required=@is_traffic_regulation_required,
                                     project_study_approved=@project_study_approved, study_approved=@study_approved,
                                     sks_relevant=@sks_relevant, strabako_no=@strabako_no, date_sks_planned=@date_sks_planned,";
 
@@ -1397,6 +1398,7 @@ namespace roadwork_portal_service.Controllers
                     updateComm.Parameters.AddWithValue("date_info_end", roadWorkActivityFeature.properties.dateInfoEnd != null ? roadWorkActivityFeature.properties.dateInfoEnd : DBNull.Value);
                     updateComm.Parameters.AddWithValue("date_info_close", roadWorkActivityFeature.properties.dateInfoClose != null ? roadWorkActivityFeature.properties.dateInfoClose : DBNull.Value);
                     updateComm.Parameters.AddWithValue("is_aggloprog", roadWorkActivityFeature.properties.isAggloprog != null ? roadWorkActivityFeature.properties.isAggloprog : DBNull.Value);
+                    updateComm.Parameters.AddWithValue("is_traffic_regulation_required", roadWorkActivityFeature.properties.isTrafficRegulationRequired != null ? roadWorkActivityFeature.properties.isTrafficRegulationRequired : DBNull.Value);
                     updateComm.Parameters.AddWithValue("sks_relevant", roadWorkActivityFeature.properties.isSksRelevant != null ? roadWorkActivityFeature.properties.isSksRelevant : DBNull.Value);
                     updateComm.Parameters.AddWithValue("strabako_no", roadWorkActivityFeature.properties.strabakoNo != null ? roadWorkActivityFeature.properties.strabakoNo : DBNull.Value);
                     if (costsInDb != roadWorkActivityFeature.properties.costs)
