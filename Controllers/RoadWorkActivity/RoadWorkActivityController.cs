@@ -44,7 +44,7 @@ namespace roadwork_portal_service.Controllers
                         r.comment, r.session_comment_1, r.session_comment_2, r.session_comment_3, r.section, r.type, r.projecttype, r.projectkind, r.overarching_measure,
                         r.desired_year_from, r.desired_year_to, r.prestudy, r.start_of_construction,
                         r.end_of_construction, r.consult_due, r.project_no, 
-                        public.get_year_seq_no(r.uuid, r.created) AS roadworkactivity_no, 
+                        r.roadworkactivity_no, 
                         r.private, r.date_accept,
                         r.date_guarantee, r.is_study, r.date_study_start, r.date_study_end,
                         r.is_desire, r.date_desire_start, r.date_desire_end, r.is_particip,

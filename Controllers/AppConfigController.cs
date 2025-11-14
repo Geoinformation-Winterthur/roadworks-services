@@ -88,7 +88,7 @@ public class AppConfigController : ControllerBase
                         NpgsqlCommand insertDatesComm = pgConn.CreateCommand();
                         insertDatesComm.CommandText = @"INSERT INTO ""wtb_ssp_config_dates""
                         (date_type, planneddate, sks_no)
-                        VALUES (@date_type, @planneddate, public.next_sks_no())";
+                        VALUES (@date_type, @planneddate, COALESCE(MAX(sks_no),0) +1)";
                         insertDatesComm.Parameters.AddWithValue("date_type", "SKS");
                         insertDatesComm.Parameters.AddWithValue("planneddate", plannedDateSks);
                         insertDatesComm.ExecuteNonQuery();
