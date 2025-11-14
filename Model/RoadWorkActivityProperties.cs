@@ -16,7 +16,6 @@ public class RoadWorkActivityProperties
     public string? comment { get; set; } = "";
     public string? sessionComment1 { get; set; } = "";
     public string? sessionComment2 { get; set; } = "";
-    public string? sessionComment3 { get; set; } = "";
     public string? section { get; set; } = "";
     public string? type { get; set; } = "";
     public string projectType { get; set; } = "";

@@ -222,10 +222,7 @@ namespace roadwork_portal_service.Controllers
                             : reader.GetString(reader.GetOrdinal("session_comment_1"));
                         projectFeatureFromDb.properties.sessionComment2 = reader.IsDBNull(reader.GetOrdinal("session_comment_2"))
                             ? ""
-                            : reader.GetString(reader.GetOrdinal("session_comment_2"));
-                        projectFeatureFromDb.properties.sessionComment3 = reader.IsDBNull(reader.GetOrdinal("session_comment_3"))
-                            ? ""
-                            : reader.GetString(reader.GetOrdinal("session_comment_3"));
+                            : reader.GetString(reader.GetOrdinal("session_comment_2"));                        
                         projectFeatureFromDb.properties.section = reader.IsDBNull(reader.GetOrdinal("section"))
                             ? ""
                             : reader.GetString(reader.GetOrdinal("section"));
@@ -685,8 +682,7 @@ namespace roadwork_portal_service.Controllers
                     insertComm.Parameters.AddWithValue("investment_no", roadWorkActivityFeature.properties.investmentNo == 0 ? DBNull.Value : roadWorkActivityFeature.properties.investmentNo);
                     insertComm.Parameters.AddWithValue("comment", roadWorkActivityFeature.properties.comment);
                     insertComm.Parameters.AddWithValue("session_comment_1", roadWorkActivityFeature.properties.sessionComment1);
-                    insertComm.Parameters.AddWithValue("session_comment_2", roadWorkActivityFeature.properties.sessionComment2);
-                    insertComm.Parameters.AddWithValue("session_comment_3", roadWorkActivityFeature.properties.sessionComment3);
+                    insertComm.Parameters.AddWithValue("session_comment_2", roadWorkActivityFeature.properties.sessionComment2);                    
                     insertComm.Parameters.AddWithValue("section", roadWorkActivityFeature.properties.section);
                     insertComm.Parameters.AddWithValue("type", roadWorkActivityFeature.properties.type);
                     insertComm.Parameters.AddWithValue("projecttype", roadWorkActivityFeature.properties.projectType == "" ?
@@ -1351,8 +1347,7 @@ namespace roadwork_portal_service.Controllers
                     updateComm.Parameters.AddWithValue("date_gl_tba_real", roadWorkActivityFeature.properties.dateGlTbaReal != null ? roadWorkActivityFeature.properties.dateGlTbaReal : DBNull.Value);
                     updateComm.Parameters.AddWithValue("comment", roadWorkActivityFeature.properties.comment);
                     updateComm.Parameters.AddWithValue("session_comment_1", roadWorkActivityFeature.properties.sessionComment1);
-                    updateComm.Parameters.AddWithValue("session_comment_2", roadWorkActivityFeature.properties.sessionComment2);
-                    updateComm.Parameters.AddWithValue("session_comment_3", roadWorkActivityFeature.properties.sessionComment3);
+                    updateComm.Parameters.AddWithValue("session_comment_2", roadWorkActivityFeature.properties.sessionComment2);                    
                     updateComm.Parameters.AddWithValue("section", roadWorkActivityFeature.properties.section);
                     updateComm.Parameters.AddWithValue("type", roadWorkActivityFeature.properties.type);
                     updateComm.Parameters.AddWithValue("projecttype", roadWorkActivityFeature.properties.projectType == "" ?
