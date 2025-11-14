@@ -41,7 +41,7 @@ namespace roadwork_portal_service.Controllers
                         r.costs, r.costs_type, r.status, r.in_internet,
                         r.billing_address1, r.billing_address2, r.investment_no, r.pdb_fid,
                         r.strabako_no, r.date_sks, r.date_kap, r.date_oks, r.date_gl_tba,
-                        r.comment, r.session_comment_1, r.session_comment_2, r.session_comment_3, r.section, r.type, r.projecttype, r.projectkind, r.overarching_measure,
+                        r.comment, r.session_comment_1, r.session_comment_2, r.section, r.type, r.projecttype, r.projectkind, r.overarching_measure,
                         r.desired_year_from, r.desired_year_to, r.prestudy, r.start_of_construction,
                         r.end_of_construction, r.consult_due, r.project_no, 
                         r.roadworkactivity_no, 
@@ -632,7 +632,7 @@ namespace roadwork_portal_service.Controllers
                     NpgsqlCommand insertComm = pgConn.CreateCommand();
                     insertComm.CommandText = @"INSERT INTO ""wtb_ssp_roadworkactivities""
                                     (uuid, name, projectmanager, traffic_agent, description,
-                                    project_no, roadworkactivity_no, comment, session_comment_1, session_comment_2, session_comment_3, section, type, projecttype, projectkind,
+                                    project_no, roadworkactivity_no, comment, session_comment_1, session_comment_2, section, type, projecttype, projectkind,
                                     overarching_measure, desired_year_from, desired_year_to, prestudy, 
                                     start_of_construction, end_of_construction, consult_due,
                                     created, last_modified, date_from, date_optimum, date_to,
@@ -642,7 +642,22 @@ namespace roadwork_portal_service.Controllers
                                     date_consult_start2, date_consult_end2, date_report_start, date_report_end,
                                     url, sks_relevant, strabako_no, date_sks_planned, geom)
                                     VALUES (@uuid, @name, @projectmanager, @traffic_agent,
-                                    @description, @project_no, @roadworkactivity_no, @comment, @session_comment_1, @session_comment_2, @session_comment_3, @section, @type, @projecttype, @projectkind,
+                                    @description, @project_no, 
+                                    (
+                                        SELECT
+                                            to_char(current_timestamp, 'YYYY')  -- year prefix
+                                            || '_' ||
+                                            (
+                                                COALESCE(
+                                                    MAX(split_part(r.roadworkactivity_no, '_', 2)::int),
+                                                    0
+                                                ) + 1
+                                            )::text
+                                        FROM wtb_ssp_roadworkactivities r
+                                        WHERE split_part(r.roadworkactivity_no, '_', 1)
+                                            = to_char(current_timestamp, 'YYYY')
+                                    ),
+                                    @comment, @session_comment_1, @session_comment_2, @section, @type, @projecttype, @projectkind,
                                     @overarching_measure, @desired_year_from, @desired_year_to, @prestudy, 
                                     @start_of_construction, @end_of_construction, @consult_due,
                                     current_timestamp, current_timestamp, @date_from, @date_optimum,
@@ -1226,7 +1241,7 @@ namespace roadwork_portal_service.Controllers
                     updateComm.CommandText = @"UPDATE ""wtb_ssp_roadworkactivities""
                                     SET name=@name, projectmanager=@projectmanager,
                                     traffic_agent=@traffic_agent, description=@description,
-                                    comment=@comment, session_comment_1=@session_comment_1, session_comment_2=@session_comment_2, session_comment_3=@session_comment_3, section=@section, type=@type,
+                                    comment=@comment, session_comment_1=@session_comment_1, session_comment_2=@session_comment_2, section=@section, type=@type,
                                     projecttype=@projecttype, projectkind=@projectkind, overarching_measure=@overarching_measure,
                                     desired_year_from=@desired_year_from, desired_year_to=@desired_year_to, prestudy=@prestudy, 
                                     start_of_construction=@start_of_construction, date_of_acceptance=@date_of_acceptance,
