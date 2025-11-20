@@ -194,9 +194,8 @@ namespace roadwork_portal_service.Controllers
         {
             const string sql = @"
                 SELECT planneddate, sks_no, acceptance_1, attachments, misc_items,
-                       present_user_ids, distribution_user_ids, report_type
+                       present_user_ids, distribution_user_ids, report_type, date_type
                 FROM   public.wtb_ssp_config_dates
-                WHERE  date_type = 'SKS'
                 ORDER  BY planneddate DESC;";
 
             var result = new List<SessionDto>();
@@ -217,6 +216,7 @@ namespace roadwork_portal_service.Controllers
                 const int iPresentUserIds = 5;
                 const int iDistributionUserIds = 6;
                 const int iReportType = 7;
+                const int iDateType = 8;
 
 
                 if (reader.IsDBNull(iPlannedDate)) continue;
@@ -231,6 +231,7 @@ namespace roadwork_portal_service.Controllers
                     presentUserIds = reader.IsDBNull(iPresentUserIds) ? null : reader.GetString(iPresentUserIds),
                     distributionUserIds = reader.IsDBNull(iDistributionUserIds) ? null : reader.GetString(iDistributionUserIds),
                     reportType = reader.IsDBNull(iReportType) ? "-" : reader.GetString(iReportType),
+                    dateType = reader.IsDBNull(iDateType) ? "-" : reader.GetString(iDateType),
                 };
 
                 result.Add(dto);

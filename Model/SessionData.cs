@@ -5,6 +5,7 @@ namespace roadwork_portal_service.Model
         public DateTime plannedDate { get; set; }
         public long sksNo { get; set; }
         public string reportType { get; set; } = "";
+        public string dateType { get; set; } = "";
         public string acceptance1 { get; set; } = "";
         public string attachments { get; set; } = "";
         public string miscItems { get; set; } = "";
