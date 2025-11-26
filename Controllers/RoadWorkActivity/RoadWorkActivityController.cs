@@ -645,17 +645,21 @@ namespace roadwork_portal_service.Controllers
                                     @description, @project_no, 
                                     (
                                         SELECT
-                                            to_char(current_timestamp, 'YYYY')  -- year prefix
-                                            || '_' ||
+                                            to_char(current_timestamp, 'YYYY') || '_' ||
                                             (
                                                 COALESCE(
-                                                    MAX(split_part(r.roadworkactivity_no, '_', 2)::int),
+                                                    MAX(
+                                                        CASE 
+                                                            WHEN split_part(r.roadworkactivity_no, '_', 2) ~ '^[0-9]+$'
+                                                            THEN split_part(r.roadworkactivity_no, '_', 2)::int
+                                                            ELSE NULL
+                                                        END
+                                                    ),
                                                     0
                                                 ) + 1
                                             )::text
                                         FROM wtb_ssp_roadworkactivities r
-                                        WHERE split_part(r.roadworkactivity_no, '_', 1)
-                                            = to_char(current_timestamp, 'YYYY')
+                                        WHERE split_part(r.roadworkactivity_no, '_', 1) = to_char(current_timestamp, 'YYYY')
                                     ),
                                     @comment, @session_comment_1, @session_comment_2, @section, @type, @projecttype, @projectkind,
                                     @overarching_measure, @desired_year_from, @desired_year_to, @prestudy, 
