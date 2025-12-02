@@ -642,25 +642,8 @@ namespace roadwork_portal_service.Controllers
                                     date_consult_start2, date_consult_end2, date_report_start, date_report_end,
                                     url, sks_relevant, strabako_no, date_sks_planned, geom)
                                     VALUES (@uuid, @name, @projectmanager, @traffic_agent,
-                                    @description, @project_no, 
-                                    (
-                                        SELECT
-                                            to_char(current_timestamp, 'YYYY') || '_' ||
-                                            (
-                                                COALESCE(
-                                                    MAX(
-                                                        CASE 
-                                                            WHEN split_part(r.roadworkactivity_no, '_', 2) ~ '^[0-9]+$'
-                                                            THEN split_part(r.roadworkactivity_no, '_', 2)::int
-                                                            ELSE NULL
-                                                        END
-                                                    ),
-                                                    0
-                                                ) + 1
-                                            )::text
-                                        FROM wtb_ssp_roadworkactivities r
-                                        WHERE split_part(r.roadworkactivity_no, '_', 1) = to_char(current_timestamp, 'YYYY')
-                                    ),
+                                    @description, @project_no,                                         
+                                    to_char(current_timestamp, 'YYYY') || '_' || '00',
                                     @comment, @session_comment_1, @session_comment_2, @section, @type, @projecttype, @projectkind,
                                     @overarching_measure, @desired_year_from, @desired_year_to, @prestudy, 
                                     @start_of_construction, @end_of_construction, @consult_due,
