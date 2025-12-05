@@ -52,7 +52,7 @@ namespace roadwork_portal_service.Controllers
             try
             {
                 const string sql = @"
-                    UPDATE public.wtb_ssp_config_dates
+                    UPDATE wtb_ssp_config_dates
                     SET present_user_ids      = COALESCE(@present, present_user_ids),
                         distribution_user_ids = COALESCE(@distribution, distribution_user_ids)
                     WHERE sks_no = @sks_no;";
@@ -93,7 +93,7 @@ namespace roadwork_portal_service.Controllers
                     return Problem(title: "Invalid report_type.", detail: "Use PRE_PROTOCOL or PROTOCOL.", statusCode: 400);
 
                 const string sql = @"
-                    UPDATE public.wtb_ssp_config_dates
+                    UPDATE wtb_ssp_config_dates
                     SET attachments   = COALESCE(@attachments,   attachments),
                         acceptance_1  = COALESCE(@acceptance_1,  acceptance_1),
                         misc_items    = COALESCE(@misc_items,    misc_items),
@@ -141,7 +141,7 @@ namespace roadwork_portal_service.Controllers
             try
             {
                 const string sql = @"
-                    INSERT INTO public.wtb_ssp_config_dates
+                    INSERT INTO wtb_ssp_config_dates
                         (date_type, planneddate, acceptance_1, attachments, misc_items, present_user_ids, distribution_user_ids)
                     VALUES
                         ('SKS', @planneddate, COALESCE(@acceptance_1, 'Das Protokoll wird ohne Anmerkungen verdankt.'),
@@ -195,7 +195,7 @@ namespace roadwork_portal_service.Controllers
             const string sql = @"
                 SELECT planneddate, sks_no, acceptance_1, attachments, misc_items,
                        present_user_ids, distribution_user_ids, report_type, date_type
-                FROM   public.wtb_ssp_config_dates
+                FROM   wtb_ssp_config_dates
                 ORDER  BY planneddate DESC;";
 
             var result = new List<SessionDto>();
