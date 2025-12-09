@@ -223,7 +223,7 @@ public class AppConfigController : ControllerBase
             {
                 selectComm.CommandText = @"SELECT date_type, planneddate, sks_no
                             FROM ""wtb_ssp_config_dates""
-                            WHERE planneddate::timestamp >= CURRENT_DATE
+                            WHERE planneddate::timestamp >= (CURRENT_DATE - INTERVAL '7 days')
                             ORDER BY planneddate ASC";
                 using (NpgsqlDataReader reader = selectComm.ExecuteReader())
                 {
