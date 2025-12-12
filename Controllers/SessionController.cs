@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using Npgsql;
 using roadwork_portal_service.Configuration;
 using roadwork_portal_service.Model;
+using System.Globalization;
+using NpgsqlTypes;
 
 namespace roadwork_portal_service.Controllers
 {
@@ -88,6 +90,13 @@ namespace roadwork_portal_service.Controllers
         {
             try
             {
+                DateTime? plannedDate = null;
+                if (!string.IsNullOrWhiteSpace(dto.plannedDateForBackend)) // for example "27.12.2025"
+                {                    
+                    plannedDate = DateTime.ParseExact(dto.plannedDateForBackend,"dd.MM.yyyy", CultureInfo.GetCultureInfo("de-CH"));                    
+                    plannedDate = DateTime.SpecifyKind(plannedDate.Value, DateTimeKind.Unspecified); // No Kind=Utc !!!
+                }
+
                 var reportType = string.IsNullOrWhiteSpace(dto.reportType) ? null : dto.reportType;
                 if (reportType is not null && reportType is not ("PRE_PROTOCOL" or "PROTOCOL"))
                     return Problem(title: "Invalid report_type.", detail: "Use PRE_PROTOCOL or PROTOCOL.", statusCode: 400);
@@ -107,7 +116,8 @@ namespace roadwork_portal_service.Controllers
                 cmd.Parameters.AddWithValue("@attachments", (object?)dto.attachments ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@acceptance_1", (object?)dto.acceptance1 ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@misc_items", (object?)dto.miscItems ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@planneddate", (object?)dto.plannedDate ?? DBNull.Value);
+                var pDate = cmd.Parameters.Add("@planneddate", NpgsqlDbType.Date);
+                pDate.Value = (object?)plannedDate ?? DBNull.Value;
                 cmd.Parameters.AddWithValue("@report_type", (object?)dto.reportType ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@sks_no", sksNo);
 
@@ -142,9 +152,9 @@ namespace roadwork_portal_service.Controllers
             {
                 const string sql = @"
                     INSERT INTO wtb_ssp_config_dates
-                        (date_type, planneddate, acceptance_1, attachments, misc_items, present_user_ids, distribution_user_ids)
+                        (sks_no, date_type, planneddate, acceptance_1, attachments, misc_items, present_user_ids, distribution_user_ids)
                     VALUES
-                        ('SKS', @planneddate, COALESCE(@acceptance_1, 'Das Protokoll wird ohne Anmerkungen verdankt.'),
+                        (@sks_no, 'SKS', @planneddate, COALESCE(@acceptance_1, 'Das Protokoll wird ohne Anmerkungen verdankt.'),
                                 COALESCE(@attachments, 'Keine'),
                                 COALESCE(@misc_items, 'Keine'),
                                 COALESCE(@present, ''),
@@ -155,12 +165,22 @@ namespace roadwork_portal_service.Controllers
                 await conn.OpenAsync();
                 await using var cmd = new NpgsqlCommand(sql, conn);
 
-                cmd.Parameters.AddWithValue("@planneddate", dto.PlannedDate.Date);
-                cmd.Parameters.AddWithValue("@acceptance_1", (object?)dto.Acceptance1 ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@attachments", (object?)dto.Attachments ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@misc_items", (object?)dto.MiscItems ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@present", (object?)dto.PresentUserIds ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@distribution", (object?)dto.DistributionUserIds ?? DBNull.Value);
+                DateTime? plannedDate = null;
+                if (!string.IsNullOrWhiteSpace(dto.plannedDateForBackend)) // for example "27.12.2025"
+                {                    
+                    plannedDate = DateTime.ParseExact(dto.plannedDateForBackend,"dd.MM.yyyy", CultureInfo.GetCultureInfo("de-CH"));                    
+                    plannedDate = DateTime.SpecifyKind(plannedDate.Value, DateTimeKind.Unspecified); // No Kind=Utc !!!
+                }
+
+                // sks_no is required
+                cmd.Parameters.AddWithValue("@sks_no", dto.sksNo);                                
+                var pDate = cmd.Parameters.Add("@planneddate", NpgsqlDbType.Date);
+                pDate.Value = (object?)plannedDate ?? DBNull.Value;
+                cmd.Parameters.AddWithValue("@acceptance_1", (object?)dto.acceptance1 ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@attachments", (object?)dto.attachments ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@misc_items", (object?)dto.miscItems ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@present", (object?)dto.presentUserIds ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@distribution", (object?)dto.distributionUserIds ?? DBNull.Value);
 
                 await using var reader = await cmd.ExecuteReaderAsync();
                 if (!await reader.ReadAsync())
@@ -168,8 +188,8 @@ namespace roadwork_portal_service.Controllers
 
                 var result = new SessionDto
                 {
-                    plannedDate = reader.GetDateTime(reader.GetOrdinal("planneddate")),
-                    sksNo = reader.GetInt64(reader.GetOrdinal("sks_no")),
+                    sksNo = reader.GetInt32(reader.GetOrdinal("sks_no")),
+                    plannedDate = reader.GetDateTime(reader.GetOrdinal("planneddate")),                    
                     acceptance1 = reader.GetString(reader.GetOrdinal("acceptance_1")),
                     attachments = reader.GetString(reader.GetOrdinal("attachments")),
                     miscItems = reader.GetString(reader.GetOrdinal("misc_items")),
@@ -179,6 +199,15 @@ namespace roadwork_portal_service.Controllers
 
                 // Location header to the resource
                 return Created($"/Session/{result.sksNo}", result);
+            }
+            catch (PostgresException pgEx) when (pgEx.SqlState == "23505")
+            {
+                // 23505 = unique_violation (np. duplicate (sks_no, date_type))                
+                return Problem(
+                    title: "SKS-Nr ist bereits vergeben.",
+                    detail: "SqlState == 23505",
+                    statusCode: StatusCodes.Status409Conflict
+                );
             }
             catch (Exception ex)
             {

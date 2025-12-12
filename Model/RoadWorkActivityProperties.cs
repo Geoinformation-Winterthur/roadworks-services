@@ -48,6 +48,7 @@ public class RoadWorkActivityProperties
     public DateTime? dateSks { get; set; }
     public DateTime? dateSksReal { get; set; }
     public DateTime? dateSksPlanned { get; set; }
+    public long? sksNo { get; set; } 
     public DateTime? dateKap { get; set; }
     public DateTime? dateKapReal { get; set; }
     public DateTime? dateOks { get; set; }

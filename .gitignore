@@ -7,3 +7,7 @@ appsettings.Development.json
 appsettings.Production.json
 appsettings.Test.json
 *.sln
+Stadt-Winterthur-RootCA1.crt
+Stadt-Winterthur-SA-IssuingCA1.crt
+docker_info.txt
+docker_steps.sh
