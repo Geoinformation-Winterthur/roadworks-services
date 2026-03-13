@@ -88,9 +88,9 @@ namespace roadwork_portal_service.Helper
             else if (code == "review")
                 return "Prüfung";
             else if (code == "verified1")
-                return "verifiziert-1";
+                return "Verifiziert-1";
             else if (code == "verified2")
-                return "verifiziert-2";
+                return "Verifiziert-2";
             else if (code == "inconsult1")
                 return "Bedarfsklärung-1";
             else if (code == "inconsult2")
@@ -98,12 +98,46 @@ namespace roadwork_portal_service.Helper
             else if (code == "reporting")
                 return "Stellungnahme";
             else if (code == "coordinated")
-                return "koordiniert";
+                return "Koordiniert";
             else if (code == "prestudy")
                 return "Vorstudie";
             else if (code == "suspended")
-                return "sistiert";
+                return "Sistiert";
             else return "";
+        }
+
+        public static string translateProjectKind(string code)
+        {
+            if (code == "ROAD_NEW_REGIONAL")
+                return "Strasse Überkommunal (Neu)";
+            else if (code == "ROAD_NEW_COMMUNAL")
+                return "Strasse Kommunal (Neu)";
+            else if (code == "ROAD_MAINTENANCE_REGIONAL")
+                return "Strasse Überkommunal (Unterhalt)";
+            else if (code == "ROAD_MAINTENANCE_COMMUNAL")
+                return "Strasse Kommunal (Unterhalt)";
+            else if (code == "TRENCH_WITH_RESURFACING")
+                return "Aufgrabung mit Belagsersatz";
+            else if (code == "WATERBODY")
+                return "Gewässer";
+            else if (code == "SEWER_MAINTENANCE")
+                return "Kanalbau (Unterhalt)";
+            else if (code == "OTHER")
+                return "Übrige";
+            else
+                return "";
+        }
+
+        public static string translateType(string code)
+        {
+            if (code == "type_a")
+                return "Typ A";
+            else if (code == "type_b")
+                return "Typ B";
+            else if (code == "type_c")
+                return "Typ C";
+            else
+                return "";
         }
 
         private static List<(string, Point)> _getFromToListFromDb(

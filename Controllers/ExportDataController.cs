@@ -38,15 +38,15 @@ namespace roadwork_portal_service.Controllers
 
                 // Header row (semicolon-separated, no quoting; therefore we must sanitize text fields properly).
                 sb.Append(
-                    "UUID;Titel/Strasse;Projektleiter Vorname;Projektleiter Nachname;" +
+                    "BV-Nr;Titel/Strasse;Projektleiter Vorname;Projektleiter Nachname;" +
                     "Leiter Baustellenverkehr Vorname;Leiter Baustellenverkehr Nachname;Auslösegrund;" +
                     "Erstellungsdatum;Datum letzte Bearbeitung;Datum von;Datum bis;Ist privat;" +
                     "Status;Im Internet publiziert;Rechnungsadresse 1;Rechnungsadresse 2;PDB-FID;" +
-                    "Strabako-Nr.;Investitionsnummer;Datum SKS;Datum KAP;Datum OKS;Datum GL-TBA;" +
-                    "Projektnummer;Kommentar;Abschnitt;URL;Projekttyp;Projekt-Art;Übergeordnete Massnahme;Wunschjahr von;" +
+                    "Investitionsnummer;Datum SKS;Datum KAP;Datum OKS;Datum GL-TBA;" +
+                    "Kommentar;Abschnitt;URL;Projekttyp;Projekt-Art;Übergeordnete Massnahme;Wunschjahr von;" +
                     "Wunschjahr bis;Vorstudie;date_optimum;Baubeginn;Bauende;" +
                     "Abnahmedatum;consult_due;SKS, genehmigt;KAP, genehmigt;OKS, genehmigt;" +
-                    "GL TBA, genehmigt;date_planned;date_accept;Garantie;is_study;Plantermin: Vorstudie Start;" +
+                    "GL TBA, genehmigt;date_planned;date_accept;Garantie;Vorstudie;Plantermin: Vorstudie Start;" +
                     "Plantermin: Vorstudie Ende;Projektauftrag Vorstudie genehmigt;" +
                     "Vorstudie genehmigt;Begehrensäusserung § 45;Begehrensäusserung Start;" +
                     "Begehrensäusserung Ende;Mitwirkungsverfahren § 13;Mitwirkungsverfahren Start;" +
@@ -59,8 +59,8 @@ namespace roadwork_portal_service.Controllers
                     "Stellungnahme Start;Stellungnahme Ende;" +
 
                     "Infoversand Start;Infoversand Ende;Infoversand Abschluss;" +
-                    "Aggloprogramm;date_start_inconsult1;verifiziert1;date_start_inconsult2;verifiziert2;" +
-                    "date_start_reporting;sistiert;koordiniert\r\n"
+                    "Aggloprogramm;Start Bedarfsklärung 1;Verifiziert 1;Start Bedarfsklärung 2;Verifiziert 2;" +
+                    "Start Stellungnahme;Sistiert;Koordiniert\r\n"
                 );
 
                 // 1) Export "needs" (wtb_ssp_roadworkneeds) - only those with status == "requirement"
@@ -91,8 +91,8 @@ namespace roadwork_portal_service.Controllers
                         var status = GetText(reader, "status");
                         if (!string.Equals(status, "requirement", StringComparison.OrdinalIgnoreCase))
                             continue;
-
-                        AppendGuid(sb, reader, "uuid");
+                      
+                        AppendText(sb, "Bedarf");
                         AppendText(sb, reader, "name");
 
                         // Project manager / traffic agent not applicable here
@@ -116,7 +116,8 @@ namespace roadwork_portal_service.Controllers
 
                         // Fill the remaining columns with empty fields to match the header count.
                         // (We keep this behavior as in your original code.)
-                        AppendEmpty(sb, 11);
+                        AppendEmpty(sb, 10);
+                        AppendEmpty(sb, 51);                        
 
                         sb.Append("\r\n");
                     }
@@ -129,14 +130,14 @@ namespace roadwork_portal_service.Controllers
 
                     await using var selectComm = pgConn.CreateCommand();
                     selectComm.CommandText = @"
-                        SELECT r.uuid, r.name,
+                        SELECT r.uuid, r.roadworkactivity_no, r.name,
                                p.first_name AS p_first_name, p.last_name AS p_last_name,
                                t.first_name AS t_first_name, t.last_name AS t_last_name,
                                r.description, r.created, r.last_modified,
                                r.date_from, r.date_to, r.private, r.status,
                                r.in_internet, r.billing_address1, r.billing_address2,
                                r.pdb_fid, r.strabako_no, r.investment_no, r.date_sks,
-                               r.date_kap, r.date_oks, r.date_gl_tba, r.project_no,
+                               r.date_kap, r.date_oks, r.date_gl_tba, 
                                r.comment, r.section, r.url, r.projecttype, r.projectkind,
                                r.overarching_measure, r.desired_year_from,
                                r.desired_year_to, r.prestudy, r.date_optimum,
@@ -164,7 +165,7 @@ namespace roadwork_portal_service.Controllers
                     await using var reader = await selectComm.ExecuteReaderAsync();
                     while (await reader.ReadAsync())
                     {
-                        AppendGuid(sb, reader, "uuid");
+                        AppendText(sb, reader, "roadworkactivity_no");
                         AppendText(sb, reader, "name");
                         AppendText(sb, reader, "p_first_name");
                         AppendText(sb, reader, "p_last_name");
@@ -179,14 +180,15 @@ namespace roadwork_portal_service.Controllers
                         AppendDate(sb, reader, "date_to");
 
                         AppendBool(sb, reader, "private");
-                        AppendText(sb, reader, "status");
+                        var status = GetText(reader, "status");
+                        var statusName = HelperFunctions.translateStatusCodes(status);
+                        AppendText(sb, statusName);                        
                         AppendBool(sb, reader, "in_internet");
 
                         AppendText(sb, reader, "billing_address1");
                         AppendText(sb, reader, "billing_address2");
 
-                        AppendInt(sb, reader, "pdb_fid");
-                        AppendText(sb, reader, "strabako_no");
+                        AppendInt(sb, reader, "pdb_fid");                        
                         AppendInt(sb, reader, "investment_no");
 
                         AppendDate(sb, reader, "date_sks");
@@ -194,13 +196,14 @@ namespace roadwork_portal_service.Controllers
                         AppendDate(sb, reader, "date_oks");
                         AppendDate(sb, reader, "date_gl_tba");
 
-                        AppendText(sb, reader, "project_no");
                         AppendText(sb, reader, "comment");
                         AppendText(sb, reader, "section");
                         AppendText(sb, reader, "url");
-                        AppendText(sb, reader, "projecttype");
-                        AppendText(sb, reader, "projectkind");
-
+                        var projectType = HelperFunctions.translateType(GetText(reader, "projecttype"));                                                                       
+                        AppendText(sb, projectType);
+                        var projectKind = HelperFunctions.translateStatusCodes(GetText(reader, "projectkind"));                                                
+                        AppendText(sb, projectKind);
+                        
                         AppendBool(sb, reader, "overarching_measure");
                         AppendInt(sb, reader, "desired_year_from");
                         AppendInt(sb, reader, "desired_year_to");
