@@ -38,10 +38,10 @@ namespace roadwork_portal_service.Controllers
 
                 // Header row (semicolon-separated, no quoting; therefore we must sanitize text fields properly).
                 sb.Append(
-                    "BV-Nr;Titel/Strasse;Projektleiter Vorname;Projektleiter Nachname;" +
+                    "UUID;Phase;Status;BV-Nr;Titel/Strasse;Projektleiter Vorname;Projektleiter Nachname;" +
                     "Leiter Baustellenverkehr Vorname;Leiter Baustellenverkehr Nachname;Auslösegrund;" +
                     "Erstellungsdatum;Datum letzte Bearbeitung;Datum von;Datum bis;Ist privat;" +
-                    "Status;Im Internet publiziert;Rechnungsadresse 1;Rechnungsadresse 2;PDB-FID;" +
+                    "Im Internet publiziert;Rechnungsadresse 1;Rechnungsadresse 2;PDB-FID;" +
                     "Investitionsnummer;Datum SKS;Datum KAP;Datum OKS;Datum GL-TBA;" +
                     "Kommentar;Abschnitt;URL;Projekttyp;Projekt-Art;Übergeordnete Massnahme;Wunschjahr von;" +
                     "Wunschjahr bis;Vorstudie;date_optimum;Baubeginn;Bauende;" +
@@ -92,7 +92,13 @@ namespace roadwork_portal_service.Controllers
                         if (!string.Equals(status, "requirement", StringComparison.OrdinalIgnoreCase))
                             continue;
                       
-                        AppendText(sb, "Bedarf");
+                        AppendGuid(sb, reader, "uuid");
+                        var statusPhase = HelperFunctions.translateStatusCodes(status, onlyStatusName: false);
+                        var statusName = HelperFunctions.translateStatusCodes(status, onlyStatusName: true);
+                        AppendText(sb, statusPhase);
+                        AppendText(sb, statusName);
+
+                        AppendText(sb, "");
                         AppendText(sb, reader, "name");
 
                         // Project manager / traffic agent not applicable here
@@ -109,10 +115,7 @@ namespace roadwork_portal_service.Controllers
                         AppendDate(sb, reader, "finish_late_to");  // Datum bis
 
                         AppendBool(sb, reader, "private");
-
-                        // Status (translated)
-                        var statusName = HelperFunctions.translateStatusCodes(status);
-                        AppendText(sb, statusName);
+                        
 
                         // Fill the remaining columns with empty fields to match the header count.
                         // (We keep this behavior as in your original code.)
@@ -165,6 +168,14 @@ namespace roadwork_portal_service.Controllers
                     await using var reader = await selectComm.ExecuteReaderAsync();
                     while (await reader.ReadAsync())
                     {
+                        AppendGuid(sb, reader, "uuid");
+
+                        var status = GetText(reader, "status");
+                        var statusPhase = HelperFunctions.translateStatusCodes(status, onlyStatusName: false);
+                        var statusName = HelperFunctions.translateStatusCodes(status, onlyStatusName: true);
+                        AppendText(sb, statusPhase);
+                        AppendText(sb, statusName);
+
                         AppendText(sb, reader, "roadworkactivity_no");
                         AppendText(sb, reader, "name");
                         AppendText(sb, reader, "p_first_name");
@@ -180,9 +191,7 @@ namespace roadwork_portal_service.Controllers
                         AppendDate(sb, reader, "date_to");
 
                         AppendBool(sb, reader, "private");
-                        var status = GetText(reader, "status");
-                        var statusName = HelperFunctions.translateStatusCodes(status);
-                        AppendText(sb, statusName);                        
+                        
                         AppendBool(sb, reader, "in_internet");
 
                         AppendText(sb, reader, "billing_address1");
@@ -201,7 +210,7 @@ namespace roadwork_portal_service.Controllers
                         AppendText(sb, reader, "url");
                         var projectType = HelperFunctions.translateType(GetText(reader, "projecttype"));                                                                       
                         AppendText(sb, projectType);
-                        var projectKind = HelperFunctions.translateStatusCodes(GetText(reader, "projectkind"));                                                
+                        var projectKind = HelperFunctions.translateProjectKind(GetText(reader, "projectkind"));                                                
                         AppendText(sb, projectKind);
                         
                         AppendBool(sb, reader, "overarching_measure");

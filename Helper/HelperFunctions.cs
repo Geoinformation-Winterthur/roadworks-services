@@ -81,29 +81,22 @@ namespace roadwork_portal_service.Helper
             return result;
         }
 
-        public static string translateStatusCodes(string code)
+        public static string translateStatusCodes(string status, bool onlyStatusName = true)
         {
-            if (code == "requirement")
-                return "Bedarf";
-            else if (code == "review")
-                return "Prüfung";
-            else if (code == "verified1")
-                return "Verifiziert-1";
-            else if (code == "verified2")
-                return "Verifiziert-2";
-            else if (code == "inconsult1")
-                return "Bedarfsklärung-1";
-            else if (code == "inconsult2")
-                return "Bedarfsklärung-2";                
-            else if (code == "reporting")
-                return "Stellungnahme";
-            else if (code == "coordinated")
-                return "Koordiniert";
-            else if (code == "prestudy")
-                return "Vorstudie";
-            else if (code == "suspended")
-                return "Sistiert";
-            else return "";
+            return status switch
+            {
+                "requirement" => onlyStatusName ? "Bedarf" : "Phase 11",
+                "review" => onlyStatusName ? "Prüfung" : "Phase 12)",
+                "verified1" => onlyStatusName ? "Verifiziert-1" : "Phase 12",
+                "verified2" => onlyStatusName ? "Verifiziert-2" : "Phase 12",
+                "inconsult1" => onlyStatusName ? "Bedarfsklärung - 1.Iteration" : "Phase 12",
+                "inconsult2" => onlyStatusName ? "Bedarfsklärung - 2.Iteration" : "Phase 12",
+                "reporting" => onlyStatusName ? "Stellungnahme" : "Phase 12",
+                "coordinated" => onlyStatusName ? "Koordiniert" : "Phase 12",
+                "prestudy" => onlyStatusName ? "Vorstudie" : "Phase 21",
+                "suspended" => "Sistiert",
+                _ => status
+            };
         }
 
         public static string translateProjectKind(string code)
