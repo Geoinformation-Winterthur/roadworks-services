@@ -38,12 +38,13 @@ namespace roadwork_portal_service.Controllers
 
                 // Header row (semicolon-separated, no quoting; therefore we must sanitize text fields properly).
                 sb.Append(
-                    "UUID;Phase;Status;BV-Nr;Titel/Strasse;Projektleiter Vorname;Projektleiter Nachname;" +
+                    "Phase;Status;BV-Nr;Titel/Strasse;Abschnitt;Bemerkung;Gebietsmanagement;Auslösende:r;Auslösendes Werk;Beteiligte:r;" +
+                    "Projektleiter Vorname;Projektleiter Nachname;" +
                     "Leiter Baustellenverkehr Vorname;Leiter Baustellenverkehr Nachname;Auslösegrund;" +
-                    "Erstellungsdatum;Datum letzte Bearbeitung;Datum von;Datum bis;Ist privat;" +
+                    "Erstellungsdatum;Datum letzte Bearbeitung;Ist privat;" +
                     "Im Internet publiziert;Rechnungsadresse 1;Rechnungsadresse 2;PDB-FID;" +
                     "Investitionsnummer;Datum SKS;Datum KAP;Datum OKS;Datum GL-TBA;" +
-                    "Kommentar;Abschnitt;URL;Projekttyp;Projekt-Art;Übergeordnete Massnahme;Wunschjahr von;" +
+                    "URL;Projekttyp;Projekt-Art;Übergeordnete Massnahme;Wunschjahr von;" +
                     "Wunschjahr bis;Vorstudie;date_optimum;Baubeginn;Bauende;" +
                     "Abnahmedatum;consult_due;SKS, genehmigt;KAP, genehmigt;OKS, genehmigt;" +
                     "GL TBA, genehmigt;date_planned;date_accept;Garantie;Vorstudie;Plantermin: Vorstudie Start;" +
@@ -60,7 +61,7 @@ namespace roadwork_portal_service.Controllers
 
                     "Infoversand Start;Infoversand Ende;Infoversand Abschluss;" +
                     "Aggloprogramm;Start Bedarfsklärung 1;Verifiziert 1;Start Bedarfsklärung 2;Verifiziert 2;" +
-                    "Start Stellungnahme;Sistiert;Koordiniert\r\n"
+                    "Start Stellungnahme;Sistiert;Koordiniert;UUID;\r\n"
                 );
 
                 // 1) Export "needs" (wtb_ssp_roadworkneeds) - only those with status == "requirement"
@@ -91,8 +92,7 @@ namespace roadwork_portal_service.Controllers
                         var status = GetText(reader, "status");
                         if (!string.Equals(status, "requirement", StringComparison.OrdinalIgnoreCase))
                             continue;
-                      
-                        AppendGuid(sb, reader, "uuid");
+                                              
                         var statusPhase = HelperFunctions.translateStatusCodes(status, onlyStatusName: false);
                         var statusName = HelperFunctions.translateStatusCodes(status, onlyStatusName: true);
                         AppendText(sb, statusPhase);
@@ -102,7 +102,7 @@ namespace roadwork_portal_service.Controllers
                         AppendText(sb, reader, "name");
 
                         // Project manager / traffic agent not applicable here
-                        AppendEmpty(sb, 4);
+                        AppendEmpty(sb, 10);
 
                         // Auslösegrund -> use description
                         AppendText(sb, reader, "description");
@@ -111,16 +111,17 @@ namespace roadwork_portal_service.Controllers
                         AppendDate(sb, reader, "last_modified");
 
                         // Map "finish_early_to" and "finish_late_to" to date_from/date_to to keep columns consistent
-                        AppendDate(sb, reader, "finish_early_to"); // Datum von
-                        AppendDate(sb, reader, "finish_late_to");  // Datum bis
+                        //AppendDate(sb, reader, "finish_early_to"); // Datum von
+                        //AppendDate(sb, reader, "finish_late_to");  // Datum bis
 
                         AppendBool(sb, reader, "private");
                         
 
-                        // Fill the remaining columns with empty fields to match the header count.
-                        // (We keep this behavior as in your original code.)
-                        AppendEmpty(sb, 10);
-                        AppendEmpty(sb, 51);                        
+                        // Remaining columns with empty fields to match the header count.                        
+                        AppendEmpty(sb, 8);
+                        AppendEmpty(sb, 51);    
+
+                        AppendGuid(sb, reader, "uuid");                    
 
                         sb.Append("\r\n");
                     }
@@ -134,41 +135,87 @@ namespace roadwork_portal_service.Controllers
                     await using var selectComm = pgConn.CreateCommand();
                     selectComm.CommandText = @"
                         SELECT r.uuid, r.roadworkactivity_no, r.name,
-                               p.first_name AS p_first_name, p.last_name AS p_last_name,
-                               t.first_name AS t_first_name, t.last_name AS t_last_name,
-                               r.description, r.created, r.last_modified,
-                               r.date_from, r.date_to, r.private, r.status,
-                               r.in_internet, r.billing_address1, r.billing_address2,
-                               r.pdb_fid, r.strabako_no, r.investment_no, r.date_sks,
-                               r.date_kap, r.date_oks, r.date_gl_tba, 
-                               r.comment, r.section, r.url, r.projecttype, r.projectkind,
-                               r.overarching_measure, r.desired_year_from,
-                               r.desired_year_to, r.prestudy, r.date_optimum,
-                               r.start_of_construction, r.end_of_construction,
-                               r.date_of_acceptance, r.consult_due, r.date_sks_real,
-                               r.date_kap_real, r.date_oks_real, r.date_gl_tba_real,
-                               r.date_planned, r.date_accept, r.date_guarantee,
-                               r.is_study, r.date_study_start, r.date_study_end,
-                               r.project_study_approved, r.study_approved,
-                               r.is_desire, r.date_desire_start, r.date_desire_end,
-                               r.is_particip, r.date_particip_start, r.date_particip_end,
-                               r.is_plan_circ, r.date_plan_circ_start, r.date_plan_circ_end,
-                               r.date_consult_start1, r.date_consult_end1,
-                               r.date_consult_start2, r.date_consult_end2,
-                               r.date_report_start, r.date_report_end,
-                               r.date_info_start, r.date_info_end, r.date_info_close,
-                               r.is_aggloprog, r.date_start_inconsult1, r.date_start_verified1,
-                               r.date_start_inconsult2, r.date_start_verified2,
-                               r.date_start_reporting, r.date_start_suspended,
-                               r.date_start_coordinated
+                            p.first_name AS p_first_name, p.last_name AS p_last_name,
+                            t.first_name AS t_first_name, t.last_name AS t_last_name,
+                            r.description, r.created, r.last_modified,
+                            r.date_from, r.date_to, r.private, r.status,
+                            r.in_internet, r.billing_address1, r.billing_address2,
+                            r.pdb_fid, r.strabako_no, r.investment_no, r.date_sks,
+                            r.date_kap, r.date_oks, r.date_gl_tba, 
+                            r.comment, r.section, r.url, r.projecttype, r.projectkind,
+                            r.overarching_measure, r.desired_year_from,
+                            r.desired_year_to, r.prestudy, r.date_optimum,
+                            r.start_of_construction, r.end_of_construction,
+                            r.date_of_acceptance, r.consult_due, r.date_sks_real,
+                            r.date_kap_real, r.date_oks_real, r.date_gl_tba_real,
+                            r.date_planned, r.date_accept, r.date_guarantee,
+                            r.is_study, r.date_study_start, r.date_study_end,
+                            r.project_study_approved, r.study_approved,
+                            r.is_desire, r.date_desire_start, r.date_desire_end,
+                            r.is_particip, r.date_particip_start, r.date_particip_end,
+                            r.is_plan_circ, r.date_plan_circ_start, r.date_plan_circ_end,
+                            r.date_consult_start1, r.date_consult_end1,
+                            r.date_consult_start2, r.date_consult_end2,
+                            r.date_report_start, r.date_report_end,
+                            r.date_info_start, r.date_info_end, r.date_info_close,
+                            r.is_aggloprog, r.date_start_inconsult1, r.date_start_verified1,
+                            r.date_start_inconsult2, r.date_start_verified2,
+                            r.date_start_reporting, r.date_start_suspended,
+                            r.date_start_coordinated,
+
+                            gm.gm_first_name,
+                            gm.gm_last_name,
+
+                            primary_need.triggering_first_name,
+                            primary_need.triggering_last_name,
+                            primary_need.triggering_org_abbr,
+
+                            involved.involved_orgs
+
                         FROM ""wtb_ssp_roadworkactivities"" r
                         LEFT JOIN ""wtb_ssp_users"" p ON r.projectmanager = p.uuid
-                        LEFT JOIN ""wtb_ssp_users"" t ON r.traffic_agent = t.uuid";
+                        LEFT JOIN ""wtb_ssp_users"" t ON r.traffic_agent = t.uuid
+
+                        LEFT JOIN LATERAL (
+                            SELECT am.first_name AS gm_first_name,
+                                am.last_name AS gm_last_name
+                            FROM ""wtb_ssp_managementareas"" m
+                            LEFT JOIN ""wtb_ssp_users"" am ON m.manager = am.uuid
+                            WHERE ST_Area(ST_Intersection(r.geom, m.geom)) > 0
+                            ORDER BY ST_Area(ST_Intersection(r.geom, m.geom)) DESC
+                            LIMIT 1
+                        ) gm ON true
+
+                        LEFT JOIN LATERAL (
+                            SELECT u.first_name AS triggering_first_name,
+                                u.last_name AS triggering_last_name,
+                                o.abbreviation AS triggering_org_abbr
+                            FROM ""wtb_ssp_activities_to_needs"" an
+                            JOIN ""wtb_ssp_roadworkneeds"" n ON an.uuid_roadwork_need = n.uuid
+                            LEFT JOIN ""wtb_ssp_users"" u ON n.orderer = u.uuid
+                            LEFT JOIN ""wtb_ssp_organisationalunits"" o ON u.org_unit = o.uuid
+                            WHERE an.uuid_roadwork_activity = r.uuid
+                            AND an.is_primary = true
+                            LIMIT 1
+                        ) primary_need ON true
+
+                        LEFT JOIN LATERAL (
+                            SELECT string_agg(x.abbreviation, ', ' ORDER BY x.abbreviation) AS involved_orgs
+                            FROM (
+                                SELECT DISTINCT o.abbreviation
+                                FROM ""wtb_ssp_activities_to_needs"" an
+                                JOIN ""wtb_ssp_roadworkneeds"" n ON an.uuid_roadwork_need = n.uuid
+                                LEFT JOIN ""wtb_ssp_users"" u ON n.orderer = u.uuid
+                                LEFT JOIN ""wtb_ssp_organisationalunits"" o ON u.org_unit = o.uuid
+                                WHERE an.uuid_roadwork_activity = r.uuid
+                                AND an.activityrelationtype = 'assignedneed'
+                                AND o.abbreviation IS NOT NULL
+                            ) x
+                        ) involved ON true";
 
                     await using var reader = await selectComm.ExecuteReaderAsync();
                     while (await reader.ReadAsync())
-                    {
-                        AppendGuid(sb, reader, "uuid");
+                    {                        
 
                         var status = GetText(reader, "status");
                         var statusPhase = HelperFunctions.translateStatusCodes(status, onlyStatusName: false);
@@ -178,6 +225,13 @@ namespace roadwork_portal_service.Controllers
 
                         AppendText(sb, reader, "roadworkactivity_no");
                         AppendText(sb, reader, "name");
+                        AppendText(sb, reader, "section");
+                        AppendText(sb, reader, "comment");                        
+                        AppendText(sb, $"{GetText(reader, "gm_first_name")} {GetText(reader, "gm_last_name")}".Trim());
+                        AppendText(sb, $"{GetText(reader, "triggering_first_name")} {GetText(reader, "triggering_last_name")}".Trim());
+                        AppendText(sb, reader, "triggering_org_abbr");
+                        AppendText(sb, reader, "involved_orgs");
+
                         AppendText(sb, reader, "p_first_name");
                         AppendText(sb, reader, "p_last_name");
                         AppendText(sb, reader, "t_first_name");
@@ -187,8 +241,8 @@ namespace roadwork_portal_service.Controllers
 
                         AppendDate(sb, reader, "created");
                         AppendDate(sb, reader, "last_modified");
-                        AppendDate(sb, reader, "date_from");
-                        AppendDate(sb, reader, "date_to");
+                        //AppendDate(sb, reader, "date_from");
+                        //AppendDate(sb, reader, "date_to");
 
                         AppendBool(sb, reader, "private");
                         
@@ -204,9 +258,7 @@ namespace roadwork_portal_service.Controllers
                         AppendDate(sb, reader, "date_kap");
                         AppendDate(sb, reader, "date_oks");
                         AppendDate(sb, reader, "date_gl_tba");
-
-                        AppendText(sb, reader, "comment");
-                        AppendText(sb, reader, "section");
+                        
                         AppendText(sb, reader, "url");
                         var projectType = HelperFunctions.translateType(GetText(reader, "projecttype"));                                                                       
                         AppendText(sb, projectType);
@@ -275,6 +327,8 @@ namespace roadwork_portal_service.Controllers
                         AppendDate(sb, reader, "date_start_reporting");
                         AppendDate(sb, reader, "date_start_suspended");
                         AppendDate(sb, reader, "date_start_coordinated");
+
+                        AppendGuid(sb, reader, "uuid");
 
                         sb.Append("\r\n");
                     }
