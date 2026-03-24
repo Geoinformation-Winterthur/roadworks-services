@@ -91,10 +91,14 @@ namespace roadwork_portal_service.Controllers
             try
             {
                 DateTime? plannedDate = null;
-                if (!string.IsNullOrWhiteSpace(dto.plannedDateForBackend)) // for example "27.12.2025"
-                {                    
-                    plannedDate = DateTime.ParseExact(dto.plannedDateForBackend,"dd.MM.yyyy", CultureInfo.GetCultureInfo("de-CH"));                    
-                    plannedDate = DateTime.SpecifyKind(plannedDate.Value, DateTimeKind.Unspecified); // No Kind=Utc !!!
+                if (!string.IsNullOrWhiteSpace(dto.plannedDateForBackend))
+                {
+                    plannedDate = DateTime.ParseExact(
+                        dto.plannedDateForBackend,
+                        "dd.MM.yyyy",
+                        CultureInfo.GetCultureInfo("de-CH"));
+
+                    plannedDate = DateTime.SpecifyKind(plannedDate.Value, DateTimeKind.Unspecified);
                 }
 
                 var reportType = string.IsNullOrWhiteSpace(dto.reportType) ? null : dto.reportType;
@@ -103,21 +107,32 @@ namespace roadwork_portal_service.Controllers
 
                 const string sql = @"
                     UPDATE wtb_ssp_config_dates
-                    SET attachments   = COALESCE(@attachments,   attachments),
-                        acceptance_1  = COALESCE(@acceptance_1,  acceptance_1),
-                        misc_items    = COALESCE(@misc_items,    misc_items),
-                        planneddate   = COALESCE(@planneddate,   planneddate),
-                        report_type   = COALESCE(CAST(@report_type AS report_type_enum), report_type)
+                    SET attachments    = COALESCE(@attachments, attachments),
+                        acceptance_1   = COALESCE(@acceptance_1, acceptance_1),
+                        misc_items     = COALESCE(@misc_items, misc_items),
+                        planneddate    = COALESCE(@planneddate, planneddate),
+                        report_type    = COALESCE(CAST(@report_type AS report_type_enum), report_type),
+                        location       = COALESCE(@location, location),
+                        time_window    = COALESCE(@time_window, time_window),
+                        chairperson    = COALESCE(@chairperson, chairperson),
+                        minute_taker   = COALESCE(@minute_taker, minute_taker)
                     WHERE sks_no = @sks_no;";
 
                 await using var conn = new NpgsqlConnection(AppConfig.connectionString);
                 await conn.OpenAsync();
                 await using var cmd = new NpgsqlCommand(sql, conn);
+
                 cmd.Parameters.AddWithValue("@attachments", (object?)dto.attachments ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@acceptance_1", (object?)dto.acceptance1 ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@misc_items", (object?)dto.miscItems ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@location", (object?)dto.location ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@time_window", (object?)dto.timeWindow ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@chairperson", (object?)dto.chairperson ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@minute_taker", (object?)dto.minuteTaker ?? DBNull.Value);
+
                 var pDate = cmd.Parameters.Add("@planneddate", NpgsqlDbType.Date);
                 pDate.Value = (object?)plannedDate ?? DBNull.Value;
+
                 cmd.Parameters.AddWithValue("@report_type", (object?)dto.reportType ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@sks_no", sksNo);
 
@@ -140,7 +155,6 @@ namespace roadwork_portal_service.Controllers
                 return Problem(title: "Failed to update session.", detail: ex.Message, statusCode: 500);
             }
         }
-        
 
         [HttpPost]
         [Authorize(Roles = "administrator, territorymanager")]
@@ -152,35 +166,79 @@ namespace roadwork_portal_service.Controllers
             {
                 const string sql = @"
                     INSERT INTO wtb_ssp_config_dates
-                        (sks_no, date_type, planneddate, acceptance_1, attachments, misc_items, present_user_ids, distribution_user_ids)
+                        (
+                            sks_no,
+                            date_type,
+                            planneddate,
+                            acceptance_1,
+                            attachments,
+                            misc_items,
+                            present_user_ids,
+                            distribution_user_ids,
+                            location,
+                            time_window,
+                            chairperson,
+                            minute_taker
+                        )
                     VALUES
-                        (@sks_no, 'SKS', @planneddate, COALESCE(@acceptance_1, 'Das Protokoll wird ohne Anmerkungen verdankt.'),
-                                COALESCE(@attachments, 'Keine'),
-                                COALESCE(@misc_items, 'Keine'),
-                                COALESCE(@present, ''),
-                                COALESCE(@distribution, ''))
-                    RETURNING planneddate, sks_no, acceptance_1, attachments, misc_items, present_user_ids, distribution_user_ids;";
+                        (
+                            @sks_no,
+                            'SKS',
+                            @planneddate,
+                            COALESCE(@acceptance_1, 'Das Protokoll wird ohne Anmerkungen verdankt.'),
+                            COALESCE(@attachments, 'Keine'),
+                            COALESCE(@misc_items, 'Keine'),
+                            COALESCE(@present, ''),
+                            COALESCE(@distribution, ''),
+                            COALESCE(@location, ''),
+                            COALESCE(@time_window, ''),
+                            COALESCE(@chairperson, ''),
+                            COALESCE(@minute_taker, '')
+                        )
+                    RETURNING
+                        planneddate,
+                        sks_no,
+                        acceptance_1,
+                        attachments,
+                        misc_items,
+                        present_user_ids,
+                        distribution_user_ids,
+                        location,
+                        time_window,
+                        chairperson,
+                        minute_taker,
+                        report_type,
+                        date_type;";
 
                 await using var conn = new NpgsqlConnection(AppConfig.connectionString);
                 await conn.OpenAsync();
                 await using var cmd = new NpgsqlCommand(sql, conn);
 
                 DateTime? plannedDate = null;
-                if (!string.IsNullOrWhiteSpace(dto.plannedDateForBackend)) // for example "27.12.2025"
-                {                    
-                    plannedDate = DateTime.ParseExact(dto.plannedDateForBackend,"dd.MM.yyyy", CultureInfo.GetCultureInfo("de-CH"));                    
-                    plannedDate = DateTime.SpecifyKind(plannedDate.Value, DateTimeKind.Unspecified); // No Kind=Utc !!!
+                if (!string.IsNullOrWhiteSpace(dto.plannedDateForBackend))
+                {
+                    plannedDate = DateTime.ParseExact(
+                        dto.plannedDateForBackend,
+                        "dd.MM.yyyy",
+                        CultureInfo.GetCultureInfo("de-CH"));
+
+                    plannedDate = DateTime.SpecifyKind(plannedDate.Value, DateTimeKind.Unspecified);
                 }
 
-                // sks_no is required
-                cmd.Parameters.AddWithValue("@sks_no", dto.sksNo);                                
+                cmd.Parameters.AddWithValue("@sks_no", dto.sksNo);
+
                 var pDate = cmd.Parameters.Add("@planneddate", NpgsqlDbType.Date);
                 pDate.Value = (object?)plannedDate ?? DBNull.Value;
+
                 cmd.Parameters.AddWithValue("@acceptance_1", (object?)dto.acceptance1 ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@attachments", (object?)dto.attachments ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@misc_items", (object?)dto.miscItems ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@present", (object?)dto.presentUserIds ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@distribution", (object?)dto.distributionUserIds ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@location", (object?)dto.location ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@time_window", (object?)dto.timeWindow ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@chairperson", (object?)dto.chairperson ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@minute_taker", (object?)dto.minuteTaker ?? DBNull.Value);
 
                 await using var reader = await cmd.ExecuteReaderAsync();
                 if (!await reader.ReadAsync())
@@ -188,21 +246,25 @@ namespace roadwork_portal_service.Controllers
 
                 var result = new SessionDto
                 {
-                    sksNo = reader.GetInt32(reader.GetOrdinal("sks_no")),
-                    plannedDate = reader.GetDateTime(reader.GetOrdinal("planneddate")),                    
-                    acceptance1 = reader.GetString(reader.GetOrdinal("acceptance_1")),
-                    attachments = reader.GetString(reader.GetOrdinal("attachments")),
-                    miscItems = reader.GetString(reader.GetOrdinal("misc_items")),
+                    sksNo = reader.GetInt64(reader.GetOrdinal("sks_no")),
+                    plannedDate = reader.GetDateTime(reader.GetOrdinal("planneddate")),
+                    acceptance1 = reader.IsDBNull(reader.GetOrdinal("acceptance_1")) ? "" : reader.GetString(reader.GetOrdinal("acceptance_1")),
+                    attachments = reader.IsDBNull(reader.GetOrdinal("attachments")) ? "" : reader.GetString(reader.GetOrdinal("attachments")),
+                    miscItems = reader.IsDBNull(reader.GetOrdinal("misc_items")) ? "" : reader.GetString(reader.GetOrdinal("misc_items")),
                     presentUserIds = reader.IsDBNull(reader.GetOrdinal("present_user_ids")) ? "" : reader.GetString(reader.GetOrdinal("present_user_ids")),
                     distributionUserIds = reader.IsDBNull(reader.GetOrdinal("distribution_user_ids")) ? "" : reader.GetString(reader.GetOrdinal("distribution_user_ids")),
+                    location = reader.IsDBNull(reader.GetOrdinal("location")) ? "" : reader.GetString(reader.GetOrdinal("location")),
+                    timeWindow = reader.IsDBNull(reader.GetOrdinal("time_window")) ? "" : reader.GetString(reader.GetOrdinal("time_window")),
+                    chairperson = reader.IsDBNull(reader.GetOrdinal("chairperson")) ? "" : reader.GetString(reader.GetOrdinal("chairperson")),
+                    minuteTaker = reader.IsDBNull(reader.GetOrdinal("minute_taker")) ? "" : reader.GetString(reader.GetOrdinal("minute_taker")),
+                    reportType = reader.IsDBNull(reader.GetOrdinal("report_type")) ? "" : reader.GetString(reader.GetOrdinal("report_type")),
+                    dateType = reader.IsDBNull(reader.GetOrdinal("date_type")) ? "" : reader.GetString(reader.GetOrdinal("date_type")),
                 };
 
-                // Location header to the resource
                 return Created($"/Session/{result.sksNo}", result);
             }
             catch (PostgresException pgEx) when (pgEx.SqlState == "23505")
             {
-                // 23505 = unique_violation (np. duplicate (sks_no, date_type))                
                 return Problem(
                     title: "SKS-Nr ist bereits vergeben.",
                     detail: "SqlState == 23505",
@@ -216,14 +278,22 @@ namespace roadwork_portal_service.Controllers
             }
         }
 
-
-
-
         private static async Task<List<SessionDto>> GetSessionsFromDbAsync()
         {
             const string sql = @"
-                SELECT planneddate, sks_no, acceptance_1, attachments, misc_items,
-                       present_user_ids, distribution_user_ids, report_type, date_type
+                SELECT planneddate,
+                       sks_no,
+                       acceptance_1,
+                       attachments,
+                       misc_items,
+                       present_user_ids,
+                       distribution_user_ids,
+                       report_type,
+                       date_type,
+                       location,
+                       time_window,
+                       chairperson,
+                       minute_taker
                 FROM   wtb_ssp_config_dates
                 ORDER  BY planneddate DESC;";
 
@@ -238,7 +308,7 @@ namespace roadwork_portal_service.Controllers
             while (await reader.ReadAsync())
             {
                 const int iPlannedDate = 0;
-                const int iSksNo       = 1;
+                const int iSksNo = 1;
                 const int iAcceptance1 = 2;
                 const int iAttachments = 3;
                 const int iMiscItems = 4;
@@ -246,7 +316,10 @@ namespace roadwork_portal_service.Controllers
                 const int iDistributionUserIds = 6;
                 const int iReportType = 7;
                 const int iDateType = 8;
-
+                const int iLocation = 9;
+                const int iTimeWindow = 10;
+                const int iChairperson = 11;
+                const int iMinuteTaker = 12;
 
                 if (reader.IsDBNull(iPlannedDate)) continue;
 
@@ -261,6 +334,10 @@ namespace roadwork_portal_service.Controllers
                     distributionUserIds = reader.IsDBNull(iDistributionUserIds) ? null : reader.GetString(iDistributionUserIds),
                     reportType = reader.IsDBNull(iReportType) ? "-" : reader.GetString(iReportType),
                     dateType = reader.IsDBNull(iDateType) ? "-" : reader.GetString(iDateType),
+                    location = reader.IsDBNull(iLocation) ? "" : reader.GetString(iLocation),
+                    timeWindow = reader.IsDBNull(iTimeWindow) ? "" : reader.GetString(iTimeWindow),
+                    chairperson = reader.IsDBNull(iChairperson) ? "" : reader.GetString(iChairperson),
+                    minuteTaker = reader.IsDBNull(iMinuteTaker) ? "" : reader.GetString(iMinuteTaker),
                 };
 
                 result.Add(dto);
