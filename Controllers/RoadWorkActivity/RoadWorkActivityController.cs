@@ -645,8 +645,8 @@ namespace roadwork_portal_service.Controllers
                                     date_consult_start2, date_consult_end2, date_report_start, date_report_end,
                                     url, sks_relevant, strabako_no, date_sks_planned, sks_no, geom)
                                     VALUES (@uuid, @name, @projectmanager, @traffic_agent,
-                                    @description, @project_no,                                         
-                                    to_char(current_timestamp, 'YYYY') || '_' || '00',
+                                    @description, @project_no, 
+                                    @roadworkactivity_no,
                                     @comment, @session_comment_1, @session_comment_2, @section, @type, @projecttype, @projectkind,
                                     @overarching_measure, @desired_year_from, @desired_year_to, @prestudy, 
                                     @start_of_construction, @end_of_construction, @consult_due,
@@ -822,6 +822,14 @@ namespace roadwork_portal_service.Controllers
                     trans.Commit();
                 }
 
+            }
+            catch (PostgresException ex) when (IsDuplicateRoadworkActivityNoViolation(ex))
+            {
+                _logger.LogWarning(ex, "Duplicate roadworkactivity_no while creating activity.");
+
+                roadWorkActivityFeature = new RoadWorkActivityFeature();
+                roadWorkActivityFeature.errorMessage = "Diese Bauvorhaben-Nr. ist bereits vergeben.";
+                return Ok(roadWorkActivityFeature);
             }
             catch (Exception ex)
             {
@@ -1562,6 +1570,15 @@ namespace roadwork_portal_service.Controllers
                 }
 
             }
+            catch (PostgresException ex) when (IsDuplicateRoadworkActivityNoViolation(ex))
+            {
+                _logger.LogWarning(ex, "Duplicate roadworkactivity_no while updating activity {Uuid}.",
+                    roadWorkActivityFeature?.properties?.uuid);
+
+                roadWorkActivityFeature = new RoadWorkActivityFeature();
+                roadWorkActivityFeature.errorMessage = "Diese Bauvorhaben-Nr. ist bereits vergeben.";
+                return Ok(roadWorkActivityFeature);
+            }
             catch (Exception ex)
             {
                 _logger.LogError(GetType().Name + ": " + ex.Message);
@@ -1964,5 +1981,16 @@ namespace roadwork_portal_service.Controllers
             return true;
         }
 
+        private static bool IsDuplicateRoadworkActivityNoViolation(PostgresException ex)
+        {
+            return ex.SqlState == "23505" &&
+                (
+                    string.Equals(ex.ConstraintName, "wtb_ssp_roadworkactivities_roadworkactivity_no_key", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(ex.ConstraintName, "wtb_ssp_roadworkactivities_roadworkactivity_no_uq", StringComparison.OrdinalIgnoreCase)
+                    || (ex.Detail?.Contains("roadworkactivity_no", StringComparison.OrdinalIgnoreCase) ?? false)
+                );
+        }
+
     }
+    
 }
