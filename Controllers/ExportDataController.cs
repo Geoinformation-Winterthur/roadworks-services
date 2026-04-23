@@ -61,7 +61,7 @@ namespace roadwork_portal_service.Controllers
 
                     "Infoversand Start;Infoversand Ende;Infoversand Abschluss;" +
                     "Aggloprogramm;Start Bedarfsklärung 1;Verifiziert 1;Start Bedarfsklärung 2;Verifiziert 2;" +
-                    "Start Stellungnahme;Sistiert;Koordiniert;UUID;\r\n"
+                    "Start Stellungnahme;Sistiert;Koordiniert;Bauvorhabe-UUID;Bedarfe-UUIDs;\r\n"
                 );
 
                 // 1) Export "needs" (wtb_ssp_roadworkneeds) - only those with status == "requirement"
@@ -92,7 +92,7 @@ namespace roadwork_portal_service.Controllers
                         var status = GetText(reader, "status");
                         if (!string.Equals(status, "requirement", StringComparison.OrdinalIgnoreCase))
                             continue;
-                                              
+
                         var statusPhase = HelperFunctions.translateStatusCodes(status, onlyStatusName: false);
                         var statusName = HelperFunctions.translateStatusCodes(status, onlyStatusName: true);
                         AppendText(sb, statusPhase);
@@ -115,13 +115,13 @@ namespace roadwork_portal_service.Controllers
                         //AppendDate(sb, reader, "finish_late_to");  // Datum bis
 
                         AppendBool(sb, reader, "private");
-                        
 
-                        // Remaining columns with empty fields to match the header count.                        
+                        // Remaining columns with empty fields to match the header count.
                         AppendEmpty(sb, 8);
-                        AppendEmpty(sb, 51);    
+                        AppendEmpty(sb, 51);
 
-                        AppendGuid(sb, reader, "uuid");                    
+                        AppendGuid(sb, reader, "uuid");
+                        AppendText(sb, "");
 
                         sb.Append("\r\n");
                     }
@@ -170,7 +170,8 @@ namespace roadwork_portal_service.Controllers
                             primary_need.triggering_last_name,
                             primary_need.triggering_org_abbr,
 
-                            involved.involved_orgs
+                            involved.involved_orgs,
+                            needs.needs_uuids
 
                         FROM ""wtb_ssp_roadworkactivities"" r
                         LEFT JOIN ""wtb_ssp_users"" p ON r.projectmanager = p.uuid
@@ -211,12 +212,21 @@ namespace roadwork_portal_service.Controllers
                                 AND an.activityrelationtype = 'assignedneed'
                                 AND o.abbreviation IS NOT NULL
                             ) x
-                        ) involved ON true";
+                        ) involved ON true
+
+                        LEFT JOIN LATERAL (
+                            SELECT string_agg(x.need_uuid, ', ' ORDER BY x.need_uuid) AS needs_uuids
+                            FROM (
+                                SELECT DISTINCT n.uuid::text AS need_uuid
+                                FROM ""wtb_ssp_activities_to_needs"" an
+                                JOIN ""wtb_ssp_roadworkneeds"" n ON an.uuid_roadwork_need = n.uuid
+                                WHERE an.uuid_roadwork_activity = r.uuid
+                            ) x
+                        ) needs ON true";
 
                     await using var reader = await selectComm.ExecuteReaderAsync();
                     while (await reader.ReadAsync())
-                    {                        
-
+                    {
                         var status = GetText(reader, "status");
                         var statusPhase = HelperFunctions.translateStatusCodes(status, onlyStatusName: false);
                         var statusName = HelperFunctions.translateStatusCodes(status, onlyStatusName: true);
@@ -226,7 +236,7 @@ namespace roadwork_portal_service.Controllers
                         AppendText(sb, reader, "roadworkactivity_no");
                         AppendText(sb, reader, "name");
                         AppendText(sb, reader, "section");
-                        AppendText(sb, reader, "comment");                        
+                        AppendText(sb, reader, "comment");
                         AppendText(sb, $"{GetText(reader, "gm_first_name")} {GetText(reader, "gm_last_name")}".Trim());
                         AppendText(sb, $"{GetText(reader, "triggering_first_name")} {GetText(reader, "triggering_last_name")}".Trim());
                         AppendText(sb, reader, "triggering_org_abbr");
@@ -245,26 +255,26 @@ namespace roadwork_portal_service.Controllers
                         //AppendDate(sb, reader, "date_to");
 
                         AppendBool(sb, reader, "private");
-                        
+
                         AppendBool(sb, reader, "in_internet");
 
                         AppendText(sb, reader, "billing_address1");
                         AppendText(sb, reader, "billing_address2");
 
-                        AppendInt(sb, reader, "pdb_fid");                        
+                        AppendInt(sb, reader, "pdb_fid");
                         AppendInt(sb, reader, "investment_no");
 
                         AppendDate(sb, reader, "date_sks");
                         AppendDate(sb, reader, "date_kap");
                         AppendDate(sb, reader, "date_oks");
                         AppendDate(sb, reader, "date_gl_tba");
-                        
+
                         AppendText(sb, reader, "url");
-                        var projectType = HelperFunctions.translateType(GetText(reader, "projecttype"));                                                                       
+                        var projectType = HelperFunctions.translateType(GetText(reader, "projecttype"));
                         AppendText(sb, projectType);
-                        var projectKind = HelperFunctions.translateProjectKind(GetText(reader, "projectkind"));                                                
+                        var projectKind = HelperFunctions.translateProjectKind(GetText(reader, "projectkind"));
                         AppendText(sb, projectKind);
-                        
+
                         AppendBool(sb, reader, "overarching_measure");
                         AppendInt(sb, reader, "desired_year_from");
                         AppendInt(sb, reader, "desired_year_to");
@@ -329,6 +339,7 @@ namespace roadwork_portal_service.Controllers
                         AppendDate(sb, reader, "date_start_coordinated");
 
                         AppendGuid(sb, reader, "uuid");
+                        AppendText(sb, reader, "needs_uuids");
 
                         sb.Append("\r\n");
                     }
