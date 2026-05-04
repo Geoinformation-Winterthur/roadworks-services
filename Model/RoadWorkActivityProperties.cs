@@ -100,4 +100,69 @@ public class RoadWorkActivityProperties
     public bool? isSksRelevant { get; set; }
     public DateTime? costLastModified { get; set; }
     public User? costLastModifiedBy { get; set; } = new User();
+
+    // Aggloprogramm
+    public bool? partOfAggloprogram { get; set; } = false;
+    public int? aggloprogramGeneration { get; set; }
+    public string? aggloprogramAreCode { get; set; } = "";
+    public string? aggloprogramAreDescription { get; set; } = "";
+    public DateTime? aggloprogramDueDate { get; set; }
+    public decimal? aggloprogramCostTotal { get; set; }
+    public decimal? aggloprogramCostCanton { get; set; }
+
+    // Vorstudie
+    //public bool? preliminaryStudyRequired { get; set; } = false;
+    //public string? preliminaryStudyDuration { get; set; } = "";
+    //public string? preliminaryStudyDetail { get; set; } = "";
+    //public DateTime? preliminaryStudyVkErConfirmed { get; set; }
+    //public long? preliminaryStudyVkErNumber { get; set; }
+
+    // Betroffene Themen
+    public bool? busStopsSheltersAffected { get; set; } = false;
+    public bool? structuresAffected { get; set; } = false;
+    public bool? roadDrainageAffected { get; set; } = false;
+    public bool? houseConnectionsAffected { get; set; } = false;
+    public bool? wasteFacilitiesAffected { get; set; } = false;
+    public bool? technicalInstallationsAffected { get; set; } = false;
+    public bool? treesAffected { get; set; } = false;
+    public bool? streetFurnitureAffected { get; set; } = false;
+    public bool? urbanClimateAffected { get; set; } = false;
+    public bool? subjectToDepaving { get; set; } = false;
+    public bool? pedestriansCyclingAffected { get; set; } = false;
+    public bool? disabilityEqualityAffected { get; set; } = false;
+    public bool? trafficRegulationAffected { get; set; } = false;
+
+    // Private betroffen
+    public bool? privateEntityAffected { get; set; } = false;
+    public string? privateEntityExtent { get; set; } = "";
+    public string? privateEntityRequirements { get; set; } = "";
+    public string? privateEntityAcquisition { get; set; } = "";
+    public string? privateEntityIsInitiator { get; set; } = "";
+
+    // Provis (Abacus)
+    public long? erpNumber { get; set; }
+
+    // Ressourcen
+    public DateTime? staffResourcesAprConfirmed { get; set; }
+    public DateTime? costEstimateAprConfirmed { get; set; }
+
+    // Projektierungsauftrag
+    public bool? coreDrillingContracted { get; set; } = false;
+    public bool? quotesRequested { get; set; } = false;
+    public bool? quotesReviewed { get; set; } = false;
+    public bool? aprChecked { get; set; } = false;
+    public bool? afmChecked { get; set; } = false;
+
+    // Ausgabengenehmigung und Ablage
+    public bool? cfDone { get; set; } = false;
+    public bool? rdDone { get; set; } = false;
+    public bool? approved { get; set; } = false;
+    public bool? fabasoftDone { get; set; } = false;
+    public bool? gisUpdated { get; set; } = false;
+
+
+    public RoadWorkApprovals approvals { get; set; } = new RoadWorkApprovals();
+    //public JournalRecord[]? journalEntries { get; set; } = Array.Empty<JournalRecord>();
+    public RoadWorkApprovals additinalParameters { get; set; } = new RoadWorkApprovals();
+    public RoadWorkApprovals[]? additinalParametersNeeds { get; set; } = Array.Empty<RoadWorkApprovals>();
 }

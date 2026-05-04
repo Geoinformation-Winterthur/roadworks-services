@@ -5,6 +5,7 @@ using NetTopologySuite.Geometries;
 using Npgsql;
 using roadwork_portal_service.Configuration;
 using roadwork_portal_service.Helper;
+using roadwork_portal_service.Mappers;
 using roadwork_portal_service.Model;
 
 namespace roadwork_portal_service.Controllers
@@ -59,12 +60,44 @@ namespace roadwork_portal_service.Controllers
                         r.date_start_inconsult1, r.date_start_verified1, r.date_start_inconsult2, r.date_start_verified2, r.date_start_reporting,
                         r.date_start_suspended, r.date_start_coordinated, r.sks_relevant,
                         r.costs_last_modified, r.costs_last_modified_by,
+                        -- Aggloprogramm
+                        r.part_of_aggloprogram, r.aggloprogram_generation, r.aggloprogram_are_code,
+                        r.aggloprogram_are_description, r.aggloprogram_due_date, r.aggloprogram_cost_total,
+                        r.aggloprogram_cost_canton,
+                        -- Vorstudie
+                        --r.prel_study_required, r.prel_study_duration, r.prel_study_detail,
+                        --r.prel_study_vk_er_confirmed, r.prel_study_vk_er_number,
+                        -- Betroffene Themen
+                        r.bus_stops_shelters_affected, r.structures_affected, r.roadDrainage_affected,
+                        r.houseConnections_affected, r.wasteFacilities_affected, r.technical_installations_affected,
+                        r.trees_affected, r.street_furniture_affected, r.urban_climate_affected, r.subject_to_depaving,
+                        r.pedestrians_cycling_affected, r.disability_equality_affected, r.traffic_regulation_affected, 
+                        -- Private betroffen
+                        r.private_entity_affected, r.private_entity_extent, r.private_entity_requirements,
+                        r.private_entity_acquisition, r.private_entity_is_initiator,
+                        -- Provis (Abacus)
+                        r.erp_number,
+                        -- Ressourcen
+                        r.staff_resources_apr_confirmed, r.cost_estimate_apr_confirmed,
+                        -- Projektierungsauftrag
+                        r.core_drilling_contracted, r.quotes_requested, r.quotes_reviewed,
+                        r.apr_checked, r.afm_checked, 
+                        -- Ausgabengenehmigung und Ablage
+                        r.cf_done, r.rd_done, r.approved, r.fabasoft_done, r.gis_updated,
+                        -- User
                         cm.first_name AS cm_first_name, cm.last_name AS cm_last_name,
-                        r.date_sks_planned, r.sks_no, r.geom
+                        r.date_sks_planned, r.sks_no, r.geom,
+                        para.uuid as uuid_parameters, para.uuid_roadwork_need, para.uuid_roadwork_activity,
+                        para.approval_required,
+                        para.strg_approval_required, para.bafu_approval_required, para.lsv_approval_required,
+                        para.ssv_approval_required, para.wwg_approval_required, para.eri_approval_required,
+                        para.pbg_approval_required, para.ebg_approval_required, para.awel_approval_required,
+                        para.esti_approval_required, para.other_approval_required, para.other_approval_details
                     FROM ""wtb_ssp_roadworkactivities"" r
                     LEFT JOIN ""wtb_ssp_users"" pm ON r.projectmanager = pm.uuid
                     LEFT JOIN ""wtb_ssp_users"" ta ON r.traffic_agent = ta.uuid
-                    LEFT JOIN ""wtb_ssp_users"" cm ON r.costs_last_modified_by = cm.uuid";
+                    LEFT JOIN ""wtb_ssp_users"" cm ON r.costs_last_modified_by = cm.uuid
+                    LEFT JOIN ""wtb_ssp_roadwork_approvals"" para ON r.uuid = para.uuid_roadwork_activity";
 
                 if (uuid != null)
                 {
@@ -101,6 +134,9 @@ namespace roadwork_portal_service.Controllers
                     while (reader.Read())
                     {
                         projectFeatureFromDb = new RoadWorkActivityFeature();
+                        projectFeatureFromDb.properties.approvals = RoadWorkApprovalsMapper.FromReader(reader);
+                        projectFeatureFromDb.properties = RoadWorkActivityMapper.FromReader(reader, projectFeatureFromDb.properties);
+
                         projectFeatureFromDb.properties.uuid = reader.IsDBNull(reader.GetOrdinal("uuid"))
                             ? ""
                             : reader.GetGuid(reader.GetOrdinal("uuid")).ToString();
@@ -643,7 +679,28 @@ namespace roadwork_portal_service.Controllers
                                     billing_address2, investment_no, date_sks,
                                     date_kap, private, date_consult_start1, date_consult_end1,
                                     date_consult_start2, date_consult_end2, date_report_start, date_report_end,
-                                    url, sks_relevant, strabako_no, date_sks_planned, sks_no, geom)
+                                    url, sks_relevant, strabako_no, date_sks_planned, sks_no, geom,
+                                    -- Aggloprogramm
+                                    part_of_aggloprogram, aggloprogram_generation, aggloprogram_are_code, aggloprogram_are_description, 
+                                    aggloprogram_due_date, aggloprogram_cost_total, aggloprogram_cost_canton,
+                                    -- Vorstudie
+                                    --prel_study_required, prel_study_duration, prel_study_detail, prel_study_vk_er_confirmed, prel_study_vk_er_number,
+                                    -- Betroffene Themen
+                                    bus_stops_shelters_affected, structures_affected, roadDrainage_affected, houseConnections_affected, 
+                                    wasteFacilities_affected, technical_installations_affected, trees_affected, street_furniture_affected, 
+                                    urban_climate_affected, subject_to_depaving, pedestrians_cycling_affected, disability_equality_affected,
+                                    traffic_regulation_affected, 
+                                    -- Private betroffen
+                                    private_entity_affected, private_entity_extent, private_entity_requirements, private_entity_acquisition, 
+                                    private_entity_is_initiator,
+                                    -- Provis (Abacus)
+                                    erp_number,
+                                    -- Ressourcen
+                                    staff_resources_apr_confirmed, cost_estimate_apr_confirmed,
+                                    -- Projektierungsauftrag
+                                    core_drilling_contracted, quotes_requested, quotes_reviewed, apr_checked, afm_checked, 
+                                    -- Ausgabengenehmigung und Ablage
+                                    cf_done, rd_done, approved, fabasoft_done, gis_updated)
                                     VALUES (@uuid, @name, @projectmanager, @traffic_agent,
                                     @description, @project_no, 
                                     @roadworkactivity_no,
@@ -655,7 +712,29 @@ namespace roadwork_portal_service.Controllers
                                     @billing_address2, @investment_no, @date_sks, @date_kap,
                                     @private, @date_consult_start1, @date_consult_end1, @date_consult_start2, @date_consult_end2,
                                     @date_report_start, @date_report_end, @url, @sks_relevant,
-                                    @strabako_no, @date_sks_planned, @sks_no, @geom)";
+                                    @strabako_no, @date_sks_planned, @sks_no, @geom,
+                                    -- Aggloprogramm
+                                    @part_of_aggloprogram, @aggloprogram_generation, @aggloprogram_are_code, @aggloprogram_are_description, 
+                                    @aggloprogram_due_date, @aggloprogram_cost_total, @aggloprogram_cost_canton,
+                                    -- Vorstudie
+                                    --@prel_study_required, @prel_study_duration, @prel_study_detail, @prel_study_vk_er_confirmed, @prel_study_vk_er_number,
+                                    -- Betroffene Themen
+                                    @bus_stops_shelters_affected, @structures_affected, @roadDrainage_affected, @houseConnections_affected, 
+                                    @wasteFacilities_affected, @technical_installations_affected, @trees_affected, @street_furniture_affected, 
+                                    @urban_climate_affected, @subject_to_depaving, @pedestrians_cycling_affected, @disability_equality_affected,
+                                    @traffic_regulation_affected, 
+                                    -- Private betroffen
+                                    @private_entity_affected, @private_entity_extent, @private_entity_requirements, @private_entity_acquisition, 
+                                    @private_entity_is_initiator,
+                                    -- Provis (Abacus)
+                                    @erp_number,
+                                    -- Ressourcen
+                                    @staff_resources_apr_confirmed, @cost_estimate_apr_confirmed,
+                                    -- Projektierungsauftrag
+                                    @core_drilling_contracted, @quotes_requested, @quotes_reviewed, @apr_checked, @afm_checked, 
+                                    -- Ausgabengenehmigung und Ablage
+                                    @cf_done, @rd_done, @approved, @fabasoft_done, @gis_updated)";
+                    RoadWorkActivityMapper.AddParameters(insertComm.Parameters, roadWorkActivityFeature.properties);
                     insertComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
                     if (roadWorkActivityFeature.properties.projectManager.uuid != "")
                     {
@@ -743,6 +822,14 @@ namespace roadwork_portal_service.Controllers
                     insertComm.Parameters.AddWithValue("date_sks", nextSks == null ? DBNull.Value : nextSks);
 
                     insertComm.ExecuteNonQuery();
+
+                    // Insert additional parameters
+                    RoadWorkApprovals roadWorkApprovals = roadWorkActivityFeature.properties.approvals;
+                    roadWorkApprovals.uuidRoadworkActivity = roadWorkActivityFeature.properties.uuid;
+                    using (NpgsqlCommand command = RoadWorkApprovalsMapper.CreateInsertOrUpdateCommand(pgConn, roadWorkApprovals))
+                    {
+                        command.ExecuteNonQuery();
+                    }
 
                     NpgsqlCommand insertInvolvedUsersComm;
                     foreach (User involvedUser in roadWorkActivityFeature.properties.involvedUsers)
@@ -1269,7 +1356,37 @@ namespace roadwork_portal_service.Controllers
                                     date_info_start=@date_info_start, date_info_end=@date_info_end,
                                     date_info_close=@date_info_close, is_aggloprog=@is_aggloprog, is_traffic_regulation_required=@is_traffic_regulation_required,
                                     project_study_approved=@project_study_approved, study_approved=@study_approved,
-                                    sks_relevant=@sks_relevant, strabako_no=@strabako_no, date_sks_planned=@date_sks_planned, sks_no=@sks_no,";
+                                    sks_relevant=@sks_relevant, strabako_no=@strabako_no, date_sks_planned=@date_sks_planned, sks_no=@sks_no,
+                                    -- Aggloprogramm
+                                    part_of_aggloprogram = @part_of_aggloprogram, aggloprogram_generation = @aggloprogram_generation,
+                                    aggloprogram_are_code = @aggloprogram_are_code, aggloprogram_are_description = @aggloprogram_are_description, 
+                                    aggloprogram_due_date = @aggloprogram_due_date, aggloprogram_cost_total = @aggloprogram_cost_total,
+                                    aggloprogram_cost_canton = @aggloprogram_cost_canton,
+                                    -- Vorstudie
+                                    --prel_study_required = @prel_study_required, prel_study_duration = @prel_study_duration, 
+                                    --prel_study_detail = @prel_study_detail, prel_study_vk_er_confirmed = @prel_study_vk_er_confirmed, 
+                                    --prel_study_vk_er_number = @prel_study_vk_er_number,
+                                    -- Betroffene Themen
+                                    bus_stops_shelters_affected = @bus_stops_shelters_affected, structures_affected = @structures_affected, 
+                                    roadDrainage_affected = @roadDrainage_affected, houseConnections_affected = @houseConnections_affected, 
+                                    wasteFacilities_affected = @wasteFacilities_affected, technical_installations_affected = @technical_installations_affected,
+                                    trees_affected = @trees_affected, street_furniture_affected = @street_furniture_affected, 
+                                    urban_climate_affected = @urban_climate_affected, subject_to_depaving = @subject_to_depaving,
+                                    pedestrians_cycling_affected = @pedestrians_cycling_affected, disability_equality_affected = @disability_equality_affected,
+                                    traffic_regulation_affected = @traffic_regulation_affected, 
+                                    -- Private betroffen
+                                    private_entity_affected = @private_entity_affected, private_entity_extent = @private_entity_extent, 
+                                    private_entity_requirements = @private_entity_requirements, private_entity_acquisition = @private_entity_acquisition, 
+                                    private_entity_is_initiator = @private_entity_is_initiator,
+                                    -- Provis (Abacus)
+                                    erp_number = @erp_number,
+                                    -- Ressourcen
+                                    staff_resources_apr_confirmed = @staff_resources_apr_confirmed, cost_estimate_apr_confirmed = @cost_estimate_apr_confirmed,
+                                    -- Projektierungsauftrag
+                                    core_drilling_contracted = @core_drilling_contracted, quotes_requested = @quotes_requested, 
+                                    quotes_reviewed = @quotes_reviewed, apr_checked = @apr_checked, afm_checked = @afm_checked, 
+                                    -- Ausgabengenehmigung und Ablage
+                                    cf_done = @cf_done, rd_done = @rd_done, approved = @approved, fabasoft_done = @fabasoft_done, gis_updated = @gis_updated, ";
 
                     if (costsInDb != roadWorkActivityFeature.properties.costs){
                         updateComm.CommandText += "costs_last_modified=@costs_last_modified, ";
@@ -1339,6 +1456,7 @@ namespace roadwork_portal_service.Controllers
                     {
                         updateComm.Parameters.AddWithValue("traffic_agent", DBNull.Value);
                     }
+                    RoadWorkActivityMapper.AddParameters(updateComm.Parameters, roadWorkActivityFeature.properties);
                     updateComm.Parameters.AddWithValue("description", roadWorkActivityFeature.properties.description);
                     roadWorkActivityFeature.properties.lastModified = DateTime.Now;
                     updateComm.Parameters.AddWithValue("last_modified", roadWorkActivityFeature.properties.lastModified);
@@ -1438,6 +1556,14 @@ namespace roadwork_portal_service.Controllers
                     }
 
                     updateComm.ExecuteNonQuery();
+
+                    // Insert additional parameters
+                    RoadWorkApprovals roadWorkApprovals = roadWorkActivityFeature.properties.approvals;
+                    roadWorkApprovals.uuidRoadworkActivity = roadWorkActivityFeature.properties.uuid;
+                    using (NpgsqlCommand command = RoadWorkApprovalsMapper.CreateInsertOrUpdateCommand(pgConn, roadWorkApprovals))
+                    {
+                        command.ExecuteNonQuery();
+                    }
 
                     NpgsqlCommand deleteInvolvedUsersComm = pgConn.CreateCommand();
                     deleteInvolvedUsersComm.CommandText = @"DELETE FROM ""wtb_ssp_act_partic""

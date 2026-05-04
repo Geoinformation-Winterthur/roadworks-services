@@ -133,6 +133,11 @@ namespace roadwork_portal_service.Helper
                 return "";
         }
 
+        public static object ToDbValue(object value)
+        {
+            return value ?? DBNull.Value;
+        }
+
         private static List<(string, Point)> _getFromToListFromDb(
                 Polygon roadWorkPoly, NpgsqlConnection pgConn)
         {

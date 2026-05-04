@@ -5,7 +5,9 @@ using NetTopologySuite.Geometries;
 using Npgsql;
 using roadwork_portal_service.Configuration;
 using roadwork_portal_service.DAO;
+using roadwork_portal_service.Extensions;
 using roadwork_portal_service.Helper;
+using roadwork_portal_service.Mappers;
 using roadwork_portal_service.Model;
 
 namespace roadwork_portal_service.Controllers
@@ -104,7 +106,13 @@ namespace roadwork_portal_service.Controllers
                             r.is_sponge_2_3, r.is_sponge_2_4, r.is_sponge_2_5, r.is_sponge_2_6,
                             r.is_sponge_2_7, r.is_sponge_3_1, r.is_sponge_3_2, r.is_sponge_3_3,
                             r.is_sponge_4_1, r.is_sponge_4_2, r.is_sponge_5_1, r.delete_reason,
-                            r.geom";
+                            r.geom, r.construction_duration, r.acquisition_planned, 
+                            para.uuid as uuid_parameters, para.uuid_roadwork_need, para.uuid_roadwork_activity,
+                            para.approval_required, para.strg_approval_required, para.bafu_approval_required,
+                            para.lsv_approval_required, para.ssv_approval_required, para.wwg_approval_required,
+                            para.eri_approval_required, para.pbg_approval_required, para.ebg_approval_required,
+                            para.awel_approval_required, para.esti_approval_required, para.other_approval_required,
+                            para.other_approval_details";
 
                     if (uuids == "" && roadWorkActivityUuid != "")
                     {
@@ -115,7 +123,8 @@ namespace roadwork_portal_service.Controllers
                         LEFT JOIN ""wtb_ssp_users"" u ON r.orderer = u.uuid
                         LEFT JOIN ""wtb_ssp_organisationalunits"" o ON u.org_unit = o.uuid
                         LEFT JOIN ""wtb_ssp_priorities"" p ON r.priority = p.code
-                        LEFT JOIN ""wtb_ssp_users"" n ON r.area_man_of_note = n.uuid";
+                        LEFT JOIN ""wtb_ssp_users"" n ON r.area_man_of_note = n.uuid
+                        LEFT JOIN ""wtb_ssp_roadwork_approvals"" para ON r.uuid = para.uuid_roadwork_need";
 
                     if (uuids == "")
                     {
@@ -226,6 +235,7 @@ namespace roadwork_portal_service.Controllers
                         while (reader.Read())
                         {
                             needFeatureFromDb = new RoadWorkNeedFeature();
+                            needFeatureFromDb.properties.approvals = RoadWorkApprovalsMapper.FromReader(reader);
                             needFeatureFromDb.properties.uuid =
                                     reader.IsDBNull(reader.GetOrdinal("uuid")) ?
                                         "" : reader.GetGuid(reader.GetOrdinal("uuid")).ToString();
@@ -273,6 +283,9 @@ namespace roadwork_portal_service.Controllers
                             needFeatureFromDb.properties.overarchingMeasure = reader.IsDBNull(reader.GetOrdinal("overarching_measure")) ? false : reader.GetBoolean(reader.GetOrdinal("overarching_measure"));
                             needFeatureFromDb.properties.desiredYearFrom = reader.IsDBNull(reader.GetOrdinal("desired_year_from")) ? null : reader.GetInt32(reader.GetOrdinal("desired_year_from"));
                             needFeatureFromDb.properties.desiredYearTo = reader.IsDBNull(reader.GetOrdinal("desired_year_to")) ? null : reader.GetInt32(reader.GetOrdinal("desired_year_to"));
+
+                            needFeatureFromDb.properties.constructionDuration = reader.GetNullableInt("construction_duration");
+                            needFeatureFromDb.properties.acquisitionPlanned = reader.GetStringOrEmpty("acquisition_planned");
 
                             needFeatureFromDb.properties.hasSpongeCityMeasures = reader.IsDBNull(reader.GetOrdinal("has_sponge_city_meas")) ? false : reader.GetBoolean(reader.GetOrdinal("has_sponge_city_meas"));
 
@@ -765,7 +778,8 @@ namespace roadwork_portal_service.Controllers
                                     is_sponge_2_7=@is_sponge_2_7, is_sponge_3_1=@is_sponge_3_1,
                                     is_sponge_3_2=@is_sponge_3_2, is_sponge_3_3=@is_sponge_3_3,
                                     is_sponge_4_1=@is_sponge_4_1, is_sponge_4_2=@is_sponge_4_2,
-                                    is_sponge_5_1=@is_sponge_5_1, geom=@geom";
+                                    is_sponge_5_1=@is_sponge_5_1, geom=@geom,
+                                    construction_duration = @construction_duration, acquisition_planned = @acquisition_planned";
 
                         if (User.IsInRole("administrator") || User.IsInRole("territorymanager"))
                             updateComm.CommandText += ", note_of_area_man=@note_of_area_man";
@@ -829,6 +843,9 @@ namespace roadwork_portal_service.Controllers
                         updateComm.Parameters.AddWithValue("decline", roadWorkNeedFeature.properties.decline != null ? roadWorkNeedFeature.properties.decline : DBNull.Value);
                         updateComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
                         updateComm.Parameters.AddWithValue("note_of_area_man", roadWorkNeedFeature.properties.noteOfAreaManager);
+
+                        updateComm.Parameters.AddWithValue("@construction_duration", HelperFunctions.ToDbValue(roadWorkNeedFeature.properties.constructionDuration));
+                        updateComm.Parameters.AddWithValue("@acquisition_planned", HelperFunctions.ToDbValue(roadWorkNeedFeature.properties.acquisitionPlanned));
 
                         string activityRelationType = "";
                         if (roadWorkNeedFeature.properties.activityRelationType != null)
@@ -1003,6 +1020,14 @@ namespace roadwork_portal_service.Controllers
                                     insertCostsComm.ExecuteNonQuery();
                                 }
                             }
+                        }
+
+                        // Insert or update additional parameters
+                        RoadWorkApprovals roadWorkApprovals = roadWorkNeedFeature.properties.approvals;
+                        roadWorkApprovals.uuidRoadworkNeed = roadWorkNeedFeature.properties.uuid;
+                        using (NpgsqlCommand command = RoadWorkApprovalsMapper.CreateInsertOrUpdateCommand(pgConn, roadWorkApprovals))
+                        {
+                            command.ExecuteNonQuery();
                         }
 
                         updateTransAction.Commit();

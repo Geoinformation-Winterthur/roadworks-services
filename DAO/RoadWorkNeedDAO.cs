@@ -6,6 +6,8 @@
 using NetTopologySuite.Geometries;
 using Npgsql;
 using roadwork_portal_service.Configuration;
+using roadwork_portal_service.Helper;
+using roadwork_portal_service.Mappers;
 using roadwork_portal_service.Model;
 
 namespace roadwork_portal_service.DAO;
@@ -184,6 +186,15 @@ public class RoadWorkNeedDAO
                         }
                     }
                 }
+
+                // Insert or update additional parameters
+                RoadWorkApprovals roadWorkApprovals = roadWorkNeedFeature.properties.approvals;
+                roadWorkApprovals.uuidRoadworkNeed = roadWorkNeedFeature.properties.uuid;
+                using (NpgsqlCommand command = RoadWorkApprovalsMapper.CreateInsertOrUpdateCommand(pgConn, roadWorkApprovals))
+                {
+                    command.ExecuteNonQuery();
+                }
+
                 trans.Commit();
             }
         }
@@ -205,7 +216,8 @@ public class RoadWorkNeedDAO
                                     is_sponge_2_1, is_sponge_2_2, is_sponge_2_3, is_sponge_2_4,
                                     is_sponge_2_5, is_sponge_2_6, is_sponge_2_7, is_sponge_3_1,
                                     is_sponge_3_2, is_sponge_3_3, is_sponge_4_1, is_sponge_4_2,
-                                    is_sponge_5_1, still_relevant, decline, feedback_given, geom)
+                                    is_sponge_5_1, still_relevant, decline, feedback_given, geom,
+                                    construction_duration, acquisition_planned)
                                     VALUES (@uuid, @name, @orderer, @created, @last_modified,
                                     @finish_early_to, @finish_optimum_to,
                                     @finish_late_to, @priority, @status, @description,
@@ -217,7 +229,8 @@ public class RoadWorkNeedDAO
                                     @is_sponge_2_1, @is_sponge_2_2, @is_sponge_2_3, @is_sponge_2_4,
                                     @is_sponge_2_5, @is_sponge_2_6, @is_sponge_2_7, @is_sponge_3_1,
                                     @is_sponge_3_2, @is_sponge_3_3, @is_sponge_4_1, @is_sponge_4_2,
-                                    @is_sponge_5_1, @still_relevant, @decline, @feedback_given, @geom)";
+                                    @is_sponge_5_1, @still_relevant, @decline, @feedback_given, @geom,
+                                    @construction_duration, @acquisition_planned)";
         insertComm.Parameters.AddWithValue("uuid", new Guid(roadWorkNeedFeature.properties.uuid));
         insertComm.Parameters.AddWithValue("name", roadWorkNeedFeature.properties.name);
         if (roadWorkNeedFeature.properties.orderer.uuid != "")
@@ -277,6 +290,9 @@ public class RoadWorkNeedDAO
         insertComm.Parameters.AddWithValue("is_sponge_4_1", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("4.1"));
         insertComm.Parameters.AddWithValue("is_sponge_4_2", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("4.2"));
         insertComm.Parameters.AddWithValue("is_sponge_5_1", roadWorkNeedFeature.properties.spongeCityMeasures.Contains("5.1"));
+
+        insertComm.Parameters.AddWithValue("@construction_duration", HelperFunctions.ToDbValue(roadWorkNeedFeature.properties.constructionDuration));
+        insertComm.Parameters.AddWithValue("@acquisition_planned", HelperFunctions.ToDbValue(roadWorkNeedFeature.properties.acquisitionPlanned));
 
         insertComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
 

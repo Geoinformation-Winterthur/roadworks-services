@@ -9,6 +9,7 @@ public class RoadWorkNeedProperties
     public string uuid { get; set; } = "";
     public string name { get; set; } = "";
     public User orderer { get; set; } = new User();
+    public RoadWorkApprovals approvals { get; set; } = new RoadWorkApprovals();
     public DateTime created { get; set; } = DateTime.MinValue;
     public DateTime? lastModified { get; set; }
     public DateTime finishEarlyTo { get; set; } = DateTime.MinValue;
@@ -39,5 +40,7 @@ public class RoadWorkNeedProperties
     public bool? stillRelevant { get; set; }
     public bool? feedbackGiven { get; set; }
     public bool? decline { get; set; }
+    public int? constructionDuration { get; set; }
+    public string? acquisitionPlanned { get; set; } = "";
 }
 
