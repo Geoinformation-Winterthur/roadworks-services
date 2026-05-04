@@ -4,10 +4,6 @@
 ALTER TABLE IF EXISTS wtb_ssp_roadworkneeds ADD COLUMN construction_duration integer;
 ALTER TABLE IF EXISTS wtb_ssp_roadworkneeds ADD COLUMN acquisition_planned character varying(40);
 
--- #608 - Add construction work duration to needs (GEOBOX AG - Simon Meyer, 16.04.2026) 
-ALTER TABLE IF EXISTS wtb_ssp_roadworkneeds ADD COLUMN construction_duration integer;
-ALTER TABLE IF EXISTS wtb_ssp_roadworkneeds ADD COLUMN acquisition_planned character varying(40);
-
 -- #616 (and following) - Add additional attributes to activities for journal page (GEOBOX AG - Simon Meyer, 23.04.2026)
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN part_of_aggloprogram boolean;
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN aggloprogram_generation integer;
