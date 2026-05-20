@@ -42,7 +42,7 @@ namespace roadwork_portal_service.Controllers
                         r.costs, r.costs_type, r.status, r.in_internet,
                         r.billing_address1, r.billing_address2, r.investment_no, r.pdb_fid,
                         r.strabako_no, r.date_sks, r.date_kap, r.date_oks, r.date_gl_tba,
-                        r.comment, r.session_comment_1, r.session_comment_2, r.section, r.type, r.projecttype, r.projectkind, r.overarching_measure,
+                        r.comment, r.session_comment_1, r.session_comment_2, r.section, r.type, r.projecttype, r.projectkind, r.working_title, r.overarching_measure,
                         r.desired_year_from, r.desired_year_to, r.prestudy, r.start_of_construction,
                         r.end_of_construction, r.consult_due, r.project_no, 
                         r.roadworkactivity_no, 
@@ -274,6 +274,9 @@ namespace roadwork_portal_service.Controllers
                         projectFeatureFromDb.properties.projectKind = reader.IsDBNull(reader.GetOrdinal("projectkind"))
                             ? ""
                             : reader.GetString(reader.GetOrdinal("projectkind"));
+                        projectFeatureFromDb.properties.workingTitle = reader.IsDBNull(reader.GetOrdinal("working_title"))
+                            ? ""
+                            : reader.GetString(reader.GetOrdinal("working_title"));
                         projectFeatureFromDb.properties.overarchingMeasure = reader.IsDBNull(reader.GetOrdinal("overarching_measure"))
                             ? false
                             : reader.GetBoolean(reader.GetOrdinal("overarching_measure"));
@@ -671,7 +674,7 @@ namespace roadwork_portal_service.Controllers
                     NpgsqlCommand insertComm = pgConn.CreateCommand();
                     insertComm.CommandText = @"INSERT INTO ""wtb_ssp_roadworkactivities""
                                     (uuid, name, projectmanager, traffic_agent, description,
-                                    project_no, roadworkactivity_no, comment, session_comment_1, session_comment_2, section, type, projecttype, projectkind,
+                                    project_no, roadworkactivity_no, comment, session_comment_1, session_comment_2, section, type, projecttype, projectkind, working_title,
                                     overarching_measure, desired_year_from, desired_year_to, prestudy, 
                                     start_of_construction, end_of_construction, consult_due,
                                     created, last_modified, date_from, date_optimum, date_to,
@@ -704,7 +707,7 @@ namespace roadwork_portal_service.Controllers
                                     VALUES (@uuid, @name, @projectmanager, @traffic_agent,
                                     @description, @project_no, 
                                     @roadworkactivity_no,
-                                    @comment, @session_comment_1, @session_comment_2, @section, @type, @projecttype, @projectkind,
+                                    @comment, @session_comment_1, @session_comment_2, @section, @type, @projecttype, @projectkind, @working_title,
                                     @overarching_measure, @desired_year_from, @desired_year_to, @prestudy, 
                                     @start_of_construction, @end_of_construction, @consult_due,
                                     current_timestamp, current_timestamp, @date_from, @date_optimum,
@@ -769,10 +772,9 @@ namespace roadwork_portal_service.Controllers
                     insertComm.Parameters.AddWithValue("session_comment_2", roadWorkActivityFeature.properties.sessionComment2);                    
                     insertComm.Parameters.AddWithValue("section", roadWorkActivityFeature.properties.section);
                     insertComm.Parameters.AddWithValue("type", roadWorkActivityFeature.properties.type);
-                    insertComm.Parameters.AddWithValue("projecttype", roadWorkActivityFeature.properties.projectType == "" ?
-                                        DBNull.Value : roadWorkActivityFeature.properties.projectType);
-                    insertComm.Parameters.AddWithValue("projectkind", roadWorkActivityFeature.properties.projectKind == "" ?
-                                        DBNull.Value : roadWorkActivityFeature.properties.projectKind);                                        
+                    insertComm.Parameters.AddWithValue("projecttype", roadWorkActivityFeature.properties.projectType == "" ? DBNull.Value : roadWorkActivityFeature.properties.projectType);
+                    insertComm.Parameters.AddWithValue("projectkind", roadWorkActivityFeature.properties.projectKind == "" ? DBNull.Value : roadWorkActivityFeature.properties.projectKind);           
+                    insertComm.Parameters.AddWithValue("working_title", roadWorkActivityFeature.properties.workingTitle ?? (object)DBNull.Value);                                               
                     insertComm.Parameters.AddWithValue("overarching_measure", roadWorkActivityFeature.properties.overarchingMeasure);
                     insertComm.Parameters.AddWithValue("desired_year_from", roadWorkActivityFeature.properties.desiredYearFrom);
                     insertComm.Parameters.AddWithValue("desired_year_to", roadWorkActivityFeature.properties.desiredYearTo);
@@ -1328,7 +1330,7 @@ namespace roadwork_portal_service.Controllers
                                     SET name=@name, projectmanager=@projectmanager,
                                     traffic_agent=@traffic_agent, description=@description,
                                     comment=@comment, session_comment_1=@session_comment_1, session_comment_2=@session_comment_2, section=@section, type=@type,
-                                    projecttype=@projecttype, projectkind=@projectkind, overarching_measure=@overarching_measure,
+                                    projecttype=@projecttype, projectkind=@projectkind, working_title=@working_title, overarching_measure=@overarching_measure,
                                     desired_year_from=@desired_year_from, desired_year_to=@desired_year_to, prestudy=@prestudy, 
                                     start_of_construction=@start_of_construction, date_of_acceptance=@date_of_acceptance,
                                     end_of_construction=@end_of_construction, consult_due=@consult_due,
@@ -1487,6 +1489,7 @@ namespace roadwork_portal_service.Controllers
                                             DBNull.Value : roadWorkActivityFeature.properties.projectType);
                     updateComm.Parameters.AddWithValue("projectkind", roadWorkActivityFeature.properties.projectKind == "" ?
                                             DBNull.Value : roadWorkActivityFeature.properties.projectKind);
+                    updateComm.Parameters.AddWithValue("working_title", roadWorkActivityFeature.properties.workingTitle ?? (object)DBNull.Value);
                     updateComm.Parameters.AddWithValue("overarching_measure", roadWorkActivityFeature.properties.overarchingMeasure);
                     updateComm.Parameters.AddWithValue("desired_year_from", roadWorkActivityFeature.properties.desiredYearFrom);
                     updateComm.Parameters.AddWithValue("desired_year_to", roadWorkActivityFeature.properties.desiredYearTo);

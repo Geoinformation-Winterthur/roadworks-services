@@ -44,7 +44,7 @@ namespace roadwork_portal_service.Controllers
                     "Erstellungsdatum;Datum letzte Bearbeitung;Ist privat;" +
                     "Im Internet publiziert;Rechnungsadresse 1;Rechnungsadresse 2;PDB-FID;" +
                     "Investitionsnummer;Datum SKS;Datum KAP;Datum OKS;Datum GL-TBA;" +
-                    "URL;Projekttyp;Projekt-Art;Übergeordnete Massnahme;Wunschjahr von;" +
+                    "URL;Arbeitsbezeichnung;Projekttyp;Projekt-Art;Übergeordnete Massnahme;Wunschjahr von;" +
                     "Wunschjahr bis;Vorstudie;date_optimum;Baubeginn;Bauende;" +
                     "Abnahmedatum;consult_due;SKS, genehmigt;KAP, genehmigt;OKS, genehmigt;" +
                     "GL TBA, genehmigt;date_planned;date_accept;Garantie;Vorstudie;Plantermin: Vorstudie Start;" +
@@ -118,7 +118,7 @@ namespace roadwork_portal_service.Controllers
 
                         // Remaining columns with empty fields to match the header count.
                         AppendEmpty(sb, 8);
-                        AppendEmpty(sb, 51);
+                        AppendEmpty(sb, 52);
 
                         AppendGuid(sb, reader, "uuid");
                         AppendText(sb, "");
@@ -142,7 +142,7 @@ namespace roadwork_portal_service.Controllers
                             r.in_internet, r.billing_address1, r.billing_address2,
                             r.pdb_fid, r.strabako_no, r.investment_no, r.date_sks,
                             r.date_kap, r.date_oks, r.date_gl_tba, 
-                            r.comment, r.section, r.url, r.projecttype, r.projectkind,
+                            r.comment, r.section, r.url, r.working_title, r.projecttype, r.projectkind,
                             r.overarching_measure, r.desired_year_from,
                             r.desired_year_to, r.prestudy, r.date_optimum,
                             r.start_of_construction, r.end_of_construction,
@@ -270,6 +270,7 @@ namespace roadwork_portal_service.Controllers
                         AppendDate(sb, reader, "date_gl_tba");
 
                         AppendText(sb, reader, "url");
+                        AppendText(sb, reader, "working_title");
                         var projectType = HelperFunctions.translateType(GetText(reader, "projecttype"));
                         AppendText(sb, projectType);
                         var projectKind = HelperFunctions.translateProjectKind(GetText(reader, "projectkind"));
