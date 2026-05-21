@@ -40,7 +40,7 @@ public class RoadWorkNeedProperties
     public bool? stillRelevant { get; set; }
     public bool? feedbackGiven { get; set; }
     public bool? decline { get; set; }
-    public int? constructionDuration { get; set; }
-    public string? acquisitionPlanned { get; set; } = "";
+    public int? constructionDuration { get; set; } // Added in 2026.4 (#608)
+    public string? acquisitionPlanned { get; set; } = "NO"; // Valid values: YES, NO, MAYBE (#609, 2026.4)
 }
 

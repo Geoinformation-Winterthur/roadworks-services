@@ -29,8 +29,14 @@ namespace roadwork_portal_service.Mappers
         /// <returns></returns>
         public static RoadWorkActivityProperties FromReader(NpgsqlDataReader reader, RoadWorkActivityProperties roadWorkActivityProperties)
         {
+            // Additional attributes for journal
+            roadWorkActivityProperties.plannedTasks = reader.GetStringOrEmpty("planned_tasks");
+            roadWorkActivityProperties.constraintsDependencies = reader.GetStringOrEmpty("constraints_dependencies");
+            roadWorkActivityProperties.acquisitionPlanned = reader.GetStringOrEmpty("acquisition_planned");
+
             // Aggloprogramm
             roadWorkActivityProperties.partOfAggloprogram = reader.GetBooleanOrFalse("part_of_aggloprogram");
+            roadWorkActivityProperties.aggloprogramLink = reader.GetStringOrEmpty("aggloprogram_link");
             roadWorkActivityProperties.aggloprogramGeneration = reader.GetNullableInt("aggloprogram_generation");
             roadWorkActivityProperties.aggloprogramAreCode = reader.GetStringOrEmpty("aggloprogram_are_code");
             roadWorkActivityProperties.aggloprogramAreDescription = reader.GetStringOrEmpty("aggloprogram_are_description");
@@ -38,14 +44,16 @@ namespace roadwork_portal_service.Mappers
             roadWorkActivityProperties.aggloprogramCostTotal = reader.GetNullableDecimal("aggloprogram_cost_total");
             roadWorkActivityProperties.aggloprogramCostCanton = reader.GetNullableDecimal("aggloprogram_cost_canton");
 
-            // Vorstudie
-            //roadWorkActivityProperties.preliminaryStudyRequired = reader.GetBooleanOrFalse("prel_study_required");
-            //roadWorkActivityProperties.preliminaryStudyDuration = reader.GetStringOrEmpty("prel_study_duration");
-            //roadWorkActivityProperties.preliminaryStudyDetail = reader.GetStringOrEmpty("prel_study_detail");
-            //roadWorkActivityProperties.preliminaryStudyVkErConfirmed = reader.GetNullableDateTime("prel_study_vk_er_confirmed");
-            //roadWorkActivityProperties.preliminaryStudyVkErNumber = reader.GetNullableLong("prel_study_vk_er_number");
+            // Prestudy
+            roadWorkActivityProperties.prestudyRequired = reader.GetBooleanOrFalse("prestudy_required");
+            //roadWorkActivityProperties.prestudyRequiredChangedAfterSks = reader.GetBooleanOrFalse("prestudy_required_changed_after_sks");
+            roadWorkActivityProperties.prestudyDuration = reader.GetStringOrEmpty("prestudy_duration");
+            roadWorkActivityProperties.prestudyContractor = reader.GetStringOrEmpty("prestudy_contractor");
+            roadWorkActivityProperties.prestudyDetail = reader.GetStringOrEmpty("prestudy_detail");
+            roadWorkActivityProperties.prestudyVkErConfirmed = reader.GetNullableDateTime("prestudy_vk_er_confirmed");
+            roadWorkActivityProperties.prestudyVkErNumber = reader.GetNullableLong("prestudy_vk_er_number");
 
-            // Betroffene Themen
+            // Affected entities
             roadWorkActivityProperties.busStopsSheltersAffected = reader.GetBooleanOrFalse("bus_stops_shelters_affected");
             roadWorkActivityProperties.structuresAffected = reader.GetBooleanOrFalse("structures_affected");
             roadWorkActivityProperties.roadDrainageAffected = reader.GetBooleanOrFalse("roadDrainage_affected");
@@ -60,28 +68,28 @@ namespace roadwork_portal_service.Mappers
             roadWorkActivityProperties.disabilityEqualityAffected = reader.GetBooleanOrFalse("disability_equality_affected");
             roadWorkActivityProperties.trafficRegulationAffected = reader.GetBooleanOrFalse("traffic_regulation_affected");
 
-            // Private betroffen
+            // Private entities
             roadWorkActivityProperties.privateEntityAffected = reader.GetBooleanOrFalse("private_entity_affected");
             roadWorkActivityProperties.privateEntityExtent = reader.GetStringOrEmpty("private_entity_extent");
             roadWorkActivityProperties.privateEntityRequirements = reader.GetStringOrEmpty("private_entity_requirements");
-            roadWorkActivityProperties.privateEntityAcquisition = reader.GetStringOrEmpty("private_entity_acquisition");
-            roadWorkActivityProperties.privateEntityIsInitiator = reader.GetStringOrEmpty("private_entity_is_initiator");
+            roadWorkActivityProperties.privateEntityAcquisition = reader.GetBooleanOrFalse("private_entity_acquisition");
+            roadWorkActivityProperties.privateEntityIsInitiator = reader.GetBooleanOrFalse("private_entity_is_initiator");
 
             // Provis (Abacus)
             roadWorkActivityProperties.erpNumber = reader.GetNullableLong("erp_number");
 
-            // Ressourcen
+            // Ressources
             roadWorkActivityProperties.staffResourcesAprConfirmed = reader.GetNullableDateTime("staff_resources_apr_confirmed");
             roadWorkActivityProperties.costEstimateAprConfirmed = reader.GetNullableDateTime("cost_estimate_apr_confirmed");
 
-            // Projektierungsauftrag
+            // Engineering contract
             roadWorkActivityProperties.coreDrillingContracted = reader.GetBooleanOrFalse("core_drilling_contracted");
             roadWorkActivityProperties.quotesRequested = reader.GetBooleanOrFalse("quotes_requested");
             roadWorkActivityProperties.quotesReviewed = reader.GetBooleanOrFalse("quotes_reviewed");
             roadWorkActivityProperties.aprChecked = reader.GetBooleanOrFalse("apr_checked");
             roadWorkActivityProperties.afmChecked = reader.GetBooleanOrFalse("afm_checked");
 
-            // Ausgabengenehmigung und Ablage
+            // Approval and filing
             roadWorkActivityProperties.cfDone = reader.GetBooleanOrFalse("cf_done");
             roadWorkActivityProperties.rdDone = reader.GetBooleanOrFalse("rd_done");
             roadWorkActivityProperties.approved = reader.GetBooleanOrFalse("approved");
@@ -92,64 +100,19 @@ namespace roadwork_portal_service.Mappers
         }
 
         /// <summary>
-        /// Create an NpgsqlCommand insert command for a RoadWorkApprovals object.
-        /// </summary>
-        /// <param name="connection"></param>
-        /// <param name="roadWorkActivityProperties"></param>
-        /// <returns></returns>
-        public static NpgsqlCommand CreateUpdateCommand(NpgsqlConnection connection, RoadWorkActivityProperties roadWorkActivityProperties)
-        {
-            var command = new NpgsqlCommand(@"
-                UPDATE wtb_ssp_roadworkactivities 
-                SET 
-                    -- Aggloprogramm
-                    part_of_aggloprogram = @part_of_aggloprogram, aggloprogram_generation = @aggloprogram_generation,
-                    aggloprogram_are_code = @aggloprogram_are_code, aggloprogram_are_description = @aggloprogram_are_description, 
-                    aggloprogram_due_date = @aggloprogram_due_date, aggloprogram_cost_total = @aggloprogram_cost_total,
-                    aggloprogram_cost_canton = @aggloprogram_cost_canton,
-                    -- Vorstudie
-                    --prel_study_required = @prel_study_required, prel_study_duration = @prel_study_duration, 
-                    --prel_study_detail = @prel_study_detail, prel_study_vk_er_confirmed = @prel_study_vk_er_confirmed, 
-                    --prel_study_vk_er_number = @prel_study_vk_er_number,
-                    -- Betroffene Themen
-                    bus_stops_shelters_affected = @bus_stops_shelters_affected, structures_affected = @structures_affected, 
-                    roadDrainage_affected = @roadDrainage_affected, houseConnections_affected = @houseConnections_affected, 
-                    wasteFacilities_affected = @wasteFacilities_affected, technical_installations_affected = @technical_installations_affected,
-                    trees_affected = @trees_affected, street_furniture_affected = @street_furniture_affected, 
-                    urban_climate_affected = @urban_climate_affected, subject_to_depaving = @subject_to_depaving,
-                    pedestrians_cycling_affected = @pedestrians_cycling_affected, disability_equality_affected = @disability_equality_affected,
-                    traffic_regulation_affected = @traffic_regulation_affected, 
-                    -- Private betroffen
-                    private_entity_affected = @private_entity_affected, private_entity_extent = @private_entity_extent, 
-                    private_entity_requirements = @private_entity_requirements, private_entity_acquisition = @private_entity_acquisition, 
-                    private_entity_is_initiator = @private_entity_is_initiator,
-                    -- Provis (Abacus)
-                    erp_number = @erp_number,
-                    -- Ressourcen
-                    staff_resources_apr_confirmed = @staff_resources_apr_confirmed, cost_estimate_apr_confirmed = @cost_estimate_apr_confirmed,
-                    -- Projektierungsauftrag
-                    core_drilling_contracted = @core_drilling_contracted, quotes_requested = @quotes_requested, 
-                    quotes_reviewed = @quotes_reviewed, apr_checked = @apr_checked, afm_checked = @afm_checked, 
-                    -- Ausgabengenehmigung und Ablage
-                    cf_done = @cf_done, rd_done = @rd_done, approved = @approved, fabasoft_done = @fabasoft_done, gis_updated = @gis_updated
-                WHERE uuid = @uuid;",
-                connection);
-
-            Guid uuid = roadWorkActivityProperties.uuid.ToGuid();
-            command.Parameters.AddWithValue("@uuid", uuid);
-            AddParameters(command.Parameters, roadWorkActivityProperties);
-
-            return command;
-        }
-
-        /// <summary>
         /// Adds the parameters the activity command(partial only!).
         /// </summary>
         /// <param name="parameters"></param>
         internal static void AddParameters(NpgsqlParameterCollection parameters, RoadWorkActivityProperties roadWorkActivityProperties)
         {
+            // Additional attributes for journal
+            parameters.AddWithValue("@planned_tasks", HelperFunctions.ToDbValue(roadWorkActivityProperties.plannedTasks));
+            parameters.AddWithValue("@constraints_dependencies", HelperFunctions.ToDbValue(roadWorkActivityProperties.constraintsDependencies));
+            parameters.AddWithValue("@acquisition_planned", HelperFunctions.ToDbValue(roadWorkActivityProperties.acquisitionPlanned));
+
             // Aggloprogramm
             parameters.AddWithValue("@part_of_aggloprogram", HelperFunctions.ToDbValue(roadWorkActivityProperties.partOfAggloprogram));
+            parameters.AddWithValue("@aggloprogram_link", HelperFunctions.ToDbValue(roadWorkActivityProperties.aggloprogramLink));
             parameters.AddWithValue("@aggloprogram_generation", HelperFunctions.ToDbValue(roadWorkActivityProperties.aggloprogramGeneration));
             parameters.AddWithValue("@aggloprogram_are_code", HelperFunctions.ToDbValue(roadWorkActivityProperties.aggloprogramAreCode));
             parameters.AddWithValue("@aggloprogram_are_description", HelperFunctions.ToDbValue(roadWorkActivityProperties.aggloprogramAreDescription));
@@ -157,14 +120,16 @@ namespace roadwork_portal_service.Mappers
             parameters.AddWithValue("@aggloprogram_cost_total", HelperFunctions.ToDbValue(roadWorkActivityProperties.aggloprogramCostTotal));
             parameters.AddWithValue("@aggloprogram_cost_canton", HelperFunctions.ToDbValue(roadWorkActivityProperties.aggloprogramCostCanton));
 
-            // Vorstudie
-            //parameters.AddWithValue("@prel_study_required", HelperFunctions.ToDbValue(roadWorkActivityProperties.preliminaryStudyRequired));
-            //parameters.AddWithValue("@prel_study_duration", HelperFunctions.ToDbValue(roadWorkActivityProperties.preliminaryStudyDuration));
-            //parameters.AddWithValue("@prel_study_detail", HelperFunctions.ToDbValue(roadWorkActivityProperties.preliminaryStudyDetail));
-            //parameters.AddWithValue("@prel_study_vk_er_confirmed", HelperFunctions.ToDbValue(roadWorkActivityProperties.preliminaryStudyVkErConfirmed));
-            //parameters.AddWithValue("@prel_study_vk_er_number", HelperFunctions.ToDbValue(roadWorkActivityProperties.preliminaryStudyVkErNumber));
+            // Prestudy
+            parameters.AddWithValue("@prestudy_required", HelperFunctions.ToDbValue(roadWorkActivityProperties.prestudyRequired));
+            //parameters.AddWithValue("@prestudy_required_changed_after_sks", HelperFunctions.ToDbValue(roadWorkActivityProperties.prestudyRequiredChangedAfterSks));
+            parameters.AddWithValue("@prestudy_duration", HelperFunctions.ToDbValue(roadWorkActivityProperties.prestudyDuration));
+            parameters.AddWithValue("@prestudy_contractor", HelperFunctions.ToDbValue(roadWorkActivityProperties.prestudyContractor));
+            parameters.AddWithValue("@prestudy_detail", HelperFunctions.ToDbValue(roadWorkActivityProperties.prestudyDetail));
+            parameters.AddWithValue("@prestudy_vk_er_confirmed", HelperFunctions.ToDbValue(roadWorkActivityProperties.prestudyVkErConfirmed));
+            parameters.AddWithValue("@prestudy_vk_er_number", HelperFunctions.ToDbValue(roadWorkActivityProperties.prestudyVkErNumber));
 
-            // Betroffene Themen
+            // Affected entities
             parameters.AddWithValue("@bus_stops_shelters_affected", HelperFunctions.ToDbValue(roadWorkActivityProperties.busStopsSheltersAffected));
             parameters.AddWithValue("@structures_affected", HelperFunctions.ToDbValue(roadWorkActivityProperties.structuresAffected));
             parameters.AddWithValue("@roadDrainage_affected", HelperFunctions.ToDbValue(roadWorkActivityProperties.roadDrainageAffected));
@@ -179,7 +144,7 @@ namespace roadwork_portal_service.Mappers
             parameters.AddWithValue("@disability_equality_affected", HelperFunctions.ToDbValue(roadWorkActivityProperties.disabilityEqualityAffected));
             parameters.AddWithValue("@traffic_regulation_affected", HelperFunctions.ToDbValue(roadWorkActivityProperties.trafficRegulationAffected));
 
-            // Private betroffen
+            // Private entities
             parameters.AddWithValue("@private_entity_affected", HelperFunctions.ToDbValue(roadWorkActivityProperties.privateEntityAffected));
             parameters.AddWithValue("@private_entity_extent", HelperFunctions.ToDbValue(roadWorkActivityProperties.privateEntityExtent));
             parameters.AddWithValue("@private_entity_requirements", HelperFunctions.ToDbValue(roadWorkActivityProperties.privateEntityRequirements));
@@ -189,18 +154,18 @@ namespace roadwork_portal_service.Mappers
             // Provis (Abacus)
             parameters.AddWithValue("@erp_number", HelperFunctions.ToDbValue(roadWorkActivityProperties.erpNumber));
 
-            // Ressourcen
+            // Ressources
             parameters.AddWithValue("@staff_resources_apr_confirmed", HelperFunctions.ToDbValue(roadWorkActivityProperties.staffResourcesAprConfirmed));
             parameters.AddWithValue("@cost_estimate_apr_confirmed", HelperFunctions.ToDbValue(roadWorkActivityProperties.costEstimateAprConfirmed));
 
-            // Projektierungsauftrag
+            // Engineering contract
             parameters.AddWithValue("@core_drilling_contracted", HelperFunctions.ToDbValue(roadWorkActivityProperties.coreDrillingContracted));
             parameters.AddWithValue("@quotes_requested", HelperFunctions.ToDbValue(roadWorkActivityProperties.quotesRequested));
             parameters.AddWithValue("@quotes_reviewed", HelperFunctions.ToDbValue(roadWorkActivityProperties.quotesReviewed));
             parameters.AddWithValue("@apr_checked", HelperFunctions.ToDbValue(roadWorkActivityProperties.aprChecked));
             parameters.AddWithValue("@afm_checked", HelperFunctions.ToDbValue(roadWorkActivityProperties.afmChecked));
 
-            // Ausgabengenehmigung und Ablage
+            // Approval and filing
             parameters.AddWithValue("@cf_done", HelperFunctions.ToDbValue(roadWorkActivityProperties.cfDone));
             parameters.AddWithValue("@rd_done", HelperFunctions.ToDbValue(roadWorkActivityProperties.rdDone));
             parameters.AddWithValue("@approved", HelperFunctions.ToDbValue(roadWorkActivityProperties.approved));

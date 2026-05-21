@@ -101,8 +101,14 @@ public class RoadWorkActivityProperties
     public DateTime? costLastModified { get; set; }
     public User? costLastModifiedBy { get; set; } = new User();
 
-    // Aggloprogramm
+    // Additional attributes for journal (#616, 2026.4)
+    public string? plannedTasks { get; set; } = "";
+    public string? constraintsDependencies { get; set; } = "";
+    public string? acquisitionPlanned { get; set; } = "NO"; // Valid values: YES, NO, MAYBE
+
+    // Aggloprogramm (#617, 2026.4)
     public bool? partOfAggloprogram { get; set; } = false;
+    public string aggloprogramLink { get; set; } = "";
     public int? aggloprogramGeneration { get; set; }
     public string? aggloprogramAreCode { get; set; } = "";
     public string? aggloprogramAreDescription { get; set; } = "";
@@ -110,14 +116,16 @@ public class RoadWorkActivityProperties
     public decimal? aggloprogramCostTotal { get; set; }
     public decimal? aggloprogramCostCanton { get; set; }
 
-    // Vorstudie
-    //public bool? preliminaryStudyRequired { get; set; } = false;
-    //public string? preliminaryStudyDuration { get; set; } = "";
-    //public string? preliminaryStudyDetail { get; set; } = "";
-    //public DateTime? preliminaryStudyVkErConfirmed { get; set; }
-    //public long? preliminaryStudyVkErNumber { get; set; }
+    // Prestudy (#621, 2026.4)
+    public bool? prestudyRequired { get; set; } = false;
+    //public bool? prestudyRequiredChangedAfterSks { get; set; } = false;
+    public string? prestudyDuration { get; set; } = "";
+    public string? prestudyContractor { get; set; } = "";
+    public string? prestudyDetail { get; set; } = "";
+    public DateTime? prestudyVkErConfirmed { get; set; }
+    public long? prestudyVkErNumber { get; set; }
 
-    // Betroffene Themen
+    // Affected entities (#622, 2026.4)
     public bool? busStopsSheltersAffected { get; set; } = false;
     public bool? structuresAffected { get; set; } = false;
     public bool? roadDrainageAffected { get; set; } = false;
@@ -132,37 +140,33 @@ public class RoadWorkActivityProperties
     public bool? disabilityEqualityAffected { get; set; } = false;
     public bool? trafficRegulationAffected { get; set; } = false;
 
-    // Private betroffen
+    // Private entities (#623, 2026.4)
     public bool? privateEntityAffected { get; set; } = false;
     public string? privateEntityExtent { get; set; } = "";
     public string? privateEntityRequirements { get; set; } = "";
-    public string? privateEntityAcquisition { get; set; } = "";
-    public string? privateEntityIsInitiator { get; set; } = "";
+    public bool? privateEntityAcquisition { get; set; } = false;
+    public bool? privateEntityIsInitiator { get; set; } = false;
 
-    // Provis (Abacus)
+    // Provis (Abacus) (#624, 2026.4)
     public long? erpNumber { get; set; }
 
-    // Ressourcen
+    // Ressources (#625, 2026.4)
     public DateTime? staffResourcesAprConfirmed { get; set; }
     public DateTime? costEstimateAprConfirmed { get; set; }
 
-    // Projektierungsauftrag
+    // Engineering contract (#626, 2026.4)
     public bool? coreDrillingContracted { get; set; } = false;
     public bool? quotesRequested { get; set; } = false;
     public bool? quotesReviewed { get; set; } = false;
     public bool? aprChecked { get; set; } = false;
     public bool? afmChecked { get; set; } = false;
 
-    // Ausgabengenehmigung und Ablage
+    // Approval and filing (#626, 2026.4)
     public bool? cfDone { get; set; } = false;
     public bool? rdDone { get; set; } = false;
     public bool? approved { get; set; } = false;
     public bool? fabasoftDone { get; set; } = false;
     public bool? gisUpdated { get; set; } = false;
 
-
     public RoadWorkApprovals approvals { get; set; } = new RoadWorkApprovals();
-    //public JournalRecord[]? journalEntries { get; set; } = Array.Empty<JournalRecord>();
-    public RoadWorkApprovals additinalParameters { get; set; } = new RoadWorkApprovals();
-    public RoadWorkApprovals[]? additinalParametersNeeds { get; set; } = Array.Empty<RoadWorkApprovals>();
 }

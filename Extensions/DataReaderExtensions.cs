@@ -20,6 +20,18 @@ namespace roadwork_portal_service.Extensions
         }
 
         /// <summary>
+        /// Returns the GUID value of the field or NULL.
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <param name="columnName"></param>
+        /// <returns></returns>
+        public static Guid? GetNullableGuid(this IDataReader reader, string columnName)
+        {
+            int fieldIndex = reader.GetOrdinal(columnName);
+            return reader.IsDBNull(fieldIndex) ? null : reader.GetGuid(fieldIndex);
+        }
+
+        /// <summary>
         /// Returns the GUID value as string of the field or an empty string for NULL.
         /// </summary>
         /// <param name="reader"></param>

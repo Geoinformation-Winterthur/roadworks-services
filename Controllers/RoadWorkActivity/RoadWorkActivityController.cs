@@ -60,29 +60,31 @@ namespace roadwork_portal_service.Controllers
                         r.date_start_inconsult1, r.date_start_verified1, r.date_start_inconsult2, r.date_start_verified2, r.date_start_reporting,
                         r.date_start_suspended, r.date_start_coordinated, r.sks_relevant,
                         r.costs_last_modified, r.costs_last_modified_by,
+                        r.planned_tasks, r.constraints_dependencies, r.acquisition_planned,
                         -- Aggloprogramm
-                        r.part_of_aggloprogram, r.aggloprogram_generation, r.aggloprogram_are_code,
+                        r.part_of_aggloprogram, r.aggloprogram_link, r.aggloprogram_generation, r.aggloprogram_are_code,
                         r.aggloprogram_are_description, r.aggloprogram_due_date, r.aggloprogram_cost_total,
                         r.aggloprogram_cost_canton,
-                        -- Vorstudie
-                        --r.prel_study_required, r.prel_study_duration, r.prel_study_detail,
-                        --r.prel_study_vk_er_confirmed, r.prel_study_vk_er_number,
-                        -- Betroffene Themen
+                        -- Prestudy
+                        r.prestudy_required, --r.prestudy_required_changed_after_sks, 
+                        r.prestudy_duration, r.prestudy_contractor,
+                        r.prestudy_detail, r.prestudy_vk_er_confirmed, r.prestudy_vk_er_number,
+                        -- Affected entities
                         r.bus_stops_shelters_affected, r.structures_affected, r.roadDrainage_affected,
                         r.houseConnections_affected, r.wasteFacilities_affected, r.technical_installations_affected,
                         r.trees_affected, r.street_furniture_affected, r.urban_climate_affected, r.subject_to_depaving,
                         r.pedestrians_cycling_affected, r.disability_equality_affected, r.traffic_regulation_affected, 
-                        -- Private betroffen
+                        -- Private entities
                         r.private_entity_affected, r.private_entity_extent, r.private_entity_requirements,
                         r.private_entity_acquisition, r.private_entity_is_initiator,
                         -- Provis (Abacus)
                         r.erp_number,
-                        -- Ressourcen
+                        -- Ressources
                         r.staff_resources_apr_confirmed, r.cost_estimate_apr_confirmed,
-                        -- Projektierungsauftrag
+                        -- Engineering contract
                         r.core_drilling_contracted, r.quotes_requested, r.quotes_reviewed,
                         r.apr_checked, r.afm_checked, 
-                        -- Ausgabengenehmigung und Ablage
+                        -- Approval and filing
                         r.cf_done, r.rd_done, r.approved, r.fabasoft_done, r.gis_updated,
                         -- User
                         cm.first_name AS cm_first_name, cm.last_name AS cm_last_name,
@@ -680,11 +682,14 @@ namespace roadwork_portal_service.Controllers
                                     date_kap, private, date_consult_start1, date_consult_end1,
                                     date_consult_start2, date_consult_end2, date_report_start, date_report_end,
                                     url, sks_relevant, strabako_no, date_sks_planned, sks_no, geom,
+                                    planned_tasks, constraints_dependencies, acquisition_planned,
                                     -- Aggloprogramm
-                                    part_of_aggloprogram, aggloprogram_generation, aggloprogram_are_code, aggloprogram_are_description, 
+                                    part_of_aggloprogram, aggloprogram_link, aggloprogram_generation, aggloprogram_are_code, aggloprogram_are_description, 
                                     aggloprogram_due_date, aggloprogram_cost_total, aggloprogram_cost_canton,
                                     -- Vorstudie
-                                    --prel_study_required, prel_study_duration, prel_study_detail, prel_study_vk_er_confirmed, prel_study_vk_er_number,
+                                    prestudy_required, --prestudy_required_changed_after_sks, 
+                                    prestudy_duration, prestudy_contractor,
+                                    prestudy_detail, prestudy_vk_er_confirmed, prestudy_vk_er_number,
                                     -- Betroffene Themen
                                     bus_stops_shelters_affected, structures_affected, roadDrainage_affected, houseConnections_affected, 
                                     wasteFacilities_affected, technical_installations_affected, trees_affected, street_furniture_affected, 
@@ -713,11 +718,14 @@ namespace roadwork_portal_service.Controllers
                                     @private, @date_consult_start1, @date_consult_end1, @date_consult_start2, @date_consult_end2,
                                     @date_report_start, @date_report_end, @url, @sks_relevant,
                                     @strabako_no, @date_sks_planned, @sks_no, @geom,
+                                    @planned_tasks, @constraints_dependencies, @acquisition_planned,
                                     -- Aggloprogramm
-                                    @part_of_aggloprogram, @aggloprogram_generation, @aggloprogram_are_code, @aggloprogram_are_description, 
+                                    @part_of_aggloprogram, @aggloprogram_link, @aggloprogram_generation, @aggloprogram_are_code, @aggloprogram_are_description, 
                                     @aggloprogram_due_date, @aggloprogram_cost_total, @aggloprogram_cost_canton,
                                     -- Vorstudie
-                                    --@prel_study_required, @prel_study_duration, @prel_study_detail, @prel_study_vk_er_confirmed, @prel_study_vk_er_number,
+                                    @prestudy_required, --@prestudy_required_changed_after_sks, 
+                                    @prestudy_duration, @prestudy_contractor,
+                                    @prestudy_detail, @prestudy_vk_er_confirmed, @prestudy_vk_er_number,
                                     -- Betroffene Themen
                                     @bus_stops_shelters_affected, @structures_affected, @roadDrainage_affected, @houseConnections_affected, 
                                     @wasteFacilities_affected, @technical_installations_affected, @trees_affected, @street_furniture_affected, 
@@ -1357,15 +1365,16 @@ namespace roadwork_portal_service.Controllers
                                     date_info_close=@date_info_close, is_aggloprog=@is_aggloprog, is_traffic_regulation_required=@is_traffic_regulation_required,
                                     project_study_approved=@project_study_approved, study_approved=@study_approved,
                                     sks_relevant=@sks_relevant, strabako_no=@strabako_no, date_sks_planned=@date_sks_planned, sks_no=@sks_no,
+                                    planned_tasks = @planned_tasks, constraints_dependencies = @constraints_dependencies, acquisition_planned = @acquisition_planned,
                                     -- Aggloprogramm
-                                    part_of_aggloprogram = @part_of_aggloprogram, aggloprogram_generation = @aggloprogram_generation,
+                                    part_of_aggloprogram = @part_of_aggloprogram, aggloprogram_link = @aggloprogram_link, aggloprogram_generation = @aggloprogram_generation,
                                     aggloprogram_are_code = @aggloprogram_are_code, aggloprogram_are_description = @aggloprogram_are_description, 
                                     aggloprogram_due_date = @aggloprogram_due_date, aggloprogram_cost_total = @aggloprogram_cost_total,
                                     aggloprogram_cost_canton = @aggloprogram_cost_canton,
                                     -- Vorstudie
-                                    --prel_study_required = @prel_study_required, prel_study_duration = @prel_study_duration, 
-                                    --prel_study_detail = @prel_study_detail, prel_study_vk_er_confirmed = @prel_study_vk_er_confirmed, 
-                                    --prel_study_vk_er_number = @prel_study_vk_er_number,
+                                    prestudy_required = @prestudy_required, --prestudy_required_changed_after_sks = @prestudy_required_changed_after_sks,
+                                    prestudy_duration = @prestudy_duration, prestudy_contractor = @prestudy_contractor, prestudy_detail = @prestudy_detail,
+                                    prestudy_vk_er_confirmed = @prestudy_vk_er_confirmed, prestudy_vk_er_number = @prestudy_vk_er_number,
                                     -- Betroffene Themen
                                     bus_stops_shelters_affected = @bus_stops_shelters_affected, structures_affected = @structures_affected, 
                                     roadDrainage_affected = @roadDrainage_affected, houseConnections_affected = @houseConnections_affected, 

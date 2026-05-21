@@ -1,10 +1,10 @@
 -- VERSION 2026.4 ---
 
--- #608 - Add construction work duration to needs (GEOBOX AG - Simon Meyer, 16.04.2026) 
-ALTER TABLE IF EXISTS wtb_ssp_roadworkneeds ADD COLUMN construction_duration integer;
+-- #608, #609 - Add additional attributes to needs (GEOBOX AG - Simon Meyer, 16.04.2026) 
+--ALTER TABLE IF EXISTS wtb_ssp_roadworkneeds ADD COLUMN construction_duration integer;
 ALTER TABLE IF EXISTS wtb_ssp_roadworkneeds ADD COLUMN acquisition_planned character varying(40);
 
--- #616 (and following) - Add additional attributes to activities for journal page (GEOBOX AG - Simon Meyer, 23.04.2026)
+-- #617 - Add "Aggloprogramm" to activities (GEOBOX AG - Simon Meyer, 23.04.2026)
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN part_of_aggloprogram boolean;
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN aggloprogram_generation integer;
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN aggloprogram_are_code character varying(40);
@@ -12,13 +12,8 @@ ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN aggloprogram_are_des
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN aggloprogram_due_date date;
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN aggloprogram_cost_total numeric(20,2);
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN aggloprogram_cost_canton numeric(20,2);
--- Vorstudie
---ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN prel_study_required boolean;
---ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN prel_study_duration character varying(80);
---ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN prel_study_detail character varying(255);
---ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN prel_study_vk_er_confirmed date;
---ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN prel_study_vk_er_number bigint;
--- Betroffene Themen
+
+-- #622 - Add affected entities to activities (GEOBOX AG - Simon Meyer, 23.04.2026)
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN bus_stops_shelters_affected boolean;
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN structures_affected boolean;
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN roadDrainage_affected boolean;
@@ -32,31 +27,36 @@ ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN subject_to_depaving 
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN pedestrians_cycling_affected boolean;
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN disability_equality_affected boolean;
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN traffic_regulation_affected boolean;
--- Private betroffen
+
+-- #623 - Add private entities to activities (GEOBOX AG - Simon Meyer, 23.04.2026)
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN private_entity_affected boolean;
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN private_entity_extent character varying(255);
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN private_entity_requirements character varying(255);
-ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN private_entity_acquisition character varying(255);
-ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN private_entity_is_initiator character varying(255);
--- Provis (Abacus)
+--ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN private_entity_acquisition character varying(255); Changed in #644 >> V2026_5
+--ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN private_entity_is_initiator character varying(255); Changed in #644 >> V2026_5
+
+-- #624 - Add provis (Abacus) to activities (GEOBOX AG - Simon Meyer, 23.04.2026)
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN erp_number bigint;
--- Ressourcen
+
+-- #625 - Add ressources to activities (GEOBOX AG - Simon Meyer, 23.04.2026)
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN staff_resources_apr_confirmed date;
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN cost_estimate_apr_confirmed date;
--- Projektierungsauftrag
+
+-- #626 - Add engineering contract to activities (GEOBOX AG - Simon Meyer, 23.04.2026)
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN core_drilling_contracted boolean;
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN quotes_requested boolean;
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN quotes_reviewed boolean;
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN apr_checked boolean;
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN afm_checked boolean;
--- Ausgabengenehmigung und Ablage
+
+-- #626 - Add approval and filing to activities (GEOBOX AG - Simon Meyer, 23.04.2026)
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN cf_done boolean;
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN rd_done boolean;
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN approved boolean;
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN fabasoft_done boolean;
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN gis_updated boolean;
 
--- #611 - Add road work parameters table (GEOBOX AG - Simon Meyer, 16.04.2026)
+-- #610, #611 - Add road work parameters table (GEOBOX AG - Simon Meyer, 16.04.2026)
 CREATE TABLE IF NOT EXISTS wtb_ssp_roadwork_approvals
 (
     uuid uuid NOT NULL,
