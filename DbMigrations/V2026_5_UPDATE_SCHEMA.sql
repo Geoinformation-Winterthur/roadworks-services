@@ -44,3 +44,7 @@ CREATE TABLE wikis.wtb_ssp_journal_entries
         ON DELETE NO ACTION
         NOT VALID
 );
+
+--#640, #642, #633 Arbeitsbezeichnung
+ALTER TABLE wikis.wtb_ssp_roadworkactivities
+ADD COLUMN working_title varchar(255);
