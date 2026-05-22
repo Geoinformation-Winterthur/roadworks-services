@@ -1,7 +1,7 @@
 -- VERSION 2026.4 ---
 
 -- #608, #609 - Add additional attributes to needs (GEOBOX AG - Simon Meyer, 16.04.2026) 
---ALTER TABLE IF EXISTS wtb_ssp_roadworkneeds ADD COLUMN construction_duration integer;
+ALTER TABLE IF EXISTS wtb_ssp_roadworkneeds ADD COLUMN construction_duration integer;
 ALTER TABLE IF EXISTS wtb_ssp_roadworkneeds ADD COLUMN acquisition_planned character varying(40);
 
 -- #617 - Add "Aggloprogramm" to activities (GEOBOX AG - Simon Meyer, 23.04.2026)
