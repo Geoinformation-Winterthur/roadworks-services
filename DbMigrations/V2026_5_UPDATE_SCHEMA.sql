@@ -17,6 +17,10 @@ ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN prestudy_vk_er_confi
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN prestudy_vk_er_number bigint;
 
 -- #644 (#623) - Add private entities to activities (GEOBOX AG - Simon Meyer, 11.05.2026)
+-- cleanup of old columns with differenet data types (if they exist) 
+ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities DROP COLUMN IF EXISTS private_entity_acquisition;
+ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities DROP COLUMN IF EXISTS private_entity_is_initiator;
+
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN private_entity_acquisition boolean;
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN private_entity_is_initiator boolean;
 
