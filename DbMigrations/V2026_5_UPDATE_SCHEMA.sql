@@ -3,6 +3,7 @@
 -- #616 - Add additional attributes to activities (GEOBOX AG - Simon Meyer, 11.05.2026)
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN planned_tasks character varying(255);
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN constraints_dependencies character varying(255);
+ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN acquisition_planned character varying(40);
 
 -- #617 - Add "Aggloprogramm" to activities (GEOBOX AG - Simon Meyer, 20.05.2026)
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN aggloprogram_link character varying(255);
@@ -17,7 +18,7 @@ ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN prestudy_vk_er_confi
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN prestudy_vk_er_number bigint;
 
 -- #644 (#623) - Add private entities to activities (GEOBOX AG - Simon Meyer, 11.05.2026)
--- cleanup of old columns with differenet data types (if they exist) 
+-- cleanup of old columns (added and removed again in V2026_4) with differenet data types (if they exist) 
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities DROP COLUMN IF EXISTS private_entity_acquisition;
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities DROP COLUMN IF EXISTS private_entity_is_initiator;
 
