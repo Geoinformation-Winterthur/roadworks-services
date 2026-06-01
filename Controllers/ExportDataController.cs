@@ -53,6 +53,8 @@ namespace roadwork_portal_service.Controllers
                     "Begehrensäusserung Ende;Mitwirkungsverfahren § 13;Mitwirkungsverfahren Start;" +
                     "Mitwirkungsverfahren Ende;Planauflage § 16;" +
                     "Planauflage Start;Planauflage Ende;" +
+                    "Aggloprogramm vorgesehen;Private betroffen;Provis;Vorgesehene Tätigkeiten/Arbeiten; Randbedingungen/Abhängigkeiten;" +
+                    "Rechts-/Landerwerb vorgesehen;Vorstudie vorgesehen; Umsetzung durch Dritte/Werk;" +
 
                     // Make these columns explicit and easy to recognize in Excel import:
                     "Bedarfsklärung 1 Start;Bedarfsklärung 1 Ende;" +
@@ -118,7 +120,7 @@ namespace roadwork_portal_service.Controllers
 
                         // Remaining columns with empty fields to match the header count.
                         AppendEmpty(sb, 8);
-                        AppendEmpty(sb, 52);
+                        AppendEmpty(sb, 60);
 
                         AppendGuid(sb, reader, "uuid");
                         AppendText(sb, "");
@@ -154,6 +156,9 @@ namespace roadwork_portal_service.Controllers
                             r.is_desire, r.date_desire_start, r.date_desire_end,
                             r.is_particip, r.date_particip_start, r.date_particip_end,
                             r.is_plan_circ, r.date_plan_circ_start, r.date_plan_circ_end,
+                            r.part_of_aggloprogram, r.private_entity_affected, r.erp_number,
+                            r.planned_tasks, r.constraints_dependencies, r.acquisition_planned,
+                            r.prestudy_required, r.implementation_by_third,
                             r.date_consult_start1, r.date_consult_end1,
                             r.date_consult_start2, r.date_consult_end2,
                             r.date_report_start, r.date_report_end,
@@ -315,6 +320,15 @@ namespace roadwork_portal_service.Controllers
                         AppendBool(sb, reader, "is_plan_circ");
                         AppendDate(sb, reader, "date_plan_circ_start");
                         AppendDate(sb, reader, "date_plan_circ_end");
+
+                        AppendBool(sb, reader, "part_of_aggloprogram");
+                        AppendBool(sb, reader, "private_entity_affected");
+                        AppendInt(sb, reader, "erp_number");
+                        AppendText(sb, reader, "planned_tasks");
+                        AppendText(sb, reader, "constraints_dependencies");
+                        AppendText(sb, reader, "acquisition_planned");
+                        AppendBool(sb, reader, "prestudy_required");
+                        AppendBool(sb, reader, "implementation_by_third");
 
                         // Vernehmlassungen / consult rounds and Stellungnahme (make columns explicit)
                         AppendDate(sb, reader, "date_consult_start1"); // Bedarfsklärung 1 Start
