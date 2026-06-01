@@ -7,8 +7,9 @@
         public string content { get; set; } = "";
         public DateTime? created { get; set; }
         public DateTime? lastModified { get; set; }
-        internal string createdBy { get; set; } = ""; // internal >> exclude in API response
         public string createdByName { get; set; } = "";
         public bool isEditingAllowed { get; set; } = false;
+
+        internal string createdBy { get; set; } = ""; // internal >> exclude in API response
     }
 }

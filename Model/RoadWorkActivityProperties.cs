@@ -21,6 +21,7 @@ public class RoadWorkActivityProperties
     public string projectType { get; set; } = "";
     public string projectKind { get; set; } = "";
     public string? workingTitle { get; set; } = "";
+    public bool? implementationByThird { get; set; } = false;
     public bool? overarchingMeasure { get; set; } = false;
     public int? desiredYearFrom { get; set; } = -1;
     public int? desiredYearTo { get; set; } = -1;

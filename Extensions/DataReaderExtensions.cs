@@ -117,6 +117,18 @@ namespace roadwork_portal_service.Extensions
         }
 
         /// <summary>
+        /// Returns the short value of the field or NULL.
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <param name="columnName"></param>
+        /// <returns></returns>
+        public static short? GetNullableShort(this IDataReader reader, string columnName)
+        {
+            int fieldIndex = reader.GetOrdinal(columnName);
+            return reader.IsDBNull(fieldIndex) ? null : reader.GetInt16(fieldIndex);
+        }
+
+        /// <summary>
         /// Returns the integer value of the field or NULL.
         /// </summary>
         /// <param name="reader"></param>
@@ -138,6 +150,19 @@ namespace roadwork_portal_service.Extensions
         {
             int fieldIndex = reader.GetOrdinal(columnName);
             return reader.IsDBNull(fieldIndex) ? null : reader.GetDecimal(fieldIndex);
+        }
+
+        /// <summary>
+        /// Returns the short value of the field or passed default value for NULL.
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <param name="columnName"></param>
+        /// <param name="defaultValue"></param>
+        /// <returns></returns>
+        public static short GetShortOrDefault(this IDataReader reader, string columnName, short defaultValue)
+        {
+            int fieldIndex = reader.GetOrdinal(columnName);
+            return reader.IsDBNull(fieldIndex) ? defaultValue : reader.GetInt16(fieldIndex);
         }
 
         /// <summary>

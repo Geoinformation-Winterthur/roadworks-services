@@ -76,15 +76,14 @@ namespace roadwork_portal_service.Controllers
             if (journalEntryFeature?.properties == null)
             {
                 _logger.LogWarning("No journal entry feature received in insert feature method.");
-                return Ok(new JournalEntryFeature { errorMessage = "SSP-3" });
+                return BadRequest(new JournalEntryFeature { errorMessage = "SSP-3" });
             }
 
-            if (string.IsNullOrEmpty(journalEntryFeature?.properties?.uuidRoadworkActivity))
+            if (string.IsNullOrEmpty(journalEntryFeature.properties.uuidRoadworkActivity))
             {
                 _logger.LogWarning("No uuid roadwork activity received in insert feature method.");
-                return Ok(new JournalEntryFeature { errorMessage = "SSP-3" });
+                return BadRequest(new JournalEntryFeature { errorMessage = "SSP-3" });
             }
-
 
             // Set new uid, current user and date
             journalEntryFeature.properties.uuid = Guid.NewGuid().ToString();
@@ -103,7 +102,7 @@ namespace roadwork_portal_service.Controllers
                 _logger.LogError(ex.Message);
                 journalEntryFeature.errorMessage = "SSP-3";
 
-                return Ok(journalEntryFeature);
+                return StatusCode(500, journalEntryFeature);
             }
 
             return Ok(journalEntryFeature);
@@ -128,10 +127,10 @@ namespace roadwork_portal_service.Controllers
                 return Problem(title: "Unknown user.", statusCode: 500);
 
             // Check object to insert
-            if (string.IsNullOrEmpty(journalEntryFeature?.properties.uuid))
+            if (string.IsNullOrEmpty(journalEntryFeature?.properties?.uuid))
             {
                 _logger.LogWarning("No journal entry feature received in update feature method.");
-                return Ok(new JournalEntryFeature { errorMessage = "SSP-3" });
+                return BadRequest(new JournalEntryFeature { errorMessage = "SSP-3" });
             }
 
             // Get the existing feature from db
@@ -140,11 +139,11 @@ namespace roadwork_portal_service.Controllers
             if (journalEntryFromDb == null)
             {
                 _logger.LogWarning("Journal entry feature to update not existing.");
-                return Ok(new JournalEntryFeature { errorMessage = "SSP-3" });
+                return BadRequest(new JournalEntryFeature { errorMessage = "SSP-3" });
             }
 
             // Check if the user (territorymanager) is the owner
-            if (User.IsInRole("territorymanager") && journalEntryFromDb?.properties?.createdBy != userUuid)
+            if (User.IsInRole("territorymanager") && journalEntryFromDb.properties.createdBy != userUuid)
                 return Forbid();
 
             // Update the feature
@@ -160,7 +159,7 @@ namespace roadwork_portal_service.Controllers
                 _logger.LogError(ex.Message);
                 journalEntryFromDb.errorMessage = "SSP-3";
 
-                return Ok(journalEntryFromDb);
+                return StatusCode(500, journalEntryFromDb);
             }
 
             return Ok(journalEntryFromDb);

@@ -149,7 +149,7 @@ namespace roadwork_portal_service.DAO
         }
 
         /// <summary>
-        /// Create an NpgsqlCommand insert command for a JournalEntryMapper object.
+        /// Create an NpgsqlCommand insert command for a JournalEntry object.
         /// </summary>
         /// <param name="connection"></param>
         /// <param name="journalEntry"></param>
@@ -202,7 +202,7 @@ namespace roadwork_portal_service.DAO
         }
 
         /// <summary>
-        /// Create an NpgsqlCommand update command for a JournalEntryMapper object.
+        /// Create an NpgsqlCommand update command for a JournalEntry object.
         /// </summary>
         /// <param name="connection"></param>
         /// <param name="journalEntry"></param>
