@@ -43,10 +43,10 @@ namespace roadwork_portal_service.Controllers
                     "Leiter Baustellenverkehr Vorname;Leiter Baustellenverkehr Nachname;Auslösegrund;" +
                     "Erstellungsdatum;Datum letzte Bearbeitung;Ist privat;" +
                     "Im Internet publiziert;Rechnungsadresse 1;Rechnungsadresse 2;PDB-FID;" +
-                    "Investitionsnummer;Datum SKS;Datum KAP;Datum OKS;Datum GL-TBA;" +
+                    "Investitionsnummer;Datum SKS;Datum KAP berechnet;Datum OKS;" +
                     "URL;Arbeitsbezeichnung;Projekttyp;Projekt-Art;Übergeordnete Massnahme;Wunschjahr von;" +
                     "Wunschjahr bis;Vorstudie;date_optimum;Baubeginn;Bauende;" +
-                    "Abnahmedatum;consult_due;SKS, genehmigt;KAP, genehmigt;OKS, genehmigt;" +
+                    "Abnahmedatum;consult_due;SKS, genehmigt;KAP, genehmigt;" +
                     "GL TBA, genehmigt;date_planned;date_accept;Garantie;Vorstudie;Plantermin: Vorstudie Start;" +
                     "Plantermin: Vorstudie Ende;Projektauftrag Vorstudie genehmigt;" +
                     "Vorstudie genehmigt;Begehrensäusserung § 45;Begehrensäusserung Start;" +
@@ -60,8 +60,7 @@ namespace roadwork_portal_service.Controllers
                     "Bedarfsklärung 1 Start;Bedarfsklärung 1 Ende;" +
                     "Bedarfsklärung 2 Start;Bedarfsklärung 2 Ende;" +
                     "Stellungnahme Start;Stellungnahme Ende;" +
-
-                    "Infoversand Start;Infoversand Ende;Infoversand Abschluss;" +
+                    
                     "Aggloprogramm;Start Bedarfsklärung 1;Verifiziert 1;Start Bedarfsklärung 2;Verifiziert 2;" +
                     "Start Stellungnahme;Sistiert;Koordiniert;Bauvorhabe-UUID;Bedarfe-UUIDs;\r\n"
                 );
@@ -120,7 +119,7 @@ namespace roadwork_portal_service.Controllers
 
                         // Remaining columns with empty fields to match the header count.
                         AppendEmpty(sb, 8);
-                        AppendEmpty(sb, 60);
+                        AppendEmpty(sb, 55);
 
                         AppendGuid(sb, reader, "uuid");
                         AppendText(sb, "");
@@ -161,8 +160,7 @@ namespace roadwork_portal_service.Controllers
                             r.prestudy_required, r.implementation_by_third,
                             r.date_consult_start1, r.date_consult_end1,
                             r.date_consult_start2, r.date_consult_end2,
-                            r.date_report_start, r.date_report_end,
-                            r.date_info_start, r.date_info_end, r.date_info_close,
+                            r.date_report_start, r.date_report_end,                            
                             r.is_aggloprog, r.date_start_inconsult1, r.date_start_verified1,
                             r.date_start_inconsult2, r.date_start_verified2,
                             r.date_start_reporting, r.date_start_suspended,
@@ -271,8 +269,7 @@ namespace roadwork_portal_service.Controllers
 
                         AppendDate(sb, reader, "date_sks");
                         AppendDate(sb, reader, "date_kap");
-                        AppendDate(sb, reader, "date_oks");
-                        AppendDate(sb, reader, "date_gl_tba");
+                        AppendDate(sb, reader, "date_oks");                        
 
                         AppendText(sb, reader, "url");
                         AppendText(sb, reader, "working_title");
@@ -293,8 +290,7 @@ namespace roadwork_portal_service.Controllers
                         AppendDate(sb, reader, "consult_due");
 
                         AppendDate(sb, reader, "date_sks_real");
-                        AppendDate(sb, reader, "date_kap_real");
-                        AppendDate(sb, reader, "date_oks_real");
+                        AppendDate(sb, reader, "date_kap_real");                        
                         AppendDate(sb, reader, "date_gl_tba_real");
 
                         AppendDate(sb, reader, "date_planned");
@@ -336,12 +332,7 @@ namespace roadwork_portal_service.Controllers
                         AppendDate(sb, reader, "date_consult_start2"); // Bedarfsklärung 2 Start
                         AppendDate(sb, reader, "date_consult_end2");   // Bedarfsklärung 2 Ende
                         AppendDate(sb, reader, "date_report_start");   // Stellungnahme Start
-                        AppendDate(sb, reader, "date_report_end");     // Stellungnahme Ende
-
-                        // Infoversand
-                        AppendDate(sb, reader, "date_info_start");
-                        AppendDate(sb, reader, "date_info_end");
-                        AppendDate(sb, reader, "date_info_close");
+                        AppendDate(sb, reader, "date_report_end");     // Stellungnahme Ende                        
 
                         // Aggloprogramm + status flags at the end
                         AppendBool(sb, reader, "is_aggloprog");
