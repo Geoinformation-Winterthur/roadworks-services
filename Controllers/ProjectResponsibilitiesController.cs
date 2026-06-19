@@ -27,13 +27,20 @@ namespace roadwork_portal_service.Controllers
         /// <returns></returns>
         [HttpGet("project-lead")]
         [Authorize]
-        public ActionResult<ActivityResponsibilityFeature> GetActivityProjectResponsibility(string roadWorkActivityUuid = "")
+        public ActionResult<ActivityResponsibilityFeature> GetActivityProjectResponsibility(string roadWorkActivityUuid)
         {
             var userUuid = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             // Check permission
             if (!User.IsInRole("administrator") && !User.IsInRole("territorymanager"))
                 return Forbid();
+
+            // Check activity uuid
+            if (string.IsNullOrEmpty(roadWorkActivityUuid))
+            {
+                _logger.LogWarning("No activity uuid provided to get project responsibility.");
+                return BadRequest(new ActivityResponsibilityFeature { errorMessage = "SSP-3" });
+            }
 
             // Get the features from db
             ActivityResponsibilityDAO activityResponsibilityDAO = new ActivityResponsibilityDAO();
@@ -47,13 +54,20 @@ namespace roadwork_portal_service.Controllers
         /// <returns></returns>
         [HttpGet("phase-leads")]
         [Authorize]
-        public ActionResult<IEnumerable<ActivityResponsibilityFeature>> GetActivityPhaseResponsibilities(string roadWorkActivityUuid = "")
+        public ActionResult<IEnumerable<ActivityResponsibilityFeature>> GetActivityPhaseResponsibilities(string roadWorkActivityUuid)
         {
             var userUuid = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             // Check permission
             if (!User.IsInRole("administrator") && !User.IsInRole("territorymanager"))
                 return Forbid();
+
+            // Check activity uuid
+            if (string.IsNullOrEmpty(roadWorkActivityUuid))
+            {
+                _logger.LogWarning("No activity uuid provided to get phase responsibilities.");
+                return BadRequest(new ActivityResponsibilityFeature { errorMessage = "SSP-3" });
+            }
 
             // Get the features from db
             ActivityResponsibilityDAO activityResponsibilityDAO = new ActivityResponsibilityDAO();
