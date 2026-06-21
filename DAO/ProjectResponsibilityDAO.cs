@@ -31,12 +31,12 @@ namespace roadwork_portal_service.DAO
             ActivityResponsibilityFeature activityResponsibilityFeatureFromDb = null;
 
             // get data of current user from database:
-            using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
+            using (NpgsqlConnection connection = new NpgsqlConnection(AppConfig.connectionString))
             {
-                pgConn.Open();
+                connection.Open();
 
                 // Get the activity responsibility entry
-                using (NpgsqlCommand command = GetByUuidCommand(uuid, pgConn))
+                using (NpgsqlCommand command = GetByUuidCommand(uuid, connection))
                 using (NpgsqlDataReader reader = command.ExecuteReader())
                 {
                     if (reader.Read())
@@ -44,8 +44,6 @@ namespace roadwork_portal_service.DAO
                         activityResponsibilityFeatureFromDb = ActivityResponsibilityMapper.FromReader(reader);
                     }
                 }
-
-                pgConn.Close();
             }
 
             return activityResponsibilityFeatureFromDb;
@@ -80,12 +78,12 @@ namespace roadwork_portal_service.DAO
             ActivityResponsibilityFeature activityResponsibilityFeatureFromDb = null;
 
             // get data of current user from database:
-            using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
+            using (NpgsqlConnection connection = new NpgsqlConnection(AppConfig.connectionString))
             {
-                pgConn.Open();
+                connection.Open();
 
                 // Get the activity responsibility entry
-                using (NpgsqlCommand command = GetProjectLeadByUuidCommand(uuidActivity, pgConn))
+                using (NpgsqlCommand command = GetProjectLeadByUuidCommand(uuidActivity, connection))
                 using (NpgsqlDataReader reader = command.ExecuteReader())
                 {
                     if (reader.Read())
@@ -93,8 +91,6 @@ namespace roadwork_portal_service.DAO
                         activityResponsibilityFeatureFromDb = ActivityResponsibilityMapper.FromReader(reader);
                     }
                 }
-
-                pgConn.Close();
             }
 
             return activityResponsibilityFeatureFromDb;
@@ -110,12 +106,12 @@ namespace roadwork_portal_service.DAO
             List<ActivityResponsibilityFeature> activityResponsibilityFeaturesFromDb = new List<ActivityResponsibilityFeature>();
 
             // get data of current user from database:
-            using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
+            using (NpgsqlConnection connection = new NpgsqlConnection(AppConfig.connectionString))
             {
-                pgConn.Open();
+                connection.Open();
 
                 // Get the activity responsibility entry
-                using (NpgsqlCommand command = GetPhaseLeadsByUuidCommand(uuidActivity, pgConn))
+                using (NpgsqlCommand command = GetPhaseLeadsByUuidCommand(uuidActivity, connection))
                 using (NpgsqlDataReader reader = command.ExecuteReader())
                 {
                     while (reader.Read())
@@ -123,8 +119,6 @@ namespace roadwork_portal_service.DAO
                         activityResponsibilityFeaturesFromDb.Add(ActivityResponsibilityMapper.FromReader(reader));
                     }
                 }
-
-                pgConn.Close();
             }
 
             return activityResponsibilityFeaturesFromDb;
@@ -177,17 +171,19 @@ namespace roadwork_portal_service.DAO
             if (activityResponsibilityFeature == null)
                 return null;
 
-            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
-            connection.Open();
-
-            using (NpgsqlTransaction transaction = connection.BeginTransaction())
+            using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
             {
-                using (NpgsqlCommand command = CreateInsertCommand(connection, activityResponsibilityFeature))
-                {
-                    command?.ExecuteNonQuery();
-                }
+                connection.Open();
 
-                transaction.Commit();
+                using (NpgsqlTransaction transaction = connection.BeginTransaction())
+                {
+                    using (NpgsqlCommand command = CreateInsertCommand(connection, activityResponsibilityFeature))
+                    {
+                        command?.ExecuteNonQuery();
+                    }
+
+                    transaction.Commit();
+                }
             }
 
             return activityResponsibilityFeature;
@@ -201,6 +197,7 @@ namespace roadwork_portal_service.DAO
         /// <returns></returns>
         private static NpgsqlCommand CreateInsertCommand(NpgsqlConnection connection, ActivityResponsibilityFeature activityResponsibility)
         {
+            var responsibility = activityResponsibility.properties;
             var command = new NpgsqlCommand(@"
                 INSERT INTO wtb_ssp_activity_responsibilities (
                     uuid, uuid_roadwork_activity, uuid_organisationalunit, uuid_user, responsibility_type, phase, sort_order)
@@ -208,13 +205,13 @@ namespace roadwork_portal_service.DAO
                     @uuid, @uuid_roadwork_activity, @uuid_organisationalunit, @uuid_user, @responsibility_type, @phase, @sort_order);",
                 connection);
 
-            command.Parameters.AddWithValue("@uuid", new Guid(activityResponsibility.properties.uuid));
-            command.Parameters.AddWithValue("@uuid_roadwork_activity", new Guid(activityResponsibility.properties.uuidRoadworkActivity));
-            command.Parameters.AddWithValue("@uuid_organisationalunit", new Guid(activityResponsibility.properties.uuidOrganisationalUnit));
-            command.Parameters.AddWithValue("@uuid_user", new Guid(activityResponsibility.properties.uuidUser));
-            command.Parameters.AddWithValue("@responsibility_type", HelperFunctions.ToDbValue(activityResponsibility.properties.responsibilityType.ToString()));
-            command.Parameters.AddWithValue("@phase", HelperFunctions.ToDbValue(activityResponsibility.properties.phase));
-            command.Parameters.AddWithValue("@sort_order", HelperFunctions.ToDbValue(activityResponsibility.properties.sortOrder));
+            command.Parameters.AddWithValue("@uuid", new Guid(responsibility.uuid));
+            command.Parameters.AddWithValue("@uuid_roadwork_activity", new Guid(responsibility.uuidRoadworkActivity));
+            command.Parameters.AddWithValue("@uuid_organisationalunit", HelperFunctions.ToDbNullableGuid(responsibility.uuidOrganisationalUnit));
+            command.Parameters.AddWithValue("@uuid_user", HelperFunctions.ToDbNullableGuid(responsibility.uuidUser));
+            command.Parameters.AddWithValue("@responsibility_type", responsibility.responsibilityType.ToString());
+            command.Parameters.AddWithValue("@phase", HelperFunctions.ToDbValue(responsibility.phase));
+            command.Parameters.AddWithValue("@sort_order", HelperFunctions.ToDbValue(responsibility.sortOrder));
 
             return command;
         }
@@ -229,17 +226,19 @@ namespace roadwork_portal_service.DAO
             if (activityResponsibilityFeature == null)
                 return null;
 
-            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
-            connection.Open();
-
-            using (NpgsqlTransaction transaction = connection.BeginTransaction())
+            using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
             {
-                using (NpgsqlCommand command = CreateUpdateCommand(connection, activityResponsibilityFeature))
-                {
-                    command?.ExecuteNonQuery();
-                }
+                connection.Open();
 
-                transaction.Commit();
+                using (NpgsqlTransaction transaction = connection.BeginTransaction())
+                {
+                    using (NpgsqlCommand command = CreateUpdateCommand(connection, activityResponsibilityFeature))
+                    {
+                        command?.ExecuteNonQuery();
+                    }
+
+                    transaction.Commit();
+                }
             }
 
             return activityResponsibilityFeature;
@@ -253,6 +252,7 @@ namespace roadwork_portal_service.DAO
         /// <returns></returns>
         private static NpgsqlCommand CreateUpdateCommand(NpgsqlConnection connection, ActivityResponsibilityFeature activityResponsibility)
         {
+            var responsibility = activityResponsibility.properties;
             var command = new NpgsqlCommand(@"
                 UPDATE wtb_ssp_activity_responsibilities
                 SET
@@ -261,13 +261,50 @@ namespace roadwork_portal_service.DAO
                     uuid = @uuid;",
                 connection);
 
-            command.Parameters.AddWithValue("@uuid", new Guid(activityResponsibility.properties.uuid));
-            command.Parameters.AddWithValue("@uuid_organisationalunit", new Guid(activityResponsibility.properties.uuidOrganisationalUnit));
-            command.Parameters.AddWithValue("@uuid_user", new Guid(activityResponsibility.properties.uuidUser));
-            command.Parameters.AddWithValue("@phase", HelperFunctions.ToDbValue(activityResponsibility.properties.phase));
+            command.Parameters.AddWithValue("@uuid", new Guid(responsibility.uuid));
+            command.Parameters.AddWithValue("@uuid_organisationalunit", HelperFunctions.ToDbNullableGuid(responsibility.uuidOrganisationalUnit));
+            command.Parameters.AddWithValue("@uuid_user", HelperFunctions.ToDbNullableGuid(responsibility.uuidUser));
+            command.Parameters.AddWithValue("@phase", HelperFunctions.ToDbValue(responsibility.phase));
             command.Parameters.AddWithValue("@sort_order", HelperFunctions.ToDbValue(activityResponsibility.properties.sortOrder));
 
             return command;
+        }
+
+        /// <summary>
+        /// Delete an activity responsitility by uuid.
+        /// </summary>
+        /// <param name="uuid"></param>
+        /// <returns></returns>
+        public int Delete(string uuid)
+        {
+            // get data of current user from database:
+            using (NpgsqlConnection connection = new NpgsqlConnection(AppConfig.connectionString))
+            {
+                connection.Open();
+
+                // Get the activity responsibility entry
+                using (NpgsqlCommand command = DeleteByUuidCommand(uuid, connection))
+                {
+                    return command.ExecuteNonQuery();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Select command to delete the ActivityResponsibilityFeature (wtb_ssp_journal_entries) by uuid.
+        /// </summary>
+        /// <param name="uuid"></param>
+        /// <param name="pgConn"></param>
+        /// <returns></returns>
+        internal static NpgsqlCommand DeleteByUuidCommand(string uuid, NpgsqlConnection pgConn)
+        {
+            NpgsqlCommand selectComm = pgConn.CreateCommand();
+            selectComm.CommandText = @"DELETE
+                        FROM wtb_ssp_activity_responsibilities
+                        WHERE uuid = @uuid";
+
+            selectComm.Parameters.AddWithValue("@uuid", new Guid(uuid));
+            return selectComm;
         }
     }
 }

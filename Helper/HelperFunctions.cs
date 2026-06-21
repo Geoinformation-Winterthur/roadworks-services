@@ -138,6 +138,11 @@ namespace roadwork_portal_service.Helper
             return value ?? DBNull.Value;
         }
 
+        public static object ToDbNullableGuid(string value)
+        {
+            return string.IsNullOrEmpty(value) ? DBNull.Value : new Guid(value);
+        }
+
         private static List<(string, Point)> _getFromToListFromDb(
                 Polygon roadWorkPoly, NpgsqlConnection pgConn)
         {

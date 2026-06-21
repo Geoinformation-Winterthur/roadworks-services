@@ -75,7 +75,7 @@ namespace roadwork_portal_service.Controllers
         }
 
         /// <summary>
-        /// Insert a journal entry.
+        /// Insert an activity responsibility feature entry.
         /// </summary>
         /// <param name="activityResponsibilityFeature">The feature to insert.</param>
         /// <returns></returns>
@@ -90,7 +90,7 @@ namespace roadwork_portal_service.Controllers
             // Check object to insert
             if (activityResponsibilityFeature?.properties == null)
             {
-                _logger.LogWarning("No journal entry feature received in insert feature method.");
+                _logger.LogWarning("No activity responsibility feature entry feature received in insert feature method.");
                 return BadRequest(new ActivityResponsibilityFeature { errorMessage = "SSP-3" });
             }
 
@@ -100,28 +100,9 @@ namespace roadwork_portal_service.Controllers
                 return BadRequest(new ActivityResponsibilityFeature { errorMessage = "SSP-3" });
             }
 
-            if (string.IsNullOrEmpty(activityResponsibilityFeature.properties.uuidOrganisationalUnit))
-            {
-                _logger.LogWarning("No uuid organisational unit received in insert feature method.");
-                return BadRequest(new ActivityResponsibilityFeature { errorMessage = "SSP-3" });
-            }
-
-            if (string.IsNullOrEmpty(activityResponsibilityFeature.properties.uuidUser))
-            {
-                _logger.LogWarning("No uuid user received in insert feature method.");
-                return BadRequest(new ActivityResponsibilityFeature { errorMessage = "SSP-3" });
-            }
-
             if (activityResponsibilityFeature.properties.responsibilityType == null)
             {
                 _logger.LogWarning("Invalid responsibility type in insert feature method.");
-                return BadRequest(new ActivityResponsibilityFeature { errorMessage = "SSP-3" });
-            }
-
-            if (activityResponsibilityFeature.properties.responsibilityType == ResponsibilityType.PhaseLead
-                && string.IsNullOrEmpty(activityResponsibilityFeature.properties.phase))
-            {
-                _logger.LogWarning("Invalid phase for responsibility type \"PhaseLead\" type in insert feature method.");
                 return BadRequest(new ActivityResponsibilityFeature { errorMessage = "SSP-3" });
             }
 
@@ -152,7 +133,7 @@ namespace roadwork_portal_service.Controllers
         }
 
         /// <summary>
-        /// Update a journal entry.
+        /// Update an activity responsibility feature entry.
         /// </summary>
         /// <param name="activityResponsibilityFeature">The feature to update.</param>
         /// <returns></returns>
@@ -177,28 +158,9 @@ namespace roadwork_portal_service.Controllers
                 return BadRequest(new ActivityResponsibilityFeature { errorMessage = "SSP-3" });
             }
 
-            if (string.IsNullOrEmpty(activityResponsibilityFeature.properties.uuidOrganisationalUnit))
-            {
-                _logger.LogWarning("No uuid organisational unit received in insert feature method.");
-                return BadRequest(new ActivityResponsibilityFeature { errorMessage = "SSP-3" });
-            }
-
-            if (string.IsNullOrEmpty(activityResponsibilityFeature.properties.uuidUser))
-            {
-                _logger.LogWarning("No uuid user received in insert feature method.");
-                return BadRequest(new ActivityResponsibilityFeature { errorMessage = "SSP-3" });
-            }
-
             if (activityResponsibilityFeature.properties.responsibilityType == null)
             {
                 _logger.LogWarning("Invalid responsibility type in insert feature method.");
-                return BadRequest(new ActivityResponsibilityFeature { errorMessage = "SSP-3" });
-            }
-
-            if (activityResponsibilityFeature.properties.responsibilityType == ResponsibilityType.PhaseLead
-                && string.IsNullOrEmpty(activityResponsibilityFeature.properties.phase))
-            {
-                _logger.LogWarning("Invalid phase for responsibility type \"PhaseLead\" type in insert feature method.");
                 return BadRequest(new ActivityResponsibilityFeature { errorMessage = "SSP-3" });
             }
 
@@ -242,6 +204,49 @@ namespace roadwork_portal_service.Controllers
             }
 
             return Ok(activityResponsibilityFromDb);
+        }
+
+        /// <summary>
+        /// Delete an activity responsibility feature entry.
+        /// </summary>
+        /// <param name="uuid">The feature to update.</param>
+        /// <returns></returns>
+        [HttpDelete]
+        [Authorize]
+        public ActionResult<ActivityResponsibilityFeature> DeleteActivityResponsibility(string uuid)
+        {
+            // Check permission
+            if (!User.IsInRole("administrator") && !User.IsInRole("territorymanager"))
+                return Forbid();
+
+            // Check object to insert
+            if (string.IsNullOrEmpty(uuid))
+            {
+                _logger.LogWarning("No roadwork activity entry feature received in update feature method.");
+                return BadRequest(new ActivityResponsibilityFeature { errorMessage = "SSP-3" });
+            }
+
+            try
+            {
+                // Delete the feature in the db
+                ActivityResponsibilityDAO activityResponsibilityDAO = new ActivityResponsibilityDAO();
+                int countAffectedRows = activityResponsibilityDAO.Delete(uuid);
+
+                if (countAffectedRows != 1)
+                {
+                    _logger.LogError("Unknown error.");
+                    var errorMessage = new ErrorMessage() { errorMessage = "SSP-3" };
+                    return Ok(errorMessage);
+                }
+
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                var errorMessage = new ErrorMessage() { errorMessage = "SSP-3" };
+                return Ok(errorMessage);
+            }
         }
     }
 }
