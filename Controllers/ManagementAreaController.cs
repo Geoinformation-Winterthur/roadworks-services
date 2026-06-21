@@ -106,8 +106,8 @@ namespace roadwork_portal_service.Controllers
                 {
                     pgConn.Open();
                     NpgsqlCommand selectComm = pgConn.CreateCommand();
-                    selectComm.CommandText = @"SELECT m.uuid, am.uuid, am.first_name, am.last_name,
-                            sam.uuid, sam.first_name, sam.last_name
+                    selectComm.CommandText = @"SELECT m.uuid, am.uuid, am.first_name, am.last_name, am.e_mail,
+                            sam.uuid, sam.first_name, sam.last_name, sam.e_mail
                             FROM ""wtb_ssp_managementareas"" m
                             LEFT JOIN ""wtb_ssp_users"" am ON m.manager = am.uuid
                             LEFT JOIN ""wtb_ssp_users"" sam ON m.substitute_manager = sam.uuid
@@ -128,12 +128,14 @@ namespace roadwork_portal_service.Controllers
                             manager.uuid = reader.IsDBNull(1) ? "" : reader.GetGuid(1).ToString();
                             manager.firstName = reader.IsDBNull(2) ? "" : reader.GetString(2);
                             manager.lastName = reader.IsDBNull(3) ? "" : reader.GetString(3);
+                            manager.mailAddress = reader.IsDBNull(4) ? "" : reader.GetString(4);
                             result.manager = manager;
 
                             User substituteManager = new User();
-                            substituteManager.uuid = reader.IsDBNull(4) ? "" : reader.GetGuid(4).ToString();
-                            substituteManager.firstName = reader.IsDBNull(5) ? "" : reader.GetString(5);
-                            substituteManager.lastName = reader.IsDBNull(6) ? "" : reader.GetString(6);
+                            substituteManager.uuid = reader.IsDBNull(5) ? "" : reader.GetGuid(5).ToString();
+                            substituteManager.firstName = reader.IsDBNull(6) ? "" : reader.GetString(6);
+                            substituteManager.lastName = reader.IsDBNull(7) ? "" : reader.GetString(7);
+                            substituteManager.mailAddress = reader.IsDBNull(8) ? "" : reader.GetString(8);
                             result.substituteManager = substituteManager;
                         }
                     }
