@@ -1,4 +1,4 @@
--- VERSION 2026.7 ---
+-- VERSION 2026.8 ---
 
 -- #662 - Unify prestudy: prestudy & prestudy_required >> prestudy (GEOBOX AG - Simon Meyer, 22.06.2026)
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities DROP COLUMN IF EXISTS prestudy_required;
