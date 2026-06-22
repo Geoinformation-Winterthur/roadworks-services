@@ -9,7 +9,7 @@ ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN acquisition_planned 
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN aggloprogram_link character varying(255);
 
 -- #621 - Add prestudy to activities (GEOBOX AG - Simon Meyer, 11.05.2026)
-ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN prestudy_required boolean;
+--ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN prestudy_required boolean;
 --ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN prestudy_required_changed_after_sks boolean;
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN prestudy_duration character varying(80);
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN prestudy_contractor character varying(255);

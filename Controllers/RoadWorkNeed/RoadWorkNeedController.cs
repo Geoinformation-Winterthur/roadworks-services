@@ -107,12 +107,12 @@ namespace roadwork_portal_service.Controllers
                             r.is_sponge_2_7, r.is_sponge_3_1, r.is_sponge_3_2, r.is_sponge_3_3,
                             r.is_sponge_4_1, r.is_sponge_4_2, r.is_sponge_5_1, r.delete_reason,
                             r.geom, r.construction_duration, r.acquisition_planned, 
-                            para.uuid as uuid_parameters, para.uuid_roadwork_need, para.uuid_roadwork_activity,
-                            para.approval_required, para.strg_approval_required, para.bafu_approval_required,
-                            para.lsv_approval_required, para.ssv_approval_required, para.wwg_approval_required,
-                            para.eri_approval_required, para.pbg_approval_required, para.ebg_approval_required,
-                            para.awel_approval_required, para.esti_approval_required, para.other_approval_required,
-                            para.other_approval_details";
+                            appr.uuid as uuid_approvals, appr.uuid_roadwork_need, appr.uuid_roadwork_activity,
+                            appr.approval_required, appr.strg_approval_required, appr.bafu_approval_required,
+                            appr.lsv_approval_required, appr.ssv_approval_required, appr.wwg_approval_required,
+                            appr.eri_approval_required, appr.pbg_approval_required, appr.ebg_approval_required,
+                            appr.awel_approval_required, appr.esti_approval_required, appr.other_approval_required,
+                            appr.other_approval_details";
 
                     if (uuids == "" && roadWorkActivityUuid != "")
                     {
@@ -124,7 +124,7 @@ namespace roadwork_portal_service.Controllers
                         LEFT JOIN ""wtb_ssp_organisationalunits"" o ON u.org_unit = o.uuid
                         LEFT JOIN ""wtb_ssp_priorities"" p ON r.priority = p.code
                         LEFT JOIN ""wtb_ssp_users"" n ON r.area_man_of_note = n.uuid
-                        LEFT JOIN ""wtb_ssp_roadwork_approvals"" para ON r.uuid = para.uuid_roadwork_need";
+                        LEFT JOIN ""wtb_ssp_roadwork_approvals"" appr ON r.uuid = appr.uuid_roadwork_need";
 
                     if (uuids == "")
                     {

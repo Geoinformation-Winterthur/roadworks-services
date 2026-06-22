@@ -25,7 +25,6 @@ public class RoadWorkActivityProperties
     public bool? overarchingMeasure { get; set; } = false;
     public int? desiredYearFrom { get; set; } = -1;
     public int? desiredYearTo { get; set; } = -1;
-    public bool? prestudy { get; set; } = false;
     public DateTime? created { get; set; } = DateTime.MinValue;
     public DateTime? lastModified { get; set; } = DateTime.MinValue;
     public DateTime? finishEarlyTo { get; set; }
@@ -99,7 +98,7 @@ public class RoadWorkActivityProperties
     public DateTime? dateStartCoordinated { get; set; }
     public string? url { get; set; }
     public DocumentAttributes[]? documentAtts { get; set; }
-    public bool? isSksRelevant { get; set; }
+    public bool? isOksActive { get; set; }
     public DateTime? costLastModified { get; set; }
     public User? costLastModifiedBy { get; set; } = new User();
 
@@ -118,9 +117,9 @@ public class RoadWorkActivityProperties
     public decimal? aggloprogramCostTotal { get; set; }
     public decimal? aggloprogramCostCanton { get; set; }
 
-    // Prestudy (#621, 2026.4)
-    public bool? prestudyRequired { get; set; } = false;
-    //public bool? prestudyRequiredChangedAfterSks { get; set; } = false;
+    // Prestudy
+    public bool? prestudy { get; set; } = false;
+    // Prestudy additional(#621, 2026.4)
     public string? prestudyDuration { get; set; } = "";
     public string? prestudyContractor { get; set; } = "";
     public string? prestudyDetail { get; set; } = "";
@@ -140,7 +139,7 @@ public class RoadWorkActivityProperties
     public bool? subjectToDepaving { get; set; } = false;
     public bool? pedestriansCyclingAffected { get; set; } = false;
     public bool? disabilityEqualityAffected { get; set; } = false;
-    public bool? trafficRegulationAffected { get; set; } = false;
+    public bool? trafficRegulation { get; set; } = false;
 
     // Private entities (#623, 2026.4)
     public bool? privateEntityAffected { get; set; } = false;

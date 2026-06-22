@@ -45,7 +45,7 @@ namespace roadwork_portal_service.Controllers
                     "Im Internet publiziert;Rechnungsadresse 1;Rechnungsadresse 2;PDB-FID;" +
                     "Investitionsnummer;Datum SKS;Datum KAP berechnet;Datum OKS;" +
                     "URL;Arbeitsbezeichnung;Projekttyp;Projekt-Art;Übergeordnete Massnahme;Wunschjahr von;" +
-                    "Wunschjahr bis;Vorstudie;date_optimum;Baubeginn;Bauende;" +
+                    "Wunschjahr bis;VS vorgesehen;Verkehrsanordnung;date_optimum;Baubeginn;Bauende;" +
                     "Abnahmedatum;consult_due;SKS, genehmigt;KAP, genehmigt;" +
                     "GL TBA, genehmigt;date_planned;date_accept;Garantie;Vorstudie;Plantermin: Vorstudie Start;" +
                     "Plantermin: Vorstudie Ende;Projektauftrag Vorstudie genehmigt;" +
@@ -53,8 +53,9 @@ namespace roadwork_portal_service.Controllers
                     "Begehrensäusserung Ende;Mitwirkungsverfahren § 13;Mitwirkungsverfahren Start;" +
                     "Mitwirkungsverfahren Ende;Planauflage § 16;" +
                     "Planauflage Start;Planauflage Ende;" +
+                    "Störfallverordnung;Akustisches Projekt" +
                     "Aggloprogramm vorgesehen;Private betroffen;Provis;Vorgesehene Tätigkeiten/Arbeiten; Randbedingungen/Abhängigkeiten;" +
-                    "Rechts-/Landerwerb vorgesehen;Vorstudie vorgesehen; Umsetzung durch Dritte/Werk;" +
+                    "Rechts-/Landerwerb vorgesehen; Umsetzung durch Dritte/Werk;" +
 
                     // Make these columns explicit and easy to recognize in Excel import:
                     "Bedarfsklärung 1 Start;Bedarfsklärung 1 Ende;" +
@@ -119,7 +120,7 @@ namespace roadwork_portal_service.Controllers
 
                         // Remaining columns with empty fields to match the header count.
                         AppendEmpty(sb, 8);
-                        AppendEmpty(sb, 55);
+                        AppendEmpty(sb, 57);
 
                         AppendGuid(sb, reader, "uuid");
                         AppendText(sb, "");
@@ -138,6 +139,7 @@ namespace roadwork_portal_service.Controllers
                         SELECT r.uuid, r.roadworkactivity_no, r.name,
                             p.first_name AS p_first_name, p.last_name AS p_last_name,
                             t.first_name AS t_first_name, t.last_name AS t_last_name,
+                            appr.bafu_approval_required, appr.lsv_approval_required,
                             r.description, r.created, r.last_modified,
                             r.date_from, r.date_to, r.private, r.status,
                             r.in_internet, r.billing_address1, r.billing_address2,
@@ -145,7 +147,7 @@ namespace roadwork_portal_service.Controllers
                             r.date_kap, r.date_oks, r.date_gl_tba, 
                             r.comment, r.section, r.url, r.working_title, r.projecttype, r.projectkind,
                             r.overarching_measure, r.desired_year_from,
-                            r.desired_year_to, r.prestudy, r.date_optimum,
+                            r.desired_year_to, r.prestudy, r.traffic_regulation, r.date_optimum,
                             r.start_of_construction, r.end_of_construction,
                             r.date_of_acceptance, r.consult_due, r.date_sks_real,
                             r.date_kap_real, r.date_oks_real, r.date_gl_tba_real,
@@ -157,7 +159,7 @@ namespace roadwork_portal_service.Controllers
                             r.is_plan_circ, r.date_plan_circ_start, r.date_plan_circ_end,
                             r.part_of_aggloprogram, r.private_entity_affected, r.erp_number,
                             r.planned_tasks, r.constraints_dependencies, r.acquisition_planned,
-                            r.prestudy_required, r.implementation_by_third,
+                            r.implementation_by_third,
                             r.date_consult_start1, r.date_consult_end1,
                             r.date_consult_start2, r.date_consult_end2,
                             r.date_report_start, r.date_report_end,                            
@@ -179,6 +181,7 @@ namespace roadwork_portal_service.Controllers
                         FROM ""wtb_ssp_roadworkactivities"" r
                         LEFT JOIN ""wtb_ssp_users"" p ON r.projectmanager = p.uuid
                         LEFT JOIN ""wtb_ssp_users"" t ON r.traffic_agent = t.uuid
+                        LEFT JOIN ""wtb_ssp_roadwork_approvals"" appr ON r.uuid = appr.uuid_roadwork_activity
 
                         LEFT JOIN LATERAL (
                             SELECT am.first_name AS gm_first_name,
@@ -283,6 +286,8 @@ namespace roadwork_portal_service.Controllers
                         AppendInt(sb, reader, "desired_year_to");
 
                         AppendBool(sb, reader, "prestudy");
+                        AppendBool(sb, reader, "traffic_regulation");
+
                         AppendDate(sb, reader, "date_optimum");
                         AppendDate(sb, reader, "start_of_construction");
                         AppendDate(sb, reader, "end_of_construction");
@@ -317,13 +322,15 @@ namespace roadwork_portal_service.Controllers
                         AppendDate(sb, reader, "date_plan_circ_start");
                         AppendDate(sb, reader, "date_plan_circ_end");
 
+                        AppendBool(sb, reader, "bafu_approval_required");
+                        AppendBool(sb, reader, "lsv_approval_required");
+
                         AppendBool(sb, reader, "part_of_aggloprogram");
                         AppendBool(sb, reader, "private_entity_affected");
                         AppendInt(sb, reader, "erp_number");
                         AppendText(sb, reader, "planned_tasks");
                         AppendText(sb, reader, "constraints_dependencies");
                         AppendText(sb, reader, "acquisition_planned");
-                        AppendBool(sb, reader, "prestudy_required");
                         AppendBool(sb, reader, "implementation_by_third");
 
                         // Vernehmlassungen / consult rounds and Stellungnahme (make columns explicit)

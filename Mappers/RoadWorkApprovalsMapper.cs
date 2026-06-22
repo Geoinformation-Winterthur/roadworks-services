@@ -19,7 +19,7 @@ namespace roadwork_portal_service.Mappers
         {
             return new RoadWorkApprovals
             {
-                uuid = reader.GetGuidAsStringOrEmpty("uuid_parameters"),
+                uuid = reader.GetGuidAsStringOrEmpty("uuid_approvals"),
                 uuidRoadworkActivity = reader.GetGuidAsStringOrEmpty("uuid_roadwork_activity"),
                 uuidRoadworkNeed = reader.GetGuidAsStringOrEmpty("uuid_roadwork_need"),
                 approvalRequired = reader.GetBooleanOrFalse("approval_required"),

@@ -45,8 +45,7 @@ namespace roadwork_portal_service.Mappers
             roadWorkActivityProperties.aggloprogramCostCanton = reader.GetNullableDecimal("aggloprogram_cost_canton");
 
             // Prestudy
-            roadWorkActivityProperties.prestudyRequired = reader.GetBooleanOrFalse("prestudy_required");
-            //roadWorkActivityProperties.prestudyRequiredChangedAfterSks = reader.GetBooleanOrFalse("prestudy_required_changed_after_sks");
+            roadWorkActivityProperties.prestudy = reader.GetBooleanOrFalse("prestudy");
             roadWorkActivityProperties.prestudyDuration = reader.GetStringOrEmpty("prestudy_duration");
             roadWorkActivityProperties.prestudyContractor = reader.GetStringOrEmpty("prestudy_contractor");
             roadWorkActivityProperties.prestudyDetail = reader.GetStringOrEmpty("prestudy_detail");
@@ -66,7 +65,7 @@ namespace roadwork_portal_service.Mappers
             roadWorkActivityProperties.subjectToDepaving = reader.GetBooleanOrFalse("subject_to_depaving");
             roadWorkActivityProperties.pedestriansCyclingAffected = reader.GetBooleanOrFalse("pedestrians_cycling_affected");
             roadWorkActivityProperties.disabilityEqualityAffected = reader.GetBooleanOrFalse("disability_equality_affected");
-            roadWorkActivityProperties.trafficRegulationAffected = reader.GetBooleanOrFalse("traffic_regulation_affected");
+            roadWorkActivityProperties.trafficRegulation = reader.GetBooleanOrFalse("traffic_regulation");
 
             // Private entities
             roadWorkActivityProperties.privateEntityAffected = reader.GetBooleanOrFalse("private_entity_affected");
@@ -121,8 +120,7 @@ namespace roadwork_portal_service.Mappers
             parameters.AddWithValue("@aggloprogram_cost_canton", HelperFunctions.ToDbValue(roadWorkActivityProperties.aggloprogramCostCanton));
 
             // Prestudy
-            parameters.AddWithValue("@prestudy_required", HelperFunctions.ToDbValue(roadWorkActivityProperties.prestudyRequired));
-            //parameters.AddWithValue("@prestudy_required_changed_after_sks", HelperFunctions.ToDbValue(roadWorkActivityProperties.prestudyRequiredChangedAfterSks));
+            parameters.AddWithValue("@prestudy", HelperFunctions.ToDbValue(roadWorkActivityProperties.prestudy));
             parameters.AddWithValue("@prestudy_duration", HelperFunctions.ToDbValue(roadWorkActivityProperties.prestudyDuration));
             parameters.AddWithValue("@prestudy_contractor", HelperFunctions.ToDbValue(roadWorkActivityProperties.prestudyContractor));
             parameters.AddWithValue("@prestudy_detail", HelperFunctions.ToDbValue(roadWorkActivityProperties.prestudyDetail));
@@ -142,7 +140,7 @@ namespace roadwork_portal_service.Mappers
             parameters.AddWithValue("@subject_to_depaving", HelperFunctions.ToDbValue(roadWorkActivityProperties.subjectToDepaving));
             parameters.AddWithValue("@pedestrians_cycling_affected", HelperFunctions.ToDbValue(roadWorkActivityProperties.pedestriansCyclingAffected));
             parameters.AddWithValue("@disability_equality_affected", HelperFunctions.ToDbValue(roadWorkActivityProperties.disabilityEqualityAffected));
-            parameters.AddWithValue("@traffic_regulation_affected", HelperFunctions.ToDbValue(roadWorkActivityProperties.trafficRegulationAffected));
+            parameters.AddWithValue("@traffic_regulation", HelperFunctions.ToDbValue(roadWorkActivityProperties.trafficRegulation));
 
             // Private entities
             parameters.AddWithValue("@private_entity_affected", HelperFunctions.ToDbValue(roadWorkActivityProperties.privateEntityAffected));

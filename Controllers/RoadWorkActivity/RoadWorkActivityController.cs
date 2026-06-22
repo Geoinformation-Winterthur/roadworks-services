@@ -43,7 +43,7 @@ namespace roadwork_portal_service.Controllers
                         r.billing_address1, r.billing_address2, r.investment_no, r.pdb_fid,
                         r.strabako_no, r.date_sks, r.date_kap, r.date_oks, r.date_gl_tba,
                         r.comment, r.session_comment_1, r.session_comment_2, r.section, r.type, r.projecttype, r.projectkind, r.working_title, r.implementation_by_third,
-                        r.overarching_measure, r.desired_year_from, r.desired_year_to, r.prestudy, r.start_of_construction,
+                        r.overarching_measure, r.desired_year_from, r.desired_year_to, r.start_of_construction,
                         r.end_of_construction, r.consult_due, r.project_no, 
                         r.roadworkactivity_no, 
                         r.private, r.date_accept,
@@ -58,7 +58,7 @@ namespace roadwork_portal_service.Controllers
                         r.project_study_approved, r.study_approved, r.date_sks_real,
                         r.date_kap_real, r.date_oks_real, r.date_gl_tba_real,
                         r.date_start_inconsult1, r.date_start_verified1, r.date_start_inconsult2, r.date_start_verified2, r.date_start_reporting,
-                        r.date_start_suspended, r.date_start_coordinated, r.sks_relevant,
+                        r.date_start_suspended, r.date_start_coordinated, r.oks_active,
                         r.costs_last_modified, r.costs_last_modified_by,
                         r.planned_tasks, r.constraints_dependencies, r.acquisition_planned,
                         -- Aggloprogramm
@@ -66,14 +66,13 @@ namespace roadwork_portal_service.Controllers
                         r.aggloprogram_are_description, r.aggloprogram_due_date, r.aggloprogram_cost_total,
                         r.aggloprogram_cost_canton,
                         -- Prestudy
-                        r.prestudy_required, --r.prestudy_required_changed_after_sks, 
-                        r.prestudy_duration, r.prestudy_contractor,
+                        r.prestudy, r.prestudy_duration, r.prestudy_contractor,
                         r.prestudy_detail, r.prestudy_vk_er_confirmed, r.prestudy_vk_er_number,
                         -- Affected entities
                         r.bus_stops_shelters_affected, r.structures_affected, r.roadDrainage_affected,
                         r.houseConnections_affected, r.wasteFacilities_affected, r.technical_installations_affected,
                         r.trees_affected, r.street_furniture_affected, r.urban_climate_affected, r.subject_to_depaving,
-                        r.pedestrians_cycling_affected, r.disability_equality_affected, r.traffic_regulation_affected, 
+                        r.pedestrians_cycling_affected, r.disability_equality_affected, r.traffic_regulation, 
                         -- Private entities
                         r.private_entity_affected, r.private_entity_extent, r.private_entity_requirements,
                         r.private_entity_acquisition, r.private_entity_is_initiator,
@@ -89,17 +88,17 @@ namespace roadwork_portal_service.Controllers
                         -- User
                         cm.first_name AS cm_first_name, cm.last_name AS cm_last_name,
                         r.date_sks_planned, r.sks_no, r.geom,
-                        para.uuid as uuid_parameters, para.uuid_roadwork_need, para.uuid_roadwork_activity,
-                        para.approval_required,
-                        para.strg_approval_required, para.bafu_approval_required, para.lsv_approval_required,
-                        para.ssv_approval_required, para.wwg_approval_required, para.eri_approval_required,
-                        para.pbg_approval_required, para.ebg_approval_required, para.awel_approval_required,
-                        para.esti_approval_required, para.other_approval_required, para.other_approval_details
+                        appr.uuid as uuid_approvals, appr.uuid_roadwork_need, appr.uuid_roadwork_activity,
+                        appr.approval_required,
+                        appr.strg_approval_required, appr.bafu_approval_required, appr.lsv_approval_required,
+                        appr.ssv_approval_required, appr.wwg_approval_required, appr.eri_approval_required,
+                        appr.pbg_approval_required, appr.ebg_approval_required, appr.awel_approval_required,
+                        appr.esti_approval_required, appr.other_approval_required, appr.other_approval_details
                     FROM ""wtb_ssp_roadworkactivities"" r
                     LEFT JOIN ""wtb_ssp_users"" pm ON r.projectmanager = pm.uuid
                     LEFT JOIN ""wtb_ssp_users"" ta ON r.traffic_agent = ta.uuid
                     LEFT JOIN ""wtb_ssp_users"" cm ON r.costs_last_modified_by = cm.uuid
-                    LEFT JOIN ""wtb_ssp_roadwork_approvals"" para ON r.uuid = para.uuid_roadwork_activity";
+                    LEFT JOIN ""wtb_ssp_roadwork_approvals"" appr ON r.uuid = appr.uuid_roadwork_activity";
 
                 if (uuid != null)
                 {
@@ -291,9 +290,6 @@ namespace roadwork_portal_service.Controllers
                         projectFeatureFromDb.properties.desiredYearTo = reader.IsDBNull(reader.GetOrdinal("desired_year_to"))
                             ? -1
                             : reader.GetInt32(reader.GetOrdinal("desired_year_to"));
-                        projectFeatureFromDb.properties.prestudy = reader.IsDBNull(reader.GetOrdinal("prestudy"))
-                            ? false
-                            : reader.GetBoolean(reader.GetOrdinal("prestudy"));
                         if (!reader.IsDBNull(reader.GetOrdinal("start_of_construction")))
                             projectFeatureFromDb.properties.startOfConstruction =
                                 reader.GetDateTime(reader.GetOrdinal("start_of_construction"));
@@ -432,9 +428,9 @@ namespace roadwork_portal_service.Controllers
                             reader.IsDBNull(reader.GetOrdinal("date_start_coordinated"))
                                 ? null
                                 : reader.GetDateTime(reader.GetOrdinal("date_start_coordinated"));
-                        projectFeatureFromDb.properties.isSksRelevant = reader.IsDBNull(reader.GetOrdinal("sks_relevant"))
+                        projectFeatureFromDb.properties.isOksActive = reader.IsDBNull(reader.GetOrdinal("oks_active"))
                             ? false
-                            : reader.GetBoolean(reader.GetOrdinal("sks_relevant"));
+                            : reader.GetBoolean(reader.GetOrdinal("oks_active"));
                         projectFeatureFromDb.properties.costLastModified = reader.IsDBNull(reader.GetOrdinal("costs_last_modified"))
                             ? null
                             : reader.GetDateTime(reader.GetOrdinal("costs_last_modified"));
@@ -652,7 +648,7 @@ namespace roadwork_portal_service.Controllers
 
                 if (roadWorkActivityFeature.properties.isAggloprog != null &&
                         (bool)roadWorkActivityFeature.properties.isAggloprog)
-                    roadWorkActivityFeature.properties.isSksRelevant = true;
+                    roadWorkActivityFeature.properties.isOksActive = true;
 
                 if (roadWorkActivityFeature.properties.projectNo == null)
                     roadWorkActivityFeature.properties.projectNo = "";
@@ -680,27 +676,26 @@ namespace roadwork_portal_service.Controllers
                     insertComm.CommandText = @"INSERT INTO ""wtb_ssp_roadworkactivities""
                                     (uuid, name, projectmanager, traffic_agent, description,
                                     project_no, roadworkactivity_no, comment, session_comment_1, session_comment_2, section, type, projecttype, projectkind, working_title,
-                                    implementation_by_third, overarching_measure, desired_year_from, desired_year_to, prestudy, 
+                                    implementation_by_third, overarching_measure, desired_year_from, desired_year_to, 
                                     start_of_construction, end_of_construction, consult_due,
                                     created, last_modified, date_from, date_optimum, date_to,
                                     costs, costs_type, status, in_internet, billing_address1,
                                     billing_address2, investment_no, date_sks,
                                     date_kap, private, date_consult_start1, date_consult_end1,
                                     date_consult_start2, date_consult_end2, date_report_start, date_report_end,
-                                    url, sks_relevant, strabako_no, date_sks_planned, sks_no, geom,
+                                    url, oks_active, strabako_no, date_sks_planned, sks_no, geom,
                                     planned_tasks, constraints_dependencies, acquisition_planned,
                                     -- Aggloprogramm
                                     part_of_aggloprogram, aggloprogram_link, aggloprogram_generation, aggloprogram_are_code, aggloprogram_are_description, 
                                     aggloprogram_due_date, aggloprogram_cost_total, aggloprogram_cost_canton,
                                     -- Vorstudie
-                                    prestudy_required, --prestudy_required_changed_after_sks, 
-                                    prestudy_duration, prestudy_contractor,
+                                    prestudy, prestudy_duration, prestudy_contractor,
                                     prestudy_detail, prestudy_vk_er_confirmed, prestudy_vk_er_number,
                                     -- Betroffene Themen
                                     bus_stops_shelters_affected, structures_affected, roadDrainage_affected, houseConnections_affected, 
                                     wasteFacilities_affected, technical_installations_affected, trees_affected, street_furniture_affected, 
                                     urban_climate_affected, subject_to_depaving, pedestrians_cycling_affected, disability_equality_affected,
-                                    traffic_regulation_affected, 
+                                    traffic_regulation, 
                                     -- Private betroffen
                                     private_entity_affected, private_entity_extent, private_entity_requirements, private_entity_acquisition, 
                                     private_entity_is_initiator,
@@ -716,27 +711,26 @@ namespace roadwork_portal_service.Controllers
                                     @description, @project_no, 
                                     @roadworkactivity_no,
                                     @comment, @session_comment_1, @session_comment_2, @section, @type, @projecttype, @projectkind, @working_title,
-                                    @implementation_by_third, @overarching_measure, @desired_year_from, @desired_year_to, @prestudy, 
+                                    @implementation_by_third, @overarching_measure, @desired_year_from, @desired_year_to, 
                                     @start_of_construction, @end_of_construction, @consult_due,
                                     current_timestamp, current_timestamp, @date_from, @date_optimum,
                                     @date_to, @costs, @costs_type, @status, @in_internet, @billing_address1,
                                     @billing_address2, @investment_no, @date_sks, @date_kap,
                                     @private, @date_consult_start1, @date_consult_end1, @date_consult_start2, @date_consult_end2,
-                                    @date_report_start, @date_report_end, @url, @sks_relevant,
+                                    @date_report_start, @date_report_end, @url, @oks_active,
                                     @strabako_no, @date_sks_planned, @sks_no, @geom,
                                     @planned_tasks, @constraints_dependencies, @acquisition_planned,
                                     -- Aggloprogramm
                                     @part_of_aggloprogram, @aggloprogram_link, @aggloprogram_generation, @aggloprogram_are_code, @aggloprogram_are_description, 
                                     @aggloprogram_due_date, @aggloprogram_cost_total, @aggloprogram_cost_canton,
                                     -- Vorstudie
-                                    @prestudy_required, --@prestudy_required_changed_after_sks, 
-                                    @prestudy_duration, @prestudy_contractor,
+                                    @prestudy, @prestudy_duration, @prestudy_contractor,
                                     @prestudy_detail, @prestudy_vk_er_confirmed, @prestudy_vk_er_number,
                                     -- Betroffene Themen
                                     @bus_stops_shelters_affected, @structures_affected, @roadDrainage_affected, @houseConnections_affected, 
                                     @wasteFacilities_affected, @technical_installations_affected, @trees_affected, @street_furniture_affected, 
                                     @urban_climate_affected, @subject_to_depaving, @pedestrians_cycling_affected, @disability_equality_affected,
-                                    @traffic_regulation_affected, 
+                                    @traffic_regulation, 
                                     -- Private betroffen
                                     @private_entity_affected, @private_entity_extent, @private_entity_requirements, @private_entity_acquisition, 
                                     @private_entity_is_initiator,
@@ -790,7 +784,6 @@ namespace roadwork_portal_service.Controllers
                     insertComm.Parameters.AddWithValue("overarching_measure", roadWorkActivityFeature.properties.overarchingMeasure);
                     insertComm.Parameters.AddWithValue("desired_year_from", roadWorkActivityFeature.properties.desiredYearFrom);
                     insertComm.Parameters.AddWithValue("desired_year_to", roadWorkActivityFeature.properties.desiredYearTo);
-                    insertComm.Parameters.AddWithValue("prestudy", roadWorkActivityFeature.properties.prestudy);
                     insertComm.Parameters.AddWithValue("start_of_construction", roadWorkActivityFeature.properties.startOfConstruction != null ? roadWorkActivityFeature.properties.startOfConstruction : DBNull.Value);
                     insertComm.Parameters.AddWithValue("end_of_construction", roadWorkActivityFeature.properties.endOfConstruction != null ? roadWorkActivityFeature.properties.endOfConstruction : DBNull.Value);
                     insertComm.Parameters.AddWithValue("date_of_acceptance", roadWorkActivityFeature.properties.dateOfAcceptance != null ? roadWorkActivityFeature.properties.dateOfAcceptance : DBNull.Value);
@@ -806,7 +799,7 @@ namespace roadwork_portal_service.Controllers
                     insertComm.Parameters.AddWithValue("date_report_start", DateTime.Now.AddDays(63));
                     insertComm.Parameters.AddWithValue("date_report_end", DateTime.Now.AddDays(73));
                     insertComm.Parameters.AddWithValue("url", roadWorkActivityFeature.properties.url != null ? roadWorkActivityFeature.properties.url : DBNull.Value);
-                    insertComm.Parameters.AddWithValue("sks_relevant", roadWorkActivityFeature.properties.isSksRelevant != null ? roadWorkActivityFeature.properties.isSksRelevant : DBNull.Value);
+                    insertComm.Parameters.AddWithValue("oks_active", roadWorkActivityFeature.properties.isOksActive != null ? roadWorkActivityFeature.properties.isOksActive : DBNull.Value);
                     insertComm.Parameters.AddWithValue("strabako_no", roadWorkActivityFeature.properties.strabakoNo != null ? roadWorkActivityFeature.properties.strabakoNo : DBNull.Value);
                     insertComm.Parameters.AddWithValue("geom", roadWorkActivityPoly);
 
@@ -1037,7 +1030,7 @@ namespace roadwork_portal_service.Controllers
 
                 if (roadWorkActivityFeature.properties.isAggloprog != null &&
                         (bool)roadWorkActivityFeature.properties.isAggloprog)
-                    roadWorkActivityFeature.properties.isSksRelevant = true;
+                    roadWorkActivityFeature.properties.isOksActive = true;
 
                 User userFromDb = LoginController.getAuthorizedUserFromDb(this.User, false);
 
@@ -1344,7 +1337,7 @@ namespace roadwork_portal_service.Controllers
                                     comment=@comment, session_comment_1=@session_comment_1, session_comment_2=@session_comment_2, section=@section, type=@type,
                                     projecttype=@projecttype, projectkind=@projectkind, working_title=@working_title, implementation_by_third=@implementation_by_third,
                                     overarching_measure=@overarching_measure, desired_year_from=@desired_year_from, desired_year_to=@desired_year_to,
-                                    prestudy=@prestudy, start_of_construction=@start_of_construction, date_of_acceptance=@date_of_acceptance,
+                                    start_of_construction=@start_of_construction, date_of_acceptance=@date_of_acceptance,
                                     end_of_construction=@end_of_construction, consult_due=@consult_due,
                                     last_modified=@last_modified, project_no=@project_no, roadworkactivity_no=@roadworkactivity_no,
                                     date_from=@date_from, date_optimum=@date_optimum, date_to=@date_to,
@@ -1370,38 +1363,38 @@ namespace roadwork_portal_service.Controllers
                                     date_info_start=@date_info_start, date_info_end=@date_info_end,
                                     date_info_close=@date_info_close, is_aggloprog=@is_aggloprog, is_traffic_regulation_required=@is_traffic_regulation_required,
                                     project_study_approved=@project_study_approved, study_approved=@study_approved,
-                                    sks_relevant=@sks_relevant, strabako_no=@strabako_no, date_sks_planned=@date_sks_planned, sks_no=@sks_no,
-                                    planned_tasks = @planned_tasks, constraints_dependencies = @constraints_dependencies, acquisition_planned = @acquisition_planned,
+                                    oks_active=@oks_active, strabako_no=@strabako_no, date_sks_planned=@date_sks_planned, sks_no=@sks_no,
+                                    planned_tasks=@planned_tasks, constraints_dependencies=@constraints_dependencies, acquisition_planned=@acquisition_planned,
                                     -- Aggloprogramm
-                                    part_of_aggloprogram = @part_of_aggloprogram, aggloprogram_link = @aggloprogram_link, aggloprogram_generation = @aggloprogram_generation,
-                                    aggloprogram_are_code = @aggloprogram_are_code, aggloprogram_are_description = @aggloprogram_are_description, 
-                                    aggloprogram_due_date = @aggloprogram_due_date, aggloprogram_cost_total = @aggloprogram_cost_total,
-                                    aggloprogram_cost_canton = @aggloprogram_cost_canton,
+                                    part_of_aggloprogram=@part_of_aggloprogram, aggloprogram_link=@aggloprogram_link, aggloprogram_generation=@aggloprogram_generation,
+                                    aggloprogram_are_code=@aggloprogram_are_code, aggloprogram_are_description=@aggloprogram_are_description, 
+                                    aggloprogram_due_date=@aggloprogram_due_date, aggloprogram_cost_total=@aggloprogram_cost_total,
+                                    aggloprogram_cost_canton=@aggloprogram_cost_canton,
                                     -- Vorstudie
-                                    prestudy_required = @prestudy_required, --prestudy_required_changed_after_sks = @prestudy_required_changed_after_sks,
-                                    prestudy_duration = @prestudy_duration, prestudy_contractor = @prestudy_contractor, prestudy_detail = @prestudy_detail,
-                                    prestudy_vk_er_confirmed = @prestudy_vk_er_confirmed, prestudy_vk_er_number = @prestudy_vk_er_number,
+                                    prestudy=@prestudy, prestudy_duration=@prestudy_duration, prestudy_contractor=@prestudy_contractor,
+                                    prestudy_detail=@prestudy_detail, prestudy_vk_er_confirmed=@prestudy_vk_er_confirmed,
+                                    prestudy_vk_er_number=@prestudy_vk_er_number,
                                     -- Betroffene Themen
-                                    bus_stops_shelters_affected = @bus_stops_shelters_affected, structures_affected = @structures_affected, 
-                                    roadDrainage_affected = @roadDrainage_affected, houseConnections_affected = @houseConnections_affected, 
-                                    wasteFacilities_affected = @wasteFacilities_affected, technical_installations_affected = @technical_installations_affected,
-                                    trees_affected = @trees_affected, street_furniture_affected = @street_furniture_affected, 
-                                    urban_climate_affected = @urban_climate_affected, subject_to_depaving = @subject_to_depaving,
-                                    pedestrians_cycling_affected = @pedestrians_cycling_affected, disability_equality_affected = @disability_equality_affected,
-                                    traffic_regulation_affected = @traffic_regulation_affected, 
+                                    bus_stops_shelters_affected=@bus_stops_shelters_affected, structures_affected=@structures_affected, 
+                                    roadDrainage_affected=@roadDrainage_affected, houseConnections_affected=@houseConnections_affected, 
+                                    wasteFacilities_affected=@wasteFacilities_affected, technical_installations_affected=@technical_installations_affected,
+                                    trees_affected=@trees_affected, street_furniture_affected=@street_furniture_affected, 
+                                    urban_climate_affected=@urban_climate_affected, subject_to_depaving=@subject_to_depaving,
+                                    pedestrians_cycling_affected=@pedestrians_cycling_affected, disability_equality_affected=@disability_equality_affected,
+                                    traffic_regulation=@traffic_regulation, 
                                     -- Private betroffen
-                                    private_entity_affected = @private_entity_affected, private_entity_extent = @private_entity_extent, 
-                                    private_entity_requirements = @private_entity_requirements, private_entity_acquisition = @private_entity_acquisition, 
-                                    private_entity_is_initiator = @private_entity_is_initiator,
+                                    private_entity_affected=@private_entity_affected, private_entity_extent=@private_entity_extent, 
+                                    private_entity_requirements=@private_entity_requirements, private_entity_acquisition=@private_entity_acquisition, 
+                                    private_entity_is_initiator=@private_entity_is_initiator,
                                     -- Provis (Abacus)
-                                    erp_number = @erp_number,
+                                    erp_number=@erp_number,
                                     -- Ressourcen
-                                    staff_resources_apr_confirmed = @staff_resources_apr_confirmed, cost_estimate_apr_confirmed = @cost_estimate_apr_confirmed,
+                                    staff_resources_apr_confirmed=@staff_resources_apr_confirmed, cost_estimate_apr_confirmed=@cost_estimate_apr_confirmed,
                                     -- Projektierungsauftrag
-                                    core_drilling_contracted = @core_drilling_contracted, quotes_requested = @quotes_requested, 
-                                    quotes_reviewed = @quotes_reviewed, apr_checked = @apr_checked, afm_checked = @afm_checked, 
+                                    core_drilling_contracted=@core_drilling_contracted, quotes_requested=@quotes_requested, 
+                                    quotes_reviewed=@quotes_reviewed, apr_checked=@apr_checked, afm_checked=@afm_checked, 
                                     -- Ausgabengenehmigung und Ablage
-                                    cf_done = @cf_done, rd_done = @rd_done, approved = @approved, fabasoft_done = @fabasoft_done, gis_updated = @gis_updated, ";
+                                    cf_done=@cf_done, rd_done=@rd_done, approved=@approved, fabasoft_done=@fabasoft_done, gis_updated=@gis_updated, ";
 
                     if (costsInDb != roadWorkActivityFeature.properties.costs){
                         updateComm.CommandText += "costs_last_modified=@costs_last_modified, ";
@@ -1507,7 +1500,6 @@ namespace roadwork_portal_service.Controllers
                     updateComm.Parameters.AddWithValue("overarching_measure", roadWorkActivityFeature.properties.overarchingMeasure);
                     updateComm.Parameters.AddWithValue("desired_year_from", roadWorkActivityFeature.properties.desiredYearFrom);
                     updateComm.Parameters.AddWithValue("desired_year_to", roadWorkActivityFeature.properties.desiredYearTo);
-                    updateComm.Parameters.AddWithValue("prestudy", roadWorkActivityFeature.properties.prestudy);
                     updateComm.Parameters.AddWithValue("start_of_construction", roadWorkActivityFeature.properties.startOfConstruction != null ? roadWorkActivityFeature.properties.startOfConstruction : DBNull.Value);
                     updateComm.Parameters.AddWithValue("end_of_construction", roadWorkActivityFeature.properties.endOfConstruction != null ? roadWorkActivityFeature.properties.endOfConstruction : DBNull.Value);
                     updateComm.Parameters.AddWithValue("date_of_acceptance", roadWorkActivityFeature.properties.dateOfAcceptance != null ? roadWorkActivityFeature.properties.dateOfAcceptance : DBNull.Value);
@@ -1544,7 +1536,7 @@ namespace roadwork_portal_service.Controllers
                     updateComm.Parameters.AddWithValue("date_info_close", roadWorkActivityFeature.properties.dateInfoClose != null ? roadWorkActivityFeature.properties.dateInfoClose : DBNull.Value);
                     updateComm.Parameters.AddWithValue("is_aggloprog", roadWorkActivityFeature.properties.isAggloprog != null ? roadWorkActivityFeature.properties.isAggloprog : DBNull.Value);
                     updateComm.Parameters.AddWithValue("is_traffic_regulation_required", roadWorkActivityFeature.properties.isTrafficRegulationRequired != null ? roadWorkActivityFeature.properties.isTrafficRegulationRequired : DBNull.Value);
-                    updateComm.Parameters.AddWithValue("sks_relevant", roadWorkActivityFeature.properties.isSksRelevant != null ? roadWorkActivityFeature.properties.isSksRelevant : DBNull.Value);
+                    updateComm.Parameters.AddWithValue("oks_active", roadWorkActivityFeature.properties.isOksActive != null ? roadWorkActivityFeature.properties.isOksActive : DBNull.Value);
                     updateComm.Parameters.AddWithValue("strabako_no", roadWorkActivityFeature.properties.strabakoNo != null ? roadWorkActivityFeature.properties.strabakoNo : DBNull.Value);
                     if (costsInDb != roadWorkActivityFeature.properties.costs)
                     {
