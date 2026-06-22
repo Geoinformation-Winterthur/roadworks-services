@@ -72,7 +72,7 @@ namespace roadwork_portal_service.Controllers
                         r.bus_stops_shelters_affected, r.structures_affected, r.roadDrainage_affected,
                         r.houseConnections_affected, r.wasteFacilities_affected, r.technical_installations_affected,
                         r.trees_affected, r.street_furniture_affected, r.urban_climate_affected, r.subject_to_depaving,
-                        r.pedestrians_cycling_affected, r.disability_equality_affected, r.traffic_regulation, 
+                        r.pedestrians_cycling_affected, r.disability_equality_affected,
                         -- Private entities
                         r.private_entity_affected, r.private_entity_extent, r.private_entity_requirements,
                         r.private_entity_acquisition, r.private_entity_is_initiator,
@@ -695,7 +695,6 @@ namespace roadwork_portal_service.Controllers
                                     bus_stops_shelters_affected, structures_affected, roadDrainage_affected, houseConnections_affected, 
                                     wasteFacilities_affected, technical_installations_affected, trees_affected, street_furniture_affected, 
                                     urban_climate_affected, subject_to_depaving, pedestrians_cycling_affected, disability_equality_affected,
-                                    traffic_regulation, 
                                     -- Private betroffen
                                     private_entity_affected, private_entity_extent, private_entity_requirements, private_entity_acquisition, 
                                     private_entity_is_initiator,
@@ -730,7 +729,6 @@ namespace roadwork_portal_service.Controllers
                                     @bus_stops_shelters_affected, @structures_affected, @roadDrainage_affected, @houseConnections_affected, 
                                     @wasteFacilities_affected, @technical_installations_affected, @trees_affected, @street_furniture_affected, 
                                     @urban_climate_affected, @subject_to_depaving, @pedestrians_cycling_affected, @disability_equality_affected,
-                                    @traffic_regulation, 
                                     -- Private betroffen
                                     @private_entity_affected, @private_entity_extent, @private_entity_requirements, @private_entity_acquisition, 
                                     @private_entity_is_initiator,
@@ -1381,7 +1379,6 @@ namespace roadwork_portal_service.Controllers
                                     trees_affected=@trees_affected, street_furniture_affected=@street_furniture_affected, 
                                     urban_climate_affected=@urban_climate_affected, subject_to_depaving=@subject_to_depaving,
                                     pedestrians_cycling_affected=@pedestrians_cycling_affected, disability_equality_affected=@disability_equality_affected,
-                                    traffic_regulation=@traffic_regulation, 
                                     -- Private betroffen
                                     private_entity_affected=@private_entity_affected, private_entity_extent=@private_entity_extent, 
                                     private_entity_requirements=@private_entity_requirements, private_entity_acquisition=@private_entity_acquisition, 

@@ -65,7 +65,6 @@ namespace roadwork_portal_service.Mappers
             roadWorkActivityProperties.subjectToDepaving = reader.GetBooleanOrFalse("subject_to_depaving");
             roadWorkActivityProperties.pedestriansCyclingAffected = reader.GetBooleanOrFalse("pedestrians_cycling_affected");
             roadWorkActivityProperties.disabilityEqualityAffected = reader.GetBooleanOrFalse("disability_equality_affected");
-            roadWorkActivityProperties.trafficRegulation = reader.GetBooleanOrFalse("traffic_regulation");
 
             // Private entities
             roadWorkActivityProperties.privateEntityAffected = reader.GetBooleanOrFalse("private_entity_affected");
@@ -140,7 +139,6 @@ namespace roadwork_portal_service.Mappers
             parameters.AddWithValue("@subject_to_depaving", HelperFunctions.ToDbValue(roadWorkActivityProperties.subjectToDepaving));
             parameters.AddWithValue("@pedestrians_cycling_affected", HelperFunctions.ToDbValue(roadWorkActivityProperties.pedestriansCyclingAffected));
             parameters.AddWithValue("@disability_equality_affected", HelperFunctions.ToDbValue(roadWorkActivityProperties.disabilityEqualityAffected));
-            parameters.AddWithValue("@traffic_regulation", HelperFunctions.ToDbValue(roadWorkActivityProperties.trafficRegulation));
 
             // Private entities
             parameters.AddWithValue("@private_entity_affected", HelperFunctions.ToDbValue(roadWorkActivityProperties.privateEntityAffected));

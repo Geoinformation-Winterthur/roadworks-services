@@ -26,7 +26,7 @@ ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN urban_climate_affect
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN subject_to_depaving boolean;
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN pedestrians_cycling_affected boolean;
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN disability_equality_affected boolean;
-ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN traffic_regulation_affected boolean;
+--ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN traffic_regulation_affected boolean;
 
 -- #623 - Add private entities to activities (GEOBOX AG - Simon Meyer, 23.04.2026)
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN private_entity_affected boolean;

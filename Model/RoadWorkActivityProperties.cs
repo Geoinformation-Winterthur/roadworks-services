@@ -139,7 +139,6 @@ public class RoadWorkActivityProperties
     public bool? subjectToDepaving { get; set; } = false;
     public bool? pedestriansCyclingAffected { get; set; } = false;
     public bool? disabilityEqualityAffected { get; set; } = false;
-    public bool? trafficRegulation { get; set; } = false;
 
     // Private entities (#623, 2026.4)
     public bool? privateEntityAffected { get; set; } = false;

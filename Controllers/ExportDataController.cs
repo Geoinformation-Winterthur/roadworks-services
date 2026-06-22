@@ -147,7 +147,7 @@ namespace roadwork_portal_service.Controllers
                             r.date_kap, r.date_oks, r.date_gl_tba, 
                             r.comment, r.section, r.url, r.working_title, r.projecttype, r.projectkind,
                             r.overarching_measure, r.desired_year_from,
-                            r.desired_year_to, r.prestudy, r.traffic_regulation, r.date_optimum,
+                            r.desired_year_to, r.prestudy, r.is_traffic_regulation_required, r.date_optimum,
                             r.start_of_construction, r.end_of_construction,
                             r.date_of_acceptance, r.consult_due, r.date_sks_real,
                             r.date_kap_real, r.date_oks_real, r.date_gl_tba_real,
@@ -286,7 +286,7 @@ namespace roadwork_portal_service.Controllers
                         AppendInt(sb, reader, "desired_year_to");
 
                         AppendBool(sb, reader, "prestudy");
-                        AppendBool(sb, reader, "traffic_regulation");
+                        AppendBool(sb, reader, "is_traffic_regulation_required");
 
                         AppendDate(sb, reader, "date_optimum");
                         AppendDate(sb, reader, "start_of_construction");
