@@ -45,7 +45,7 @@ namespace roadwork_portal_service.Controllers
                     "Im Internet publiziert;Rechnungsadresse 1;Rechnungsadresse 2;PDB-FID;" +
                     "Investitionsnummer;Datum SKS;Datum KAP berechnet;Datum OKS;" +
                     "URL;Arbeitsbezeichnung;Projekttyp;Projekt-Art;Übergeordnete Massnahme;Wunschjahr von;" +
-                    "Wunschjahr bis;VS vorgesehen;Verkehrsanordnung;date_optimum;Baubeginn;Bauende;" +
+                    "Wunschjahr bis;VS vorgesehen;VS vorgesehen (SKS);Verkehrsanordnung;date_optimum;Baubeginn;Bauende;" +
                     "Abnahmedatum;consult_due;SKS, genehmigt;KAP, genehmigt;" +
                     "GL TBA, genehmigt;date_planned;date_accept;Garantie;Vorstudie;Plantermin: Vorstudie Start;" +
                     "Plantermin: Vorstudie Ende;Projektauftrag Vorstudie genehmigt;" +
@@ -63,7 +63,7 @@ namespace roadwork_portal_service.Controllers
                     "Stellungnahme Start;Stellungnahme Ende;" +
                     
                     "Aggloprogramm;Start Bedarfsklärung 1;Verifiziert 1;Start Bedarfsklärung 2;Verifiziert 2;" +
-                    "Start Stellungnahme;Sistiert;Koordiniert;Bauvorhabe-UUID;Bedarfe-UUIDs;\r\n"
+                    "Start Stellungnahme;Sistiert;Koordiniert;Oks aktiv Änderungsdatum;Bauvorhabe-UUID;Bedarfe-UUIDs;\r\n"
                 );
 
                 // 1) Export "needs" (wtb_ssp_roadworkneeds) - only those with status == "requirement"
@@ -120,7 +120,7 @@ namespace roadwork_portal_service.Controllers
 
                         // Remaining columns with empty fields to match the header count.
                         AppendEmpty(sb, 8);
-                        AppendEmpty(sb, 57);
+                        AppendEmpty(sb, 59);
 
                         AppendGuid(sb, reader, "uuid");
                         AppendText(sb, "");
@@ -147,7 +147,7 @@ namespace roadwork_portal_service.Controllers
                             r.date_kap, r.date_oks, r.date_gl_tba, 
                             r.comment, r.section, r.url, r.working_title, r.projecttype, r.projectkind,
                             r.overarching_measure, r.desired_year_from,
-                            r.desired_year_to, r.prestudy, r.is_traffic_regulation_required, r.date_optimum,
+                            r.desired_year_to, r.prestudy, r.prestudy_sks, r.is_traffic_regulation_required, r.date_optimum,
                             r.start_of_construction, r.end_of_construction,
                             r.date_of_acceptance, r.consult_due, r.date_sks_real,
                             r.date_kap_real, r.date_oks_real, r.date_gl_tba_real,
@@ -166,7 +166,7 @@ namespace roadwork_portal_service.Controllers
                             r.is_aggloprog, r.date_start_inconsult1, r.date_start_verified1,
                             r.date_start_inconsult2, r.date_start_verified2,
                             r.date_start_reporting, r.date_start_suspended,
-                            r.date_start_coordinated,
+                            r.date_start_coordinated, r.oks_active_last_modified,
 
                             gm.gm_first_name,
                             gm.gm_last_name,
@@ -286,6 +286,7 @@ namespace roadwork_portal_service.Controllers
                         AppendInt(sb, reader, "desired_year_to");
 
                         AppendBool(sb, reader, "prestudy");
+                        AppendBool(sb, reader, "prestudy_sks");
                         AppendBool(sb, reader, "is_traffic_regulation_required");
 
                         AppendDate(sb, reader, "date_optimum");
@@ -350,6 +351,9 @@ namespace roadwork_portal_service.Controllers
                         AppendDate(sb, reader, "date_start_reporting");
                         AppendDate(sb, reader, "date_start_suspended");
                         AppendDate(sb, reader, "date_start_coordinated");
+
+
+                        AppendDate(sb, reader, "oks_active_last_modified");
 
                         AppendGuid(sb, reader, "uuid");
                         AppendText(sb, reader, "needs_uuids");

@@ -99,6 +99,7 @@ public class RoadWorkActivityProperties
     public string? url { get; set; }
     public DocumentAttributes[]? documentAtts { get; set; }
     public bool? isOksActive { get; set; }
+    public DateTime? isOksActiveLastModified { get; set; }
     public DateTime? costLastModified { get; set; }
     public User? costLastModifiedBy { get; set; } = new User();
 
@@ -119,7 +120,9 @@ public class RoadWorkActivityProperties
 
     // Prestudy
     public bool? prestudy { get; set; } = false;
-    // Prestudy additional(#621, 2026.4)
+    // Prestudy additional (#663, 2026.9)
+    public bool? prestudySks { get; set; } = false;
+    // Prestudy additional (#621, 2026.4)
     public string? prestudyDuration { get; set; } = "";
     public string? prestudyContractor { get; set; } = "";
     public string? prestudyDetail { get; set; } = "";

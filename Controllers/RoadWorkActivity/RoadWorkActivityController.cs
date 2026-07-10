@@ -58,7 +58,7 @@ namespace roadwork_portal_service.Controllers
                         r.project_study_approved, r.study_approved, r.date_sks_real,
                         r.date_kap_real, r.date_oks_real, r.date_gl_tba_real,
                         r.date_start_inconsult1, r.date_start_verified1, r.date_start_inconsult2, r.date_start_verified2, r.date_start_reporting,
-                        r.date_start_suspended, r.date_start_coordinated, r.oks_active,
+                        r.date_start_suspended, r.date_start_coordinated, r.oks_active, r.oks_active_last_modified,
                         r.costs_last_modified, r.costs_last_modified_by,
                         r.planned_tasks, r.constraints_dependencies, r.acquisition_planned,
                         -- Aggloprogramm
@@ -66,7 +66,7 @@ namespace roadwork_portal_service.Controllers
                         r.aggloprogram_are_description, r.aggloprogram_due_date, r.aggloprogram_cost_total,
                         r.aggloprogram_cost_canton,
                         -- Prestudy
-                        r.prestudy, r.prestudy_duration, r.prestudy_contractor,
+                        r.prestudy, r.prestudy_sks, r.prestudy_duration, r.prestudy_contractor,
                         r.prestudy_detail, r.prestudy_vk_er_confirmed, r.prestudy_vk_er_number,
                         -- Affected entities
                         r.bus_stops_shelters_affected, r.structures_affected, r.roadDrainage_affected,
@@ -683,13 +683,13 @@ namespace roadwork_portal_service.Controllers
                                     billing_address2, investment_no, date_sks,
                                     date_kap, private, date_consult_start1, date_consult_end1,
                                     date_consult_start2, date_consult_end2, date_report_start, date_report_end,
-                                    url, oks_active, strabako_no, date_sks_planned, sks_no, geom,
+                                    url, oks_active, oks_active_last_modified,strabako_no, date_sks_planned, sks_no, geom,
                                     planned_tasks, constraints_dependencies, acquisition_planned,
                                     -- Aggloprogramm
                                     part_of_aggloprogram, aggloprogram_link, aggloprogram_generation, aggloprogram_are_code, aggloprogram_are_description, 
                                     aggloprogram_due_date, aggloprogram_cost_total, aggloprogram_cost_canton,
                                     -- Vorstudie
-                                    prestudy, prestudy_duration, prestudy_contractor,
+                                    prestudy, prestudy_sks, prestudy_duration, prestudy_contractor,
                                     prestudy_detail, prestudy_vk_er_confirmed, prestudy_vk_er_number,
                                     -- Betroffene Themen
                                     bus_stops_shelters_affected, structures_affected, roadDrainage_affected, houseConnections_affected, 
@@ -716,14 +716,14 @@ namespace roadwork_portal_service.Controllers
                                     @date_to, @costs, @costs_type, @status, @in_internet, @billing_address1,
                                     @billing_address2, @investment_no, @date_sks, @date_kap,
                                     @private, @date_consult_start1, @date_consult_end1, @date_consult_start2, @date_consult_end2,
-                                    @date_report_start, @date_report_end, @url, @oks_active,
+                                    @date_report_start, @date_report_end, @url, @oks_active, @oks_active_last_modified,
                                     @strabako_no, @date_sks_planned, @sks_no, @geom,
                                     @planned_tasks, @constraints_dependencies, @acquisition_planned,
                                     -- Aggloprogramm
                                     @part_of_aggloprogram, @aggloprogram_link, @aggloprogram_generation, @aggloprogram_are_code, @aggloprogram_are_description, 
                                     @aggloprogram_due_date, @aggloprogram_cost_total, @aggloprogram_cost_canton,
                                     -- Vorstudie
-                                    @prestudy, @prestudy_duration, @prestudy_contractor,
+                                    @prestudy, @prestudy_sks, @prestudy_duration, @prestudy_contractor,
                                     @prestudy_detail, @prestudy_vk_er_confirmed, @prestudy_vk_er_number,
                                     -- Betroffene Themen
                                     @bus_stops_shelters_affected, @structures_affected, @roadDrainage_affected, @houseConnections_affected, 
@@ -1361,7 +1361,8 @@ namespace roadwork_portal_service.Controllers
                                     date_info_start=@date_info_start, date_info_end=@date_info_end,
                                     date_info_close=@date_info_close, is_aggloprog=@is_aggloprog, is_traffic_regulation_required=@is_traffic_regulation_required,
                                     project_study_approved=@project_study_approved, study_approved=@study_approved,
-                                    oks_active=@oks_active, strabako_no=@strabako_no, date_sks_planned=@date_sks_planned, sks_no=@sks_no,
+                                    oks_active=@oks_active, oks_active_last_modified=@oks_active_last_modified,strabako_no=@strabako_no,
+                                    date_sks_planned=@date_sks_planned, sks_no=@sks_no,
                                     planned_tasks=@planned_tasks, constraints_dependencies=@constraints_dependencies, acquisition_planned=@acquisition_planned,
                                     -- Aggloprogramm
                                     part_of_aggloprogram=@part_of_aggloprogram, aggloprogram_link=@aggloprogram_link, aggloprogram_generation=@aggloprogram_generation,
@@ -1369,7 +1370,7 @@ namespace roadwork_portal_service.Controllers
                                     aggloprogram_due_date=@aggloprogram_due_date, aggloprogram_cost_total=@aggloprogram_cost_total,
                                     aggloprogram_cost_canton=@aggloprogram_cost_canton,
                                     -- Vorstudie
-                                    prestudy=@prestudy, prestudy_duration=@prestudy_duration, prestudy_contractor=@prestudy_contractor,
+                                    prestudy=@prestudy, prestudy_sks=@prestudy_sks, prestudy_duration=@prestudy_duration, prestudy_contractor=@prestudy_contractor,
                                     prestudy_detail=@prestudy_detail, prestudy_vk_er_confirmed=@prestudy_vk_er_confirmed,
                                     prestudy_vk_er_number=@prestudy_vk_er_number,
                                     -- Betroffene Themen

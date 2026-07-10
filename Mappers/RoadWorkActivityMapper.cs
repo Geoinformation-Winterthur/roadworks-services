@@ -46,6 +46,7 @@ namespace roadwork_portal_service.Mappers
 
             // Prestudy
             roadWorkActivityProperties.prestudy = reader.GetBooleanOrFalse("prestudy");
+            roadWorkActivityProperties.prestudySks = reader.GetBooleanOrFalse("prestudy_sks");
             roadWorkActivityProperties.prestudyDuration = reader.GetStringOrEmpty("prestudy_duration");
             roadWorkActivityProperties.prestudyContractor = reader.GetStringOrEmpty("prestudy_contractor");
             roadWorkActivityProperties.prestudyDetail = reader.GetStringOrEmpty("prestudy_detail");
@@ -94,6 +95,9 @@ namespace roadwork_portal_service.Mappers
             roadWorkActivityProperties.fabasoftDone = reader.GetBooleanOrFalse("fabasoft_done");
             roadWorkActivityProperties.gisUpdated = reader.GetBooleanOrFalse("gis_updated");
 
+            // Oks
+            roadWorkActivityProperties.isOksActiveLastModified = reader.GetNullableDateTime("oks_active_last_modified");
+            
             return roadWorkActivityProperties;
         }
 
@@ -120,6 +124,7 @@ namespace roadwork_portal_service.Mappers
 
             // Prestudy
             parameters.AddWithValue("@prestudy", HelperFunctions.ToDbValue(roadWorkActivityProperties.prestudy));
+            parameters.AddWithValue("@prestudy_sks", HelperFunctions.ToDbValue(roadWorkActivityProperties.prestudySks));
             parameters.AddWithValue("@prestudy_duration", HelperFunctions.ToDbValue(roadWorkActivityProperties.prestudyDuration));
             parameters.AddWithValue("@prestudy_contractor", HelperFunctions.ToDbValue(roadWorkActivityProperties.prestudyContractor));
             parameters.AddWithValue("@prestudy_detail", HelperFunctions.ToDbValue(roadWorkActivityProperties.prestudyDetail));
@@ -167,6 +172,9 @@ namespace roadwork_portal_service.Mappers
             parameters.AddWithValue("@approved", HelperFunctions.ToDbValue(roadWorkActivityProperties.approved));
             parameters.AddWithValue("@fabasoft_done", HelperFunctions.ToDbValue(roadWorkActivityProperties.fabasoftDone));
             parameters.AddWithValue("@gis_updated", HelperFunctions.ToDbValue(roadWorkActivityProperties.gisUpdated));
+
+            // Oks
+            parameters.AddWithValue("@oks_active_last_modified", HelperFunctions.ToDbValue(roadWorkActivityProperties.isOksActiveLastModified));
         }
     }
 }
