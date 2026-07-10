@@ -53,7 +53,7 @@ namespace roadwork_portal_service.Controllers
                     "Begehrensäusserung Ende;Mitwirkungsverfahren § 13;Mitwirkungsverfahren Start;" +
                     "Mitwirkungsverfahren Ende;Planauflage § 16;" +
                     "Planauflage Start;Planauflage Ende;" +
-                    "Störfallverordnung;Akustisches Projekt" +
+                    "Störfallverordnung;Akustisches Projekt;" +
                     "Aggloprogramm vorgesehen;Private betroffen;Provis;Vorgesehene Tätigkeiten/Arbeiten; Randbedingungen/Abhängigkeiten;" +
                     "Rechts-/Landerwerb vorgesehen; Umsetzung durch Dritte/Werk;" +
 
