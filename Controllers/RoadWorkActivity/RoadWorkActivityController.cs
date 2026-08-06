@@ -48,12 +48,11 @@ namespace roadwork_portal_service.Controllers
                         r.roadworkactivity_no, 
                         r.private, r.date_accept,
                         r.date_guarantee, r.is_study, r.date_study_start, r.date_study_end,
-                        r.is_desire, r.date_desire_start, r.date_desire_end, r.is_particip,
+                        r.is_particip,
                         r.date_particip_start, r.date_particip_end, r.is_plan_circ,
                         r.date_plan_circ_start, r.date_plan_circ_end, r.date_consult_start1, r.date_consult_end1,
                         r.date_consult_start2, r.date_consult_end2, r.date_consult_close, r.date_report_start,
-                        r.date_report_end, r.date_report_close, r.date_info_start,
-                        r.date_info_end, r.date_info_close, r.is_aggloprog, r.is_traffic_regulation_required, r.date_optimum,
+                        r.date_report_end, r.date_report_close, r.is_aggloprog, r.is_traffic_regulation_required, r.date_optimum,
                         r.date_of_acceptance, r.url,
                         r.project_study_approved, r.study_approved, r.date_sks_real,
                         r.date_kap_real, r.date_oks_real, r.date_gl_tba_real,
@@ -319,14 +318,15 @@ namespace roadwork_portal_service.Controllers
                                 reader.GetDateTime(reader.GetOrdinal("date_study_start"));
                         if (!reader.IsDBNull(reader.GetOrdinal("date_study_end")))
                             projectFeatureFromDb.properties.dateStudyEnd = reader.GetDateTime(reader.GetOrdinal("date_study_end"));
-                        if (!reader.IsDBNull(reader.GetOrdinal("is_desire")))
-                            projectFeatureFromDb.properties.isDesire = reader.GetBoolean(reader.GetOrdinal("is_desire"));
-                        if (!reader.IsDBNull(reader.GetOrdinal("date_desire_start")))
-                            projectFeatureFromDb.properties.dateDesireStart =
-                                reader.GetDateTime(reader.GetOrdinal("date_desire_start"));
-                        if (!reader.IsDBNull(reader.GetOrdinal("date_desire_end")))
-                            projectFeatureFromDb.properties.dateDesireEnd =
-                                reader.GetDateTime(reader.GetOrdinal("date_desire_end"));
+                        // removed in #650
+                        //if (!reader.IsDBNull(reader.GetOrdinal("is_desire")))
+                        //    projectFeatureFromDb.properties.isDesire = reader.GetBoolean(reader.GetOrdinal("is_desire"));
+                        //if (!reader.IsDBNull(reader.GetOrdinal("date_desire_start")))
+                        //    projectFeatureFromDb.properties.dateDesireStart =
+                        //        reader.GetDateTime(reader.GetOrdinal("date_desire_start"));
+                        //if (!reader.IsDBNull(reader.GetOrdinal("date_desire_end")))
+                        //    projectFeatureFromDb.properties.dateDesireEnd =
+                        //        reader.GetDateTime(reader.GetOrdinal("date_desire_end"));
                         if (!reader.IsDBNull(reader.GetOrdinal("is_particip")))
                             projectFeatureFromDb.properties.isParticip = reader.GetBoolean(reader.GetOrdinal("is_particip"));
                         if (!reader.IsDBNull(reader.GetOrdinal("date_particip_start")))
@@ -367,15 +367,16 @@ namespace roadwork_portal_service.Controllers
                         if (!reader.IsDBNull(reader.GetOrdinal("date_report_close")))
                             projectFeatureFromDb.properties.dateReportClose =
                                 reader.GetDateTime(reader.GetOrdinal("date_report_close"));
-                        if (!reader.IsDBNull(reader.GetOrdinal("date_info_start")))
-                            projectFeatureFromDb.properties.dateInfoStart =
-                                reader.GetDateTime(reader.GetOrdinal("date_info_start"));
-                        if (!reader.IsDBNull(reader.GetOrdinal("date_info_end")))
-                            projectFeatureFromDb.properties.dateInfoEnd =
-                                reader.GetDateTime(reader.GetOrdinal("date_info_end"));
-                        if (!reader.IsDBNull(reader.GetOrdinal("date_info_close")))
-                            projectFeatureFromDb.properties.dateInfoClose =
-                                reader.GetDateTime(reader.GetOrdinal("date_info_close"));
+                        // removed in #650
+                        //if (!reader.IsDBNull(reader.GetOrdinal("date_info_start")))
+                        //    projectFeatureFromDb.properties.dateInfoStart =
+                        //        reader.GetDateTime(reader.GetOrdinal("date_info_start"));
+                        //if (!reader.IsDBNull(reader.GetOrdinal("date_info_end")))
+                        //    projectFeatureFromDb.properties.dateInfoEnd =
+                        //        reader.GetDateTime(reader.GetOrdinal("date_info_end"));
+                        //if (!reader.IsDBNull(reader.GetOrdinal("date_info_close")))
+                        //    projectFeatureFromDb.properties.dateInfoClose =
+                        //        reader.GetDateTime(reader.GetOrdinal("date_info_close"));
                         if (!reader.IsDBNull(reader.GetOrdinal("is_aggloprog")))
                             projectFeatureFromDb.properties.isAggloprog = reader.GetBoolean(reader.GetOrdinal("is_aggloprog"));
                         if (!reader.IsDBNull(reader.GetOrdinal("is_traffic_regulation_required")))
@@ -1347,8 +1348,7 @@ namespace roadwork_portal_service.Controllers
                                     date_gl_tba=@date_gl_tba, date_gl_tba_real=@date_gl_tba_real, private=@private,
                                     date_accept=@date_accept, date_guarantee=@date_guarantee,
                                     is_study=@is_study, date_study_start=@date_study_start,
-                                    date_study_end=@date_study_end, is_desire=@is_desire,
-                                    date_desire_start=@date_desire_start, date_desire_end=@date_desire_end,
+                                    date_study_end=@date_study_end,
                                     is_particip=@is_particip, date_particip_start=@date_particip_start,
                                     date_particip_end=@date_particip_end, is_plan_circ=@is_plan_circ,
                                     date_plan_circ_start=@date_plan_circ_start,
@@ -1358,8 +1358,7 @@ namespace roadwork_portal_service.Controllers
                                     date_consult_close=@date_consult_close,
                                     date_report_start=@date_report_start,
                                     date_report_end=@date_report_end, date_report_close=@date_report_close,
-                                    date_info_start=@date_info_start, date_info_end=@date_info_end,
-                                    date_info_close=@date_info_close, is_aggloprog=@is_aggloprog, is_traffic_regulation_required=@is_traffic_regulation_required,
+                                    is_aggloprog=@is_aggloprog, is_traffic_regulation_required=@is_traffic_regulation_required,
                                     project_study_approved=@project_study_approved, study_approved=@study_approved,
                                     oks_active=@oks_active, oks_active_last_modified=@oks_active_last_modified,strabako_no=@strabako_no,
                                     date_sks_planned=@date_sks_planned, sks_no=@sks_no,
@@ -1512,9 +1511,10 @@ namespace roadwork_portal_service.Controllers
                     updateComm.Parameters.AddWithValue("date_study_end", roadWorkActivityFeature.properties.dateStudyEnd != null ? roadWorkActivityFeature.properties.dateStudyEnd : DBNull.Value);
                     updateComm.Parameters.AddWithValue("project_study_approved", roadWorkActivityFeature.properties.projectStudyApproved != null ? roadWorkActivityFeature.properties.projectStudyApproved : DBNull.Value);
                     updateComm.Parameters.AddWithValue("study_approved", roadWorkActivityFeature.properties.studyApproved != null ? roadWorkActivityFeature.properties.studyApproved : DBNull.Value);
-                    updateComm.Parameters.AddWithValue("is_desire", roadWorkActivityFeature.properties.isDesire);
-                    updateComm.Parameters.AddWithValue("date_desire_start", roadWorkActivityFeature.properties.dateDesireStart != null ? roadWorkActivityFeature.properties.dateDesireStart : DBNull.Value);
-                    updateComm.Parameters.AddWithValue("date_desire_end", roadWorkActivityFeature.properties.dateDesireEnd != null ? roadWorkActivityFeature.properties.dateDesireEnd : DBNull.Value);
+                    // removed in #650
+                    //updateComm.Parameters.AddWithValue("is_desire", roadWorkActivityFeature.properties.isDesire);
+                    //updateComm.Parameters.AddWithValue("date_desire_start", roadWorkActivityFeature.properties.dateDesireStart != null ? roadWorkActivityFeature.properties.dateDesireStart : DBNull.Value);
+                    //updateComm.Parameters.AddWithValue("date_desire_end", roadWorkActivityFeature.properties.dateDesireEnd != null ? roadWorkActivityFeature.properties.dateDesireEnd : DBNull.Value);
                     updateComm.Parameters.AddWithValue("is_particip", roadWorkActivityFeature.properties.isParticip);
                     updateComm.Parameters.AddWithValue("date_particip_start", roadWorkActivityFeature.properties.dateParticipStart != null ? roadWorkActivityFeature.properties.dateParticipStart : DBNull.Value);
                     updateComm.Parameters.AddWithValue("date_particip_end", roadWorkActivityFeature.properties.dateParticipEnd != null ? roadWorkActivityFeature.properties.dateParticipEnd : DBNull.Value);
@@ -1529,9 +1529,10 @@ namespace roadwork_portal_service.Controllers
                     updateComm.Parameters.AddWithValue("date_report_start", roadWorkActivityFeature.properties.dateReportStart != null ? roadWorkActivityFeature.properties.dateReportStart : DBNull.Value);
                     updateComm.Parameters.AddWithValue("date_report_end", roadWorkActivityFeature.properties.dateReportEnd != null ? roadWorkActivityFeature.properties.dateReportEnd : DBNull.Value);
                     updateComm.Parameters.AddWithValue("date_report_close", roadWorkActivityFeature.properties.dateReportClose != null ? roadWorkActivityFeature.properties.dateReportClose : DBNull.Value);
-                    updateComm.Parameters.AddWithValue("date_info_start", roadWorkActivityFeature.properties.dateInfoStart != null ? roadWorkActivityFeature.properties.dateInfoStart : DBNull.Value);
-                    updateComm.Parameters.AddWithValue("date_info_end", roadWorkActivityFeature.properties.dateInfoEnd != null ? roadWorkActivityFeature.properties.dateInfoEnd : DBNull.Value);
-                    updateComm.Parameters.AddWithValue("date_info_close", roadWorkActivityFeature.properties.dateInfoClose != null ? roadWorkActivityFeature.properties.dateInfoClose : DBNull.Value);
+                    // removed in #650
+                    //updateComm.Parameters.AddWithValue("date_info_start", roadWorkActivityFeature.properties.dateInfoStart != null ? roadWorkActivityFeature.properties.dateInfoStart : DBNull.Value);
+                    //updateComm.Parameters.AddWithValue("date_info_end", roadWorkActivityFeature.properties.dateInfoEnd != null ? roadWorkActivityFeature.properties.dateInfoEnd : DBNull.Value);
+                    //updateComm.Parameters.AddWithValue("date_info_close", roadWorkActivityFeature.properties.dateInfoClose != null ? roadWorkActivityFeature.properties.dateInfoClose : DBNull.Value);
                     updateComm.Parameters.AddWithValue("is_aggloprog", roadWorkActivityFeature.properties.isAggloprog != null ? roadWorkActivityFeature.properties.isAggloprog : DBNull.Value);
                     updateComm.Parameters.AddWithValue("is_traffic_regulation_required", roadWorkActivityFeature.properties.isTrafficRegulationRequired != null ? roadWorkActivityFeature.properties.isTrafficRegulationRequired : DBNull.Value);
                     updateComm.Parameters.AddWithValue("oks_active", roadWorkActivityFeature.properties.isOksActive != null ? roadWorkActivityFeature.properties.isOksActive : DBNull.Value);

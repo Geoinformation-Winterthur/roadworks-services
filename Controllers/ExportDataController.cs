@@ -120,7 +120,7 @@ namespace roadwork_portal_service.Controllers
 
                         // Remaining columns with empty fields to match the header count.
                         AppendEmpty(sb, 8);
-                        AppendEmpty(sb, 59);
+                        AppendEmpty(sb, 56);
 
                         AppendGuid(sb, reader, "uuid");
                         AppendText(sb, "");
@@ -154,7 +154,6 @@ namespace roadwork_portal_service.Controllers
                             r.date_planned, r.date_accept, r.date_guarantee,
                             r.is_study, r.date_study_start, r.date_study_end,
                             r.project_study_approved, r.study_approved,
-                            r.is_desire, r.date_desire_start, r.date_desire_end,
                             r.is_particip, r.date_particip_start, r.date_particip_end,
                             r.is_plan_circ, r.date_plan_circ_start, r.date_plan_circ_end,
                             r.part_of_aggloprogram, r.private_entity_affected, r.erp_number,
@@ -311,9 +310,10 @@ namespace roadwork_portal_service.Controllers
 
                         // IMPORTANT FIX:
                         // Previously: "False;;;" caused column shift -> dates ended up under wrong headers in Excel import.
-                        AppendBool(sb, reader, "is_desire");
-                        AppendDate(sb, reader, "date_desire_start");
-                        AppendDate(sb, reader, "date_desire_end");
+                        // removed in #650
+                        //AppendBool(sb, reader, "is_desire");
+                        //AppendDate(sb, reader, "date_desire_start");
+                        //AppendDate(sb, reader, "date_desire_end");
 
                         AppendBool(sb, reader, "is_particip");
                         AppendDate(sb, reader, "date_particip_start");

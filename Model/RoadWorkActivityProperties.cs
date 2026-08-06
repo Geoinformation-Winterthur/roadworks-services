@@ -67,9 +67,9 @@ public class RoadWorkActivityProperties
     public DateTime? dateStudyEnd { get; set; }
     public DateTime? projectStudyApproved { get; set; }
     public DateTime? studyApproved { get; set; }
-    public bool? isDesire { get; set; } = false;
-    public DateTime? dateDesireStart { get; set; }
-    public DateTime? dateDesireEnd { get; set; }
+    //public bool? isDesire { get; set; } = false; // removed in #650
+    //public DateTime? dateDesireStart { get; set; } // removed in #650
+    //public DateTime? dateDesireEnd { get; set; } // removed in #650
     public bool? isParticip { get; set; } = false;
     public DateTime? dateParticipStart { get; set; }
     public DateTime? dateParticipEnd { get; set; }
@@ -84,9 +84,9 @@ public class RoadWorkActivityProperties
     public DateTime? dateReportStart { get; set; }
     public DateTime? dateReportEnd { get; set; }
     public DateTime? dateReportClose { get; set; }
-    public DateTime? dateInfoStart { get; set; }
-    public DateTime? dateInfoEnd { get; set; }
-    public DateTime? dateInfoClose { get; set; }
+    //public DateTime? dateInfoStart { get; set; } // removed in #650
+    //public DateTime? dateInfoEnd { get; set; } // removed in #650
+    //public DateTime? dateInfoClose { get; set; } // removed in #650
     public bool? isAggloprog { get; set; } = false;
     public bool? isTrafficRegulationRequired { get; set; } = false;
     public DateTime? dateStartInconsult1 { get; set; }
