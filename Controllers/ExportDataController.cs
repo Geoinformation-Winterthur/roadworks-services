@@ -120,7 +120,7 @@ namespace roadwork_portal_service.Controllers
 
                         // Remaining columns with empty fields to match the header count.
                         AppendEmpty(sb, 8);
-                        AppendEmpty(sb, 56);
+                        AppendEmpty(sb, 55);
 
                         AppendGuid(sb, reader, "uuid");
                         AppendText(sb, "");
@@ -149,7 +149,7 @@ namespace roadwork_portal_service.Controllers
                             r.overarching_measure, r.desired_year_from,
                             r.desired_year_to, r.prestudy, r.prestudy_sks, r.is_traffic_regulation_required, r.date_optimum,
                             r.start_of_construction, r.end_of_construction,
-                            r.date_of_acceptance, r.consult_due, r.date_sks_real,
+                            r.consult_due, r.date_sks_real,
                             r.date_kap_real, r.date_oks_real, r.date_gl_tba_real,
                             r.date_planned, r.date_accept, r.date_guarantee,
                             r.is_study, r.date_study_start, r.date_study_end,
@@ -291,7 +291,8 @@ namespace roadwork_portal_service.Controllers
                         AppendDate(sb, reader, "date_optimum");
                         AppendDate(sb, reader, "start_of_construction");
                         AppendDate(sb, reader, "end_of_construction");
-                        AppendDate(sb, reader, "date_of_acceptance");
+                        // removed in #650
+                        //AppendDate(sb, reader, "date_of_acceptance");
                         AppendDate(sb, reader, "consult_due");
 
                         AppendDate(sb, reader, "date_sks_real");

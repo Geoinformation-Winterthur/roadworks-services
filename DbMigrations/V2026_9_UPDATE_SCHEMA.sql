@@ -14,3 +14,6 @@ ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities DROP COLUMN IF EXISTS date_desi
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities DROP COLUMN IF EXISTS date_info_start;
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities DROP COLUMN IF EXISTS date_info_end;
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities DROP COLUMN IF EXISTS date_info_close;
+
+-- #650 Consolidate date_of_acceptance and date_guarantee to date_guarantee (GEOBOX AG - Simon Meyer, 07.08.2026)
+ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities DROP COLUMN IF EXISTS date_of_acceptance;
