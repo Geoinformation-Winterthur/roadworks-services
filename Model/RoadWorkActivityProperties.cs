@@ -30,7 +30,7 @@ public class RoadWorkActivityProperties
     public DateTime? finishEarlyTo { get; set; } // unused (never a value assigned), Termine Alt: "Frühester Baubeginn"
     public DateTime? finishOptimumTo { get; set; } // unused (never a value assigned), Termine Alt: "Wunsch Baubeginn"
     public DateTime? finishLateTo { get; set; } // unused (never a value assigned), Termine Alt: "Späteste Inbetriebnahme"
-    public DateTime? startOfConstruction { get; set; } // Modul Termine: "Baubeginn (Voraussichtlich)"
+    public DateTime? startOfConstruction { get; set; } // Modul Termine, Grobplanung: "Baubeginn (Voraussichtlich)"
     public DateTime? endOfConstruction { get; set; } // Modul Termine: "Bauende (Voraussichtlich)"
     // public DateTime? dateOfAcceptance { get; set; }  // removed in #650
     public DateTime? consultDue { get; set; } = DateTime.MinValue; // unused
@@ -40,7 +40,7 @@ public class RoadWorkActivityProperties
     public string[]? roadWorkNeedsUuids { get; set; } = new string[0];
     public string? status { get; set; }
     public bool? isEditingAllowed { get; set; } = false;
-    public bool? isInInternet {get; set; } = false; // unused
+    public bool? isInInternet { get; set; } = false; // unused
     public string? billingAddress1 { get; set; } = ""; // unused
     public string? billingAddress2 { get; set; } = ""; // unused
     public int? investmentNo { get; set; } = 0;
@@ -49,7 +49,7 @@ public class RoadWorkActivityProperties
     public DateTime? dateSks { get; set; } // SKS Berechnet
     public DateTime? dateSksReal { get; set; } // Modul Sitzungen, gehnehmigt: "SKS"
     public DateTime? dateSksPlanned { get; set; } // Modul Sitzungen, terminiert: "SKS"
-    public long? sksNo { get; set; } 
+    public long? sksNo { get; set; }
     public DateTime? dateKap { get; set; } // Modul Sitzungen, berechnet: "KAP"
     public DateTime? dateKapReal { get; set; } // Modul Sitzungen, gehnehmigt: "KAP"
     public DateTime? dateOks { get; set; } // OKS Berechnet
@@ -84,6 +84,27 @@ public class RoadWorkActivityProperties
     public DateTime? dateReportStart { get; set; } // Modul Termine, Phase2: "Stellungnahme" >> Start
     public DateTime? dateReportEnd { get; set; } // Modul Termine, Phase2: "Stellungnahme" >> End
     public DateTime? dateReportClose { get; set; } // Modul Vernehmlassung: "Stellungnahme Abschluss"
+    public DateTime? dateDesignAssignmentIssued { get; set; } // Modul Termine, Grobplanung: "Projektierungsauftrag erstellt bis"
+    public DateTime? dateAprDesignCompletion { get; set; } // Modul Termine, Grobplanung: "APR Projektiert bis"
+    public DateTime? dateAprConstructionCompletion { get; set; } // Modul Termine, Grobplanung, PhaseX: "APR Realisiert bis"
+    public DateTime? dateQuotesRequested { get; set; } // Modul Termine, Phase1: "Bestellungen" >> Start
+    public DateTime? dateQuotesReviewed { get; set; } // Modul Termine, Phase1: "Bestellungen" >> End
+    public DateTime? datePrepareEdcStart { get; set; } // Modul Termine, Phase1: "Projektierungsauftrag erarbeiten" >> Start
+    public DateTime? datePrepareEdcEnd { get; set; } // Modul Termine, Phase1: "Projektierungsauftrag erarbeiten" >> End
+    public DateTime? dateHandoverToApk { get; set; } // Modul Termine, Phase2: "Übergabesitzung AMO/AEW an APK"
+    public DateTime? dateHandoverToApr { get; set; } // Modul Termine, Phase3: "Übergabesitzung APK an APR"
+    public DateTime? dateRequestDesignBudget { get; set; } // Modul Termine, Phase3: "Projektierungskredit einholen"
+    public DateTime? dateProjectApprovalStart { get; set; } // Modul Termine, Phase3: "Projektfestsetzung" >> Start
+    public DateTime? dateProjectApprovalEnd { get; set; } // Modul Termine, Phase3: "Projektfestsetzung" >> End
+    public DateTime? dateConstructionBudgetApprovalStart { get; set; } // Modul Termine, Phase3: "Ausführungskredit" >> Start
+    public DateTime? dateConstructionBudgetApprovalEnd { get; set; } // Modul Termine, Phase3: "Ausführungskredit" >> End
+    public DateTime? dateSubmissionStart { get; set; } // Modul Termine, Phase4: "Submission" >> Start
+    public DateTime? dateSubmissionEnd { get; set; } // Modul Termine, Phase4: "Submission" >> End
+    public DateTime? dateStartOfConstructionReal { get; set; } // Modul Termine, Phase5: "Baubeginn/ -ende" >> Beginn
+    public DateTime? dateEndOfConstructionReal { get; set; } // Modul Termine, Phase5: "Baubeginn/ -ende" >> End
+    public DateTime? dateFinalPavementStart { get; set; } // Modul Termine, Phase5: "Einbau Deckbelag" >> Start
+    public DateTime? dateFinalPavementEnd { get; set; } // Modul Termine, Phase5: "Einbau Deckbelag" >> End
+    public DateTime? dateProjectBudgetFinalized { get; set; } // Modul Termine, Phase5: "Projektkreditabrechnung"
     //public DateTime? dateInfoStart { get; set; } // removed in #650
     //public DateTime? dateInfoEnd { get; set; } // removed in #650
     //public DateTime? dateInfoClose { get; set; } // removed in #650

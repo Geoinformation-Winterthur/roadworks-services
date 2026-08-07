@@ -84,6 +84,14 @@ namespace roadwork_portal_service.Controllers
                         r.apr_checked, r.afm_checked, 
                         -- Approval and filing
                         r.cf_done, r.rd_done, r.approved, r.fabasoft_done, r.gis_updated,
+                        -- Dates
+                        r.date_design_assignment_issued, r.date_apr_design_completion, r.date_apr_construction_completion,
+                        r.date_quotes_requested, r.date_quotes_reviewed, r.date_prepare_edc_start,
+                        r.date_prepare_edc_end, r.date_handover_to_apk, r.date_handover_to_apr,
+                        r.date_request_design_budget, r.date_project_approval_start, r.date_project_approval_end, 
+                        r.date_construction_budget_approval_start, r.date_construction_budget_approval_end, r.date_submission_start,
+                        r.date_submission_end, r.date_start_of_construction_real, r.date_end_of_construction_real,
+                        r.date_final_pavement_start, r.date_final_pavement_end, r.date_project_budget_finalized,
                         -- User
                         cm.first_name AS cm_first_name, cm.last_name AS cm_last_name,
                         r.date_sks_planned, r.sks_no, r.geom,
@@ -707,7 +715,15 @@ namespace roadwork_portal_service.Controllers
                                     -- Projektierungsauftrag
                                     core_drilling_contracted, quotes_requested, quotes_reviewed, apr_checked, afm_checked, 
                                     -- Ausgabengenehmigung und Ablage
-                                    cf_done, rd_done, approved, fabasoft_done, gis_updated)
+                                    cf_done, rd_done, approved, fabasoft_done, gis_updated,
+                                    -- Dates
+						            date_design_assignment_issued, date_apr_design_completion, date_apr_construction_completion,
+                                    date_quotes_requested, date_quotes_reviewed, date_prepare_edc_start,
+                                    date_prepare_edc_end, date_handover_to_apk, date_handover_to_apr,
+                                    date_request_design_budget, date_project_approval_start, date_project_approval_end, 
+                                    date_construction_budget_approval_start, date_construction_budget_approval_end, date_submission_start,
+                                    date_submission_end, date_start_of_construction_real, date_end_of_construction_real,
+                                    date_final_pavement_start, date_final_pavement_end, date_project_budget_finalized)
                                     VALUES (@uuid, @name, @projectmanager, @traffic_agent,
                                     @description, @project_no, 
                                     @roadworkactivity_no,
@@ -741,7 +757,15 @@ namespace roadwork_portal_service.Controllers
                                     -- Projektierungsauftrag
                                     @core_drilling_contracted, @quotes_requested, @quotes_reviewed, @apr_checked, @afm_checked, 
                                     -- Ausgabengenehmigung und Ablage
-                                    @cf_done, @rd_done, @approved, @fabasoft_done, @gis_updated)";
+                                    @cf_done, @rd_done, @approved, @fabasoft_done, @gis_updated,
+                                    -- Dates
+						            @date_design_assignment_issued, @date_apr_design_completion, @date_apr_construction_completion,
+                                    @date_quotes_requested, @date_quotes_reviewed, @date_prepare_edc_start,
+                                    @date_prepare_edc_end, @date_handover_to_apk, @date_handover_to_apr,
+                                    @date_request_design_budget, @date_project_approval_start, @date_project_approval_end, 
+                                    @date_construction_budget_approval_start, @date_construction_budget_approval_end, @date_submission_start,
+                                    @date_submission_end, @date_start_of_construction_real, @date_end_of_construction_real,
+                                    @date_final_pavement_start, @date_final_pavement_end, @date_project_budget_finalized)";
                     RoadWorkActivityMapper.AddParameters(insertComm.Parameters, roadWorkActivityFeature.properties);
                     insertComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
                     if (roadWorkActivityFeature.properties.projectManager.uuid != "")
@@ -1393,7 +1417,18 @@ namespace roadwork_portal_service.Controllers
                                     core_drilling_contracted=@core_drilling_contracted, quotes_requested=@quotes_requested, 
                                     quotes_reviewed=@quotes_reviewed, apr_checked=@apr_checked, afm_checked=@afm_checked, 
                                     -- Ausgabengenehmigung und Ablage
-                                    cf_done=@cf_done, rd_done=@rd_done, approved=@approved, fabasoft_done=@fabasoft_done, gis_updated=@gis_updated, ";
+                                    cf_done=@cf_done, rd_done=@rd_done, approved=@approved, fabasoft_done=@fabasoft_done, gis_updated=@gis_updated, 
+                                    -- Dates
+						            date_design_assignment_issued=@date_design_assignment_issued, date_apr_design_completion=@date_apr_design_completion,
+                                    date_apr_construction_completion=@date_apr_construction_completion, date_quotes_requested=@date_quotes_requested,
+                                    date_quotes_reviewed=@date_quotes_reviewed,date_prepare_edc_start=@date_prepare_edc_start,
+                                    date_prepare_edc_end=@date_prepare_edc_end, date_handover_to_apk=@date_handover_to_apk, date_handover_to_apr=@date_handover_to_apr,
+                                    date_request_design_budget=@date_request_design_budget, date_project_approval_start=@date_project_approval_start,
+                                    date_project_approval_end=@date_project_approval_end, date_construction_budget_approval_start=@date_construction_budget_approval_start,
+                                    date_construction_budget_approval_end=@date_construction_budget_approval_end, date_submission_start=@date_submission_start,
+                                    date_submission_end=@date_submission_end, date_start_of_construction_real=@date_start_of_construction_real,
+                                    date_end_of_construction_real=@date_end_of_construction_real, date_final_pavement_start=@date_final_pavement_start,
+                                    date_final_pavement_end=@date_final_pavement_end, date_project_budget_finalized=@date_project_budget_finalized, ";
 
                     if (costsInDb != roadWorkActivityFeature.properties.costs){
                         updateComm.CommandText += "costs_last_modified=@costs_last_modified, ";

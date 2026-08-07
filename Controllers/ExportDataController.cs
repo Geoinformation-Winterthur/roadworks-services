@@ -46,11 +46,11 @@ namespace roadwork_portal_service.Controllers
                     "Investitionsnummer;Datum SKS;Datum KAP berechnet;Datum OKS;" +
                     "URL;Arbeitsbezeichnung;Projekttyp;Projekt-Art;Übergeordnete Massnahme;Wunschjahr von;" +
                     "Wunschjahr bis;VS vorgesehen;VS vorgesehen (SKS);Verkehrsanordnung;date_optimum;Baubeginn;Bauende;" +
-                    "Abnahmedatum;consult_due;SKS, genehmigt;KAP, genehmigt;" +
+                    "consult_due;SKS, genehmigt;KAP, genehmigt;" +
                     "GL TBA, genehmigt;date_planned;date_accept;Garantie;Vorstudie;Plantermin: Vorstudie Start;" +
                     "Plantermin: Vorstudie Ende;Projektauftrag Vorstudie genehmigt;" +
-                    "Vorstudie genehmigt;Begehrensäusserung § 45;Begehrensäusserung Start;" +
-                    "Begehrensäusserung Ende;Mitwirkungsverfahren § 13;Mitwirkungsverfahren Start;" +
+                    "Vorstudie genehmigt;" +
+                    "Mitwirkungsverfahren § 13;Mitwirkungsverfahren Start;" +
                     "Mitwirkungsverfahren Ende;Planauflage § 16;" +
                     "Planauflage Start;Planauflage Ende;" +
                     "Störfallverordnung;Akustisches Projekt;" +
@@ -63,7 +63,14 @@ namespace roadwork_portal_service.Controllers
                     "Stellungnahme Start;Stellungnahme Ende;" +
                     
                     "Aggloprogramm;Start Bedarfsklärung 1;Verifiziert 1;Start Bedarfsklärung 2;Verifiziert 2;" +
-                    "Start Stellungnahme;Sistiert;Koordiniert;Oks aktiv Änderungsdatum;Bauvorhabe-UUID;Bedarfe-UUIDs;\r\n"
+                    "Start Stellungnahme;Sistiert;Koordiniert;Oks aktiv Änderungsdatum;" +
+                    "Projektierungsauftrag erstellt bis;APR Projektiert bis;APR Realisiert bis;Bestellungen Start;" +
+                    "Bestellungen Ende;Projektierungsauftrag erarbeiten Start;Projektierungsauftrag erarbeiten Ende;" +
+                    "Übergabesitzung AMO/AEW an APK;Übergabesitzung APK an APR;Projektierungskredit einholen;" +
+                    "Projektfestsetzung Start;Projektfestsetzung Ende;Ausführungskredit Start;Ausführungskredit Ende;" +
+                    "Submission Start;Submission Ende;Baubeginn;Bauende;Einbau Deckbelag Start;Einbau Deckbelag Ende;" +
+                    "Projektkreditabrechnung;" +
+                    "Bauvorhabe-UUID;Bedarfe-UUIDs;\r\n"
                 );
 
                 // 1) Export "needs" (wtb_ssp_roadworkneeds) - only those with status == "requirement"
@@ -120,7 +127,7 @@ namespace roadwork_portal_service.Controllers
 
                         // Remaining columns with empty fields to match the header count.
                         AppendEmpty(sb, 8);
-                        AppendEmpty(sb, 55);
+                        AppendEmpty(sb, 76);
 
                         AppendGuid(sb, reader, "uuid");
                         AppendText(sb, "");
@@ -166,6 +173,14 @@ namespace roadwork_portal_service.Controllers
                             r.date_start_inconsult2, r.date_start_verified2,
                             r.date_start_reporting, r.date_start_suspended,
                             r.date_start_coordinated, r.oks_active_last_modified,
+                            -- Dates
+                            r.date_design_assignment_issued, r.date_apr_design_completion, r.date_apr_construction_completion,
+                            r.date_quotes_requested, r.date_quotes_reviewed, r.date_prepare_edc_start,
+                            r.date_prepare_edc_end, r.date_handover_to_apk, r.date_handover_to_apr,
+                            r.date_request_design_budget, r.date_project_approval_start, r.date_project_approval_end, 
+                            r.date_construction_budget_approval_start, r.date_construction_budget_approval_end, r.date_submission_start,
+                            r.date_submission_end, r.date_start_of_construction_real, r.date_end_of_construction_real,
+                            r.date_final_pavement_start, r.date_final_pavement_end, r.date_project_budget_finalized,
 
                             gm.gm_first_name,
                             gm.gm_last_name,
@@ -353,8 +368,29 @@ namespace roadwork_portal_service.Controllers
                         AppendDate(sb, reader, "date_start_suspended");
                         AppendDate(sb, reader, "date_start_coordinated");
 
-
+                        // Dates
                         AppendDate(sb, reader, "oks_active_last_modified");
+                        AppendDate(sb, reader, "date_design_assignment_issued");
+                        AppendDate(sb, reader, "date_apr_design_completion");
+                        AppendDate(sb, reader, "date_apr_construction_completion");
+                        AppendDate(sb, reader, "date_quotes_requested");
+                        AppendDate(sb, reader, "date_quotes_reviewed");
+                        AppendDate(sb, reader, "date_prepare_edc_start");
+                        AppendDate(sb, reader, "date_prepare_edc_end");
+                        AppendDate(sb, reader, "date_handover_to_apk");
+                        AppendDate(sb, reader, "date_handover_to_apr");
+                        AppendDate(sb, reader, "date_request_design_budget");
+                        AppendDate(sb, reader, "date_project_approval_start");
+                        AppendDate(sb, reader, "date_project_approval_end");
+                        AppendDate(sb, reader, "date_construction_budget_approval_start");
+                        AppendDate(sb, reader, "date_construction_budget_approval_end");
+                        AppendDate(sb, reader, "date_submission_start");
+                        AppendDate(sb, reader, "date_submission_end");
+                        AppendDate(sb, reader, "date_start_of_construction_real");
+                        AppendDate(sb, reader, "date_end_of_construction_real");
+                        AppendDate(sb, reader, "date_final_pavement_start");
+                        AppendDate(sb, reader, "date_final_pavement_end");
+                        AppendDate(sb, reader, "date_project_budget_finalized");
 
                         AppendGuid(sb, reader, "uuid");
                         AppendText(sb, reader, "needs_uuids");

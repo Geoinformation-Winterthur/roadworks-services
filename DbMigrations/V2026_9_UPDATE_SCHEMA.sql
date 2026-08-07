@@ -17,3 +17,26 @@ ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities DROP COLUMN IF EXISTS date_info
 
 -- #650 Consolidate date_of_acceptance and date_guarantee to date_guarantee (GEOBOX AG - Simon Meyer, 07.08.2026)
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities DROP COLUMN IF EXISTS date_of_acceptance;
+
+-- #650 Add new fields for "Termine" (GEOBOX AG - Simon Meyer, 07.08.2026)
+ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN date_design_assignment_issued date;
+ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN date_apr_design_completion date;
+ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN date_apr_construction_completion date;
+ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN date_quotes_requested date;
+ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN date_quotes_reviewed date;
+ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN date_prepare_edc_start date;
+ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN date_prepare_edc_end date;
+ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN date_handover_to_apk date;
+ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN date_handover_to_apr date;
+ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN date_request_design_budget date;
+ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN date_project_approval_start date;
+ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN date_project_approval_end date;
+ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN date_construction_budget_approval_start date;
+ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN date_construction_budget_approval_end date;
+ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN date_submission_start date;
+ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN date_submission_end date;
+ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN date_start_of_construction_real date;
+ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN date_end_of_construction_real date;
+ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN date_final_pavement_start date;
+ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN date_final_pavement_end date;
+ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN date_project_budget_finalized date;

@@ -97,6 +97,29 @@ namespace roadwork_portal_service.Mappers
 
             // Oks
             roadWorkActivityProperties.isOksActiveLastModified = reader.GetNullableDateTime("oks_active_last_modified");
+
+            // Dates
+            roadWorkActivityProperties.dateDesignAssignmentIssued = reader.GetNullableDateTime("date_design_assignment_issued");
+            roadWorkActivityProperties.dateAprDesignCompletion = reader.GetNullableDateTime("date_apr_design_completion");
+            roadWorkActivityProperties.dateAprConstructionCompletion = reader.GetNullableDateTime("date_apr_construction_completion");
+            roadWorkActivityProperties.dateQuotesRequested = reader.GetNullableDateTime("date_quotes_requested");
+            roadWorkActivityProperties.dateQuotesReviewed = reader.GetNullableDateTime("date_quotes_reviewed");
+            roadWorkActivityProperties.datePrepareEdcStart = reader.GetNullableDateTime("date_prepare_edc_start");
+            roadWorkActivityProperties.datePrepareEdcEnd = reader.GetNullableDateTime("date_prepare_edc_end");
+            roadWorkActivityProperties.dateHandoverToApk = reader.GetNullableDateTime("date_handover_to_apk");
+            roadWorkActivityProperties.dateHandoverToApr = reader.GetNullableDateTime("date_handover_to_apr");
+            roadWorkActivityProperties.dateRequestDesignBudget = reader.GetNullableDateTime("date_request_design_budget");
+            roadWorkActivityProperties.dateProjectApprovalStart = reader.GetNullableDateTime("date_project_approval_start");
+            roadWorkActivityProperties.dateProjectApprovalEnd = reader.GetNullableDateTime("date_project_approval_end");
+            roadWorkActivityProperties.dateConstructionBudgetApprovalStart = reader.GetNullableDateTime("date_construction_budget_approval_start");
+            roadWorkActivityProperties.dateConstructionBudgetApprovalEnd = reader.GetNullableDateTime("date_construction_budget_approval_end");
+            roadWorkActivityProperties.dateSubmissionStart = reader.GetNullableDateTime("date_submission_start");
+            roadWorkActivityProperties.dateSubmissionEnd = reader.GetNullableDateTime("date_submission_end");
+            roadWorkActivityProperties.dateStartOfConstructionReal = reader.GetNullableDateTime("date_start_of_construction_real");
+            roadWorkActivityProperties.dateEndOfConstructionReal = reader.GetNullableDateTime("date_end_of_construction_real");
+            roadWorkActivityProperties.dateFinalPavementStart = reader.GetNullableDateTime("date_final_pavement_start");
+            roadWorkActivityProperties.dateFinalPavementEnd = reader.GetNullableDateTime("date_final_pavement_end");
+            roadWorkActivityProperties.dateProjectBudgetFinalized = reader.GetNullableDateTime("date_project_budget_finalized");
             
             return roadWorkActivityProperties;
         }
@@ -175,6 +198,29 @@ namespace roadwork_portal_service.Mappers
 
             // Oks
             parameters.AddWithValue("@oks_active_last_modified", HelperFunctions.ToDbValue(roadWorkActivityProperties.isOksActiveLastModified));
+
+            // Dates
+            parameters.AddWithValue("@date_design_assignment_issued", HelperFunctions.ToDbValue(roadWorkActivityProperties.dateDesignAssignmentIssued));
+            parameters.AddWithValue("@date_apr_design_completion", HelperFunctions.ToDbValue(roadWorkActivityProperties.dateAprDesignCompletion));
+            parameters.AddWithValue("@date_apr_construction_completion", HelperFunctions.ToDbValue(roadWorkActivityProperties.dateAprConstructionCompletion));
+            parameters.AddWithValue("@date_quotes_requested", HelperFunctions.ToDbValue(roadWorkActivityProperties.dateQuotesRequested));
+            parameters.AddWithValue("@date_quotes_reviewed", HelperFunctions.ToDbValue(roadWorkActivityProperties.dateQuotesReviewed));
+            parameters.AddWithValue("@date_prepare_edc_start", HelperFunctions.ToDbValue(roadWorkActivityProperties.datePrepareEdcStart));
+            parameters.AddWithValue("@date_prepare_edc_end", HelperFunctions.ToDbValue(roadWorkActivityProperties.datePrepareEdcEnd));
+            parameters.AddWithValue("@date_handover_to_apk", HelperFunctions.ToDbValue(roadWorkActivityProperties.dateHandoverToApk));
+            parameters.AddWithValue("@date_handover_to_apr", HelperFunctions.ToDbValue(roadWorkActivityProperties.dateHandoverToApr));
+            parameters.AddWithValue("@date_request_design_budget", HelperFunctions.ToDbValue(roadWorkActivityProperties.dateRequestDesignBudget));
+            parameters.AddWithValue("@date_project_approval_start", HelperFunctions.ToDbValue(roadWorkActivityProperties.dateProjectApprovalStart));
+            parameters.AddWithValue("@date_project_approval_end", HelperFunctions.ToDbValue(roadWorkActivityProperties.dateProjectApprovalEnd));
+            parameters.AddWithValue("@date_construction_budget_approval_start", HelperFunctions.ToDbValue(roadWorkActivityProperties.dateConstructionBudgetApprovalStart));
+            parameters.AddWithValue("@date_construction_budget_approval_end", HelperFunctions.ToDbValue(roadWorkActivityProperties.dateConstructionBudgetApprovalEnd));
+            parameters.AddWithValue("@date_submission_start", HelperFunctions.ToDbValue(roadWorkActivityProperties.dateSubmissionStart));
+            parameters.AddWithValue("@date_submission_end", HelperFunctions.ToDbValue(roadWorkActivityProperties.dateSubmissionEnd));
+            parameters.AddWithValue("@date_start_of_construction_real", HelperFunctions.ToDbValue(roadWorkActivityProperties.dateStartOfConstructionReal));
+            parameters.AddWithValue("@date_end_of_construction_real", HelperFunctions.ToDbValue(roadWorkActivityProperties.dateEndOfConstructionReal));
+            parameters.AddWithValue("@date_final_pavement_start", HelperFunctions.ToDbValue(roadWorkActivityProperties.dateFinalPavementStart));
+            parameters.AddWithValue("@date_final_pavement_end", HelperFunctions.ToDbValue(roadWorkActivityProperties.dateFinalPavementEnd));
+            parameters.AddWithValue("@date_project_budget_finalized", HelperFunctions.ToDbValue(roadWorkActivityProperties.dateProjectBudgetFinalized));
         }
     }
 }
