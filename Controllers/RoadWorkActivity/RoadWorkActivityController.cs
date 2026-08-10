@@ -57,7 +57,8 @@ namespace roadwork_portal_service.Controllers
                         r.project_study_approved, r.study_approved, r.date_sks_real,
                         r.date_kap_real, r.date_oks_real, r.date_gl_tba_real,
                         r.date_start_inconsult1, r.date_start_verified1, r.date_start_inconsult2, r.date_start_verified2, r.date_start_reporting,
-                        r.date_start_suspended, r.date_start_coordinated, r.oks_active, r.oks_active_last_modified,
+                        r.date_start_suspended, r.status_before_suspended, r.comment_start_suspended,
+                        r.date_start_coordinated, r.oks_active, r.oks_active_last_modified,
                         r.costs_last_modified, r.costs_last_modified_by,
                         r.planned_tasks, r.constraints_dependencies, r.acquisition_planned,
                         -- Aggloprogramm
@@ -434,6 +435,14 @@ namespace roadwork_portal_service.Controllers
                         projectFeatureFromDb.properties.dateStartSuspended = reader.IsDBNull(reader.GetOrdinal("date_start_suspended"))
                             ? null
                             : reader.GetDateTime(reader.GetOrdinal("date_start_suspended"));
+                        projectFeatureFromDb.properties.statusBeforeSuspended =
+                            reader.IsDBNull(reader.GetOrdinal("status_before_suspended"))
+                                ? null
+                                : reader.GetString(reader.GetOrdinal("status_before_suspended"));
+                        projectFeatureFromDb.properties.commentStartSuspended =
+                            reader.IsDBNull(reader.GetOrdinal("comment_start_suspended"))
+                                ? null
+                                : reader.GetString(reader.GetOrdinal("comment_start_suspended"));
                         projectFeatureFromDb.properties.dateStartCoordinated =
                             reader.IsDBNull(reader.GetOrdinal("date_start_coordinated"))
                                 ? null
@@ -1112,14 +1121,17 @@ namespace roadwork_portal_service.Controllers
 
                     NpgsqlCommand selectStatusComm = pgConn.CreateCommand();
                     selectStatusComm.CommandText = @"SELECT status, project_study_approved,
-                                                        study_approved, private FROM ""wtb_ssp_roadworkactivities""
-                                                        WHERE uuid=@uuid";
+                                                        study_approved, private, status_before_suspended
+                                                        FROM ""wtb_ssp_roadworkactivities""
+                                                        WHERE uuid=@uuid
+                                                        FOR UPDATE";
                     selectStatusComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
 
                     string statusOfActivityInDb = "";
                     DateTime? projectStudyApprovedInDb = null;
                     DateTime? studyApprovedInDb = null;
                     bool isPrivateInDb = false;
+                    string? statusBeforeSuspendedInDb = null;
                     using (NpgsqlDataReader reader = selectStatusComm.ExecuteReader())
                     {
                         if (reader.Read())
@@ -1128,6 +1140,7 @@ namespace roadwork_portal_service.Controllers
                             projectStudyApprovedInDb = reader.IsDBNull(1) ? null : reader.GetDateTime(1);
                             studyApprovedInDb = reader.IsDBNull(2) ? null : reader.GetDateTime(2);
                             isPrivateInDb = reader.IsDBNull(3) ? false : reader.GetBoolean(3);
+                            statusBeforeSuspendedInDb = reader.IsDBNull(4) ? null : reader.GetString(4);
                         }
                     }
 
@@ -1159,6 +1172,24 @@ namespace roadwork_portal_service.Controllers
                         insertHistoryComm.Parameters.AddWithValue("what", activityHistoryItem.what);
 
                         insertHistoryComm.ExecuteNonQuery();
+                    }
+                    
+                    bool isResuming =
+                        statusOfActivityInDb == "suspended" &&
+                        roadWorkActivityFeature.properties.status != "suspended";
+
+                    if (isResuming)
+                    {
+                        if (string.IsNullOrWhiteSpace(statusBeforeSuspendedInDb))
+                        {
+                            _logger.LogWarning("Roadwork activity {Uuid} is suspended but has no previous status.",
+                                roadWorkActivityFeature.properties.uuid);
+                            roadWorkActivityFeature = new RoadWorkActivityFeature();
+                            roadWorkActivityFeature.errorMessage = "Der vorherige Status ist nicht gespeichert.";
+                            return Ok(roadWorkActivityFeature);
+                        }
+
+                        roadWorkActivityFeature.properties.status = statusBeforeSuspendedInDb;
                     }
 
                     bool hasStatusChanged = false;
@@ -1199,6 +1230,17 @@ namespace roadwork_portal_service.Controllers
                             roadWorkActivityFeature.properties.status = "coordinated";
                             hasStatusChanged = true;
                         }
+                    }
+
+                    if (hasStatusChanged &&
+                        roadWorkActivityFeature.properties.status == "suspended" &&
+                        string.IsNullOrWhiteSpace(roadWorkActivityFeature.properties.commentStartSuspended))
+                    {
+                        _logger.LogWarning("No reason was provided for suspending roadwork activity {Uuid}.",
+                            roadWorkActivityFeature.properties.uuid);
+                        roadWorkActivityFeature = new RoadWorkActivityFeature();
+                        roadWorkActivityFeature.errorMessage = "Bitte geben Sie einen Grund für die Sistierung ein.";
+                        return Ok(roadWorkActivityFeature);
                     }
 
                     if (hasStatusChanged && (bool)roadWorkActivityFeature.properties.isPrivate)
@@ -1435,7 +1477,7 @@ namespace roadwork_portal_service.Controllers
                         updateComm.CommandText += "costs_last_modified_by=@costs_last_modified_by, ";
                     }
 
-                    if (hasStatusChanged)
+                    if (hasStatusChanged && !isResuming)
                     {
                         if (roadWorkActivityFeature.properties.status == "inconsult1")
                             updateComm.CommandText += "date_start_inconsult1=@date_start_inconsult1, ";
@@ -1448,7 +1490,11 @@ namespace roadwork_portal_service.Controllers
                         else if (roadWorkActivityFeature.properties.status == "reporting")
                             updateComm.CommandText += "date_start_reporting=@date_start_reporting, ";
                         else if (roadWorkActivityFeature.properties.status == "suspended")
+                        {
                             updateComm.CommandText += "date_start_suspended=@date_start_suspended, ";
+                            updateComm.CommandText += "status_before_suspended=@status_before_suspended, ";
+                            updateComm.CommandText += "comment_start_suspended=@comment_start_suspended, ";
+                        }
                         else if (roadWorkActivityFeature.properties.status == "coordinated")
                             updateComm.CommandText += "date_start_coordinated=@date_start_coordinated, ";
                     }
@@ -1475,6 +1521,14 @@ namespace roadwork_portal_service.Controllers
                             roadWorkActivityFeature.properties.status == "reporting")
                     {
                         updateComm.CommandText += "date_start_coordinated=NULL, ";
+                    }
+
+                    // Resume: restore the previous status and clear all suspension metadata.
+                    if (isResuming)
+                    {
+                        updateComm.CommandText += "date_start_suspended=NULL, ";
+                        updateComm.CommandText += "status_before_suspended=NULL, ";
+                        updateComm.CommandText += "comment_start_suspended=NULL, ";
                     }
 
                     updateComm.CommandText += "geom=@geom WHERE uuid=@uuid";
@@ -1583,7 +1637,7 @@ namespace roadwork_portal_service.Controllers
                     updateComm.Parameters.AddWithValue("geom", roadWorkActivityPoly);
                     updateComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
 
-                    if (hasStatusChanged)
+                    if (hasStatusChanged && !isResuming)
                     {
                         if (roadWorkActivityFeature.properties.status == "inconsult1")
                             updateComm.Parameters.AddWithValue("date_start_inconsult1", DateTime.Now);
@@ -1596,7 +1650,13 @@ namespace roadwork_portal_service.Controllers
                         else if (roadWorkActivityFeature.properties.status == "reporting")
                             updateComm.Parameters.AddWithValue("date_start_reporting", DateTime.Now);
                         else if (roadWorkActivityFeature.properties.status == "suspended")
+                        {
                             updateComm.Parameters.AddWithValue("date_start_suspended", DateTime.Now);
+                            updateComm.Parameters.AddWithValue("status_before_suspended", statusOfActivityInDb);
+                            updateComm.Parameters.AddWithValue(
+                                "comment_start_suspended",
+                                roadWorkActivityFeature.properties.commentStartSuspended!.Trim());
+                        }
                         else if (roadWorkActivityFeature.properties.status == "coordinated")
                             updateComm.Parameters.AddWithValue("date_start_coordinated", DateTime.Now);
                     }
@@ -1642,7 +1702,28 @@ namespace roadwork_portal_service.Controllers
                         insertHistoryComm.Parameters.AddWithValue("changedate", DateTime.Now);
                         insertHistoryComm.Parameters.AddWithValue("who", userFromDb.firstName + " " + userFromDb.lastName);
                         string whatText = "Status des Bauvorhabens wurde geändert zu: ";
-                        if (roadWorkActivityFeature.properties.status == "review")
+                        if (isResuming)
+                        {
+                            if (roadWorkActivityFeature.properties.status == "review")
+                                whatText += "in Prüfung";
+                            else if (roadWorkActivityFeature.properties.status == "inconsult1")
+                                whatText += "in Bedarfsklärung-1";
+                            else if (roadWorkActivityFeature.properties.status == "inconsult2")
+                                whatText += "in Bedarfsklärung-2";
+                            else if (roadWorkActivityFeature.properties.status == "verified1")
+                                whatText += "verifiziert-1";
+                            else if (roadWorkActivityFeature.properties.status == "verified2")
+                                whatText += "verifiziert-2";
+                            else if (roadWorkActivityFeature.properties.status == "reporting")
+                                whatText += "in Stellungnahme";
+                            else if (roadWorkActivityFeature.properties.status == "coordinated")
+                                whatText += "koordiniert";
+                            else
+                                whatText += roadWorkActivityFeature.properties.status;
+
+                            whatText += " (Sistierung aufgehoben)";
+                        }
+                        else if (roadWorkActivityFeature.properties.status == "review")
                             whatText += "in Prüfung";
                         else if (roadWorkActivityFeature.properties.status == "inconsult1")
                             whatText += "in Bedarfsklärung-1";
@@ -1656,7 +1737,22 @@ namespace roadwork_portal_service.Controllers
                             whatText += "in Stellungnahme";
                         else if (roadWorkActivityFeature.properties.status == "coordinated")
                             whatText += "koordiniert";
+                        else if (roadWorkActivityFeature.properties.status == "suspended")
+                            whatText += "sistiert";
+
                         insertHistoryComm.Parameters.AddWithValue("what", whatText);
+
+                        if (roadWorkActivityFeature.properties.status == "suspended")
+                        {
+                            insertHistoryComm.CommandText = @"INSERT INTO ""wtb_ssp_activities_history""
+                                    (uuid, uuid_roadwork_activity, changedate, who, what, usercomment)
+                                    VALUES
+                                    (@uuid, @uuid_roadwork_activity, @changedate, @who, @what, @usercomment)";
+                            insertHistoryComm.Parameters.AddWithValue(
+                                "usercomment",
+                                roadWorkActivityFeature.properties.commentStartSuspended!.Trim());
+                        }
+
                         insertHistoryComm.ExecuteNonQuery();
 
                         NpgsqlCommand updateActivityStatusComm = pgConn.CreateCommand();
@@ -1666,9 +1762,10 @@ namespace roadwork_portal_service.Controllers
                         updateActivityStatusComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
                         updateActivityStatusComm.ExecuteNonQuery();
 
-                        if (roadWorkActivityFeature.properties.status == "inconsult1" ||
-                            roadWorkActivityFeature.properties.status == "inconsult2" ||
-                            roadWorkActivityFeature.properties.status == "reporting")
+                        if (!isResuming &&
+                            (roadWorkActivityFeature.properties.status == "inconsult1" ||
+                             roadWorkActivityFeature.properties.status == "inconsult2" ||
+                             roadWorkActivityFeature.properties.status == "reporting"))
                         {
                             foreach (String involvedNeedUuid in roadWorkActivityFeature.properties.roadWorkNeedsUuids)
                             {
@@ -2148,7 +2245,9 @@ namespace roadwork_portal_service.Controllers
             }
             else if (oldStatus == "suspended")
             {
-                return false;
+                // The exact target status is validated against status_before_suspended
+                // in UpdateActivity.
+                return newStatus != "suspended";
             }
             return true;
         }

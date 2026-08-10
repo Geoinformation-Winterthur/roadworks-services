@@ -27,9 +27,9 @@ public class RoadWorkActivityProperties
     public int? desiredYearTo { get; set; } = -1;
     public DateTime? created { get; set; } = DateTime.MinValue; // System, Modul Termine, Phase1: "Bauvorhaben erfasst"
     public DateTime? lastModified { get; set; } = DateTime.MinValue; // System
-    public DateTime? finishEarlyTo { get; set; } // unused (never a value assigned), Termine Alt: "Frühester Baubeginn"
+    public DateTime? finishEarlyTo { get; set; } // unused (never a value assigned), Termine Alt: "Frï¿½hester Baubeginn"
     public DateTime? finishOptimumTo { get; set; } // unused (never a value assigned), Termine Alt: "Wunsch Baubeginn"
-    public DateTime? finishLateTo { get; set; } // unused (never a value assigned), Termine Alt: "Späteste Inbetriebnahme"
+    public DateTime? finishLateTo { get; set; } // unused (never a value assigned), Termine Alt: "Spï¿½teste Inbetriebnahme"
     public DateTime? startOfConstruction { get; set; } // Modul Termine, Grobplanung: "Baubeginn (Voraussichtlich)"
     public DateTime? endOfConstruction { get; set; } // Modul Termine: "Bauende (Voraussichtlich)"
     // public DateTime? dateOfAcceptance { get; set; }  // removed in #650
@@ -54,7 +54,7 @@ public class RoadWorkActivityProperties
     public DateTime? dateKapReal { get; set; } // Modul Sitzungen, gehnehmigt: "KAP"
     public DateTime? dateOks { get; set; } // OKS Berechnet
     public DateTime? dateOksReal { get; set; } // Modul Sitzungen, terminiert: "OKS"
-    public DateTime? dateGlTba { get; set; } // Modul Übersicht
+    public DateTime? dateGlTba { get; set; } // Modul ï¿½bersicht
     public DateTime? dateGlTbaReal { get; set; } // Modul Termine, Phase1: "Genehmigter Projektierungsauftrag (GL)"
     public ActivityHistoryItem[]? activityHistory { get; set; } = new ActivityHistoryItem[0];
     public bool? isPrivate { get; set; } = false;
@@ -63,7 +63,7 @@ public class RoadWorkActivityProperties
     public DateTime? dateAccept { get; set; } // unused
     public DateTime? dateGuarantee { get; set; } // Modul Termine, Phase5: "Abnahme/Garantie"
     public bool? isStudy { get; set; } = false;
-    public DateTime? dateStudyStart { get; set; } // Modul Termine, Phase2: "Auftrag für Vorstudie erarbeiten"
+    public DateTime? dateStudyStart { get; set; } // Modul Termine, Phase2: "Auftrag fï¿½r Vorstudie erarbeiten"
     public DateTime? dateStudyEnd { get; set; } // Modul Termine, Phase2: "Genehmigter Auftrag Vorstudie (GL)"
     public DateTime? projectStudyApproved { get; set; } // Modul Termine, Phase2: "Vorstudie erarbeiten"
     public DateTime? studyApproved { get; set; } // Modul Termine, Phase2: "Genehmigte Vorstudie (GL)"
@@ -71,16 +71,16 @@ public class RoadWorkActivityProperties
     //public DateTime? dateDesireStart { get; set; } // removed in #650
     //public DateTime? dateDesireEnd { get; set; } // removed in #650
     public bool? isParticip { get; set; } = false;
-    public DateTime? dateParticipStart { get; set; } // Modul Termine, Phase3: "Planauflage §13" >> Start
-    public DateTime? dateParticipEnd { get; set; } // Modul Termine, Phase3: "Planauflage §13" >> End
+    public DateTime? dateParticipStart { get; set; } // Modul Termine, Phase3: "Planauflage ï¿½13" >> Start
+    public DateTime? dateParticipEnd { get; set; } // Modul Termine, Phase3: "Planauflage ï¿½13" >> End
     public bool? isPlanCirc { get; set; } = false;
-    public DateTime? datePlanCircStart { get; set; } // Modul Termine, Phase3: "Planauflage §16" >> Start
-    public DateTime? datePlanCircEnd { get; set; } // Modul Termine, Phase3: "Planauflage §16" >> End
-    public DateTime? dateConsultStart1 { get; set; } // Modul Termine, Phase2: "Bedarfsklärung - 1. Iteration" >> Start
-    public DateTime? dateConsultEnd1 { get; set; } // Modul Termine, Phase2: "Bedarfsklärung - 1. Iteration" >> End
-    public DateTime? dateConsultStart2 { get; set; } // Modul Termine, Phase2: "Bedarfsklärung - 2. Iteration" >> Start
-    public DateTime? dateConsultEnd2 { get; set; } // Modul Termine, Phase2: "Bedarfsklärung - 2. Iteration" >> End
-    public DateTime? dateConsultClose { get; set; } // Modul Vernehmlassung: "Bedarfsklärung Abschluss"
+    public DateTime? datePlanCircStart { get; set; } // Modul Termine, Phase3: "Planauflage ï¿½16" >> Start
+    public DateTime? datePlanCircEnd { get; set; } // Modul Termine, Phase3: "Planauflage ï¿½16" >> End
+    public DateTime? dateConsultStart1 { get; set; } // Modul Termine, Phase2: "Bedarfsklï¿½rung - 1. Iteration" >> Start
+    public DateTime? dateConsultEnd1 { get; set; } // Modul Termine, Phase2: "Bedarfsklï¿½rung - 1. Iteration" >> End
+    public DateTime? dateConsultStart2 { get; set; } // Modul Termine, Phase2: "Bedarfsklï¿½rung - 2. Iteration" >> Start
+    public DateTime? dateConsultEnd2 { get; set; } // Modul Termine, Phase2: "Bedarfsklï¿½rung - 2. Iteration" >> End
+    public DateTime? dateConsultClose { get; set; } // Modul Vernehmlassung: "Bedarfsklï¿½rung Abschluss"
     public DateTime? dateReportStart { get; set; } // Modul Termine, Phase2: "Stellungnahme" >> Start
     public DateTime? dateReportEnd { get; set; } // Modul Termine, Phase2: "Stellungnahme" >> End
     public DateTime? dateReportClose { get; set; } // Modul Vernehmlassung: "Stellungnahme Abschluss"
@@ -91,13 +91,13 @@ public class RoadWorkActivityProperties
     public DateTime? dateQuotesReviewed { get; set; } // Modul Termine, Phase1: "Bestellungen" >> End
     public DateTime? datePrepareEdcStart { get; set; } // Modul Termine, Phase1: "Projektierungsauftrag erarbeiten" >> Start
     public DateTime? datePrepareEdcEnd { get; set; } // Modul Termine, Phase1: "Projektierungsauftrag erarbeiten" >> End
-    public DateTime? dateHandoverToApk { get; set; } // Modul Termine, Phase2: "Übergabesitzung AMO/AEW an APK"
-    public DateTime? dateHandoverToApr { get; set; } // Modul Termine, Phase3: "Übergabesitzung APK an APR"
+    public DateTime? dateHandoverToApk { get; set; } // Modul Termine, Phase2: "ï¿½bergabesitzung AMO/AEW an APK"
+    public DateTime? dateHandoverToApr { get; set; } // Modul Termine, Phase3: "ï¿½bergabesitzung APK an APR"
     public DateTime? dateRequestDesignBudget { get; set; } // Modul Termine, Phase3: "Projektierungskredit einholen"
     public DateTime? dateProjectApprovalStart { get; set; } // Modul Termine, Phase3: "Projektfestsetzung" >> Start
     public DateTime? dateProjectApprovalEnd { get; set; } // Modul Termine, Phase3: "Projektfestsetzung" >> End
-    public DateTime? dateConstructionBudgetApprovalStart { get; set; } // Modul Termine, Phase3: "Ausführungskredit" >> Start
-    public DateTime? dateConstructionBudgetApprovalEnd { get; set; } // Modul Termine, Phase3: "Ausführungskredit" >> End
+    public DateTime? dateConstructionBudgetApprovalStart { get; set; } // Modul Termine, Phase3: "Ausfï¿½hrungskredit" >> Start
+    public DateTime? dateConstructionBudgetApprovalEnd { get; set; } // Modul Termine, Phase3: "Ausfï¿½hrungskredit" >> End
     public DateTime? dateSubmissionStart { get; set; } // Modul Termine, Phase4: "Submission" >> Start
     public DateTime? dateSubmissionEnd { get; set; } // Modul Termine, Phase4: "Submission" >> End
     public DateTime? dateStartOfConstructionReal { get; set; } // Modul Termine, Phase5: "Baubeginn/ -ende" >> Beginn
@@ -110,12 +110,14 @@ public class RoadWorkActivityProperties
     //public DateTime? dateInfoClose { get; set; } // removed in #650
     public bool? isAggloprog { get; set; } = false;
     public bool? isTrafficRegulationRequired { get; set; } = false;
-    public DateTime? dateStartInconsult1 { get; set; } // unused, Phase: in Bedarfsklärung - 1.Iteration (Phase 12)
-    public DateTime? dateStartInconsult2 { get; set; } // unused, Phase: in Bedarfsklärung - 2.Iteration (Phase 12)
+    public DateTime? dateStartInconsult1 { get; set; } // unused, Phase: in Bedarfsklï¿½rung - 1.Iteration (Phase 12)
+    public DateTime? dateStartInconsult2 { get; set; } // unused, Phase: in Bedarfsklï¿½rung - 2.Iteration (Phase 12)
     public DateTime? dateStartVerified1 { get; set; } // Phase: verifiziert-1 (Phase 12)
     public DateTime? dateStartVerified2 { get; set; } // unused, Phase: verifiziert-2 (Phase 12)
     public DateTime? dateStartReporting { get; set; } // Phase: Stellungnahme (Phase 12)
-    public DateTime? dateStartSuspended { get; set; } // unused, Phase: sistiert
+    public DateTime? dateStartSuspended { get; set; } 
+    public string? statusBeforeSuspended { get; set; }
+    public string? commentStartSuspended { get; set; }
     public DateTime? dateStartCoordinated { get; set; } // Phase: koordiniert (Phase 12)
     public string? url { get; set; }
     public DocumentAttributes[]? documentAtts { get; set; }
@@ -147,7 +149,7 @@ public class RoadWorkActivityProperties
     public string? prestudyDuration { get; set; } = "";
     public string? prestudyContractor { get; set; } = "";
     public string? prestudyDetail { get; set; } = "";
-    public DateTime? prestudyVkErConfirmed { get; set; } // Modul Journal: "Finanzielle Ressourcen für Phase 2 (VK ER) abgesprochen.."
+    public DateTime? prestudyVkErConfirmed { get; set; } // Modul Journal: "Finanzielle Ressourcen fï¿½r Phase 2 (VK ER) abgesprochen.."
     public long? prestudyVkErNumber { get; set; }
 
     // Affected entities (#622, 2026.4)
@@ -176,7 +178,7 @@ public class RoadWorkActivityProperties
 
     // Ressources (#625, 2026.4)
     public DateTime? staffResourcesAprConfirmed { get; set; } // Modul Journal: "Personelle Ressourcen APR (ab Phase 3) abgesprochen"
-    public DateTime? costEstimateAprConfirmed { get; set; } // Modul Journal: "Journal >> "Kostenschätzung mit APR (Phase 3 bis 5) abgesprochen"
+    public DateTime? costEstimateAprConfirmed { get; set; } // Modul Journal: "Journal >> "Kostenschï¿½tzung mit APR (Phase 3 bis 5) abgesprochen"
 
     // Engineering contract (#626, 2026.4)
     public bool? coreDrillingContracted { get; set; } = false;
