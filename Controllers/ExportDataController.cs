@@ -54,8 +54,8 @@ namespace roadwork_portal_service.Controllers
                     "Mitwirkungsverfahren Ende;Planauflage § 16;" +
                     "Planauflage Start;Planauflage Ende;" +
                     "Störfallverordnung;Akustisches Projekt;" +
-                    "Aggloprogramm vorgesehen;Private betroffen;Provis;Vorgesehene Tätigkeiten/Arbeiten; Randbedingungen/Abhängigkeiten;" +
-                    "Rechts-/Landerwerb vorgesehen; Umsetzung durch Dritte/Werk;" +
+                    "Aggloprogramm vorgesehen;Private betroffen;Provis;Vorgesehene Tätigkeiten/Arbeiten;Randbedingungen/Abhängigkeiten;" +
+                    "Rechts-/Landerwerb vorgesehen;Umsetzung durch Dritte/Werk;" +
 
                     // Make these columns explicit and easy to recognize in Excel import:
                     "Bedarfsklärung 1 Start;Bedarfsklärung 1 Ende;" +
