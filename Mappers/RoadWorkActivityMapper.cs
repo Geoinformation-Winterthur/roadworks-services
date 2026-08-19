@@ -38,11 +38,13 @@ namespace roadwork_portal_service.Mappers
             roadWorkActivityProperties.partOfAggloprogram = reader.GetBooleanOrFalse("part_of_aggloprogram");
             roadWorkActivityProperties.aggloprogramLink = reader.GetStringOrEmpty("aggloprogram_link");
             roadWorkActivityProperties.aggloprogramGeneration = reader.GetNullableInt("aggloprogram_generation");
+            roadWorkActivityProperties.aggloprogramMeasureNumber = reader.GetStringOrEmpty("aggloprogram_measure_number");
             roadWorkActivityProperties.aggloprogramAreCode = reader.GetStringOrEmpty("aggloprogram_are_code");
             roadWorkActivityProperties.aggloprogramAreDescription = reader.GetStringOrEmpty("aggloprogram_are_description");
             roadWorkActivityProperties.aggloprogramDueDate = reader.GetNullableDateTime("aggloprogram_due_date");
             roadWorkActivityProperties.aggloprogramCostTotal = reader.GetNullableDecimal("aggloprogram_cost_total");
             roadWorkActivityProperties.aggloprogramCostCanton = reader.GetNullableDecimal("aggloprogram_cost_canton");
+            roadWorkActivityProperties.aggloprogramComment = reader.GetStringOrEmpty("aggloprogram_comment");
 
             // Prestudy
             roadWorkActivityProperties.prestudy = reader.GetBooleanOrFalse("prestudy");
@@ -139,11 +141,13 @@ namespace roadwork_portal_service.Mappers
             parameters.AddWithValue("@part_of_aggloprogram", HelperFunctions.ToDbValue(roadWorkActivityProperties.partOfAggloprogram));
             parameters.AddWithValue("@aggloprogram_link", HelperFunctions.ToDbValue(roadWorkActivityProperties.aggloprogramLink));
             parameters.AddWithValue("@aggloprogram_generation", HelperFunctions.ToDbValue(roadWorkActivityProperties.aggloprogramGeneration));
+            parameters.AddWithValue("@aggloprogram_measure_number", HelperFunctions.ToDbValue(roadWorkActivityProperties.aggloprogramMeasureNumber));
             parameters.AddWithValue("@aggloprogram_are_code", HelperFunctions.ToDbValue(roadWorkActivityProperties.aggloprogramAreCode));
             parameters.AddWithValue("@aggloprogram_are_description", HelperFunctions.ToDbValue(roadWorkActivityProperties.aggloprogramAreDescription));
             parameters.AddWithValue("@aggloprogram_due_date", HelperFunctions.ToDbValue(roadWorkActivityProperties.aggloprogramDueDate));
             parameters.AddWithValue("@aggloprogram_cost_total", HelperFunctions.ToDbValue(roadWorkActivityProperties.aggloprogramCostTotal));
             parameters.AddWithValue("@aggloprogram_cost_canton", HelperFunctions.ToDbValue(roadWorkActivityProperties.aggloprogramCostCanton));
+            parameters.AddWithValue("@aggloprogram_comment", HelperFunctions.ToDbValue(roadWorkActivityProperties.aggloprogramComment));
 
             // Prestudy
             parameters.AddWithValue("@prestudy", HelperFunctions.ToDbValue(roadWorkActivityProperties.prestudy));

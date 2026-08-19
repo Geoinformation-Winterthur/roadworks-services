@@ -135,11 +135,13 @@ public class RoadWorkActivityProperties
     public bool? partOfAggloprogram { get; set; } = false;
     public string aggloprogramLink { get; set; } = "";
     public int? aggloprogramGeneration { get; set; }
+    public string? aggloprogramMeasureNumber { get; set; } = "";
     public string? aggloprogramAreCode { get; set; } = "";
     public string? aggloprogramAreDescription { get; set; } = "";
     public DateTime? aggloprogramDueDate { get; set; } // Modul Journal, Agglo: "Umzusetzen bis"
     public decimal? aggloprogramCostTotal { get; set; }
     public decimal? aggloprogramCostCanton { get; set; }
+    public string? aggloprogramComment { get; set; } = "";
 
     // Prestudy
     public bool? prestudy { get; set; } = false;
