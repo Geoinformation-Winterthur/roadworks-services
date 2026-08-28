@@ -12,6 +12,7 @@ namespace roadwork_portal_service.Configuration
         public static string wmsUrl;
         public static string connectionString;
         public static byte[] salt;
+        public static byte[]? legacySalt;
 
         static AppConfig()
         {
@@ -33,6 +34,12 @@ namespace roadwork_portal_service.Configuration
 
                 string saltBase64String = AppConfig.Configuration.GetValue<string>("SaltBase64String");
                 AppConfig.salt = Convert.FromBase64String(saltBase64String);
+
+                string? legacySaltBase64String = AppConfig.Configuration.GetValue<string>("LegacySaltBase64String");
+                if (!string.IsNullOrWhiteSpace(legacySaltBase64String))
+                {
+                    AppConfig.legacySalt = Convert.FromBase64String(legacySaltBase64String);
+                }
 
             }
         }

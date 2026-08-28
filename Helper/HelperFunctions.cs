@@ -13,9 +13,14 @@ namespace roadwork_portal_service.Helper
     {
         public static string hashPassphrase(string passphrase)
         {
+            return hashPassphrase(passphrase, AppConfig.salt);
+        }
+
+        public static string hashPassphrase(string passphrase, byte[] salt)
+        {
             string hashedPassphrase = Convert.ToBase64String(KeyDerivation.Pbkdf2(
                 password: passphrase,
-                salt: AppConfig.salt,
+                salt: salt,
                 prf: KeyDerivationPrf.HMACSHA256,
                 iterationCount: 100000,
                 numBytesRequested: 256 / 8
