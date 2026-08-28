@@ -38,7 +38,10 @@ namespace roadwork_portal_service.ElasticsearchLogger
                 ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true
             }; */
 
-            _httpClient = new HttpClient(handler);
+            _httpClient = new HttpClient(handler)
+            {
+                Timeout = TimeSpan.FromSeconds(2)
+            };
 
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine("Hi from Elasticsearch logger");                  
@@ -73,7 +76,7 @@ namespace roadwork_portal_service.ElasticsearchLogger
 
             try
             {                
-                var response = await _httpClient.PostAsync(_endpointUrl, content);
+                using var response = await _httpClient.PostAsync(_endpointUrl, content);
                 return response.IsSuccessStatusCode;
             }
             catch
@@ -83,19 +86,19 @@ namespace roadwork_portal_service.ElasticsearchLogger
         }
         public void LogInformation(string message)
         {
-            SendLogAsync("Information", message).GetAwaiter().GetResult();
+            _ = SendLogAsync("Information", message);
         }
         public void LogWarning(string message)
         {
-            SendLogAsync("Warning", message).GetAwaiter().GetResult();
+            _ = SendLogAsync("Warning", message);
         }
         public void LogError(string message)
         {
-            SendLogAsync("Error", message).GetAwaiter().GetResult();
+            _ = SendLogAsync("Error", message);
         }
         public void LogCritical(string message)
         {
-            SendLogAsync("Critical", message).GetAwaiter().GetResult();
+            _ = SendLogAsync("Critical", message);
         }
     }
 }
