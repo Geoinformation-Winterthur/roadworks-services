@@ -124,9 +124,27 @@ public class LoginController : ControllerBase
             }
 
             string hashedPassphrase = HelperFunctions.hashPassphrase(receivedUser.passPhrase);
+            bool passphraseMatches = userFromDb.mailAddress != null &&
+                userFromDb.passPhrase != null &&
+                userFromDb.passPhrase.Equals(hashedPassphrase);
 
-            if (userFromDb.mailAddress != null && userFromDb.passPhrase != null
-                && userFromDb.passPhrase.Equals(hashedPassphrase))
+            if (!passphraseMatches && userFromDb.passPhrase != null && AppConfig.legacySalt != null)
+            {
+                string legacyHashedPassphrase = HelperFunctions.hashPassphrase(
+                    receivedUser.passPhrase, AppConfig.legacySalt);
+
+                if (userFromDb.passPhrase.Equals(legacyHashedPassphrase))
+                {
+                    passphraseMatches = true;
+                    LoginController._updatePassphraseHash(
+                        receivedUser.mailAddress, hashedPassphrase, dryRun);
+                    _logger.LogInformation(
+                        "Password hash of user " + receivedUser.mailAddress +
+                        " was migrated to the current salt.");
+                }
+            }
+
+            if (passphraseMatches)
             {
                 string securityKey = AppConfig.Configuration.GetValue<string>("SecurityKey");
                 byte[] securityKeyByteArray = Encoding.UTF8.GetBytes(securityKey);
@@ -283,6 +301,24 @@ public class LoginController : ControllerBase
         }
 
         return userFromDb;
+    }
+
+    private static void _updatePassphraseHash(string eMailAddress, string hashedPassphrase, bool dryRun)
+    {
+        if (dryRun) return;
+
+        using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
+        {
+            pgConn.Open();
+            NpgsqlCommand updatePassphraseComm = pgConn.CreateCommand();
+            updatePassphraseComm.CommandText = @"UPDATE ""wtb_ssp_users""
+                        SET pwd=@pwd
+                        WHERE trim(lower(e_mail))=@e_mail";
+            updatePassphraseComm.Parameters.AddWithValue("pwd", hashedPassphrase);
+            updatePassphraseComm.Parameters.AddWithValue("e_mail", eMailAddress);
+            updatePassphraseComm.ExecuteNonQuery();
+            pgConn.Close();
+        }
     }
 
     private static void _updateLoginTimestamp(string eMailAddress, bool dryRun)
