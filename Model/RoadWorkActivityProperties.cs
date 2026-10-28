@@ -87,8 +87,6 @@ public class RoadWorkActivityProperties
     public DateTime? dateDesignAssignmentIssued { get; set; } // Modul Termine, Grobplanung: "Projektierungsauftrag erstellt bis"
     public DateTime? dateAprDesignCompletion { get; set; } // Modul Termine, Grobplanung: "APR Projektiert bis"
     public DateTime? dateAprConstructionCompletion { get; set; } // Modul Termine, Grobplanung, PhaseX: "APR Realisiert bis"
-    public DateTime? dateQuotesRequested { get; set; } // Modul Termine, Phase1: "Bestellungen" >> Start
-    public DateTime? dateQuotesReviewed { get; set; } // Modul Termine, Phase1: "Bestellungen" >> End
     public DateTime? datePrepareEdcStart { get; set; } // Modul Termine, Phase1: "Projektierungsauftrag erarbeiten" >> Start
     public DateTime? datePrepareEdcEnd { get; set; } // Modul Termine, Phase1: "Projektierungsauftrag erarbeiten" >> End
     public DateTime? dateHandoverToApk { get; set; } // Modul Termine, Phase2: "�bergabesitzung AMO/AEW an APK"
@@ -179,22 +177,32 @@ public class RoadWorkActivityProperties
     public long? erpNumber { get; set; }
 
     // Ressources (#625, 2026.4)
-    public DateTime? staffResourcesAprConfirmed { get; set; } // Modul Journal: "Personelle Ressourcen APR (ab Phase 3) abgesprochen"
-    public DateTime? costEstimateAprConfirmed { get; set; } // Modul Journal: "Journal >> "Kostensch�tzung mit APR (Phase 3 bis 5) abgesprochen"
+    public bool? staffResourcesAprConfirmed { get; set; } // Modul Journal: "Personelle Ressourcen APR (ab Phase 3) abgesprochen"
+    public DateTime? dateStaffResourcesAprConfirmed { get; set; } // Modul Journal: "Personelle Ressourcen APR (ab Phase 3) abgesprochen"
+    public bool? costEstimateAprConfirmed { get; set; } // Modul Journal: "Journal >> "Kostensch�tzung mit APR (Phase 3 bis 5) abgesprochen"
+    public DateTime? dateCostEstimateAprConfirmed { get; set; } // Modul Journal: "Journal >> "Kostensch�tzung mit APR (Phase 3 bis 5) abgesprochen"
 
     // Engineering contract (#626, 2026.4)
     public bool? coreDrillingContracted { get; set; } = false;
+    public DateTime? dateCoreDrillingContracted { get; set; }
     public bool? quotesRequested { get; set; } = false;
+    public DateTime? dateQuotesRequested { get; set; } // Modul Termine, Phase1: "Bestellungen" >> Start
     public bool? quotesReviewed { get; set; } = false;
-    public bool? aprChecked { get; set; } = false;
+    public DateTime? dateQuotesReviewed { get; set; } // Modul Termine, Phase1: "Bestellungen" >> End
     public bool? afmChecked { get; set; } = false;
+    public DateTime? dateAfmChecked { get; set; }
 
     // Approval and filing (#626, 2026.4)
-    public bool? cfDone { get; set; } = false;
-    public bool? rdDone { get; set; } = false;
-    public bool? approved { get; set; } = false;
-    public bool? fabasoftDone { get; set; } = false;
+    public bool? preReviewedByCf { get; set; } = false;
+    public DateTime? datePreReviewedByCf { get; set; }
+    public bool? preReviewedByRd { get; set; } = false;
+    public DateTime? datePreReviewedByRd { get; set; }
+    public bool? formallyApproved { get; set; } = false;
+    public DateTime? dateFormallyApproved { get; set; }
+    public bool? filedInFabasoft { get; set; } = false;
+    public DateTime? dateFiledInFabasoft { get; set; }
     public bool? gisUpdated { get; set; } = false;
+    public DateTime? dateGisUpdated { get; set; }
 
     public RoadWorkApprovals approvals { get; set; } = new RoadWorkApprovals();
 }

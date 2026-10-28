@@ -80,22 +80,32 @@ namespace roadwork_portal_service.Mappers
             roadWorkActivityProperties.erpNumber = reader.GetNullableLong("erp_number");
 
             // Ressources
-            roadWorkActivityProperties.staffResourcesAprConfirmed = reader.GetNullableDateTime("staff_resources_apr_confirmed");
-            roadWorkActivityProperties.costEstimateAprConfirmed = reader.GetNullableDateTime("cost_estimate_apr_confirmed");
+            roadWorkActivityProperties.staffResourcesAprConfirmed = reader.GetBooleanOrFalse("staff_resources_apr_confirmed");
+            roadWorkActivityProperties.dateStaffResourcesAprConfirmed = reader.GetNullableDateTime("date_staff_resources_apr_confirmed");
+            roadWorkActivityProperties.costEstimateAprConfirmed = reader.GetBooleanOrFalse("cost_estimate_apr_confirmed");
+            roadWorkActivityProperties.dateCostEstimateAprConfirmed = reader.GetNullableDateTime("date_cost_estimate_apr_confirmed");
 
             // Engineering contract
             roadWorkActivityProperties.coreDrillingContracted = reader.GetBooleanOrFalse("core_drilling_contracted");
+            roadWorkActivityProperties.dateCoreDrillingContracted = reader.GetNullableDateTime("date_core_drilling_contracted");
             roadWorkActivityProperties.quotesRequested = reader.GetBooleanOrFalse("quotes_requested");
+            roadWorkActivityProperties.dateQuotesRequested = reader.GetNullableDateTime("date_quotes_requested");
             roadWorkActivityProperties.quotesReviewed = reader.GetBooleanOrFalse("quotes_reviewed");
-            roadWorkActivityProperties.aprChecked = reader.GetBooleanOrFalse("apr_checked");
+            roadWorkActivityProperties.dateQuotesReviewed = reader.GetNullableDateTime("date_quotes_reviewed");
             roadWorkActivityProperties.afmChecked = reader.GetBooleanOrFalse("afm_checked");
+            roadWorkActivityProperties.dateAfmChecked = reader.GetNullableDateTime("date_afm_checked");
 
             // Approval and filing
-            roadWorkActivityProperties.cfDone = reader.GetBooleanOrFalse("cf_done");
-            roadWorkActivityProperties.rdDone = reader.GetBooleanOrFalse("rd_done");
-            roadWorkActivityProperties.approved = reader.GetBooleanOrFalse("approved");
-            roadWorkActivityProperties.fabasoftDone = reader.GetBooleanOrFalse("fabasoft_done");
+            roadWorkActivityProperties.preReviewedByCf = reader.GetBooleanOrFalse("pre_reviewed_by_cf");
+            roadWorkActivityProperties.datePreReviewedByCf = reader.GetNullableDateTime("date_pre_reviewed_by_cf");
+            roadWorkActivityProperties.preReviewedByRd = reader.GetBooleanOrFalse("pre_reviewed_by_rd");
+            roadWorkActivityProperties.datePreReviewedByRd = reader.GetNullableDateTime("date_pre_reviewed_by_rd");
+            roadWorkActivityProperties.formallyApproved = reader.GetBooleanOrFalse("formally_approved");
+            roadWorkActivityProperties.dateFormallyApproved = reader.GetNullableDateTime("date_formally_approved");
+            roadWorkActivityProperties.filedInFabasoft = reader.GetBooleanOrFalse("filed_in_fabasoft");
+            roadWorkActivityProperties.dateFiledInFabasoft = reader.GetNullableDateTime("date_filed_in_fabasoft");
             roadWorkActivityProperties.gisUpdated = reader.GetBooleanOrFalse("gis_updated");
+            roadWorkActivityProperties.dateGisUpdated = reader.GetNullableDateTime("date_gis_updated");
 
             // Oks
             roadWorkActivityProperties.isOksActiveLastModified = reader.GetNullableDateTime("oks_active_last_modified");
@@ -104,8 +114,6 @@ namespace roadwork_portal_service.Mappers
             roadWorkActivityProperties.dateDesignAssignmentIssued = reader.GetNullableDateTime("date_design_assignment_issued");
             roadWorkActivityProperties.dateAprDesignCompletion = reader.GetNullableDateTime("date_apr_design_completion");
             roadWorkActivityProperties.dateAprConstructionCompletion = reader.GetNullableDateTime("date_apr_construction_completion");
-            roadWorkActivityProperties.dateQuotesRequested = reader.GetNullableDateTime("date_quotes_requested");
-            roadWorkActivityProperties.dateQuotesReviewed = reader.GetNullableDateTime("date_quotes_reviewed");
             roadWorkActivityProperties.datePrepareEdcStart = reader.GetNullableDateTime("date_prepare_edc_start");
             roadWorkActivityProperties.datePrepareEdcEnd = reader.GetNullableDateTime("date_prepare_edc_end");
             roadWorkActivityProperties.dateHandoverToApk = reader.GetNullableDateTime("date_handover_to_apk");
@@ -184,21 +192,31 @@ namespace roadwork_portal_service.Mappers
 
             // Ressources
             parameters.AddWithValue("@staff_resources_apr_confirmed", HelperFunctions.ToDbValue(roadWorkActivityProperties.staffResourcesAprConfirmed));
+            parameters.AddWithValue("@date_staff_resources_apr_confirmed", HelperFunctions.ToDbValue(roadWorkActivityProperties.dateStaffResourcesAprConfirmed));
             parameters.AddWithValue("@cost_estimate_apr_confirmed", HelperFunctions.ToDbValue(roadWorkActivityProperties.costEstimateAprConfirmed));
+            parameters.AddWithValue("@date_cost_estimate_apr_confirmed", HelperFunctions.ToDbValue(roadWorkActivityProperties.dateCostEstimateAprConfirmed));
 
             // Engineering contract
             parameters.AddWithValue("@core_drilling_contracted", HelperFunctions.ToDbValue(roadWorkActivityProperties.coreDrillingContracted));
+            parameters.AddWithValue("@date_core_drilling_contracted", HelperFunctions.ToDbValue(roadWorkActivityProperties.dateCoreDrillingContracted));
             parameters.AddWithValue("@quotes_requested", HelperFunctions.ToDbValue(roadWorkActivityProperties.quotesRequested));
+            parameters.AddWithValue("@date_quotes_requested", HelperFunctions.ToDbValue(roadWorkActivityProperties.dateQuotesRequested));
             parameters.AddWithValue("@quotes_reviewed", HelperFunctions.ToDbValue(roadWorkActivityProperties.quotesReviewed));
-            parameters.AddWithValue("@apr_checked", HelperFunctions.ToDbValue(roadWorkActivityProperties.aprChecked));
+            parameters.AddWithValue("@date_quotes_reviewed", HelperFunctions.ToDbValue(roadWorkActivityProperties.dateQuotesReviewed));
             parameters.AddWithValue("@afm_checked", HelperFunctions.ToDbValue(roadWorkActivityProperties.afmChecked));
+            parameters.AddWithValue("@date_afm_checked", HelperFunctions.ToDbValue(roadWorkActivityProperties.dateAfmChecked));
 
             // Approval and filing
-            parameters.AddWithValue("@cf_done", HelperFunctions.ToDbValue(roadWorkActivityProperties.cfDone));
-            parameters.AddWithValue("@rd_done", HelperFunctions.ToDbValue(roadWorkActivityProperties.rdDone));
-            parameters.AddWithValue("@approved", HelperFunctions.ToDbValue(roadWorkActivityProperties.approved));
-            parameters.AddWithValue("@fabasoft_done", HelperFunctions.ToDbValue(roadWorkActivityProperties.fabasoftDone));
+            parameters.AddWithValue("@pre_reviewed_by_cf", HelperFunctions.ToDbValue(roadWorkActivityProperties.preReviewedByCf));
+            parameters.AddWithValue("@date_pre_reviewed_by_cf", HelperFunctions.ToDbValue(roadWorkActivityProperties.datePreReviewedByCf));
+            parameters.AddWithValue("@pre_reviewed_by_rd", HelperFunctions.ToDbValue(roadWorkActivityProperties.preReviewedByRd));
+            parameters.AddWithValue("@date_pre_reviewed_by_rd", HelperFunctions.ToDbValue(roadWorkActivityProperties.datePreReviewedByRd));
+            parameters.AddWithValue("@formally_approved", HelperFunctions.ToDbValue(roadWorkActivityProperties.formallyApproved));
+            parameters.AddWithValue("@date_formally_approved", HelperFunctions.ToDbValue(roadWorkActivityProperties.dateFormallyApproved));
+            parameters.AddWithValue("@filed_in_fabasoft", HelperFunctions.ToDbValue(roadWorkActivityProperties.filedInFabasoft));
+            parameters.AddWithValue("@date_filed_in_fabasoft", HelperFunctions.ToDbValue(roadWorkActivityProperties.dateFiledInFabasoft));
             parameters.AddWithValue("@gis_updated", HelperFunctions.ToDbValue(roadWorkActivityProperties.gisUpdated));
+            parameters.AddWithValue("@date_gis_updated", HelperFunctions.ToDbValue(roadWorkActivityProperties.dateGisUpdated));
 
             // Oks
             parameters.AddWithValue("@oks_active_last_modified", HelperFunctions.ToDbValue(roadWorkActivityProperties.isOksActiveLastModified));

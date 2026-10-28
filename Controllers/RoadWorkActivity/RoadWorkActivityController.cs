@@ -79,15 +79,19 @@ namespace roadwork_portal_service.Controllers
                         -- Provis (Abacus)
                         r.erp_number,
                         -- Ressources
-                        r.staff_resources_apr_confirmed, r.cost_estimate_apr_confirmed,
+                        r.staff_resources_apr_confirmed, r.date_staff_resources_apr_confirmed,
+                        r.cost_estimate_apr_confirmed, r.date_cost_estimate_apr_confirmed,
                         -- Engineering contract
-                        r.core_drilling_contracted, r.quotes_requested, r.quotes_reviewed,
-                        r.apr_checked, r.afm_checked, 
+                        r.core_drilling_contracted, r.date_core_drilling_contracted,
+                        r.quotes_requested, r.date_quotes_requested,
+                        r.quotes_reviewed, r.date_quotes_reviewed, 
+                        r.afm_checked, r.date_afm_checked,
                         -- Approval and filing
-                        r.cf_done, r.rd_done, r.approved, r.fabasoft_done, r.gis_updated,
+                        r.pre_reviewed_by_cf, r.date_pre_reviewed_by_cf, r.pre_reviewed_by_rd, r.date_pre_reviewed_by_rd, r.formally_approved,
+                        r.date_formally_approved, r.filed_in_fabasoft, r.date_filed_in_fabasoft, r.gis_updated, r.date_gis_updated,
                         -- Dates
                         r.date_design_assignment_issued, r.date_apr_design_completion, r.date_apr_construction_completion,
-                        r.date_quotes_requested, r.date_quotes_reviewed, r.date_prepare_edc_start,
+                        r.date_prepare_edc_start,
                         r.date_prepare_edc_end, r.date_handover_to_apk, r.date_handover_to_apr,
                         r.date_request_design_budget, r.date_project_approval_start, r.date_project_approval_end, 
                         r.date_construction_budget_approval_start, r.date_construction_budget_approval_end, r.date_submission_start,
@@ -720,14 +724,19 @@ namespace roadwork_portal_service.Controllers
                                     -- Provis (Abacus)
                                     erp_number,
                                     -- Ressourcen
-                                    staff_resources_apr_confirmed, cost_estimate_apr_confirmed,
+                                    date_staff_resources_apr_confirmed, staff_resources_apr_confirmed, 
+                                    cost_estimate_apr_confirmed, date_cost_estimate_apr_confirmed,
                                     -- Projektierungsauftrag
-                                    core_drilling_contracted, quotes_requested, quotes_reviewed, apr_checked, afm_checked, 
+                                    core_drilling_contracted, date_core_drilling_contracted,
+                                    quotes_requested, date_quotes_requested,
+                                    quotes_reviewed, date_quotes_reviewed, 
+                                    afm_checked, date_afm_checked,
                                     -- Ausgabengenehmigung und Ablage
-                                    cf_done, rd_done, approved, fabasoft_done, gis_updated,
+                                    pre_reviewed_by_cf, date_pre_reviewed_by_cf, pre_reviewed_by_rd, date_pre_reviewed_by_rd, formally_approved,
+                                    date_formally_approved, filed_in_fabasoft, date_filed_in_fabasoft, gis_updated, date_gis_updated,
                                     -- Dates
 						            date_design_assignment_issued, date_apr_design_completion, date_apr_construction_completion,
-                                    date_quotes_requested, date_quotes_reviewed, date_prepare_edc_start,
+                                    date_prepare_edc_start,
                                     date_prepare_edc_end, date_handover_to_apk, date_handover_to_apr,
                                     date_request_design_budget, date_project_approval_start, date_project_approval_end, 
                                     date_construction_budget_approval_start, date_construction_budget_approval_end, date_submission_start,
@@ -762,14 +771,19 @@ namespace roadwork_portal_service.Controllers
                                     -- Provis (Abacus)
                                     @erp_number,
                                     -- Ressourcen
-                                    @staff_resources_apr_confirmed, @cost_estimate_apr_confirmed,
+                                    @date_staff_resources_apr_confirmed, @staff_resources_apr_confirmed,
+                                    @cost_estimate_apr_confirmed, @cost_estimate_apr_confirmed,
                                     -- Projektierungsauftrag
-                                    @core_drilling_contracted, @quotes_requested, @quotes_reviewed, @apr_checked, @afm_checked, 
+                                    @core_drilling_contracted, @date_core_drilling_contracted,
+                                    @quotes_requested, @date_quotes_requested,
+                                    @quotes_reviewed, @date_quotes_reviewed, 
+                                    @afm_checked, @date_afm_checked,
                                     -- Ausgabengenehmigung und Ablage
-                                    @cf_done, @rd_done, @approved, @fabasoft_done, @gis_updated,
+                                    @pre_reviewed_by_cf, @date_pre_reviewed_by_cf, @pre_reviewed_by_rd, @date_pre_reviewed_by_rd, @formally_approved,
+                                    @date_formally_approved, @filed_in_fabasoft, @date_filed_in_fabasoft, @gis_updated, @date_gis_updated,
                                     -- Dates
 						            @date_design_assignment_issued, @date_apr_design_completion, @date_apr_construction_completion,
-                                    @date_quotes_requested, @date_quotes_reviewed, @date_prepare_edc_start,
+                                    @date_prepare_edc_start,
                                     @date_prepare_edc_end, @date_handover_to_apk, @date_handover_to_apr,
                                     @date_request_design_budget, @date_project_approval_start, @date_project_approval_end, 
                                     @date_construction_budget_approval_start, @date_construction_budget_approval_end, @date_submission_start,
@@ -1455,16 +1469,23 @@ namespace roadwork_portal_service.Controllers
                                     -- Provis (Abacus)
                                     erp_number=@erp_number,
                                     -- Ressourcen
-                                    staff_resources_apr_confirmed=@staff_resources_apr_confirmed, cost_estimate_apr_confirmed=@cost_estimate_apr_confirmed,
+                                    date_staff_resources_apr_confirmed=@date_staff_resources_apr_confirmed, staff_resources_apr_confirmed=@staff_resources_apr_confirmed, 
+                                    cost_estimate_apr_confirmed=@cost_estimate_apr_confirmed, date_cost_estimate_apr_confirmed=@date_cost_estimate_apr_confirmed,
                                     -- Projektierungsauftrag
-                                    core_drilling_contracted=@core_drilling_contracted, quotes_requested=@quotes_requested, 
-                                    quotes_reviewed=@quotes_reviewed, apr_checked=@apr_checked, afm_checked=@afm_checked, 
+                                    core_drilling_contracted=@core_drilling_contracted, date_core_drilling_contracted=@date_core_drilling_contracted,
+                                    quotes_requested=@quotes_requested, date_quotes_requested=@date_quotes_requested,
+                                    quotes_reviewed=@quotes_reviewed, date_quotes_reviewed=@date_quotes_reviewed, 
+                                    afm_checked=@afm_checked, date_afm_checked=@date_afm_checked,
                                     -- Ausgabengenehmigung und Ablage
-                                    cf_done=@cf_done, rd_done=@rd_done, approved=@approved, fabasoft_done=@fabasoft_done, gis_updated=@gis_updated, 
+                                    pre_reviewed_by_cf=@pre_reviewed_by_cf, date_pre_reviewed_by_cf=@date_pre_reviewed_by_cf,
+                                    pre_reviewed_by_rd=@pre_reviewed_by_rd, date_pre_reviewed_by_rd=@date_pre_reviewed_by_rd,
+                                    formally_approved=@formally_approved, date_formally_approved=@date_formally_approved,
+                                    filed_in_fabasoft=@filed_in_fabasoft, date_filed_in_fabasoft=@date_filed_in_fabasoft,
+                                    gis_updated=@gis_updated, date_gis_updated=@date_gis_updated,
                                     -- Dates
 						            date_design_assignment_issued=@date_design_assignment_issued, date_apr_design_completion=@date_apr_design_completion,
-                                    date_apr_construction_completion=@date_apr_construction_completion, date_quotes_requested=@date_quotes_requested,
-                                    date_quotes_reviewed=@date_quotes_reviewed,date_prepare_edc_start=@date_prepare_edc_start,
+                                    date_apr_construction_completion=@date_apr_construction_completion,
+                                    date_prepare_edc_start=@date_prepare_edc_start,
                                     date_prepare_edc_end=@date_prepare_edc_end, date_handover_to_apk=@date_handover_to_apk, date_handover_to_apr=@date_handover_to_apr,
                                     date_request_design_budget=@date_request_design_budget, date_project_approval_start=@date_project_approval_start,
                                     date_project_approval_end=@date_project_approval_end, date_construction_budget_approval_start=@date_construction_budget_approval_start,
