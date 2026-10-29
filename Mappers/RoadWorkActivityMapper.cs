@@ -52,7 +52,8 @@ namespace roadwork_portal_service.Mappers
             roadWorkActivityProperties.prestudyDuration = reader.GetStringOrEmpty("prestudy_duration");
             roadWorkActivityProperties.prestudyContractor = reader.GetStringOrEmpty("prestudy_contractor");
             roadWorkActivityProperties.prestudyDetail = reader.GetStringOrEmpty("prestudy_detail");
-            roadWorkActivityProperties.prestudyVkErConfirmed = reader.GetNullableDateTime("prestudy_vk_er_confirmed");
+            roadWorkActivityProperties.prestudyVkErConfirmed = reader.GetBooleanOrFalse("prestudy_vk_er_confirmed");
+            roadWorkActivityProperties.datePrestudyVkErConfirmed = reader.GetNullableDateTime("date_prestudy_vk_er_confirmed");
             roadWorkActivityProperties.prestudyVkErNumber = reader.GetNullableLong("prestudy_vk_er_number");
 
             // Affected entities
@@ -164,6 +165,7 @@ namespace roadwork_portal_service.Mappers
             parameters.AddWithValue("@prestudy_contractor", HelperFunctions.ToDbValue(roadWorkActivityProperties.prestudyContractor));
             parameters.AddWithValue("@prestudy_detail", HelperFunctions.ToDbValue(roadWorkActivityProperties.prestudyDetail));
             parameters.AddWithValue("@prestudy_vk_er_confirmed", HelperFunctions.ToDbValue(roadWorkActivityProperties.prestudyVkErConfirmed));
+            parameters.AddWithValue("@date_prestudy_vk_er_confirmed", HelperFunctions.ToDbValue(roadWorkActivityProperties.datePrestudyVkErConfirmed));
             parameters.AddWithValue("@prestudy_vk_er_number", HelperFunctions.ToDbValue(roadWorkActivityProperties.prestudyVkErNumber));
 
             // Affected entities

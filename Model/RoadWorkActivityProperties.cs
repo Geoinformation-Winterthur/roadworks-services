@@ -149,7 +149,8 @@ public class RoadWorkActivityProperties
     public string? prestudyDuration { get; set; } = "";
     public string? prestudyContractor { get; set; } = "";
     public string? prestudyDetail { get; set; } = "";
-    public DateTime? prestudyVkErConfirmed { get; set; } // Modul Journal: "Finanzielle Ressourcen f�r Phase 2 (VK ER) abgesprochen.."
+    public bool? prestudyVkErConfirmed { get; set; } = false;
+    public DateTime? datePrestudyVkErConfirmed { get; set; } // Modul Journal: "Finanzielle Ressourcen f�r Phase 2 (VK ER) abgesprochen.."
     public long? prestudyVkErNumber { get; set; }
 
     // Affected entities (#622, 2026.4)

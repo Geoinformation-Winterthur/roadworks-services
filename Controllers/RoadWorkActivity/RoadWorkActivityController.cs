@@ -67,7 +67,7 @@ namespace roadwork_portal_service.Controllers
                         r.aggloprogram_cost_canton, r.aggloprogram_comment,
                         -- Prestudy
                         r.prestudy, r.prestudy_sks, r.prestudy_duration, r.prestudy_contractor,
-                        r.prestudy_detail, r.prestudy_vk_er_confirmed, r.prestudy_vk_er_number,
+                        r.prestudy_detail, r.prestudy_vk_er_confirmed, r.date_prestudy_vk_er_confirmed, r.prestudy_vk_er_number,
                         -- Affected entities
                         r.bus_stops_shelters_affected, r.structures_affected, r.roadDrainage_affected,
                         r.houseConnections_affected, r.wasteFacilities_affected, r.technical_installations_affected,
@@ -713,7 +713,7 @@ namespace roadwork_portal_service.Controllers
                                     aggloprogram_due_date, aggloprogram_cost_total, aggloprogram_cost_canton, aggloprogram_comment,
                                     -- Vorstudie
                                     prestudy, prestudy_sks, prestudy_duration, prestudy_contractor,
-                                    prestudy_detail, prestudy_vk_er_confirmed, prestudy_vk_er_number,
+                                    prestudy_detail, prestudy_vk_er_confirmed, date_prestudy_vk_er_confirmed, prestudy_vk_er_number,
                                     -- Betroffene Themen
                                     bus_stops_shelters_affected, structures_affected, roadDrainage_affected, houseConnections_affected, 
                                     wasteFacilities_affected, technical_installations_affected, trees_affected, street_furniture_affected, 
@@ -760,7 +760,7 @@ namespace roadwork_portal_service.Controllers
                                     @aggloprogram_due_date, @aggloprogram_cost_total, @aggloprogram_cost_canton, @aggloprogram_comment,
                                     -- Vorstudie
                                     @prestudy, @prestudy_sks, @prestudy_duration, @prestudy_contractor,
-                                    @prestudy_detail, @prestudy_vk_er_confirmed, @prestudy_vk_er_number,
+                                    @prestudy_detail, @prestudy_vk_er_confirmed, @date_prestudy_vk_er_confirmed, @prestudy_vk_er_number,
                                     -- Betroffene Themen
                                     @bus_stops_shelters_affected, @structures_affected, @roadDrainage_affected, @houseConnections_affected, 
                                     @wasteFacilities_affected, @technical_installations_affected, @trees_affected, @street_furniture_affected, 
@@ -1453,7 +1453,7 @@ namespace roadwork_portal_service.Controllers
                                     aggloprogram_cost_canton=@aggloprogram_cost_canton, aggloprogram_comment=@aggloprogram_comment,
                                     -- Vorstudie
                                     prestudy=@prestudy, prestudy_sks=@prestudy_sks, prestudy_duration=@prestudy_duration, prestudy_contractor=@prestudy_contractor,
-                                    prestudy_detail=@prestudy_detail, prestudy_vk_er_confirmed=@prestudy_vk_er_confirmed,
+                                    prestudy_detail=@prestudy_detail, prestudy_vk_er_confirmed=@prestudy_vk_er_confirmed, date_prestudy_vk_er_confirmed=@date_prestudy_vk_er_confirmed,
                                     prestudy_vk_er_number=@prestudy_vk_er_number,
                                     -- Betroffene Themen
                                     bus_stops_shelters_affected=@bus_stops_shelters_affected, structures_affected=@structures_affected, 

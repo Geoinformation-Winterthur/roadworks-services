@@ -28,3 +28,6 @@ ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities RENAME fabasoft_done TO filed_i
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN date_filed_in_fabasoft date;
 -- gis_updated
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN date_gis_updated date;
+-- prestudy_vk_er_confirmed
+ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities RENAME prestudy_vk_er_confirmed TO date_prestudy_vk_er_confirmed;
+ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN prestudy_vk_er_confirmed boolean;
