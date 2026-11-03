@@ -175,7 +175,7 @@ public class RoadWorkActivityProperties
     public bool? privateEntityIsInitiator { get; set; } = false;
 
     // Provis (Abacus) (#624, 2026.4)
-    public long? erpNumber { get; set; }
+    public string? erpNumber { get; set; }
 
     // Ressources (#625, 2026.4)
     public bool? staffResourcesAprConfirmed { get; set; } // Modul Journal: "Personelle Ressourcen APR (ab Phase 3) abgesprochen"

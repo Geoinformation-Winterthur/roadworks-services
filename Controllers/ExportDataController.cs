@@ -344,7 +344,7 @@ namespace roadwork_portal_service.Controllers
 
                         AppendBool(sb, reader, "part_of_aggloprogram");
                         AppendBool(sb, reader, "private_entity_affected");
-                        AppendInt(sb, reader, "erp_number");
+                        AppendText(sb, reader, "erp_number");
                         AppendText(sb, reader, "planned_tasks");
                         AppendText(sb, reader, "constraints_dependencies");
                         AppendText(sb, reader, "acquisition_planned");
