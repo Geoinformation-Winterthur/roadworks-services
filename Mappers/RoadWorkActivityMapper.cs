@@ -78,7 +78,10 @@ namespace roadwork_portal_service.Mappers
             roadWorkActivityProperties.privateEntityIsInitiator = reader.GetBooleanOrFalse("private_entity_is_initiator");
 
             // Provis (Abacus)
-            roadWorkActivityProperties.erpNumber = reader.GetNullableLong("erp_number");
+            int erpNumberIndex = reader.GetOrdinal("erp_number");
+            roadWorkActivityProperties.erpNumber = reader.IsDBNull(erpNumberIndex)
+                ? null
+                : reader.GetString(erpNumberIndex);
 
             // Ressources
             roadWorkActivityProperties.staffResourcesAprConfirmed = reader.GetBooleanOrFalse("staff_resources_apr_confirmed");
@@ -190,7 +193,8 @@ namespace roadwork_portal_service.Mappers
             parameters.AddWithValue("@private_entity_is_initiator", HelperFunctions.ToDbValue(roadWorkActivityProperties.privateEntityIsInitiator));
 
             // Provis (Abacus)
-            parameters.AddWithValue("@erp_number", HelperFunctions.ToDbValue(roadWorkActivityProperties.erpNumber));
+            parameters.AddWithValue("@erp_number", NpgsqlTypes.NpgsqlDbType.Text,
+                HelperFunctions.ToDbValue(roadWorkActivityProperties.erpNumber));
 
             // Ressources
             parameters.AddWithValue("@staff_resources_apr_confirmed", HelperFunctions.ToDbValue(roadWorkActivityProperties.staffResourcesAprConfirmed));
