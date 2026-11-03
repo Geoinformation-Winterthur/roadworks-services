@@ -70,7 +70,53 @@ namespace roadwork_portal_service.Controllers
                     "Projektfestsetzung Start;Projektfestsetzung Ende;Ausführungskredit Start;Ausführungskredit Ende;" +
                     "Submission Start;Submission Ende;Baubeginn;Bauende;Einbau Deckbelag Start;Einbau Deckbelag Ende;" +
                     "Projektkreditabrechnung;" +
-                    "Bauvorhabe-UUID;Bedarfe-UUIDs;\r\n"
+                    "Bauvorhabe-UUID;Bedarfe-UUIDs;" +
+
+                    // Additional  attributes; keep the original prefix.
+                    "BV: Projektleiter UUID;BV: Leiter Baustellenverkehr UUID;BV: Transfernummer;" +
+                    "BV: Typ (Code);BV: Datum von;BV: Datum bis;" +
+                    "BV: Kosten;BV: Kostenart;BV: Strabako-Nr;" +
+                    "BV: OKS genehmigt;BV: GL TBA berechnet;BV: Bedarfsklärung Abschluss;" +
+                    "BV: Stellungnahme Abschluss;BV: OKS aktiv;BV: Kosten letzte Bearbeitung;" +
+                    "BV: Kosten letzte Bearbeitung durch UUID;BV: SKS terminiert;BV: Sitzungsbemerkung 1;" +
+                    "BV: Sitzungsbemerkung 2;BV: SKS-Nr;BV: Aggloprogramm Link;" +
+                    "BV: Aggloprogramm Generation;BV: Aggloprogramm Massnahmen-Nr;BV: Aggloprogramm ARE-Code;" +
+                    "BV: Aggloprogramm ARE-Bezeichnung;BV: Aggloprogramm umzusetzen bis;BV: Aggloprogramm Gesamtkosten;" +
+                    "BV: Aggloprogramm Kosten Kanton;BV: Aggloprogramm Kommentar;BV: Haltestellen und Wartehallen betroffen;" +
+                    "BV: Kunstbauten betroffen;BV: Strassenentwässerung betroffen;BV: Private Hausanschlüsse betroffen;" +
+                    "BV: Entsorgungseinrichtungen betroffen;BV: Technische Einrichtungen betroffen;BV: Bäume betroffen;" +
+                    "BV: Stadtmobiliar betroffen;BV: Stadtklima betroffen;BV: Entsiegelung betroffen;" +
+                    "BV: Fuss- und Veloverkehr betroffen;BV: Behindertengleichstellung betroffen;BV: Private Betroffenheit Umfang;" +
+                    "BV: Private Betroffenheit Anforderungen;BV: Landerwerb von Privaten;BV: Private als Auslösende;" +
+                    "BV: Personelle Ressourcen APR bestätigt am;BV: Kostenschätzung APR bestätigt am;BV: Bohrkern beauftragt;" +
+                    "BV: Bestellungen eingeholt;BV: Bestellungen geprüft;BV: Check APR (Alt);" +
+                    "BV: Check AFM;BV: C und F vorgeprüft;BV: Rechtsdienst vorgeprüft;" +
+                    "BV: Verfügt;BV: In Fabasoft abgelegt;BV: GIS nachgeführt;" +
+                    "BV: Vorstudie Dauer;BV: Vorstudie Auftragnehmer;BV: Vorstudie Details;" +
+                    "BV: VK ER Vorstudie bestätigt am;BV: VK ER Vorstudie Nummer;BV: Status vor Sistierung;" +
+                    "BV: Bemerkung zur Sistierung;BV: Bohrkern beauftragt am;BV: AFM geprüft am;" +
+                    "BV: C und F vorgeprüft am;BV: Rechtsdienst vorgeprüft am;BV: Verfügt am;" +
+                    "BV: In Fabasoft abgelegt am;BV: GIS nachgeführt am;Bedarf: Auslösende UUID;" +
+                    "Bedarf: Auslösende Vorname;Bedarf: Auslösende Nachname;Bedarf: Frühester Baubeginn;" +
+                    "Bedarf: Wunsch Baubeginn;Bedarf: Späteste Inbetriebnahme;Bedarf: Priorität Code;" +
+                    "Bedarf: Priorität;Bedarf: Relevanz;Bedarf: Gebietsmanagement Notiz;" +
+                    "Bedarf: Gebietsmanagement Notizdatum;Bedarf: Gebietsmanagement Notiz Verfasser UUID;Bedarf: Gebietsmanagement Notiz Verfasser Vorname;" +
+                    "Bedarf: Gebietsmanagement Notiz Verfasser Nachname;Bedarf: Abschnitt;Bedarf: Bemerkung;" +
+                    "Bedarf: Link URL;Bedarf: Übergeordnete Massnahme;Bedarf: Wunschjahr von;" +
+                    "Bedarf: Wunschjahr bis;Bedarf: Weiterhin relevant;Bedarf: Rückmeldung gegeben;" +
+                    "Bedarf: Abgelehnt;Bedarf: Schwammstadtmassnahmen vorhanden;Bedarf: Löschgrund;" +
+                    "Bedarf: Bauzeit;Bedarf: Rechts- und Landerwerb vorgesehen;Bedarf: Schwammstadtmassnahme 1.1;" +
+                    "Bedarf: Schwammstadtmassnahme 1.2;Bedarf: Schwammstadtmassnahme 1.3;Bedarf: Schwammstadtmassnahme 1.4;" +
+                    "Bedarf: Schwammstadtmassnahme 1.5;Bedarf: Schwammstadtmassnahme 1.6;Bedarf: Schwammstadtmassnahme 1.7;" +
+                    "Bedarf: Schwammstadtmassnahme 1.8;Bedarf: Schwammstadtmassnahme 2.1;Bedarf: Schwammstadtmassnahme 2.2;" +
+                    "Bedarf: Schwammstadtmassnahme 2.3;Bedarf: Schwammstadtmassnahme 2.4;Bedarf: Schwammstadtmassnahme 2.5;" +
+                    "Bedarf: Schwammstadtmassnahme 2.6;Bedarf: Schwammstadtmassnahme 2.7;Bedarf: Schwammstadtmassnahme 3.1;" +
+                    "Bedarf: Schwammstadtmassnahme 3.2;Bedarf: Schwammstadtmassnahme 3.3;Bedarf: Schwammstadtmassnahme 4.1;" +
+                    "Bedarf: Schwammstadtmassnahme 4.2;Bedarf: Schwammstadtmassnahme 5.1;Genehmigung UUID;" +
+                    "Genehmigung erforderlich;StrG Planauflageverfahren;SSV erforderlich;" +
+                    "WWG erforderlich;ERI erforderlich;PBG erforderlich;" +
+                    "EBG erforderlich;AWEL erforderlich;ESTI erforderlich;" +
+                    "Weitere Genehmigung erforderlich;Weitere Genehmigung Details;\r\n"
                 );
 
                 // 1) Export "needs" (wtb_ssp_roadworkneeds) - only those with status == "requirement"
@@ -90,10 +136,62 @@ namespace roadwork_portal_service.Controllers
                                areaman.first_name AS area_man_first_name,
                                areaman.last_name  AS area_man_last_name,
                                r.relevance
+                        , -- Additional need attributes
+                            r.orderer,
+                            r.priority,
+                            r.area_man_of_note,
+                            r.section,
+                            r.comment,
+                            r.url,
+                            r.overarching_measure,
+                            r.desired_year_from,
+                            r.desired_year_to,
+                            r.still_relevant,
+                            r.feedback_given,
+                            r.decline,
+                            r.has_sponge_city_meas,
+                            r.delete_reason,
+                            r.construction_duration,
+                            r.acquisition_planned,
+                            r.is_sponge_1_1,
+                            r.is_sponge_1_2,
+                            r.is_sponge_1_3,
+                            r.is_sponge_1_4,
+                            r.is_sponge_1_5,
+                            r.is_sponge_1_6,
+                            r.is_sponge_1_7,
+                            r.is_sponge_1_8,
+                            r.is_sponge_2_1,
+                            r.is_sponge_2_2,
+                            r.is_sponge_2_3,
+                            r.is_sponge_2_4,
+                            r.is_sponge_2_5,
+                            r.is_sponge_2_6,
+                            r.is_sponge_2_7,
+                            r.is_sponge_3_1,
+                            r.is_sponge_3_2,
+                            r.is_sponge_3_3,
+                            r.is_sponge_4_1,
+                            r.is_sponge_4_2,
+                            r.is_sponge_5_1,
+                            appr.uuid AS uuid_approvals,
+                            appr.approval_required,
+                            appr.strg_approval_required,
+                            appr.ssv_approval_required,
+                            appr.wwg_approval_required,
+                            appr.eri_approval_required,
+                            appr.pbg_approval_required,
+                            appr.ebg_approval_required,
+                            appr.awel_approval_required,
+                            appr.esti_approval_required,
+                            appr.other_approval_required,
+                            appr.other_approval_details,
+                            appr.bafu_approval_required, appr.lsv_approval_required
                         FROM ""wtb_ssp_roadworkneeds"" r
                         LEFT JOIN ""wtb_ssp_users"" o ON r.orderer = o.uuid
                         LEFT JOIN ""wtb_ssp_priorities"" prio ON r.priority = prio.code
-                        LEFT JOIN ""wtb_ssp_users"" areaman ON r.area_man_of_note = areaman.uuid";
+                        LEFT JOIN ""wtb_ssp_users"" areaman ON r.area_man_of_note = areaman.uuid
+                        LEFT JOIN ""wtb_ssp_roadwork_approvals"" appr ON r.uuid = appr.uuid_roadwork_need";
 
                     await using var reader = await selectComm.ExecuteReaderAsync();
                     while (await reader.ReadAsync())
@@ -126,11 +224,81 @@ namespace roadwork_portal_service.Controllers
                         AppendBool(sb, reader, "private");
 
                         // Remaining columns with empty fields to match the header count.
-                        AppendEmpty(sb, 8);
-                        AppendEmpty(sb, 76);
+                        AppendEmpty(sb, 39); // Columns 19-57.
+                        AppendBool(sb, reader, "bafu_approval_required");
+                        AppendBool(sb, reader, "lsv_approval_required");
+                        AppendEmpty(sb, 43); // Columns 60-102.
 
-                        AppendGuid(sb, reader, "uuid");
+                        // A standalone need UUID belongs in the need UUID column.
                         AppendText(sb, "");
+                        AppendGuid(sb, reader, "uuid");
+
+                        // Additional activity attributes are empty for a standalone need.
+                        AppendEmpty(sb, 71);
+
+                        // Additional scalar need attributes.
+                        AppendGuid(sb, reader, "orderer");
+                        AppendText(sb, reader, "first_name");
+                        AppendText(sb, reader, "last_name");
+                        AppendDate(sb, reader, "finish_early_to");
+                        AppendDate(sb, reader, "finish_optimum_to");
+                        AppendDate(sb, reader, "finish_late_to");
+                        AppendText(sb, reader, "priority");
+                        AppendText(sb, reader, "priority_name");
+                        AppendInt(sb, reader, "relevance");
+                        AppendText(sb, reader, "note_of_area_man");
+                        AppendTimestamp(sb, reader, "area_man_note_date");
+                        AppendGuid(sb, reader, "area_man_of_note");
+                        AppendText(sb, reader, "area_man_first_name");
+                        AppendText(sb, reader, "area_man_last_name");
+                        AppendText(sb, reader, "section");
+                        AppendText(sb, reader, "comment");
+                        AppendText(sb, reader, "url");
+                        AppendBool(sb, reader, "overarching_measure");
+                        AppendInt(sb, reader, "desired_year_from");
+                        AppendInt(sb, reader, "desired_year_to");
+                        AppendBool(sb, reader, "still_relevant");
+                        AppendBool(sb, reader, "feedback_given");
+                        AppendBool(sb, reader, "decline");
+                        AppendBool(sb, reader, "has_sponge_city_meas");
+                        AppendText(sb, reader, "delete_reason");
+                        AppendInt(sb, reader, "construction_duration");
+                        AppendText(sb, reader, "acquisition_planned");
+                        AppendBool(sb, reader, "is_sponge_1_1");
+                        AppendBool(sb, reader, "is_sponge_1_2");
+                        AppendBool(sb, reader, "is_sponge_1_3");
+                        AppendBool(sb, reader, "is_sponge_1_4");
+                        AppendBool(sb, reader, "is_sponge_1_5");
+                        AppendBool(sb, reader, "is_sponge_1_6");
+                        AppendBool(sb, reader, "is_sponge_1_7");
+                        AppendBool(sb, reader, "is_sponge_1_8");
+                        AppendBool(sb, reader, "is_sponge_2_1");
+                        AppendBool(sb, reader, "is_sponge_2_2");
+                        AppendBool(sb, reader, "is_sponge_2_3");
+                        AppendBool(sb, reader, "is_sponge_2_4");
+                        AppendBool(sb, reader, "is_sponge_2_5");
+                        AppendBool(sb, reader, "is_sponge_2_6");
+                        AppendBool(sb, reader, "is_sponge_2_7");
+                        AppendBool(sb, reader, "is_sponge_3_1");
+                        AppendBool(sb, reader, "is_sponge_3_2");
+                        AppendBool(sb, reader, "is_sponge_3_3");
+                        AppendBool(sb, reader, "is_sponge_4_1");
+                        AppendBool(sb, reader, "is_sponge_4_2");
+                        AppendBool(sb, reader, "is_sponge_5_1");
+
+                        // Approval attributes shared by both record kinds.
+                        AppendGuid(sb, reader, "uuid_approvals");
+                        AppendBool(sb, reader, "approval_required");
+                        AppendBool(sb, reader, "strg_approval_required");
+                        AppendBool(sb, reader, "ssv_approval_required");
+                        AppendBool(sb, reader, "wwg_approval_required");
+                        AppendBool(sb, reader, "eri_approval_required");
+                        AppendBool(sb, reader, "pbg_approval_required");
+                        AppendBool(sb, reader, "ebg_approval_required");
+                        AppendBool(sb, reader, "awel_approval_required");
+                        AppendBool(sb, reader, "esti_approval_required");
+                        AppendBool(sb, reader, "other_approval_required");
+                        AppendText(sb, reader, "other_approval_details");
 
                         sb.Append("\r\n");
                     }
@@ -181,6 +349,86 @@ namespace roadwork_portal_service.Controllers
                             r.date_construction_budget_approval_start, r.date_construction_budget_approval_end, r.date_submission_start,
                             r.date_submission_end, r.date_start_of_construction_real, r.date_end_of_construction_real,
                             r.date_final_pavement_start, r.date_final_pavement_end, r.date_project_budget_finalized,
+
+                            -- Additional scalar activity attributes and approvals.
+                            r.projectmanager,
+                            r.traffic_agent,
+                            r.project_no,
+                            r.type,
+                            r.costs,
+                            r.costs_type,
+                            r.date_consult_close,
+                            r.date_report_close,
+                            r.oks_active,
+                            r.costs_last_modified,
+                            r.costs_last_modified_by,
+                            r.date_sks_planned,
+                            r.session_comment_1,
+                            r.session_comment_2,
+                            r.sks_no,
+                            r.aggloprogram_link,
+                            r.aggloprogram_generation,
+                            r.aggloprogram_measure_number,
+                            r.aggloprogram_are_code,
+                            r.aggloprogram_are_description,
+                            r.aggloprogram_due_date,
+                            r.aggloprogram_cost_total,
+                            r.aggloprogram_cost_canton,
+                            r.aggloprogram_comment,
+                            r.bus_stops_shelters_affected,
+                            r.structures_affected,
+                            r.roaddrainage_affected,
+                            r.houseconnections_affected,
+                            r.wastefacilities_affected,
+                            r.technical_installations_affected,
+                            r.trees_affected,
+                            r.street_furniture_affected,
+                            r.urban_climate_affected,
+                            r.subject_to_depaving,
+                            r.pedestrians_cycling_affected,
+                            r.disability_equality_affected,
+                            r.private_entity_extent,
+                            r.private_entity_requirements,
+                            r.private_entity_acquisition,
+                            r.private_entity_is_initiator,
+                            r.date_staff_resources_apr_confirmed,
+                            r.date_cost_estimate_apr_confirmed,
+                            r.core_drilling_contracted,
+                            r.quotes_requested,
+                            r.quotes_reviewed,
+                            r.apr_checked,
+                            r.afm_checked,
+                            r.pre_reviewed_by_cf,
+                            r.pre_reviewed_by_rd,
+                            r.formally_approved,
+                            r.filed_in_fabasoft,
+                            r.gis_updated,
+                            r.prestudy_duration,
+                            r.prestudy_contractor,
+                            r.prestudy_detail,
+                            r.date_prestudy_vk_er_confirmed,
+                            r.prestudy_vk_er_number,
+                            r.status_before_suspended,
+                            r.comment_start_suspended,
+                            r.date_core_drilling_contracted,
+                            r.date_afm_checked,
+                            r.date_pre_reviewed_by_cf,
+                            r.date_pre_reviewed_by_rd,
+                            r.date_formally_approved,
+                            r.date_filed_in_fabasoft,
+                            r.date_gis_updated,
+                            appr.uuid AS uuid_approvals,
+                            appr.approval_required,
+                            appr.strg_approval_required,
+                            appr.ssv_approval_required,
+                            appr.wwg_approval_required,
+                            appr.eri_approval_required,
+                            appr.pbg_approval_required,
+                            appr.ebg_approval_required,
+                            appr.awel_approval_required,
+                            appr.esti_approval_required,
+                            appr.other_approval_required,
+                            appr.other_approval_details,
 
                             gm.gm_first_name,
                             gm.gm_last_name,
@@ -321,7 +569,7 @@ namespace roadwork_portal_service.Controllers
                         AppendBool(sb, reader, "is_study");
                         AppendDate(sb, reader, "date_study_start");
                         AppendDate(sb, reader, "date_study_end");
-                        AppendBool(sb, reader, "project_study_approved");
+                        AppendDate(sb, reader, "project_study_approved");
                         AppendDate(sb, reader, "study_approved");
 
                         // IMPORTANT FIX:
@@ -395,6 +643,96 @@ namespace roadwork_portal_service.Controllers
                         AppendGuid(sb, reader, "uuid");
                         AppendText(sb, reader, "needs_uuids");
 
+                        // Additional scalar activity attributes.
+                        AppendGuid(sb, reader, "projectmanager");
+                        AppendGuid(sb, reader, "traffic_agent");
+                        AppendText(sb, reader, "project_no");
+                        AppendText(sb, reader, "type");
+                        AppendDate(sb, reader, "date_from");
+                        AppendDate(sb, reader, "date_to");
+                        AppendDecimal(sb, reader, "costs");
+                        AppendText(sb, reader, "costs_type");
+                        AppendText(sb, reader, "strabako_no");
+                        AppendDate(sb, reader, "date_oks_real");
+                        AppendDate(sb, reader, "date_gl_tba");
+                        AppendDate(sb, reader, "date_consult_close");
+                        AppendDate(sb, reader, "date_report_close");
+                        AppendBool(sb, reader, "oks_active");
+                        AppendTimestamp(sb, reader, "costs_last_modified");
+                        AppendGuid(sb, reader, "costs_last_modified_by");
+                        AppendDate(sb, reader, "date_sks_planned");
+                        AppendText(sb, reader, "session_comment_1");
+                        AppendText(sb, reader, "session_comment_2");
+                        AppendInt(sb, reader, "sks_no");
+                        AppendText(sb, reader, "aggloprogram_link");
+                        AppendInt(sb, reader, "aggloprogram_generation");
+                        AppendText(sb, reader, "aggloprogram_measure_number");
+                        AppendText(sb, reader, "aggloprogram_are_code");
+                        AppendText(sb, reader, "aggloprogram_are_description");
+                        AppendDate(sb, reader, "aggloprogram_due_date");
+                        AppendDecimal(sb, reader, "aggloprogram_cost_total");
+                        AppendDecimal(sb, reader, "aggloprogram_cost_canton");
+                        AppendText(sb, reader, "aggloprogram_comment");
+                        AppendBool(sb, reader, "bus_stops_shelters_affected");
+                        AppendBool(sb, reader, "structures_affected");
+                        AppendBool(sb, reader, "roaddrainage_affected");
+                        AppendBool(sb, reader, "houseconnections_affected");
+                        AppendBool(sb, reader, "wastefacilities_affected");
+                        AppendBool(sb, reader, "technical_installations_affected");
+                        AppendBool(sb, reader, "trees_affected");
+                        AppendBool(sb, reader, "street_furniture_affected");
+                        AppendBool(sb, reader, "urban_climate_affected");
+                        AppendBool(sb, reader, "subject_to_depaving");
+                        AppendBool(sb, reader, "pedestrians_cycling_affected");
+                        AppendBool(sb, reader, "disability_equality_affected");
+                        AppendText(sb, reader, "private_entity_extent");
+                        AppendText(sb, reader, "private_entity_requirements");
+                        AppendBool(sb, reader, "private_entity_acquisition");
+                        AppendBool(sb, reader, "private_entity_is_initiator");
+                        AppendDate(sb, reader, "date_staff_resources_apr_confirmed");
+                        AppendDate(sb, reader, "date_cost_estimate_apr_confirmed");
+                        AppendBool(sb, reader, "core_drilling_contracted");
+                        AppendBool(sb, reader, "quotes_requested");
+                        AppendBool(sb, reader, "quotes_reviewed");
+                        AppendBool(sb, reader, "apr_checked");
+                        AppendBool(sb, reader, "afm_checked");
+                        AppendBool(sb, reader, "pre_reviewed_by_cf");
+                        AppendBool(sb, reader, "pre_reviewed_by_rd");
+                        AppendBool(sb, reader, "formally_approved");
+                        AppendBool(sb, reader, "filed_in_fabasoft");
+                        AppendBool(sb, reader, "gis_updated");
+                        AppendText(sb, reader, "prestudy_duration");
+                        AppendText(sb, reader, "prestudy_contractor");
+                        AppendText(sb, reader, "prestudy_detail");
+                        AppendDate(sb, reader, "date_prestudy_vk_er_confirmed");
+                        AppendInt(sb, reader, "prestudy_vk_er_number");
+                        AppendText(sb, reader, "status_before_suspended");
+                        AppendText(sb, reader, "comment_start_suspended");
+                        AppendDate(sb, reader, "date_core_drilling_contracted");
+                        AppendDate(sb, reader, "date_afm_checked");
+                        AppendDate(sb, reader, "date_pre_reviewed_by_cf");
+                        AppendDate(sb, reader, "date_pre_reviewed_by_rd");
+                        AppendDate(sb, reader, "date_formally_approved");
+                        AppendDate(sb, reader, "date_filed_in_fabasoft");
+                        AppendDate(sb, reader, "date_gis_updated");
+
+                        // Additional need attributes are empty for an activity row.
+                        AppendEmpty(sb, 48);
+
+                        // Approval attributes shared by both record kinds.
+                        AppendGuid(sb, reader, "uuid_approvals");
+                        AppendBool(sb, reader, "approval_required");
+                        AppendBool(sb, reader, "strg_approval_required");
+                        AppendBool(sb, reader, "ssv_approval_required");
+                        AppendBool(sb, reader, "wwg_approval_required");
+                        AppendBool(sb, reader, "eri_approval_required");
+                        AppendBool(sb, reader, "pbg_approval_required");
+                        AppendBool(sb, reader, "ebg_approval_required");
+                        AppendBool(sb, reader, "awel_approval_required");
+                        AppendBool(sb, reader, "esti_approval_required");
+                        AppendBool(sb, reader, "other_approval_required");
+                        AppendText(sb, reader, "other_approval_details");
+
                         sb.Append("\r\n");
                     }
                 }
@@ -424,7 +762,20 @@ namespace roadwork_portal_service.Controllers
 
         private static void AppendInt(StringBuilder sb, NpgsqlDataReader reader, string column)
         {
-            sb.Append(reader.IsDBNull(reader.GetOrdinal(column)) ? "" : reader.GetInt32(reader.GetOrdinal(column)).ToString(CultureInfo.InvariantCulture));
+            sb.Append(reader.IsDBNull(reader.GetOrdinal(column)) ? "" : Convert.ToString(reader.GetValue(reader.GetOrdinal(column)), CultureInfo.InvariantCulture));
+            sb.Append(';');
+        }
+
+        private static void AppendDecimal(StringBuilder sb, NpgsqlDataReader reader, string column)
+        {
+            sb.Append(reader.IsDBNull(reader.GetOrdinal(column)) ? "" : reader.GetDecimal(reader.GetOrdinal(column)).ToString(CultureInfo.InvariantCulture));
+            sb.Append(';');
+        }
+
+        private static void AppendTimestamp(StringBuilder sb, NpgsqlDataReader reader, string column)
+        {
+            if (!reader.IsDBNull(reader.GetOrdinal(column)))
+                sb.Append(reader.GetDateTime(reader.GetOrdinal(column)).ToString("dd.MM.yyyy HH:mm:ss.fffffff", CultureInfo.InvariantCulture));
             sb.Append(';');
         }
 
