@@ -165,14 +165,14 @@ namespace roadwork_portal_service.Controllers
         /// <param name="consultationInputs"></param>
         /// <param name="isDryRun"></param>
         /// <returns></returns>
-        [HttpPost("/consultations")]
+        [HttpPost("/Consultations")]
         [Authorize(Roles = "territorymanager,orderer,administrator")]
-        public ActionResult<int> AddConsultations(string roadworkActivityUuid,
+        public ActionResult<AffectedRowsResult> AddConsultations(string roadworkActivityUuid,
                     [FromBody] ConsultationInput[] consultationInputs, bool isDryRun = false)
         {
             // check if any consultation in the list
             if (consultationInputs == null || consultationInputs.Length == 0)
-                return Ok(0);
+                return Ok(new AffectedRowsResult { affectedRows = 0 });
 
             try
             {
@@ -191,7 +191,7 @@ namespace roadwork_portal_service.Controllers
                     {
                         _logger.LogWarning("User tried to add consultation feedback though the consultation phase is closed");
 
-                        return Conflict(new { errorMessage = "SSP-33" });
+                        return Conflict(new AffectedRowsResult { affectedRows = 0, errorMessage = "SSP-33" });
                     }
 
                     insertedConsultationsCount = InsertConsultations(roadworkActivityUuid, consultationInputs, userFromDb, pgConn);
@@ -207,7 +207,7 @@ namespace roadwork_portal_service.Controllers
 
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { errorMessage = "SSP-3" });
+                    new AffectedRowsResult { affectedRows = 0,errorMessage = "SSP-3" });
             }
         }
 

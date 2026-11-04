@@ -1,4 +1,4 @@
--- VERSION 2026.13 ---
+-- VERSION 2026.15 ---
 
 -- #647 - Remove unused fields (GEOBOX AG - Simon Meyer, 26.10.2026)
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities DROP COLUMN IF EXISTS apr_checked;

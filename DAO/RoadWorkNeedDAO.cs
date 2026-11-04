@@ -305,14 +305,15 @@ public class RoadWorkNeedDAO
         NpgsqlCommand insertCostsComm = pgConn.CreateCommand();
         insertCostsComm.CommandText = @"INSERT INTO ""wtb_ssp_costs""
                                     (uuid, roadworkneed, costs,
-                                    project_type, costs_comment)
+                                    project_type, costs_comment, erp_number)
                                     VALUES (@uuid, @roadworkneed, @costs,
-                                    @project_type, @costs_comment)";
+                                    @project_type, @costs_comment, @erp_number)";
         insertCostsComm.Parameters.AddWithValue("uuid", Guid.NewGuid());
         insertCostsComm.Parameters.AddWithValue("roadworkneed", new Guid(roadWorkNeedUuid));
         insertCostsComm.Parameters.AddWithValue("costs", costs.costs != null ? costs.costs : DBNull.Value);
         insertCostsComm.Parameters.AddWithValue("project_type", costs.projectType != null ? costs.projectType : DBNull.Value);
         insertCostsComm.Parameters.AddWithValue("costs_comment", costs.costsComment != null ? costs.costsComment : DBNull.Value);
+        insertCostsComm.Parameters.AddWithValue("erp_number", costs.erpNumber != null ? costs.erpNumber : DBNull.Value);
 
         return insertCostsComm;
     }

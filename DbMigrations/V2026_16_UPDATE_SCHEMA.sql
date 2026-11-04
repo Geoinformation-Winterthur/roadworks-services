@@ -5,5 +5,6 @@ ALTER TABLE wikis.wtb_ssp_roadworkactivities
     ALTER COLUMN erp_number TYPE text
     USING erp_number::text;
 
-
+-- #618 - Add provis (ERP) to needs (GEOBOX AG - Simon Meyer, 04.11.2026)
+ALTER TABLE IF EXISTS wtb_ssp_costs ADD COLUMN erp_number varchar(40);
 

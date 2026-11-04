@@ -441,6 +441,7 @@ namespace roadwork_portal_service.Controllers
                                 if (!reader.IsDBNull(1)) costs.costs = reader.GetDecimal(1);
                                 if (!reader.IsDBNull(2)) costs.projectType = reader.GetString(2);
                                 if (!reader.IsDBNull(3)) costs.costsComment = reader.GetString(3);
+                                if (!reader.IsDBNull(4)) costs.erpNumber = reader.GetString(4);
                                 costsOfRoadwork.Add(costs);
                             }
                             needFeatureFromDb.properties.costs = costsOfRoadwork.ToArray();
@@ -1009,14 +1010,15 @@ namespace roadwork_portal_service.Controllers
                                     NpgsqlCommand insertCostsComm = pgConn.CreateCommand();
                                     insertCostsComm.CommandText = @"INSERT INTO ""wtb_ssp_costs""
                                         (uuid, roadworkneed, costs,
-                                        project_type, costs_comment)
+                                        project_type, costs_comment, erp_number)
                                         VALUES (@uuid, @roadworkneed, @costs,
-                                        @project_type, @costs_comment)";
+                                        @project_type, @costs_comment, @erp_number)";
                                     insertCostsComm.Parameters.AddWithValue("uuid", Guid.NewGuid());
                                     insertCostsComm.Parameters.AddWithValue("roadworkneed", new Guid(roadWorkNeedFeature.properties.uuid));
                                     insertCostsComm.Parameters.AddWithValue("costs", costs.costs != null ? costs.costs : DBNull.Value);
                                     insertCostsComm.Parameters.AddWithValue("project_type", costs.projectType != null ? costs.projectType : DBNull.Value);
                                     insertCostsComm.Parameters.AddWithValue("costs_comment", costs.costsComment != null ? costs.costsComment : DBNull.Value);
+                                    insertCostsComm.Parameters.AddWithValue("erp_number", costs.erpNumber != null ? costs.erpNumber : DBNull.Value);
                                     insertCostsComm.ExecuteNonQuery();
                                 }
                             }
@@ -1238,7 +1240,7 @@ namespace roadwork_portal_service.Controllers
         {
             NpgsqlCommand selectCostsComm = pgConn.CreateCommand();
             selectCostsComm.CommandText = @"SELECT uuid, costs,
-                        project_type, costs_comment
+                        project_type, costs_comment, erp_number
                         FROM ""wtb_ssp_costs""
                         WHERE roadworkneed=@roadworkneed";
             selectCostsComm.Parameters.AddWithValue("roadworkneed", new Guid(roadWorkNeedUuid));
