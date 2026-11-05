@@ -89,7 +89,7 @@ namespace roadwork_portal_service.Controllers
                     "BV: Fuss- und Veloverkehr betroffen;BV: Behindertengleichstellung betroffen;BV: Private Betroffenheit Umfang;" +
                     "BV: Private Betroffenheit Anforderungen;BV: Landerwerb von Privaten;BV: Private als Auslösende;" +
                     "BV: Personelle Ressourcen APR bestätigt am;BV: Kostenschätzung APR bestätigt am;BV: Bohrkern beauftragt;" +
-                    "BV: Bestellungen eingeholt;BV: Bestellungen geprüft;BV: Check APR (Alt);" +
+                    "BV: Bestellungen eingeholt;BV: Bestellungen geprüft;" +
                     "BV: Check AFM;BV: C und F vorgeprüft;BV: Rechtsdienst vorgeprüft;" +
                     "BV: Verfügt;BV: In Fabasoft abgelegt;BV: GIS nachgeführt;" +
                     "BV: Vorstudie Dauer;BV: Vorstudie Auftragnehmer;BV: Vorstudie Details;" +
@@ -151,7 +151,7 @@ namespace roadwork_portal_service.Controllers
                             r.decline,
                             r.has_sponge_city_meas,
                             r.delete_reason,
-                            r.construction_duration,
+                            r.construction_duration_days,
                             r.acquisition_planned,
                             r.is_sponge_1_1,
                             r.is_sponge_1_2,
@@ -234,7 +234,7 @@ namespace roadwork_portal_service.Controllers
                         AppendGuid(sb, reader, "uuid");
 
                         // Additional activity attributes are empty for a standalone need.
-                        AppendEmpty(sb, 71);
+                        AppendEmpty(sb, 70);
 
                         // Additional scalar need attributes.
                         AppendGuid(sb, reader, "orderer");
@@ -262,7 +262,7 @@ namespace roadwork_portal_service.Controllers
                         AppendBool(sb, reader, "decline");
                         AppendBool(sb, reader, "has_sponge_city_meas");
                         AppendText(sb, reader, "delete_reason");
-                        AppendInt(sb, reader, "construction_duration");
+                        AppendInt(sb, reader, "construction_duration_days");
                         AppendText(sb, reader, "acquisition_planned");
                         AppendBool(sb, reader, "is_sponge_1_1");
                         AppendBool(sb, reader, "is_sponge_1_2");
@@ -396,7 +396,6 @@ namespace roadwork_portal_service.Controllers
                             r.core_drilling_contracted,
                             r.quotes_requested,
                             r.quotes_reviewed,
-                            r.apr_checked,
                             r.afm_checked,
                             r.pre_reviewed_by_cf,
                             r.pre_reviewed_by_rd,
@@ -694,7 +693,6 @@ namespace roadwork_portal_service.Controllers
                         AppendBool(sb, reader, "core_drilling_contracted");
                         AppendBool(sb, reader, "quotes_requested");
                         AppendBool(sb, reader, "quotes_reviewed");
-                        AppendBool(sb, reader, "apr_checked");
                         AppendBool(sb, reader, "afm_checked");
                         AppendBool(sb, reader, "pre_reviewed_by_cf");
                         AppendBool(sb, reader, "pre_reviewed_by_rd");

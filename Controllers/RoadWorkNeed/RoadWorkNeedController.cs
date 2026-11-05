@@ -106,7 +106,7 @@ namespace roadwork_portal_service.Controllers
                             r.is_sponge_2_3, r.is_sponge_2_4, r.is_sponge_2_5, r.is_sponge_2_6,
                             r.is_sponge_2_7, r.is_sponge_3_1, r.is_sponge_3_2, r.is_sponge_3_3,
                             r.is_sponge_4_1, r.is_sponge_4_2, r.is_sponge_5_1, r.delete_reason,
-                            r.geom, r.construction_duration, r.acquisition_planned, 
+                            r.geom, r.construction_duration_days, r.acquisition_planned, 
                             appr.uuid as uuid_approvals, appr.uuid_roadwork_need, appr.uuid_roadwork_activity,
                             appr.approval_required, appr.strg_approval_required, appr.bafu_approval_required,
                             appr.lsv_approval_required, appr.ssv_approval_required, appr.wwg_approval_required,
@@ -284,7 +284,7 @@ namespace roadwork_portal_service.Controllers
                             needFeatureFromDb.properties.desiredYearFrom = reader.IsDBNull(reader.GetOrdinal("desired_year_from")) ? null : reader.GetInt32(reader.GetOrdinal("desired_year_from"));
                             needFeatureFromDb.properties.desiredYearTo = reader.IsDBNull(reader.GetOrdinal("desired_year_to")) ? null : reader.GetInt32(reader.GetOrdinal("desired_year_to"));
 
-                            needFeatureFromDb.properties.constructionDuration = reader.GetNullableInt("construction_duration");
+                            needFeatureFromDb.properties.constructionDurationDays = reader.GetNullableInt("construction_duration_days");
                             needFeatureFromDb.properties.acquisitionPlanned = reader.GetStringOrEmpty("acquisition_planned");
 
                             needFeatureFromDb.properties.hasSpongeCityMeasures = reader.IsDBNull(reader.GetOrdinal("has_sponge_city_meas")) ? false : reader.GetBoolean(reader.GetOrdinal("has_sponge_city_meas"));
@@ -780,7 +780,7 @@ namespace roadwork_portal_service.Controllers
                                     is_sponge_3_2=@is_sponge_3_2, is_sponge_3_3=@is_sponge_3_3,
                                     is_sponge_4_1=@is_sponge_4_1, is_sponge_4_2=@is_sponge_4_2,
                                     is_sponge_5_1=@is_sponge_5_1, geom=@geom,
-                                    construction_duration = @construction_duration, acquisition_planned = @acquisition_planned";
+                                    construction_duration_days = @construction_duration_days, acquisition_planned = @acquisition_planned";
 
                         if (User.IsInRole("administrator") || User.IsInRole("territorymanager"))
                             updateComm.CommandText += ", note_of_area_man=@note_of_area_man";
@@ -845,7 +845,7 @@ namespace roadwork_portal_service.Controllers
                         updateComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
                         updateComm.Parameters.AddWithValue("note_of_area_man", roadWorkNeedFeature.properties.noteOfAreaManager);
 
-                        updateComm.Parameters.AddWithValue("@construction_duration", HelperFunctions.ToDbValue(roadWorkNeedFeature.properties.constructionDuration));
+                        updateComm.Parameters.AddWithValue("@construction_duration_days", HelperFunctions.ToDbValue(roadWorkNeedFeature.properties.constructionDurationDays));
                         updateComm.Parameters.AddWithValue("@acquisition_planned", HelperFunctions.ToDbValue(roadWorkNeedFeature.properties.acquisitionPlanned));
 
                         string activityRelationType = "";
