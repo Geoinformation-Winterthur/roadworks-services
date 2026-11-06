@@ -898,6 +898,13 @@ namespace roadwork_portal_service.Controllers
                                 }
                             }
 
+                            // Append the added need to the commentary of the activity.
+                            // Same is performed on the frontend to:
+                            // - have the same on the UI and DB
+                            // - no need to press the save botton on UI because user might not be aware of this situation
+                            var additionalComment = $"{roadWorkNeedFeature.properties.orderer?.organisationalUnit?.abbreviation}: {roadWorkNeedFeature.properties.description}";
+                            AppendActivityComment(pgConn, roadWorkNeedFeature.properties.roadWorkActivityUuid, additionalComment);
+
                             if (roadWorkNeedFeature.properties.isPrimary == true)
                             {
 
@@ -1045,6 +1052,20 @@ namespace roadwork_portal_service.Controllers
             }
 
             return Ok(roadWorkNeedFeature);
+        }
+
+        private void AppendActivityComment(NpgsqlConnection pgConn, string activityUuid, string additionalComment)
+        {
+            NpgsqlCommand updateActivityDates = pgConn.CreateCommand();
+            updateActivityDates.CommandText = @"UPDATE ""wtb_ssp_roadworkactivities""
+                SET comment =
+                    COALESCE(comment, '') ||
+                    CASE WHEN COALESCE(comment, '') <> '' THEN E'\n' ELSE '' END ||
+                    @additional_comment                                           
+                WHERE uuid = @uuid";
+            updateActivityDates.Parameters.AddWithValue("uuid", new Guid(activityUuid));
+            updateActivityDates.Parameters.AddWithValue("additional_comment", additionalComment);
+            updateActivityDates.ExecuteNonQuery();
         }
 
         // DELETE /roadworkneed?uuid=...&releaseonly=true
