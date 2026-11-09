@@ -97,6 +97,7 @@ namespace roadwork_portal_service.Controllers
                         r.date_construction_budget_approval_start, r.date_construction_budget_approval_end, r.date_submission_start,
                         r.date_submission_end, r.date_start_of_construction_real, r.date_end_of_construction_real,
                         r.date_final_pavement_start, r.date_final_pavement_end, r.date_project_budget_finalized,
+                        r.road_condition, r.road_condition_date, r.road_condition_comment,
                         -- User
                         cm.first_name AS cm_first_name, cm.last_name AS cm_last_name,
                         r.date_sks_planned, r.sks_no, r.geom,
@@ -741,7 +742,8 @@ namespace roadwork_portal_service.Controllers
                                     date_request_design_budget, date_project_approval_start, date_project_approval_end, 
                                     date_construction_budget_approval_start, date_construction_budget_approval_end, date_submission_start,
                                     date_submission_end, date_start_of_construction_real, date_end_of_construction_real,
-                                    date_final_pavement_start, date_final_pavement_end, date_project_budget_finalized)
+                                    date_final_pavement_start, date_final_pavement_end, date_project_budget_finalized,
+                                    road_condition, road_condition_date, road_condition_comment)
                                     VALUES (@uuid, @name, @projectmanager, @traffic_agent,
                                     @description, @project_no, 
                                     @roadworkactivity_no,
@@ -788,7 +790,8 @@ namespace roadwork_portal_service.Controllers
                                     @date_request_design_budget, @date_project_approval_start, @date_project_approval_end, 
                                     @date_construction_budget_approval_start, @date_construction_budget_approval_end, @date_submission_start,
                                     @date_submission_end, @date_start_of_construction_real, @date_end_of_construction_real,
-                                    @date_final_pavement_start, @date_final_pavement_end, @date_project_budget_finalized)";
+                                    @date_final_pavement_start, @date_final_pavement_end, @date_project_budget_finalized,
+                                    @road_condition, @road_condition_date, @road_condition_comment)";
                     RoadWorkActivityMapper.AddParameters(insertComm.Parameters, roadWorkActivityFeature.properties);
                     insertComm.Parameters.AddWithValue("uuid", new Guid(roadWorkActivityFeature.properties.uuid));
                     if (roadWorkActivityFeature.properties.projectManager.uuid != "")
@@ -1492,7 +1495,8 @@ namespace roadwork_portal_service.Controllers
                                     date_construction_budget_approval_end=@date_construction_budget_approval_end, date_submission_start=@date_submission_start,
                                     date_submission_end=@date_submission_end, date_start_of_construction_real=@date_start_of_construction_real,
                                     date_end_of_construction_real=@date_end_of_construction_real, date_final_pavement_start=@date_final_pavement_start,
-                                    date_final_pavement_end=@date_final_pavement_end, date_project_budget_finalized=@date_project_budget_finalized, ";
+                                    date_final_pavement_end=@date_final_pavement_end, date_project_budget_finalized=@date_project_budget_finalized,
+                                    road_condition=@road_condition, road_condition_date=@road_condition_date, road_condition_comment=@road_condition_comment, ";
 
                     if (costsInDb != roadWorkActivityFeature.properties.costs){
                         updateComm.CommandText += "costs_last_modified=@costs_last_modified, ";

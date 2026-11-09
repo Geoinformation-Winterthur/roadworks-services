@@ -205,5 +205,10 @@ public class RoadWorkActivityProperties
     public bool? gisUpdated { get; set; } = false;
     public DateTime? dateGisUpdated { get; set; }
 
+    // Road condition #704
+    public int? roadCondition { get; set; }
+    public DateTime? roadConditionDate { get; set; }
+    public string? roadConditionComment { get; set; }
+
     public RoadWorkApprovals approvals { get; set; } = new RoadWorkApprovals();
 }

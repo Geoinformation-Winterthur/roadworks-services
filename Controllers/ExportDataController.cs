@@ -69,7 +69,7 @@ namespace roadwork_portal_service.Controllers
                     "Übergabesitzung AMO/AEW an APK;Übergabesitzung APK an APR;Projektierungskredit einholen;" +
                     "Projektfestsetzung Start;Projektfestsetzung Ende;Ausführungskredit Start;Ausführungskredit Ende;" +
                     "Submission Start;Submission Ende;Baubeginn;Bauende;Einbau Deckbelag Start;Einbau Deckbelag Ende;" +
-                    "Projektkreditabrechnung;" +
+                    "Projektkreditabrechnung;Strassenzustand;Strassenzustand Datum;Strassenzustand Bemerkung;" +
                     "Bauvorhabe-UUID;Bedarfe-UUIDs;" +
 
                     // Additional  attributes; keep the original prefix.
@@ -227,7 +227,7 @@ namespace roadwork_portal_service.Controllers
                         AppendEmpty(sb, 39); // Columns 19-57.
                         AppendBool(sb, reader, "bafu_approval_required");
                         AppendBool(sb, reader, "lsv_approval_required");
-                        AppendEmpty(sb, 43); // Columns 60-102.
+                        AppendEmpty(sb, 46); // Columns 60-102.
 
                         // A standalone need UUID belongs in the need UUID column.
                         AppendText(sb, "");
@@ -349,6 +349,7 @@ namespace roadwork_portal_service.Controllers
                             r.date_construction_budget_approval_start, r.date_construction_budget_approval_end, r.date_submission_start,
                             r.date_submission_end, r.date_start_of_construction_real, r.date_end_of_construction_real,
                             r.date_final_pavement_start, r.date_final_pavement_end, r.date_project_budget_finalized,
+                            r.road_condition, r.road_condition_date, r.road_condition_comment,
 
                             -- Additional scalar activity attributes and approvals.
                             r.projectmanager,
@@ -638,6 +639,10 @@ namespace roadwork_portal_service.Controllers
                         AppendDate(sb, reader, "date_final_pavement_start");
                         AppendDate(sb, reader, "date_final_pavement_end");
                         AppendDate(sb, reader, "date_project_budget_finalized");
+
+                        AppendInt(sb, reader, "road_condition");
+                        AppendDate(sb, reader, "road_condition_date");
+                        AppendText(sb, reader, "road_condition_comment");
 
                         AppendGuid(sb, reader, "uuid");
                         AppendText(sb, reader, "needs_uuids");

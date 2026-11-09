@@ -134,7 +134,12 @@ namespace roadwork_portal_service.Mappers
             roadWorkActivityProperties.dateFinalPavementStart = reader.GetNullableDateTime("date_final_pavement_start");
             roadWorkActivityProperties.dateFinalPavementEnd = reader.GetNullableDateTime("date_final_pavement_end");
             roadWorkActivityProperties.dateProjectBudgetFinalized = reader.GetNullableDateTime("date_project_budget_finalized");
-            
+
+            // Road condition
+            roadWorkActivityProperties.roadCondition = reader.GetNullableInt("road_condition");
+            roadWorkActivityProperties.roadConditionDate = reader.GetNullableDateTime("road_condition_date");
+            roadWorkActivityProperties.roadConditionComment = reader.GetStringOrEmpty("road_condition_comment");
+
             return roadWorkActivityProperties;
         }
 
@@ -249,6 +254,11 @@ namespace roadwork_portal_service.Mappers
             parameters.AddWithValue("@date_final_pavement_start", HelperFunctions.ToDbValue(roadWorkActivityProperties.dateFinalPavementStart));
             parameters.AddWithValue("@date_final_pavement_end", HelperFunctions.ToDbValue(roadWorkActivityProperties.dateFinalPavementEnd));
             parameters.AddWithValue("@date_project_budget_finalized", HelperFunctions.ToDbValue(roadWorkActivityProperties.dateProjectBudgetFinalized));
+
+            // Road condition
+            parameters.AddWithValue("@road_condition", HelperFunctions.ToDbValue(roadWorkActivityProperties.roadCondition));
+            parameters.AddWithValue("@road_condition_date", HelperFunctions.ToDbValue(roadWorkActivityProperties.roadConditionDate));
+            parameters.AddWithValue("@road_condition_comment", HelperFunctions.ToDbValue(roadWorkActivityProperties.roadConditionComment));
         }
     }
 }
