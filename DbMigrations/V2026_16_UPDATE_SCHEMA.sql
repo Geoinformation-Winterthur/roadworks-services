@@ -12,7 +12,7 @@ ALTER TABLE IF EXISTS wtb_ssp_costs ADD COLUMN erp_number varchar(40);
 ALTER TABLE IF EXISTS wtb_ssp_roadworkneeds RENAME construction_duration TO construction_duration_days;
 UPDATE wtb_ssp_roadworkneeds SET construction_duration_days = construction_duration_days * 30;
 
--- #704 - Add road condition (GEOBOX AG - Simon Meyer, 04.11.2026)
+-- #704 - Add road condition (GEOBOX AG - Simon Meyer, 09.11.2026)
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN road_condition  numeric(1,0);
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN road_condition_date date;
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN road_condition_comment text;

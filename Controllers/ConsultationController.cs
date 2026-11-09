@@ -355,7 +355,9 @@ namespace roadwork_portal_service.Controllers
 
                 if (noAffectedRows == 1)
                 {
-                    return Ok();
+                    // Attribute "errorMessage" (empty string for success) required for evaluation clientside.
+                    // Therefore class ErrorMessage here because no other return value is required 
+                    return Ok(new ErrorMessage());
                 }
 
                 if (noAffectedRows == 0)
