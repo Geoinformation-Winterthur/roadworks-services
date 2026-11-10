@@ -14,8 +14,9 @@ public class RoadWorkActivityProperties
     public string? projectNo { get; set; } = "";
     public string? roadWorkActivityNo { get; set; } = "";
     public string? comment { get; set; } = "";
-    public string? sessionComment1 { get; set; } = "";
-    public string? sessionComment2 { get; set; } = "";
+    public string? sessionComment1 { get; set; } = ""; // Vorgehensvorschlag / Vorgehen
+    public string? sessionComment2 { get; set; } = ""; // Beschluss
+    public string? sessionComment3 { get; set; } = ""; // Aspekte / Faktoren
     public string? section { get; set; } = "";
     public string? type { get; set; } = "";
     public string projectType { get; set; } = "";

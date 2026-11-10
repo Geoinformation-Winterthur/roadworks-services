@@ -79,7 +79,7 @@ namespace roadwork_portal_service.Controllers
                     "BV: OKS genehmigt;BV: GL TBA berechnet;BV: Bedarfsklärung Abschluss;" +
                     "BV: Stellungnahme Abschluss;BV: OKS aktiv;BV: Kosten letzte Bearbeitung;" +
                     "BV: Kosten letzte Bearbeitung durch UUID;BV: SKS terminiert;BV: Sitzungsbemerkung 1;" +
-                    "BV: Sitzungsbemerkung 2;BV: SKS-Nr;BV: Aggloprogramm Link;" +
+                    "BV: Sitzungsbemerkung 2;BV: Sitzungsbemerkung 3;BV: SKS-Nr;BV: Aggloprogramm Link;" +
                     "BV: Aggloprogramm Generation;BV: Aggloprogramm Massnahmen-Nr;BV: Aggloprogramm ARE-Code;" +
                     "BV: Aggloprogramm ARE-Bezeichnung;BV: Aggloprogramm umzusetzen bis;BV: Aggloprogramm Gesamtkosten;" +
                     "BV: Aggloprogramm Kosten Kanton;BV: Aggloprogramm Kommentar;BV: Haltestellen und Wartehallen betroffen;" +
@@ -234,7 +234,7 @@ namespace roadwork_portal_service.Controllers
                         AppendGuid(sb, reader, "uuid");
 
                         // Additional activity attributes are empty for a standalone need.
-                        AppendEmpty(sb, 70);
+                        AppendEmpty(sb, 71);
 
                         // Additional scalar need attributes.
                         AppendGuid(sb, reader, "orderer");
@@ -366,6 +366,7 @@ namespace roadwork_portal_service.Controllers
                             r.date_sks_planned,
                             r.session_comment_1,
                             r.session_comment_2,
+                            r.session_comment_3,
                             r.sks_no,
                             r.aggloprogram_link,
                             r.aggloprogram_generation,
@@ -667,6 +668,7 @@ namespace roadwork_portal_service.Controllers
                         AppendDate(sb, reader, "date_sks_planned");
                         AppendText(sb, reader, "session_comment_1");
                         AppendText(sb, reader, "session_comment_2");
+                        AppendText(sb, reader, "session_comment_3");
                         AppendInt(sb, reader, "sks_no");
                         AppendText(sb, reader, "aggloprogram_link");
                         AppendInt(sb, reader, "aggloprogram_generation");

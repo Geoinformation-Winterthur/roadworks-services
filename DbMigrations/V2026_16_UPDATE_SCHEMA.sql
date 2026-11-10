@@ -16,3 +16,8 @@ UPDATE wtb_ssp_roadworkneeds SET construction_duration_days = construction_durat
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN road_condition  numeric(1,0);
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN road_condition_date date;
 ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN road_condition_comment text;
+
+-- #718 - Add road condition (GEOBOX AG - Simon Meyer, 10.11.2026)
+ALTER TABLE IF EXISTS wtb_ssp_roadworkactivities ADD COLUMN session_comment_3 text;
+-- set initial value
+UPDATE wtb_ssp_roadworkactivities SET session_comment_3 = 'Keine Informationen' WHERE session_comment_3 IS NULL OR session_comment_3 = '';
