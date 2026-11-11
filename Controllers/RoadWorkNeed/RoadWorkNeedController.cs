@@ -35,54 +35,24 @@ namespace roadwork_portal_service.Controllers
                 string? areaManagerUuid, string? ordererUuid,
                 bool? onlyMyNeeds, string? status, DateTime? finishOptimumTo, 
                 string? intersectsActivityUuid,
-                bool summary = false)
+                bool summary = false, bool isMinorWork = false)
         {
             List<RoadWorkNeedFeature> projectsFromDb = new List<RoadWorkNeedFeature>();
             try
             {
-
-                if (year == null)
-                    year = 0;
-
-                if (uuids == null)
-                    uuids = "";
-                else
-                    uuids = uuids.Trim().ToLower();
-
-                if (roadWorkActivityUuid == null)
-                    roadWorkActivityUuid = "";
-                else
-                    roadWorkActivityUuid = roadWorkActivityUuid.Trim().ToLower();
-
-                if (intersectsActivityUuid == null)
-                    intersectsActivityUuid = "";
-                else
-                    intersectsActivityUuid = intersectsActivityUuid.Trim().ToLower();
-
-                if (name == null)
-                    name = "";
-                else
-                    name = name.Trim().ToLower();
-
-                if (status == null)
-                    status = "";
-                else
-                    status = status.Trim().ToLower();
+                // clean up parameters and set default values
+                year ??= 0;
+                uuids = uuids?.Trim().ToLower() ?? "";
+                roadWorkActivityUuid = roadWorkActivityUuid?.Trim().ToLower() ?? "";
+                intersectsActivityUuid = intersectsActivityUuid?.Trim().ToLower() ?? "";
+                name = name?.Trim().ToLower() ?? "";
+                status = status?.Trim().ToLower() ?? "";
                 string[] statusArray = status.Split(",");
+                areaManagerUuid = areaManagerUuid?.Trim().ToLower() ?? "";
+                ordererUuid = ordererUuid?.Trim().ToLower() ?? "";
+                onlyMyNeeds ??= false;
 
-                if (areaManagerUuid == null)
-                    areaManagerUuid = "";
-                else
-                    areaManagerUuid = areaManagerUuid.Trim().ToLower();
-
-                if (ordererUuid == null)
-                    ordererUuid = "";
-                else
-                    ordererUuid = ordererUuid.Trim().ToLower();
-
-                if (onlyMyNeeds == null)
-                    onlyMyNeeds = false;
-
+                // get the user
                 User userFromDb = LoginController.getAuthorizedUserFromDb(this.User, false);
 
                 // get data of current user from database:
@@ -208,6 +178,10 @@ namespace roadwork_portal_service.Controllers
                         {
                             selectComm.CommandText += " AND r.orderer = @orderer_uuid";
                         }
+
+                        // always filter for either minor (Kleinmassnahmen) or not
+                        selectComm.CommandText += " AND r.is_minor_work = @is_minor_work";
+                        selectComm.Parameters.AddWithValue("is_minor_work", isMinorWork);                     
 
                         if (statusArray[0] != "")
                         {
