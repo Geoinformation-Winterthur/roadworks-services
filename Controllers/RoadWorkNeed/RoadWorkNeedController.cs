@@ -90,7 +90,7 @@ namespace roadwork_portal_service.Controllers
                 {
                     pgConn.Open();
                     NpgsqlCommand selectComm = pgConn.CreateCommand();
-                    selectComm.CommandText = @"SELECT r.uuid, r.name, r.orderer,
+                    selectComm.CommandText = @"SELECT r.uuid, r.name, r.orderer, r.is_minor_work,
                             u.first_name, u.last_name, o.name as orgname, r.finish_early_to,
                             r.finish_optimum_to, r.finish_late_to, p.code, r.status as statusname,
                             r.description, r.still_relevant, r.decline,
@@ -286,6 +286,8 @@ namespace roadwork_portal_service.Controllers
 
                             needFeatureFromDb.properties.constructionDurationDays = reader.GetNullableInt("construction_duration_days");
                             needFeatureFromDb.properties.acquisitionPlanned = reader.GetStringOrEmpty("acquisition_planned");
+
+                            needFeatureFromDb.properties.isMinorWork = reader.GetNullableBoolean("is_minor_work") ?? false; // minor work (Kleinmassnahmen), default: false
 
                             needFeatureFromDb.properties.hasSpongeCityMeasures = reader.IsDBNull(reader.GetOrdinal("has_sponge_city_meas")) ? false : reader.GetBoolean(reader.GetOrdinal("has_sponge_city_meas"));
 
@@ -520,8 +522,8 @@ namespace roadwork_portal_service.Controllers
                 roadWorkNeedFeature = roadWorkNeedDAO.Insert(roadWorkNeedFeature, configData);
 
                 if (roadWorkNeedFeature.errorMessage == "SSP-23")
-                    _logger.LogWarning("The provided roadworkneed data has no description attribute value." +
-                                " But description is mandatory.");
+                    _logger.LogWarning("The provided roadworkneed data has no valid description or constructionDurationDays (must be >= 0) attribute value." +
+                                " But description and constructionDurationDays are mandatory.");
                 else if (roadWorkNeedFeature.errorMessage == "SSP-7")
                     _logger.LogWarning("Roadworkneed Polygon has less than 3 coordinates.");
                 else if (roadWorkNeedFeature.errorMessage == "SSP-8")
@@ -571,15 +573,19 @@ namespace roadwork_portal_service.Controllers
                     return Ok(errorObj);
                 }
 
-                if (roadWorkNeedFeature.properties.description == null)
-                    roadWorkNeedFeature.properties.description = "";
-                else
-                    roadWorkNeedFeature.properties.description = roadWorkNeedFeature.properties.description.Trim();
-
-                if (roadWorkNeedFeature.properties.description == "")
+                if (string.IsNullOrEmpty(roadWorkNeedFeature.properties.description))
                 {
                     _logger.LogWarning("The provided roadworkneed data has no description attribute value." +
                                 " But description is mandatory.");
+                    roadWorkNeedFeature.errorMessage = "SSP-23";
+                    return Ok(roadWorkNeedFeature);
+                }
+                roadWorkNeedFeature.properties.description = roadWorkNeedFeature.properties.description.Trim();
+
+                if (roadWorkNeedFeature.properties.constructionDurationDays is null or < 0)
+                {
+                    _logger.LogWarning("The provided roadworkneed data has no valid constructionDurationDays (must be >= 0) attribute value." +
+                                " But constructionDurationDays is mandatory.");
                     roadWorkNeedFeature.errorMessage = "SSP-23";
                     return Ok(roadWorkNeedFeature);
                 }
@@ -631,7 +637,27 @@ namespace roadwork_portal_service.Controllers
                     }
                 }
 
-                if (roadWorkNeedFeature.properties.orderer.organisationalUnit.isCivilEngineering)
+                if (roadWorkNeedFeature.properties.isMinorWork == true) // costs needs to be filled in for minor work any way
+                {
+                    if (roadWorkNeedFeature.properties.costs?.Length is null or 0)
+                    {
+                        _logger.LogWarning("One or more required cost estimation attribute value is missing for roadwork need of type minor work");
+                        roadWorkNeedFeature.errorMessage = "SSP-100";
+                        return Ok(roadWorkNeedFeature);
+                    }
+
+                    foreach (Costs cost in roadWorkNeedFeature.properties.costs)
+                    {
+                        // comment required for minor work
+                        if (!RoadWorkNeedDAO.IsCostsValid(cost) || string.IsNullOrEmpty(cost.costsComment))
+                        {
+                            _logger.LogWarning("One or more required cost estrimation attribute values are missing for roadwork need is of type minor work");
+                            roadWorkNeedFeature.errorMessage = "SSP-100";
+                            return Ok(roadWorkNeedFeature);
+                        }
+                    }
+                }
+                else if (roadWorkNeedFeature.properties.orderer.organisationalUnit.isCivilEngineering)
                 {
                     bool notValid = false;
                     if (roadWorkNeedFeature.properties.costs == null ||
@@ -761,7 +787,7 @@ namespace roadwork_portal_service.Controllers
 
                         NpgsqlCommand updateComm = pgConn.CreateCommand();
                         updateComm.CommandText = @"UPDATE ""wtb_ssp_roadworkneeds""
-                                    SET name=@name, orderer=@orderer, last_modified=@last_modified,
+                                    SET name=@name, orderer=@orderer, last_modified=@last_modified, is_minor_work=@is_minor_work,
                                     finish_early_to=@finish_early_to, finish_optimum_to=@finish_optimum_to,
                                     finish_late_to=@finish_late_to, priority=@priority,
                                     description=@description, still_relevant=@still_relevant,
@@ -847,6 +873,8 @@ namespace roadwork_portal_service.Controllers
 
                         updateComm.Parameters.AddWithValue("@construction_duration_days", HelperFunctions.ToDbValue(roadWorkNeedFeature.properties.constructionDurationDays));
                         updateComm.Parameters.AddWithValue("@acquisition_planned", HelperFunctions.ToDbValue(roadWorkNeedFeature.properties.acquisitionPlanned));
+
+                        updateComm.Parameters.AddWithValue("is_minor_work", HelperFunctions.ToDbValue(roadWorkNeedFeature.properties.isMinorWork)); // minor work (Kleinmassnahmen)
 
                         string activityRelationType = "";
                         if (roadWorkNeedFeature.properties.activityRelationType != null)

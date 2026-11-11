@@ -69,7 +69,7 @@ namespace roadwork_portal_service.Controllers
                     "Übergabesitzung AMO/AEW an APK;Übergabesitzung APK an APR;Projektierungskredit einholen;" +
                     "Projektfestsetzung Start;Projektfestsetzung Ende;Ausführungskredit Start;Ausführungskredit Ende;" +
                     "Submission Start;Submission Ende;Baubeginn;Bauende;Einbau Deckbelag Start;Einbau Deckbelag Ende;" +
-                    "Projektkreditabrechnung;Strassenzustand;Strassenzustand Datum;Strassenzustand Bemerkung;" +
+                    "Projektkreditabrechnung;Strassenzustand;Strassenzustand Datum;Strassenzustand Bemerkung;Ist Kleinmassnahme;" +
                     "Bauvorhabe-UUID;Bedarfe-UUIDs;" +
 
                     // Additional  attributes; keep the original prefix.
@@ -126,7 +126,7 @@ namespace roadwork_portal_service.Controllers
 
                     await using var selectComm = pgConn.CreateCommand();
                     selectComm.CommandText = @"
-                        SELECT r.uuid, r.name,
+                        SELECT r.uuid, r.name, r.is_minor_work,
                                o.first_name, o.last_name,
                                r.created, r.last_modified,
                                r.finish_early_to, r.finish_optimum_to, r.finish_late_to,
@@ -229,6 +229,9 @@ namespace roadwork_portal_service.Controllers
                         AppendBool(sb, reader, "lsv_approval_required");
                         AppendEmpty(sb, 46); // Columns 60-102.
 
+                        // Is minor work (Kleinmassnahme)
+                        AppendBool(sb, reader, "is_minor_work");
+
                         // A standalone need UUID belongs in the need UUID column.
                         AppendText(sb, "");
                         AppendGuid(sb, reader, "uuid");
@@ -311,7 +314,7 @@ namespace roadwork_portal_service.Controllers
 
                     await using var selectComm = pgConn.CreateCommand();
                     selectComm.CommandText = @"
-                        SELECT r.uuid, r.roadworkactivity_no, r.name,
+                        SELECT r.uuid, r.roadworkactivity_no, r.name, r.is_minor_work,
                             p.first_name AS p_first_name, p.last_name AS p_last_name,
                             t.first_name AS t_first_name, t.last_name AS t_last_name,
                             appr.bafu_approval_required, appr.lsv_approval_required,
@@ -645,6 +648,10 @@ namespace roadwork_portal_service.Controllers
                         AppendDate(sb, reader, "road_condition_date");
                         AppendText(sb, reader, "road_condition_comment");
 
+                        // Is minor work (Kleinmassnahme)
+                        AppendBool(sb, reader, "is_minor_work");
+
+                        // Uuids of activities and needs
                         AppendGuid(sb, reader, "uuid");
                         AppendText(sb, reader, "needs_uuids");
 

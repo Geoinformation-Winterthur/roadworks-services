@@ -36,7 +36,7 @@ namespace roadwork_portal_service.Controllers
             {
                 pgConn.Open();
                 NpgsqlCommand selectComm = pgConn.CreateCommand();
-                selectComm.CommandText = @"SELECT r.uuid, r.name, 
+                selectComm.CommandText = @"SELECT r.uuid, r.name, r.is_minor_work,
                         r.projectmanager, pm.first_name AS pm_first_name, pm.last_name AS pm_last_name, r.traffic_agent,
                         ta.first_name AS ta_first_name, ta.last_name AS ta_last_name, description, created, last_modified, r.date_from, r.date_to,
                         r.costs, r.costs_type, r.status, r.in_internet,
@@ -701,7 +701,7 @@ namespace roadwork_portal_service.Controllers
 
                     NpgsqlCommand insertComm = pgConn.CreateCommand();
                     insertComm.CommandText = @"INSERT INTO ""wtb_ssp_roadworkactivities""
-                                    (uuid, name, projectmanager, traffic_agent, description,
+                                    (uuid, name, projectmanager, traffic_agent, description, is_minor_work,
                                     project_no, roadworkactivity_no, comment, session_comment_1, session_comment_2, session_comment_3, section, type, projecttype, projectkind, working_title,
                                     implementation_by_third, overarching_measure, desired_year_from, desired_year_to, 
                                     start_of_construction, end_of_construction, consult_due,
@@ -748,7 +748,7 @@ namespace roadwork_portal_service.Controllers
                                     date_final_pavement_start, date_final_pavement_end, date_project_budget_finalized,
                                     road_condition, road_condition_date, road_condition_comment)
                                     VALUES (@uuid, @name, @projectmanager, @traffic_agent,
-                                    @description, @project_no, 
+                                    @description, @is_minor_work, @project_no, 
                                     @roadworkactivity_no,
                                     @comment, @session_comment_1, @session_comment_2, @session_comment_3, @section, @type, @projecttype, @projectkind, @working_title,
                                     @implementation_by_third, @overarching_measure, @desired_year_from, @desired_year_to, 
@@ -1420,7 +1420,7 @@ namespace roadwork_portal_service.Controllers
 
                     NpgsqlCommand updateComm = pgConn.CreateCommand();
                     updateComm.CommandText = @"UPDATE ""wtb_ssp_roadworkactivities""
-                                    SET name=@name, projectmanager=@projectmanager,
+                                    SET name=@name, projectmanager=@projectmanager, is_minor_work=@is_minor_work,
                                     traffic_agent=@traffic_agent, description=@description,
                                     comment=@comment, session_comment_1=@session_comment_1, session_comment_2=@session_comment_2, session_comment_3=@session_comment_3,
                                     section=@section, type=@type, projecttype=@projecttype, projectkind=@projectkind, working_title=@working_title,

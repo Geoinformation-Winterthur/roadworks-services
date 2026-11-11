@@ -42,5 +42,8 @@ public class RoadWorkNeedProperties
     public bool? decline { get; set; }
     public int? constructionDurationDays { get; set; } // Added in 2026.4 (#608)
     public string? acquisitionPlanned { get; set; } = "NO"; // Valid values: YES, NO, MAYBE (#609, 2026.4)
+
+    // Minor Work - Marks if this activity contains normal needs (Bedarfe) or small work (Kleinmassnahmen) #706 / #708
+    public bool? isMinorWork { get; set; } = false;
 }
 

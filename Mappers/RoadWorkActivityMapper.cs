@@ -140,6 +140,9 @@ namespace roadwork_portal_service.Mappers
             roadWorkActivityProperties.roadConditionDate = reader.GetNullableDateTime("road_condition_date");
             roadWorkActivityProperties.roadConditionComment = reader.GetStringOrEmpty("road_condition_comment");
 
+            // Minor work (Kleinmassnahmen)
+            roadWorkActivityProperties.isMinorWork = reader.GetNullableBoolean("is_minor_work");
+
             return roadWorkActivityProperties;
         }
 
@@ -259,6 +262,9 @@ namespace roadwork_portal_service.Mappers
             parameters.AddWithValue("@road_condition", HelperFunctions.ToDbValue(roadWorkActivityProperties.roadCondition));
             parameters.AddWithValue("@road_condition_date", HelperFunctions.ToDbValue(roadWorkActivityProperties.roadConditionDate));
             parameters.AddWithValue("@road_condition_comment", HelperFunctions.ToDbValue(roadWorkActivityProperties.roadConditionComment));
+
+            // Minor work (Kleinmassnahmen)
+            parameters.AddWithValue("is_minor_work", HelperFunctions.ToDbValue(roadWorkActivityProperties.isMinorWork));
         }
     }
 }

@@ -40,7 +40,8 @@ public class RoadWorkNeedDAO
             roadWorkNeedFeature.properties.description = roadWorkNeedFeature.properties.description.Trim();
         }
 
-        if (roadWorkNeedFeature.properties.description == "")
+        if (roadWorkNeedFeature.properties.description == ""
+            || roadWorkNeedFeature.properties.constructionDurationDays is null or < 0)
         {
             roadWorkNeedFeature.errorMessage = "SSP-23";
             return roadWorkNeedFeature;
@@ -97,7 +98,25 @@ public class RoadWorkNeedDAO
             }
         }
 
-        if (roadWorkNeedFeature.properties.orderer.organisationalUnit.isCivilEngineering)
+        if (roadWorkNeedFeature.properties.isMinorWork == true) // costs needs to be filled in for minor work any way
+        {
+            if (roadWorkNeedFeature.properties.costs?.Length is null or 0)
+            {
+                roadWorkNeedFeature.errorMessage = "SSP-100";
+                return roadWorkNeedFeature;
+            }
+
+            foreach (Costs cost in roadWorkNeedFeature.properties.costs)
+            {
+                // comment required for minor work
+                if (!IsCostsValid(cost) || string.IsNullOrEmpty(cost.costsComment))
+                {
+                    roadWorkNeedFeature.errorMessage = "SSP-100";
+                    return roadWorkNeedFeature;
+                }
+            }
+        }
+        else if (roadWorkNeedFeature.properties.orderer.organisationalUnit.isCivilEngineering)
         {
             if (roadWorkNeedFeature.properties.costs == null ||
                     roadWorkNeedFeature.properties.costs.Length == 0)
@@ -207,7 +226,7 @@ public class RoadWorkNeedDAO
     {
         NpgsqlCommand insertComm = pgConn.CreateCommand();
         insertComm.CommandText = @"INSERT INTO ""wtb_ssp_roadworkneeds""
-                                    (uuid, name, orderer, created, last_modified, finish_early_to,
+                                    (uuid, name, orderer, created, last_modified, is_minor_work, finish_early_to,
                                     finish_optimum_to, finish_late_to, priority, status, description,
                                     private, section, comment, url, overarching_measure,
                                     desired_year_from, desired_year_to, has_sponge_city_meas,
@@ -218,7 +237,7 @@ public class RoadWorkNeedDAO
                                     is_sponge_3_2, is_sponge_3_3, is_sponge_4_1, is_sponge_4_2,
                                     is_sponge_5_1, still_relevant, decline, feedback_given, geom,
                                     construction_duration_days, acquisition_planned)
-                                    VALUES (@uuid, @name, @orderer, @created, @last_modified,
+                                    VALUES (@uuid, @name, @orderer, @created, @last_modified, @is_minor_work,
                                     @finish_early_to, @finish_optimum_to,
                                     @finish_late_to, @priority, @status, @description,
                                     @private, @section, @comment, @url,
@@ -293,6 +312,8 @@ public class RoadWorkNeedDAO
 
         insertComm.Parameters.AddWithValue("@construction_duration_days", HelperFunctions.ToDbValue(roadWorkNeedFeature.properties.constructionDurationDays));
         insertComm.Parameters.AddWithValue("@acquisition_planned", HelperFunctions.ToDbValue(roadWorkNeedFeature.properties.acquisitionPlanned));
+
+        insertComm.Parameters.AddWithValue("is_minor_work", HelperFunctions.ToDbValue(roadWorkNeedFeature.properties.isMinorWork)); // minor work (Kleinmassnahmen)
 
         insertComm.Parameters.AddWithValue("geom", roadWorkNeedPoly);
 
