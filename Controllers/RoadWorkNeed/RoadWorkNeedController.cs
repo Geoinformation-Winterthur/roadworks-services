@@ -35,7 +35,7 @@ namespace roadwork_portal_service.Controllers
                 string? areaManagerUuid, string? ordererUuid,
                 bool? onlyMyNeeds, string? status, DateTime? finishOptimumTo, 
                 string? intersectsActivityUuid,
-                bool summary = false, bool isMinorWork = false)
+                bool summary = false, bool? isMinorWork = null)
         {
             List<RoadWorkNeedFeature> projectsFromDb = new List<RoadWorkNeedFeature>();
             try
@@ -179,9 +179,11 @@ namespace roadwork_portal_service.Controllers
                             selectComm.CommandText += " AND r.orderer = @orderer_uuid";
                         }
 
-                        // always filter for either minor (Kleinmassnahmen) or not
-                        selectComm.CommandText += " AND r.is_minor_work = @is_minor_work";
-                        selectComm.Parameters.AddWithValue("is_minor_work", isMinorWork);                     
+                        if (isMinorWork != null)
+                        {
+                            selectComm.CommandText += " AND r.is_minor_work = @is_minor_work";
+                            selectComm.Parameters.AddWithValue("is_minor_work", isMinorWork);
+                        }
 
                         if (statusArray[0] != "")
                         {

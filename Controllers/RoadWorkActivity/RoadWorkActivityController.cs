@@ -27,8 +27,8 @@ namespace roadwork_portal_service.Controllers
         // GET roadworkactivity/
         [HttpGet]
         [Authorize(Roles = "view,orderer,trafficmanager,territorymanager,administrator")]
-        public async Task<IEnumerable<RoadWorkActivityFeature>> GetActivities
-                                (string? uuid = "", string? status = "", bool summary = false)
+        public async Task<IEnumerable<RoadWorkActivityFeature>> GetActivities(string? uuid = "",
+            string? status = "", bool summary = false, bool? isMinorWork = null)
         {
             List<RoadWorkActivityFeature> projectsFromDb = new List<RoadWorkActivityFeature>();
             // get data of current user from database:
@@ -113,33 +113,38 @@ namespace roadwork_portal_service.Controllers
                     LEFT JOIN ""wtb_ssp_users"" cm ON r.costs_last_modified_by = cm.uuid
                     LEFT JOIN ""wtb_ssp_roadwork_approvals"" appr ON r.uuid = appr.uuid_roadwork_activity";
 
-                if (uuid != null)
+                if (!string.IsNullOrWhiteSpace(uuid))
                 {
                     uuid = uuid.Trim().ToLower();
-                    if (uuid != "")
-                    {
-                        selectComm.CommandText += " WHERE r.uuid=@uuid";
-                        selectComm.Parameters.AddWithValue("uuid", new Guid(uuid));
-                    }
+                    selectComm.CommandText += " WHERE r.uuid=@uuid";
+                    selectComm.Parameters.AddWithValue("uuid", new Guid(uuid));
                 }
-
-                if (status == null)
-                    status = "";
-                status = status.Trim();
-
-                if ((uuid == null || uuid == "") && status != "")
+                else
                 {
-                    string[] statusArray = status.Split(",");
+                    var whereClauses = new List<string>();
 
-                    int i = 0;
-                    while (i < statusArray.Length)
+                    // Add is minor work (Kleinmassnahme) condition
+                    if (isMinorWork != null)
                     {
-                        statusArray[i] = statusArray[i].Trim().ToLower();
-                        i++;
+                        whereClauses.Add("r.is_minor_work = @is_minor_work");
+                        selectComm.Parameters.AddWithValue("is_minor_work", isMinorWork);
                     }
 
-                    selectComm.CommandText += " WHERE r.status = ANY (:status)";
-                    selectComm.Parameters.AddWithValue("status", statusArray);
+                    // Add the status condition
+                    if (!string.IsNullOrWhiteSpace(status))
+                    {
+                        string[] statusArray = status.Split(",", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                            .Select(elem => elem.ToLower())
+                            .ToArray();
+
+                        whereClauses.Add("r.status = ANY (:status)");
+                        selectComm.Parameters.AddWithValue("status", statusArray);
+                    }
+
+                    if (whereClauses.Any())
+                    {
+                        selectComm.CommandText += $" WHERE {string.Join(" AND ", whereClauses)}";
+                    }
                 }
 
                 using (NpgsqlDataReader reader = await selectComm.ExecuteReaderAsync())
