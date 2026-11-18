@@ -211,8 +211,9 @@ public class RoadWorkActivityProperties
     public DateTime? roadConditionDate { get; set; }
     public string? roadConditionComment { get; set; }
 
-    // Minor Work - Marks if this activity contains normal needs (Bedarfe) or small work (Kleinmassnahmen) #706 / #708
-    public bool? isMinorWork { get; set; } = false;
+    // Minor Work - Marks if this activity contains normal needs (Bedarfe, value: false) or small work (Kleinmassnahmen, value: true) #706 / #708
+    // Might be null before any need is assigned
+    public bool? isMinorWork { get; set; }
 
     public RoadWorkApprovals approvals { get; set; } = new RoadWorkApprovals();
 }

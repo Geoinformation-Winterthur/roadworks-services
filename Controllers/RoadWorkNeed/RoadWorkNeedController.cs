@@ -902,13 +902,6 @@ namespace roadwork_portal_service.Controllers
                                 }
                             }
 
-                            // Append the added need to the commentary of the activity.
-                            // Same is performed on the frontend to:
-                            // - have the same on the UI and DB
-                            // - no need to press the save botton on UI because user might not be aware of this situation
-                            var additionalComment = $"{roadWorkNeedFeature.properties.orderer?.organisationalUnit?.abbreviation}: {roadWorkNeedFeature.properties.description}";
-                            AppendActivityComment(pgConn, roadWorkNeedFeature.properties.roadWorkActivityUuid, additionalComment);
-
                             if (roadWorkNeedFeature.properties.isPrimary == true)
                             {
 
@@ -928,12 +921,15 @@ namespace roadwork_portal_service.Controllers
                                         updateActivityDates.CommandText = @"UPDATE ""wtb_ssp_roadworkactivities""
                                                                                 SET date_from = @date_from,
                                                                                     date_optimum = @date_optimum,
-                                                                                    date_to = @date_to                                            
+                                                                                    date_to = @date_to,
+                                                                                    is_minor_work = @is_minor_work
                                                                                 WHERE uuid = @uuid";
                                         updateActivityDates.Parameters.AddWithValue("uuid", new Guid(roadWorkNeedFeature.properties.roadWorkActivityUuid));
                                         updateActivityDates.Parameters.AddWithValue("date_from", roadWorkNeedFeature.properties.finishEarlyTo);
                                         updateActivityDates.Parameters.AddWithValue("date_optimum", roadWorkNeedFeature.properties.finishOptimumTo);
                                         updateActivityDates.Parameters.AddWithValue("date_to", roadWorkNeedFeature.properties.finishLateTo);
+                                        updateActivityDates.Parameters.AddWithValue("is_minor_work", roadWorkNeedFeature.properties.isMinorWork);
+                                        
                                         updateActivityDates.ExecuteNonQuery();
                                     }
                              
@@ -959,6 +955,13 @@ namespace roadwork_portal_service.Controllers
 
                             if (activityRelationType != "")
                             {
+                                // Append the added need to the commentary of the activity.
+                                // Same is performed on the frontend to:
+                                // - have the same on the UI and DB
+                                // - no need to press the save botton (in non active tab) on UI because user might not be aware of this situation
+                                var additionalComment = $"{roadWorkNeedFeature.properties.orderer?.organisationalUnit?.abbreviation}: {roadWorkNeedFeature.properties.description}";
+                                AppendActivityComment(pgConn, roadWorkNeedFeature.properties.roadWorkActivityUuid, additionalComment);
+
                                 NpgsqlCommand insertComm = pgConn.CreateCommand();
                                 insertComm.CommandText = @"INSERT INTO ""wtb_ssp_activities_to_needs""
                                         (uuid, uuid_roadwork_need, uuid_roadwork_activity, activityrelationtype,

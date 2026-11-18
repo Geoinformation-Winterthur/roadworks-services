@@ -605,7 +605,7 @@ namespace roadwork_portal_service.Controllers
             {
                 pgConn.Open();
                 NpgsqlCommand selectComm = pgConn.CreateCommand();
-                selectComm.CommandText = "SELECT code, name FROM \"wtb_ssp_projecttypes\"";
+                selectComm.CommandText = "SELECT code, name, is_minor_work FROM \"wtb_ssp_projecttypes\"";
 
                 using (NpgsqlDataReader reader = selectComm.ExecuteReader())
                 {
@@ -615,6 +615,7 @@ namespace roadwork_portal_service.Controllers
                         projectType = new EnumType();
                         projectType.code = reader.IsDBNull(0) ? "" : reader.GetString(0);
                         projectType.name = reader.IsDBNull(1) ? "" : reader.GetString(1);
+                        projectType.isMinorWork = reader.GetBoolean(2);
                         result.Add(projectType);
                     }
                 }
@@ -1775,6 +1776,8 @@ namespace roadwork_portal_service.Controllers
                             whatText += "koordiniert";
                         else if (roadWorkActivityFeature.properties.status == "suspended")
                             whatText += "sistiert";
+                        else
+                            whatText += roadWorkActivityFeature.properties.status;
 
                         insertHistoryComm.Parameters.AddWithValue("what", whatText);
 
