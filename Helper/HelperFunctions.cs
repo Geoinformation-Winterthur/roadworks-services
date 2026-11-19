@@ -100,6 +100,8 @@ namespace roadwork_portal_service.Helper
                 "coordinated" => onlyStatusName ? "Koordiniert" : "Phase 12",
                 "prestudy" => onlyStatusName ? "Vorstudie" : "Phase 21",
                 "suspended" => "Sistiert",
+                "suspended_after_sks" => onlyStatusName ? "ruhend nach SKS" : "Phase 12",
+                "construction_accounting_p53" => onlyStatusName ? "Bauabrechnung" : "Phase 53",
                 _ => status
             };
         }
