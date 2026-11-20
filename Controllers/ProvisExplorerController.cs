@@ -92,7 +92,7 @@ ORDER BY a.roadworkactivity_no NULLS LAST, a.name;";
         {
             var p = new NpgsqlParameter("id", NpgsqlTypes.NpgsqlDbType.Uuid) { Value = id };
             const string actSql = @"SELECT uuid::text, roadworkactivity_no AS bv_nr, name, status,
-                project_no, erp_number, description, costs, url,
+                project_no, erp_number, pdb_fid, description, costs, url,
                 CASE WHEN geom IS NOT NULL AND postgis.ST_SRID(geom)=2056
                   THEN postgis.ST_AsGeoJSON(postgis.ST_Transform(geom,4326)) ELSE NULL END AS geojson
                 FROM wikis.wtb_ssp_roadworkactivities WHERE uuid=@id";
@@ -109,7 +109,9 @@ FROM resolved r
 JOIN wikis.wtb_ssp_roadworkactivities a ON btrim(a.roadworkactivity_no)=r.bv_nr
 WHERE a.uuid=@id ORDER BY r.source_column, r.reference_number, r.projekt_nr";
             const string needsSql = @"SELECT n.uuid::text AS uuid, rel.activityrelationtype,
-                rel.is_primary, n.name, n.status
+                rel.is_primary, n.name, n.status,
+                CASE WHEN n.geom IS NOT NULL AND postgis.ST_SRID(n.geom)=2056
+                  THEN postgis.ST_AsGeoJSON(postgis.ST_Transform(n.geom,4326)) ELSE NULL END AS geojson
                 FROM wikis.wtb_ssp_activities_to_needs rel
                 JOIN wikis.wtb_ssp_roadworkneeds n ON n.uuid=rel.uuid_roadwork_need
                 WHERE rel.uuid_roadwork_activity=@id ORDER BY n.name";
@@ -122,19 +124,41 @@ WHERE a.uuid=@id ORDER BY r.source_column, r.reference_number, r.projekt_nr";
                 FROM wikis.wtb_ssp_journal_entries WHERE uuid_roadwork_activity=@id
                 ORDER BY sort_order DESC NULLS LAST LIMIT 200";
             const string compareSql = @"SELECT i.excel_row, i.i AS excel_title, i.h AS excel_status,
-                i.g AS provis_g, i.n AS provis_n, i.o AS provis_o, i.q AS excel_url
+                i.g AS provis_g, i.n AS provis_n, i.o AS provis_o, i.q AS excel_url,
+                i.d AS pdb_requested, i.e AS pdb_project_id
                 FROM wikis.wikis_import_excel i
                 JOIN wikis.wtb_ssp_roadworkactivities a ON a.roadworkactivity_no=
                   CASE WHEN nullif(btrim(i.r),'') IS NULL OR btrim(i.r)='-'
                        THEN 'EXCEL_ROW_'||i.excel_row::text ELSE btrim(i.r) END
                 WHERE a.uuid=@id";
+            // Match PDB using Excel columns D (use PDB) and E (PDB project ID).
+            // Resolve duplicate PDB rows deterministically by row_no; no geometry is written.
+            const string pdbSql = @"SELECT p.projekt_id, p.projektbezeichnung,
+                p.projektbereich, p.projektobjekt, p.verkehrsbehinderung,
+                p.statusbezeichnung, p.projektbemerkung, p.massnahmen
+                FROM wikis.wikis_import_excel i
+                JOIN wikis.wtb_ssp_roadworkactivities a ON a.roadworkactivity_no =
+                  CASE WHEN nullif(btrim(i.r),'') IS NULL OR btrim(i.r)='-'
+                       THEN 'EXCEL_ROW_'||i.excel_row::text ELSE btrim(i.r) END
+                JOIN LATERAL (
+                  SELECT p.projekt_id, p.projektbezeichnung, p.projektbereich,
+                    p.projektobjekt, p.verkehrsbehinderung, p.statusbezeichnung,
+                    p.projektbemerkung, p.massnahmen
+                  FROM wikis.wikis_pdb_projects p
+                  WHERE p.projekt_id::text = btrim(i.e)
+                  ORDER BY p.row_no
+                  LIMIT 1
+                ) p ON true
+                WHERE a.uuid=@id AND lower(btrim(i.d))='ja'
+                ORDER BY i.excel_row LIMIT 1";
             return Ok(new {
                 activity = activityRows[0],
                 provis = Execute(refsSql, p),
                 needs = Execute(needsSql, p),
                 costs = Execute(costsSql, p),
                 journal = Execute(journalSql, p),
-                excel = Execute(compareSql, p)
+                excel = Execute(compareSql, p),
+                pdb = Execute(pdbSql, p)
             });
         }
         catch (Exception ex) { _logger.LogError(ex, "PROVIS detail failed for {ActivityId}", id); return Problem("PROVIS detail could not be loaded."); }
