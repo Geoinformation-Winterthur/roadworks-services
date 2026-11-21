@@ -320,6 +320,155 @@ public class RoadWorkNeedDAO
         return insertComm;
     }
 
+    /// <summary>
+    /// Create a new need (isMinorWork == false) from an existing need of subtype minor work (isMinorWork == true).
+    /// </summary>
+    /// <param name="roadWorkNeedUuid"></param>
+    /// <returns></returns>
+    public Guid? CreateNeedFromMinorWork(Guid roadWorkNeedUuid)
+    {
+        Guid? newNeedFid = null;
+        
+        using (NpgsqlConnection pgConn = new NpgsqlConnection(AppConfig.connectionString))
+        {
+            pgConn.Open();
+
+            using (NpgsqlTransaction trans = pgConn.BeginTransaction())
+            {
+                NpgsqlCommand insertComm = _GetCommandCreateNeedFromMinorWork(roadWorkNeedUuid, pgConn);
+
+                using (NpgsqlDataReader reader = insertComm.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        newNeedFid = reader.GetGuid(reader.GetOrdinal("uuid"));
+                    }
+                }
+
+                trans.Commit();
+            }
+        }
+
+        return newNeedFid;
+    }
+
+    private NpgsqlCommand _GetCommandCreateNeedFromMinorWork(Guid roadWorkNeedUuid, NpgsqlConnection pgConn)
+    {
+        NpgsqlCommand insertComm = pgConn.CreateCommand();
+        insertComm.CommandText =
+            @"INSERT INTO wtb_ssp_roadworkneeds (
+                 uuid,
+                 name,
+                 orderer,
+                 created,
+                 last_modified,
+                 finish_early_to,
+                 finish_optimum_to,
+                 finish_late_to,
+                 priority,
+                 status,
+                 description,
+                 note_of_area_man,
+                 area_man_note_date,
+                 relevance,
+                 section,
+                 comment,
+                 url,
+                 overarching_measure,
+                 desired_year_from,
+                 desired_year_to,
+                 has_sponge_city_meas,
+                 is_sponge_1_1,
+                 is_sponge_1_2,
+                 is_sponge_1_3,
+                 is_sponge_1_4,
+                 is_sponge_1_5,
+                 is_sponge_1_6,
+                 is_sponge_1_7,
+                 is_sponge_1_8,
+                 is_sponge_2_1,
+                 is_sponge_2_2,
+                 is_sponge_2_3,
+                 is_sponge_2_4,
+                 is_sponge_2_5,
+                 is_sponge_2_6,
+                 is_sponge_2_7,
+                 is_sponge_3_1,
+                 is_sponge_3_2,
+                 is_sponge_3_3,
+                 is_sponge_4_1,
+                 is_sponge_4_2,
+                 is_sponge_5_1,
+                 delete_reason,
+                 still_relevant,
+                 feedback_given,
+                 decline,
+                 geom,
+                 construction_duration_days,
+                 acquisition_planned,
+                 is_minor_work)
+             SELECT
+                 gen_random_uuid(), -- uuid,
+                 name,
+                 orderer,
+                 NOW(),             -- created,
+                 NOW(),             -- last_modified,
+                 finish_early_to,
+                 finish_optimum_to,
+                 finish_late_to,
+                 'middle',          -- priority,
+                 'requirement',     -- status,
+                 description,
+                 '',                -- note_of_area_man,
+                 NULL,              -- area_man_note_date,
+                 NULL,              -- relevance,
+                 section,
+                 comment,
+                 url,
+                 overarching_measure,
+                 desired_year_from,
+                 desired_year_to,
+                 FALSE,             -- has_sponge_city_meas,
+                 FALSE,             -- is_sponge_1_1,
+                 FALSE,             -- is_sponge_1_2,
+                 FALSE,             -- is_sponge_1_3,
+                 FALSE,             -- is_sponge_1_4,
+                 FALSE,             -- is_sponge_1_5,
+                 FALSE,             -- is_sponge_1_6,
+                 FALSE,             -- is_sponge_1_7,
+                 FALSE,             -- is_sponge_1_8,
+                 FALSE,             -- is_sponge_2_1,
+                 FALSE,             -- is_sponge_2_2,
+                 FALSE,             -- is_sponge_2_3,
+                 FALSE,             -- is_sponge_2_4,
+                 FALSE,             -- is_sponge_2_5,
+                 FALSE,             -- is_sponge_2_6,
+                 FALSE,             -- is_sponge_2_7,
+                 FALSE,             -- is_sponge_3_1,
+                 FALSE,             -- is_sponge_3_2,
+                 FALSE,             -- is_sponge_3_3,
+                 FALSE,             -- is_sponge_4_1,
+                 FALSE,             -- is_sponge_4_2,
+                 FALSE,             -- is_sponge_5_1,
+                 NULL,              -- delete_reason,
+                 FALSE,             -- still_relevant,
+                 FALSE,             -- feedback_given,
+                 FALSE,             -- decline,
+                 geom,
+                 construction_duration_days,
+                 acquisition_planned,
+                 FALSE             -- is_minor_work
+             FROM wtb_ssp_roadworkneeds
+             WHERE
+                 uuid = @uuid
+                 AND is_minor_work = TRUE
+             RETURNING uuid;";
+
+        insertComm.Parameters.AddWithValue("uuid", roadWorkNeedUuid);
+
+        return insertComm;
+    }
+
     private NpgsqlCommand _CreatePreparedStatementForInsertCosts(Costs costs, string roadWorkNeedUuid,
                     NpgsqlConnection pgConn)
     {

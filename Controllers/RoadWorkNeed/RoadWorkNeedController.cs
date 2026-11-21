@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using NetTopologySuite.Geometries;
 using Npgsql;
 using roadwork_portal_service.Configuration;
+using roadwork_portal_service.Constants;
 using roadwork_portal_service.DAO;
 using roadwork_portal_service.Extensions;
 using roadwork_portal_service.Helper;
@@ -13,7 +14,7 @@ using roadwork_portal_service.Model;
 namespace roadwork_portal_service.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route(ApiRoutes.RoadWorkNeed)]
     public class RoadWorkNeedController : ControllerBase
     {
         private readonly ILogger<RoadWorkNeedController> _logger;
