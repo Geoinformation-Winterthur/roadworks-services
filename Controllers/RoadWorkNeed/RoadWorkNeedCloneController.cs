@@ -24,7 +24,7 @@ namespace roadwork_portal_service.Controllers.RoadWorkNeed
         }
 
         /// <summary>
-        /// Create a new need (isMinorWork == false) from an existing need of subtype minor work (isMinorWork == true).
+        /// Create a new need (isMinorWork = false) from an existing need of subtype minor work (isMinorWork = true).
         /// </summary>
         /// <param name="uuid"></param>
         /// <returns></returns>

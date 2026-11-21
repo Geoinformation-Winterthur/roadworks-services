@@ -321,7 +321,7 @@ public class RoadWorkNeedDAO
     }
 
     /// <summary>
-    /// Create a new need (isMinorWork == false) from an existing need of subtype minor work (isMinorWork == true).
+    /// Create a new need (isMinorWork = false) from an existing need of subtype minor work (isMinorWork = true).
     /// </summary>
     /// <param name="roadWorkNeedUuid"></param>
     /// <returns></returns>
