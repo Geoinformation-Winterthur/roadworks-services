@@ -73,67 +73,100 @@ public class AppConfigController : ControllerBase
 
                 using NpgsqlTransaction trans = pgConn.BeginTransaction();
 
-                NpgsqlCommand deleteDatesComm = pgConn.CreateCommand();
+                /*NpgsqlCommand deleteDatesComm = pgConn.CreateCommand();
                 deleteDatesComm.CommandText = @"DELETE FROM ""wtb_ssp_config_dates"" WHERE
                         planneddate::timestamp >= CURRENT_DATE";
-                deleteDatesComm.ExecuteNonQuery();
+                deleteDatesComm.ExecuteNonQuery();*/
 
                 DateTime today = DateTime.Today;
                 DateTime todayDateOnly = new DateTime(today.Year, today.Month, today.Day, 0,0,0);
 
-                foreach (DateTime? plannedDateSks in configData.plannedDatesSks)
+                // Avoid deleting future SKS dates when not intended 
+                if (configData.plannedDatesSks != null)
                 {
-                    if (plannedDateSks != null &&  plannedDateSks >= todayDateOnly)
+                    NpgsqlCommand deleteDatesComm = pgConn.CreateCommand();
+                    deleteDatesComm.CommandText = @"DELETE FROM ""wtb_ssp_config_dates"" WHERE
+                        planneddate::timestamp >= CURRENT_DATE and date_type='SKS'";
+                    deleteDatesComm.ExecuteNonQuery();
+
+                    foreach (DateTime? plannedDateSks in configData.plannedDatesSks)
                     {
-                        NpgsqlCommand insertDatesComm = pgConn.CreateCommand();
-                        insertDatesComm.CommandText = @"INSERT INTO ""wtb_ssp_config_dates""
+                        if (plannedDateSks != null && plannedDateSks >= todayDateOnly)
+                        {
+                            NpgsqlCommand insertDatesComm = pgConn.CreateCommand();
+                            insertDatesComm.CommandText = @"INSERT INTO ""wtb_ssp_config_dates""
                         (date_type, planneddate, sks_no)
-                        VALUES (@date_type, @planneddate, COALESCE(MAX(sks_no),0) +1)";
-                        insertDatesComm.Parameters.AddWithValue("date_type", "SKS");
-                        insertDatesComm.Parameters.AddWithValue("planneddate", plannedDateSks);
-                        insertDatesComm.ExecuteNonQuery();
+                        VALUES (@date_type, @planneddate, COALESCE((SELECT MAX(sks_no) FROM ""wtb_ssp_config_dates"" WHERE date_type='SKS'),0) +1)";
+                            insertDatesComm.Parameters.AddWithValue("date_type", "SKS");
+                            insertDatesComm.Parameters.AddWithValue("planneddate", plannedDateSks);
+                            insertDatesComm.ExecuteNonQuery();
+                        }
                     }
                 }
 
-                foreach (DateTime? plannedDateKks in configData.plannedDatesKks)
+                // Avoid deleting future KKS dates when not intended 
+                if (configData.plannedDatesKks != null)
                 {
-                    if (plannedDateKks != null && plannedDateKks >= todayDateOnly)
+                    NpgsqlCommand deleteDatesComm = pgConn.CreateCommand();
+                    deleteDatesComm.CommandText = @"DELETE FROM ""wtb_ssp_config_dates"" WHERE
+                        planneddate::timestamp >= CURRENT_DATE and date_type='KKS'";
+                    deleteDatesComm.ExecuteNonQuery();
+                    foreach (DateTime? plannedDateKks in configData.plannedDatesKks)
                     {
-                        NpgsqlCommand insertDatesComm = pgConn.CreateCommand();
-                        insertDatesComm.CommandText = @"INSERT INTO ""wtb_ssp_config_dates""
+                        if (plannedDateKks != null && plannedDateKks >= todayDateOnly)
+                        {
+                            NpgsqlCommand insertDatesComm = pgConn.CreateCommand();
+                            insertDatesComm.CommandText = @"INSERT INTO ""wtb_ssp_config_dates""
                         (date_type, planneddate, sks_no)
-                        VALUES (@date_type, @planneddate, COALESCE(MAX(sks_no),0) +1)";
-                        insertDatesComm.Parameters.AddWithValue("date_type", "KKS");
-                        insertDatesComm.Parameters.AddWithValue("planneddate", plannedDateKks);
-                        insertDatesComm.ExecuteNonQuery();
+                        VALUES (@date_type, @planneddate, COALESCE((SELECT MAX(sks_no) FROM ""wtb_ssp_config_dates"" WHERE date_type='KKS'),0) +1)";
+                            insertDatesComm.Parameters.AddWithValue("date_type", "KKS");
+                            insertDatesComm.Parameters.AddWithValue("planneddate", plannedDateKks);
+                            insertDatesComm.ExecuteNonQuery();
+                        }
                     }
                 }
 
-                foreach (DateTime? plannedDateKap in configData.plannedDatesKap)
+                // Avoid deleting future KAP dates when not intended 
+                if (configData.plannedDatesKap != null)
                 {
-                    if (plannedDateKap != null && plannedDateKap >= todayDateOnly)
+                    NpgsqlCommand deleteDatesComm = pgConn.CreateCommand();
+                    deleteDatesComm.CommandText = @"DELETE FROM ""wtb_ssp_config_dates"" WHERE
+                        planneddate::timestamp >= CURRENT_DATE and date_type='KAP'";
+                    deleteDatesComm.ExecuteNonQuery();
+                    foreach (DateTime? plannedDateKap in configData.plannedDatesKap)
                     {
-                        NpgsqlCommand insertDatesComm = pgConn.CreateCommand();
-                        insertDatesComm.CommandText = @"INSERT INTO ""wtb_ssp_config_dates""
+                        if (plannedDateKap != null && plannedDateKap >= todayDateOnly)
+                        {
+                            NpgsqlCommand insertDatesComm = pgConn.CreateCommand();
+                            insertDatesComm.CommandText = @"INSERT INTO ""wtb_ssp_config_dates""
                         (date_type, planneddate)
                         VALUES (@date_type, @planneddate)";
-                        insertDatesComm.Parameters.AddWithValue("date_type", "KAP");
-                        insertDatesComm.Parameters.AddWithValue("planneddate", plannedDateKap);
-                        insertDatesComm.ExecuteNonQuery();
+                            insertDatesComm.Parameters.AddWithValue("date_type", "KAP");
+                            insertDatesComm.Parameters.AddWithValue("planneddate", plannedDateKap);
+                            insertDatesComm.ExecuteNonQuery();
+                        }
                     }
                 }
 
-                foreach (DateTime? plannedDateOks in configData.plannedDatesOks)
+                // Avoid deleting future OKS dates when not intended 
+                if (configData.plannedDatesOks != null)
                 {
-                    if (plannedDateOks != null && plannedDateOks >= todayDateOnly)
+                    NpgsqlCommand deleteDatesComm = pgConn.CreateCommand();
+                    deleteDatesComm.CommandText = @"DELETE FROM ""wtb_ssp_config_dates"" WHERE
+                        planneddate::timestamp >= CURRENT_DATE and date_type='OKS'";
+                    deleteDatesComm.ExecuteNonQuery();
+                    foreach (DateTime? plannedDateOks in configData.plannedDatesOks)
                     {
-                        NpgsqlCommand insertDatesComm = pgConn.CreateCommand();
-                        insertDatesComm.CommandText = @"INSERT INTO ""wtb_ssp_config_dates""
+                        if (plannedDateOks != null && plannedDateOks >= todayDateOnly)
+                        {
+                            NpgsqlCommand insertDatesComm = pgConn.CreateCommand();
+                            insertDatesComm.CommandText = @"INSERT INTO ""wtb_ssp_config_dates""
                         (date_type, planneddate)
                         VALUES (@date_type, @planneddate)";
-                        insertDatesComm.Parameters.AddWithValue("date_type", "OKS");
-                        insertDatesComm.Parameters.AddWithValue("planneddate", plannedDateOks);
-                        insertDatesComm.ExecuteNonQuery();
+                            insertDatesComm.Parameters.AddWithValue("date_type", "OKS");
+                            insertDatesComm.Parameters.AddWithValue("planneddate", plannedDateOks);
+                            insertDatesComm.ExecuteNonQuery();
+                        }
                     }
                 }
 
