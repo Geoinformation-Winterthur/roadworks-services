@@ -9,11 +9,13 @@ public class ConfigurationData
     public int minAreaSize { get; set; } = 0;
     public int maxAreaSize { get; set; } = 0;
 
-    public DateTime?[] plannedDatesSks { get; set; } = new DateTime?[0];
+    public DateTime?[]? plannedDatesSks { get; set; } = new DateTime?[0];
+    public DateTime?[]? plannedDatesKks { get; set; } = new DateTime?[0];
     public DateTime?[] plannedDatesKap { get; set; } = new DateTime?[0];
     public DateTime?[] plannedDatesOks { get; set; } = new DateTime?[0];
 
     public long?[] sksNos { get; set; } = new long?[0];
+    public long?[] kksNos { get; set; } = new long?[0];
 
     public string errorMessage { get; set; } = "";
 }

@@ -183,7 +183,7 @@ namespace roadwork_portal_service.Controllers
                     VALUES
                         (
                             @sks_no,
-                            'SKS',
+                            @date_type,
                             @planneddate,
                             COALESCE(@acceptance_1, 'Das Protokoll wird ohne Anmerkungen verdankt.'),
                             COALESCE(@attachments, 'Keine'),
@@ -226,7 +226,8 @@ namespace roadwork_portal_service.Controllers
                 }
 
                 cmd.Parameters.AddWithValue("@sks_no", dto.sksNo);
-
+                cmd.Parameters.AddWithValue("@date_type", dto.dateType ?? "SKS");
+                
                 var pDate = cmd.Parameters.Add("@planneddate", NpgsqlDbType.Date);
                 pDate.Value = (object?)plannedDate ?? DBNull.Value;
 

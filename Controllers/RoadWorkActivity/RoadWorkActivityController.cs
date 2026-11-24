@@ -878,7 +878,8 @@ namespace roadwork_portal_service.Controllers
 
                     DateTime? nextSks = null;
                     DateTime nextSksTemp = DateTime.Now.AddDays(66);
-                    foreach (DateTime plannedDateSks in configurationData.plannedDatesSks)
+                    var plannedDatesSks = (roadWorkActivityFeature.properties.isMinorWork ?? false) ? configurationData.plannedDatesKks : configurationData.plannedDatesSks;
+                    foreach (DateTime plannedDateSks in plannedDatesSks)
                     {
                         if (plannedDateSks > nextSksTemp)
                         {

@@ -44,6 +44,7 @@ namespace roadwork_portal_service.Model
     public sealed class CreateSessionDto
     {
         public long sksNo { get; set; }
+        public string? dateType { get; set; } = "SKS";
         public string? plannedDateForBackend { get; set; }
         public string? acceptance1 { get; set; }
         public string? attachments { get; set; }
