@@ -104,23 +104,23 @@ public class AppConfigController : ControllerBase
                     }
                 }
 
-                // Avoid deleting future KKS dates when not intended 
-                if (configData.plannedDatesKks != null)
+                // Avoid deleting future KMS dates when not intended 
+                if (configData.plannedDatesKms != null)
                 {
                     NpgsqlCommand deleteDatesComm = pgConn.CreateCommand();
                     deleteDatesComm.CommandText = @"DELETE FROM ""wtb_ssp_config_dates"" WHERE
-                        planneddate::timestamp >= CURRENT_DATE and date_type='KKS'";
+                        planneddate::timestamp >= CURRENT_DATE and date_type='KMS'";
                     deleteDatesComm.ExecuteNonQuery();
-                    foreach (DateTime? plannedDateKks in configData.plannedDatesKks)
+                    foreach (DateTime? plannedDateKms in configData.plannedDatesKms)
                     {
-                        if (plannedDateKks != null && plannedDateKks >= todayDateOnly)
+                        if (plannedDateKms != null && plannedDateKms >= todayDateOnly)
                         {
                             NpgsqlCommand insertDatesComm = pgConn.CreateCommand();
                             insertDatesComm.CommandText = @"INSERT INTO ""wtb_ssp_config_dates""
                         (date_type, planneddate, sks_no)
-                        VALUES (@date_type, @planneddate, COALESCE((SELECT MAX(sks_no) FROM ""wtb_ssp_config_dates"" WHERE date_type='KKS'),0) +1)";
-                            insertDatesComm.Parameters.AddWithValue("date_type", "KKS");
-                            insertDatesComm.Parameters.AddWithValue("planneddate", plannedDateKks);
+                        VALUES (@date_type, @planneddate, COALESCE((SELECT MAX(sks_no) FROM ""wtb_ssp_config_dates"" WHERE date_type='KMS'),0) +1)";
+                            insertDatesComm.Parameters.AddWithValue("date_type", "KMS");
+                            insertDatesComm.Parameters.AddWithValue("planneddate", plannedDateKms);
                             insertDatesComm.ExecuteNonQuery();
                         }
                     }
@@ -235,27 +235,27 @@ public class AppConfigController : ControllerBase
                 }
                 selectComm.CommandText = @"SELECT planneddate, sks_no
                             FROM ""wtb_ssp_config_dates""
-                            WHERE date_type='KKS' AND planneddate < current_timestamp
+                            WHERE date_type='KMS' AND planneddate < current_timestamp
                             ORDER BY planneddate DESC
                             LIMIT 5";
-                List<long?> kksNos = new List<long?>();
+                List<long?> kmsNos = new List<long?>();
 
                 using (NpgsqlDataReader reader = selectComm.ExecuteReader())
                 {
-                    List<DateTime?> plannedDatesKks = new List<DateTime?>();
+                    List<DateTime?> plannedDatesKms = new List<DateTime?>();
                     while (reader.Read())
                     {
-                        DateTime? dateKks = reader.IsDBNull(0) ? null : reader.GetDateTime(0);
+                        DateTime? dateKms = reader.IsDBNull(0) ? null : reader.GetDateTime(0);
 
-                        if (dateKks != null)
-                            plannedDatesKks.Add((DateTime)dateKks);
+                        if (dateKms != null)
+                            plannedDatesKms.Add((DateTime)dateKms);
 
-                        long? kksNo = reader.IsDBNull(1) ? (long?)null : reader.GetInt64(1);
-                        if (kksNo != null)
-                            kksNos.Add((long)kksNo);
+                        long? kmsNo = reader.IsDBNull(1) ? (long?)null : reader.GetInt64(1);
+                        if (kmsNo != null)
+                            kmsNos.Add((long)kmsNo);
                     }
-                    result.plannedDatesKks = plannedDatesKks.ToArray();
-                    result.kksNos = kksNos.ToArray();
+                    result.plannedDatesKms = plannedDatesKms.ToArray();
+                    result.kmsNos = kmsNos.ToArray();
                 }
                 selectComm.CommandText = @"SELECT planneddate
                             FROM ""wtb_ssp_config_dates""
@@ -299,11 +299,11 @@ public class AppConfigController : ControllerBase
                 using (NpgsqlDataReader reader = selectComm.ExecuteReader())
                 {
                     List<DateTime?> plannedDatesSks = new List<DateTime?>();
-                    List<DateTime?> plannedDatesKks = new List<DateTime?>();
+                    List<DateTime?> plannedDatesKms = new List<DateTime?>();
                     List<DateTime?> plannedDatesKap = new List<DateTime?>();
                     List<DateTime?> plannedDatesOks = new List<DateTime?>();
                     List<long?> sksNos = new List<long?>();
-                    List<long?> kksNos = new List<long?>();
+                    List<long?> kmsNos = new List<long?>();
                     while (reader.Read())
                     {
                         string dateType = reader.IsDBNull(0) ? "" : reader.GetString(0);
@@ -317,12 +317,12 @@ public class AppConfigController : ControllerBase
                                 if (sksNo != null)
                                     sksNos.Add((long)sksNo);
                             }
-                            if (dateType == "KKS")
+                            if (dateType == "KMS")
                             {
-                                plannedDatesKks.Add((DateTime)plannedDate);
-                                long? kksNo = reader.IsDBNull(2) ? (long?)null : reader.GetInt64(2);
-                                if (kksNo != null)
-                                    kksNos.Add((long)kksNo);
+                                plannedDatesKms.Add((DateTime)plannedDate);
+                                long? kmsNo = reader.IsDBNull(2) ? (long?)null : reader.GetInt64(2);
+                                if (kmsNo != null)
+                                    kmsNos.Add((long)kmsNo);
                             }
                             if (dateType == "OKS")
                                 plannedDatesOks.Add((DateTime)plannedDate);
@@ -332,11 +332,11 @@ public class AppConfigController : ControllerBase
 
                     }
                     result.plannedDatesSks = plannedDatesSks.ToArray();
-                    result.plannedDatesKks = plannedDatesKks.ToArray();
+                    result.plannedDatesKms = plannedDatesKms.ToArray();
                     result.plannedDatesOks = plannedDatesOks.ToArray();
                     result.plannedDatesKap = plannedDatesKap.ToArray();
                     result.sksNos = sksNos.ToArray();
-                    result.kksNos = kksNos.ToArray();
+                    result.kmsNos = kmsNos.ToArray();
                 }
 
             }
