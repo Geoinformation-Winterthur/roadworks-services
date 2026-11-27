@@ -15,9 +15,9 @@ public sealed class ProvisExplorerController : ControllerBase
     private const string ReferenceCte = @"
 WITH imported AS (
     SELECT i.excel_row, i.excel_key,
-      CASE WHEN nullif(btrim(i.r),'') IS NULL OR btrim(i.r)='-'
-           THEN 'EXCEL_ROW_'||i.excel_row::text ELSE btrim(i.r) END AS bv_nr,
-      i.g, i.n, i.o, i.i AS excel_title, i.h AS excel_status, i.q AS excel_url
+      CASE WHEN nullif(btrim(i.s),'') IS NULL OR btrim(i.s)='-'
+           THEN 'EXCEL_ROW_'||i.excel_row::text ELSE btrim(i.s) END AS bv_nr,
+      i.g, i.n, i.o, i.i AS excel_title, i.h AS excel_status, i.r AS excel_url
     FROM wikis.wikis_import_excel i
 ), excel_references AS (
     SELECT i.excel_row, i.bv_nr, v.source_column, btrim(part.token) AS reference_number
@@ -124,12 +124,12 @@ WHERE a.uuid=@id ORDER BY r.source_column, r.reference_number, r.projekt_nr";
                 FROM wikis.wtb_ssp_journal_entries WHERE uuid_roadwork_activity=@id
                 ORDER BY sort_order DESC NULLS LAST LIMIT 200";
             const string compareSql = @"SELECT i.excel_row, i.i AS excel_title, i.h AS excel_status,
-                i.g AS provis_g, i.n AS provis_n, i.o AS provis_o, i.q AS excel_url,
+                i.g AS provis_g, i.n AS provis_n, i.o AS provis_o, i.r AS excel_url,
                 i.d AS pdb_requested, i.e AS pdb_project_id
                 FROM wikis.wikis_import_excel i
                 JOIN wikis.wtb_ssp_roadworkactivities a ON a.roadworkactivity_no=
-                  CASE WHEN nullif(btrim(i.r),'') IS NULL OR btrim(i.r)='-'
-                       THEN 'EXCEL_ROW_'||i.excel_row::text ELSE btrim(i.r) END
+                  CASE WHEN nullif(btrim(i.s),'') IS NULL OR btrim(i.s)='-'
+                       THEN 'EXCEL_ROW_'||i.excel_row::text ELSE btrim(i.s) END
                 WHERE a.uuid=@id";
             // Match PDB using Excel columns D (use PDB) and E (PDB project ID).
             // Resolve duplicate PDB rows deterministically by row_no; no geometry is written.
@@ -138,8 +138,8 @@ WHERE a.uuid=@id ORDER BY r.source_column, r.reference_number, r.projekt_nr";
                 p.statusbezeichnung, p.projektbemerkung, p.massnahmen
                 FROM wikis.wikis_import_excel i
                 JOIN wikis.wtb_ssp_roadworkactivities a ON a.roadworkactivity_no =
-                  CASE WHEN nullif(btrim(i.r),'') IS NULL OR btrim(i.r)='-'
-                       THEN 'EXCEL_ROW_'||i.excel_row::text ELSE btrim(i.r) END
+                  CASE WHEN nullif(btrim(i.s),'') IS NULL OR btrim(i.s)='-'
+                       THEN 'EXCEL_ROW_'||i.excel_row::text ELSE btrim(i.s) END
                 JOIN LATERAL (
                   SELECT p.projekt_id, p.projektbezeichnung, p.projektbereich,
                     p.projektobjekt, p.verkehrsbehinderung, p.statusbezeichnung,
