@@ -36,7 +36,7 @@ namespace roadwork_portal_service.Controllers
                 // Note: If Angular already prepends BOM, double BOM is usually harmless, but you can leave this disabled.
                 // sb.Append('\uFEFF');
 
-                // Header row (semicolon-separated, no quoting; therefore we must sanitize text fields properly).
+                // Header row (semicolon-separated, no quoting; therefore we must sanitize text fields properly).                
                 sb.Append(
                     "Phase;Status;BV-Nr;Titel/Strasse;Abschnitt;Bemerkung;Gebietsmanagement;Auslösende:r;Auslösendes Werk;Beteiligte:r;" +
                     "Projektleiter Vorname;Projektleiter Nachname;" +
@@ -116,7 +116,21 @@ namespace roadwork_portal_service.Controllers
                     "Genehmigung erforderlich;StrG Planauflageverfahren;SSV erforderlich;" +
                     "WWG erforderlich;ERI erforderlich;PBG erforderlich;" +
                     "EBG erforderlich;AWEL erforderlich;ESTI erforderlich;" +
-                    "Weitere Genehmigung erforderlich;Weitere Genehmigung Details;\r\n"
+                    "Weitere Genehmigung erforderlich;Weitere Genehmigung Details;" +
+
+                    // Additional activity flags and responsibilities.
+                    "BV: Personelle Ressourcen APR bestätigt;BV: Kostenschätzung APR bestätigt;BV: VK ER Vorstudie bestätigt;" +
+                    "BV: Lead Realisierung OE;BV: Lead Realisierung PL;" +
+                    "BV: Phase 2 OE;BV: Phase 2 PL;" +
+                    "BV: Phase 3 OE;BV: Phase 3 PL;" +
+                    "BV: Phase 31 OE;BV: Phase 31 PL;" +
+                    "BV: Phase 32 OE;BV: Phase 32 PL;" +
+                    "BV: Phase 33 OE;BV: Phase 33 PL;" +
+                    "BV: Phase 4 OE;BV: Phase 4 PL;" +
+                    "BV: Phase 5 OE;BV: Phase 5 PL;" +
+                    "BV: Phase 51 OE;BV: Phase 51 PL;" +
+                    "BV: Phase 52 OE;BV: Phase 52 PL;" +
+                    "BV: Phase 53 OE;BV: Phase 53 PL;\r\n"
                 );
 
                 // 1) Export "needs" (wtb_ssp_roadworkneeds) - only those with status == "requirement"
@@ -303,6 +317,8 @@ namespace roadwork_portal_service.Controllers
                         AppendBool(sb, reader, "other_approval_required");
                         AppendText(sb, reader, "other_approval_details");
 
+                        // Activity-only flags and responsibilities are empty for a standalone need.
+                        AppendEmpty(sb, 25);
                         sb.Append("\r\n");
                     }
                 }
@@ -314,6 +330,50 @@ namespace roadwork_portal_service.Controllers
 
                     await using var selectComm = pgConn.CreateCommand();
                     selectComm.CommandText = @"
+                        WITH responsibility_groups AS (
+                            SELECT
+                                ar.uuid_roadwork_activity,
+                                CASE WHEN ar.responsibility_type = 'ProjectLead' THEN 'project_lead'
+                                     ELSE 'phase:' || ar.phase END AS responsibility_key,
+                                CASE WHEN COUNT(*) = 1 THEN MAX(NULLIF(BTRIM(ou.abbreviation), ''))
+                                     ELSE STRING_AGG(COALESCE(NULLIF(BTRIM(ou.abbreviation), ''), '—'), ' | '
+                                         ORDER BY ar.sort_order NULLS LAST, ar.uuid) END AS oe,
+                                CASE WHEN COUNT(*) = 1 THEN MAX(NULLIF(BTRIM(CONCAT_WS(' ', usr.first_name, usr.last_name)), ''))
+                                     ELSE STRING_AGG(COALESCE(NULLIF(BTRIM(CONCAT_WS(' ', usr.first_name, usr.last_name)), ''), '—'), ' | '
+                                         ORDER BY ar.sort_order NULLS LAST, ar.uuid) END AS pl
+                            FROM ""wtb_ssp_activity_responsibilities"" ar
+                            LEFT JOIN ""wtb_ssp_organisationalunits"" ou ON ou.uuid = ar.uuid_organisationalunit
+                            LEFT JOIN ""wtb_ssp_users"" usr ON usr.uuid = ar.uuid_user
+                            WHERE ar.responsibility_type IN ('ProjectLead', 'PhaseLead')
+                              AND ar.uuid_roadwork_activity IS NOT NULL
+                            GROUP BY 1, 2
+                        ), responsibilities AS (
+                            SELECT uuid_roadwork_activity,
+                                MAX(oe) FILTER (WHERE responsibility_key = 'project_lead') AS lead_oe,
+                                MAX(pl) FILTER (WHERE responsibility_key = 'project_lead') AS lead_pl,
+                                MAX(oe) FILTER (WHERE responsibility_key = 'phase:prestudy_p2') AS phase_2_oe,
+                                MAX(pl) FILTER (WHERE responsibility_key = 'phase:prestudy_p2') AS phase_2_pl,
+                                MAX(oe) FILTER (WHERE responsibility_key = 'phase:design_p3') AS phase_3_oe,
+                                MAX(pl) FILTER (WHERE responsibility_key = 'phase:design_p3') AS phase_3_pl,
+                                MAX(oe) FILTER (WHERE responsibility_key = 'phase:predesign_p31') AS phase_31_oe,
+                                MAX(pl) FILTER (WHERE responsibility_key = 'phase:predesign_p31') AS phase_31_pl,
+                                MAX(oe) FILTER (WHERE responsibility_key = 'phase:design_p32') AS phase_32_oe,
+                                MAX(pl) FILTER (WHERE responsibility_key = 'phase:design_p32') AS phase_32_pl,
+                                MAX(oe) FILTER (WHERE responsibility_key = 'phase:approval_p33') AS phase_33_oe,
+                                MAX(pl) FILTER (WHERE responsibility_key = 'phase:approval_p33') AS phase_33_pl,
+                                MAX(oe) FILTER (WHERE responsibility_key = 'phase:tendering_p4') AS phase_4_oe,
+                                MAX(pl) FILTER (WHERE responsibility_key = 'phase:tendering_p4') AS phase_4_pl,
+                                MAX(oe) FILTER (WHERE responsibility_key = 'phase:construction_p5') AS phase_5_oe,
+                                MAX(pl) FILTER (WHERE responsibility_key = 'phase:construction_p5') AS phase_5_pl,
+                                MAX(oe) FILTER (WHERE responsibility_key = 'phase:executiondesign_p51') AS phase_51_oe,
+                                MAX(pl) FILTER (WHERE responsibility_key = 'phase:executiondesign_p51') AS phase_51_pl,
+                                MAX(oe) FILTER (WHERE responsibility_key = 'phase:execution_p52') AS phase_52_oe,
+                                MAX(pl) FILTER (WHERE responsibility_key = 'phase:execution_p52') AS phase_52_pl,
+                                MAX(oe) FILTER (WHERE responsibility_key = 'phase:commissioning_p53') AS phase_53_oe,
+                                MAX(pl) FILTER (WHERE responsibility_key = 'phase:commissioning_p53') AS phase_53_pl
+                            FROM responsibility_groups
+                            GROUP BY uuid_roadwork_activity
+                        )
                         SELECT r.uuid, r.roadworkactivity_no, r.name, r.is_minor_work,
                             p.first_name AS p_first_name, p.last_name AS p_last_name,
                             t.first_name AS t_first_name, t.last_name AS t_last_name,
@@ -442,12 +502,41 @@ namespace roadwork_portal_service.Controllers
                             primary_need.triggering_org_abbr,
 
                             involved.involved_orgs,
-                            needs.needs_uuids
+                            needs.needs_uuids,
+
+                            -- Additional activity flags and grouped responsibilities.
+                            r.staff_resources_apr_confirmed,
+                            r.cost_estimate_apr_confirmed,
+                            r.prestudy_vk_er_confirmed,
+                            resp.lead_oe,
+                            resp.lead_pl,
+                            resp.phase_2_oe,
+                            resp.phase_2_pl,
+                            resp.phase_3_oe,
+                            resp.phase_3_pl,
+                            resp.phase_31_oe,
+                            resp.phase_31_pl,
+                            resp.phase_32_oe,
+                            resp.phase_32_pl,
+                            resp.phase_33_oe,
+                            resp.phase_33_pl,
+                            resp.phase_4_oe,
+                            resp.phase_4_pl,
+                            resp.phase_5_oe,
+                            resp.phase_5_pl,
+                            resp.phase_51_oe,
+                            resp.phase_51_pl,
+                            resp.phase_52_oe,
+                            resp.phase_52_pl,
+                            resp.phase_53_oe,
+                            resp.phase_53_pl
 
                         FROM ""wtb_ssp_roadworkactivities"" r
                         LEFT JOIN ""wtb_ssp_users"" p ON r.projectmanager = p.uuid
                         LEFT JOIN ""wtb_ssp_users"" t ON r.traffic_agent = t.uuid
                         LEFT JOIN ""wtb_ssp_roadwork_approvals"" appr ON r.uuid = appr.uuid_roadwork_activity
+                        -- The grouped result has at most one row per activity.
+                        LEFT JOIN responsibilities resp ON resp.uuid_roadwork_activity = r.uuid
 
                         LEFT JOIN LATERAL (
                             SELECT am.first_name AS gm_first_name,
@@ -744,6 +833,35 @@ namespace roadwork_portal_service.Controllers
                         AppendBool(sb, reader, "esti_approval_required");
                         AppendBool(sb, reader, "other_approval_required");
                         AppendText(sb, reader, "other_approval_details");
+
+                        // Additional activity flags.
+                        AppendBool(sb, reader, "staff_resources_apr_confirmed");
+                        AppendBool(sb, reader, "cost_estimate_apr_confirmed");
+                        AppendBool(sb, reader, "prestudy_vk_er_confirmed");
+
+                        // Export all assignments in matching OE/PL order, using a single-line separator.
+                        AppendText(sb, reader, "lead_oe");
+                        AppendText(sb, reader, "lead_pl");
+                        AppendText(sb, reader, "phase_2_oe");
+                        AppendText(sb, reader, "phase_2_pl");
+                        AppendText(sb, reader, "phase_3_oe");
+                        AppendText(sb, reader, "phase_3_pl");
+                        AppendText(sb, reader, "phase_31_oe");
+                        AppendText(sb, reader, "phase_31_pl");
+                        AppendText(sb, reader, "phase_32_oe");
+                        AppendText(sb, reader, "phase_32_pl");
+                        AppendText(sb, reader, "phase_33_oe");
+                        AppendText(sb, reader, "phase_33_pl");
+                        AppendText(sb, reader, "phase_4_oe");
+                        AppendText(sb, reader, "phase_4_pl");
+                        AppendText(sb, reader, "phase_5_oe");
+                        AppendText(sb, reader, "phase_5_pl");
+                        AppendText(sb, reader, "phase_51_oe");
+                        AppendText(sb, reader, "phase_51_pl");
+                        AppendText(sb, reader, "phase_52_oe");
+                        AppendText(sb, reader, "phase_52_pl");
+                        AppendText(sb, reader, "phase_53_oe");
+                        AppendText(sb, reader, "phase_53_pl");
 
                         sb.Append("\r\n");
                     }
